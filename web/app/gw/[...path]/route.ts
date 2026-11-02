@@ -4,6 +4,16 @@ const TOKEN = process.env.DASHBOARD_TOKEN ?? "";
 
 async function proxy(req: Request, ctx: { params: Promise<{ path: string[] }> }) {
   const { path } = await ctx.params;
+  if (path.some((s) => s === "" || s.includes(".."))) return new Response("Not found", { status: 404 });
+  const joined = path.join("/");
+  const allowed =
+    req.method === "GET"
+      ? joined === "events/stream" || /^(dashboard|phone)(\/|$)/.test(joined)
+      : req.method === "POST" && /^phone\/[^/]+\/approvals\/[^/]+\/(approve|deny)$/.test(joined);
+  if (!allowed) return new Response("Not found", { status: 404 });
+  if (req.method === "POST" && req.headers.get("origin") !== new URL(req.url).origin) {
+    return new Response("Forbidden", { status: 403 });
+  }
   const url = new URL(`${GATEWAY}/${path.map(encodeURIComponent).join("/")}`);
   if (path.join("/") === "events/stream") url.searchParams.set("token", TOKEN);
   try {
