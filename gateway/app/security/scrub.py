@@ -2,11 +2,11 @@
 import re
 
 _KW = re.compile(
-    r"pass\s*word|pass\s*code|\bpin\b|\bmpin\b|\bupin\b|\botp\b|\bcvv\b|\bcvc\b|one[\s-]*time[\s-]*pass|"
-    r"पासवर्ड|ओटीपी|पिन|सीवीवी|पासकोड|पासवर्ड|एमपिन",
+    r"pass\s*word|pass\s*code|\bpin\b(?![\s\-]*code)|\bmpin\b|\bupin\b|\botp\b|\bcvv\b|\bcvc\b|one[\s-]*time[\s-]*pass|"
+    r"पासवर्ड|ओटीपी|पिन(?!\s*कोड)|सीवीवी|पासकोड|पासवर्ड|एमपिन",
     re.I,
 )
-_FIELD_KW = re.compile(r"password|passcode|pin|otp|cvv|secret", re.I)
+_FIELD_KW = re.compile(r"password|passcode|(?<![a-z])[mu]?pin(?![a-z])|otp|cvv|secret", re.I)
 _CARD = re.compile(r"(?<![\d])(?:\d[ -]?){16}(?![\d])")
 _DIGITS = re.compile(r"(?<!\d)\d{3,6}(?!\d)")
 
