@@ -15,9 +15,9 @@
 
 ## Measured numbers
 Machine: i7-13650HX (20 threads), Windows 11, one box: Locust, gateway (`uvicorn --workers 4`), Postgres and Redis (Docker) all share it. Use `127.0.0.1`, not `localhost` (Windows tries IPv6 first: +200 ms per new connection).
-- Tests: 139 gateway tests pass; `tools/test_simulate.py` 3 pass.
+- Tests (final): 170 gateway tests pass; 11 tools tests pass.
 - Simulator (`tools/simulate_call.py --scenario all`, fresh seed): both demo calls pass; transcript in `tools/out/simulate_transcript.txt`. The seed is stateful (EMI date change is allowed once per 6 months), so reseed before each run.
-- Load test, 1,000 users, 8-16 s think time (about 86 rps, the CLAUDE.md 50-125 rps target; `LL_THINK=8,16`), 4 min, stats reset after ramp-up: 0 errors in 18,940 requests. Overall p50 12 / p95 29 / p99 46 ms. Worst action p95: start_call 32 ms (p50 12, p99 70); every action p95 <= 32 ms. PASS (< 50 ms). Result: `tools/out/loadtest.json`.
+- Load test (final code, reseed + customer export), 1,000 users, `LL_THINK=8,16` (86 rps), 4 min, stats reset after ramp-up: 0 errors in 18,913 requests. Overall p50 14 / p95 33 / p99 49 ms. Worst action p95: start_call 40 ms (p99 100), request_app_approval 39, check_payment 36; every action p95 < 50 ms. PASS. `tools/out/loadtest.json`.
 - Same run without resetting stats (ramp-up included): overall p95 57 ms, start_call p95 98 ms (new-connection burst), 0.02% errors. Saved in `tools/out/loadtest_spec_rate_with_ramp.json`.
 - Stress, 1 to 3 s think time (about 457 rps, 4x the target), 3 min: 0 errors, p50 18 / p95 120 / p99 280 ms. Gateway and generator are CPU-bound on the same box. `tools/out/loadtest_stress_457rps.json`.
 - Earlier single connection, confirm_readback: p50 ~8 ms, p95 ~12 ms.
@@ -31,6 +31,23 @@ Machine: i7-13650HX (20 threads), Windows 11, one box: Locust, gateway (`uvicorn
 - Simulator: UTF-8 stdout on Windows, SMS check by id (inbox capped at 50) with a short poll (SMS is a background task).
 - Load test: wrong-verification calls use a fresh unregistered mobile (real customers hit the 3/hour lockout and failed their legitimate calls); `--reset-stats`; `LL_THINK`; `--note`.
 - Redis rate-limit and session keys (`ll:*`) survive a reseed; flush them between load runs or verify_caller returns RATE_LIMITED for seeded customers.
+
+## Final decisions
+- Simulator checks compare speak with spaces removed because speak groups digits for TTS ("44 17").
+- agent/system_prompt.md: when `next` = `confirm_readback`, read back `data.confirm` and call confirm_readback with that field/value.
+- Untapped approvals appear in `/gw/dashboard/security` (ops attack view) once expired (2 min), not while pending.
+- Dependencies beyond CLAUDE.md section 7 needing owner approval: `cryptography`, `pydantic-settings`, `asyncpg`, `locust`.
+
+## Needs the owner
+- [ ] Gnani API keys in `.env` (`GNANI_SPEECH_API_KEY`, `INYA_PLATFORM_API_KEY`).
+- [ ] Create the GitHub repo and push (blocked for the agent).
+- [ ] Agent Builder console: create the integration and the 23 custom actions per docs/agent-builder-setup.md; run `agent/apply_agent.py --apply`.
+- [ ] Tunnel (cloudflared/ngrok) or VM; set `PUBLIC_GATEWAY_URL`.
+- [ ] Run `tools/make_test_audio.py` then `tools/stt_benchmark.py` (STT numbers).
+- [ ] Record a voice clone for the attacker demo.
+- [ ] 20 scripted calls (`tools/scripted_calls.md`) and end-to-end latency measurement.
+- [ ] Demo video.
+- [ ] Confirm the open questions below in the console.
 
 ## Open questions (CLAUDE.md has no section 4.5; these are the open items from docs/gnani-facts.md)
 1. Caller ANI variable in Agent Builder? Not in docs; agent asks for registered mobile, caller_number is a claim only (guess).

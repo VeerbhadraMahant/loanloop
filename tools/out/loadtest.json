@@ -1,0 +1,111 @@
+{
+  "users": 1000,
+  "duration_s": 240,
+  "rps": 85.91399701034844,
+  "per_action": [
+    {
+      "action": "branch_lookup",
+      "p50": 15.0,
+      "p95": 32.0,
+      "p99": 43.0,
+      "count": 909,
+      "failures": 0
+    },
+    {
+      "action": "check_approval",
+      "p50": 10.0,
+      "p95": 15.0,
+      "p99": 24.0,
+      "count": 876,
+      "failures": 0
+    },
+    {
+      "action": "check_payment",
+      "p50": 17.0,
+      "p95": 36.0,
+      "p99": 51.0,
+      "count": 1273,
+      "failures": 0
+    },
+    {
+      "action": "confirm_readback",
+      "p50": 11.0,
+      "p95": 31.0,
+      "p99": 42.0,
+      "count": 3132,
+      "failures": 0
+    },
+    {
+      "action": "emi_info",
+      "p50": 14.0,
+      "p95": 33.0,
+      "p99": 48.0,
+      "count": 1130,
+      "failures": 0
+    },
+    {
+      "action": "end_call",
+      "p50": 17.0,
+      "p95": 35.0,
+      "p99": 48.0,
+      "count": 2808,
+      "failures": 0
+    },
+    {
+      "action": "phone_approve",
+      "p50": 11.0,
+      "p95": 29.0,
+      "p99": 38.0,
+      "count": 876,
+      "failures": 0
+    },
+    {
+      "action": "report_secret_spoken",
+      "p50": 12.0,
+      "p95": 29.0,
+      "p99": 45.0,
+      "count": 481,
+      "failures": 0
+    },
+    {
+      "action": "request_app_approval",
+      "p50": 17.0,
+      "p95": 39.0,
+      "p99": 54.0,
+      "count": 913,
+      "failures": 0
+    },
+    {
+      "action": "start_call",
+      "p50": 17.0,
+      "p95": 40.0,
+      "p99": 100.0,
+      "count": 2667,
+      "failures": 0
+    },
+    {
+      "action": "validate_ifsc",
+      "p50": 13.0,
+      "p95": 32.0,
+      "p99": 43.0,
+      "count": 969,
+      "failures": 0
+    },
+    {
+      "action": "verify_caller",
+      "p50": 15.0,
+      "p95": 32.0,
+      "p99": 44.0,
+      "count": 2825,
+      "failures": 0
+    }
+  ],
+  "overall": {
+    "p50": 14.0,
+    "p95": 33.0,
+    "p99": 49.0,
+    "error_rate": 0.0
+  },
+  "measured_at": "2026-11-02T11:21:08.720008+00:00",
+  "host_note": "single dev box: load generator and gateway share CPU, so latencies are pessimistic; i7-13650HX one box, uvicorn 4 workers, think 8-16s, stats reset after ramp-up"
+}

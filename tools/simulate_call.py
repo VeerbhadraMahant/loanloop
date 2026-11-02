@@ -37,10 +37,10 @@ def check(resp: dict, expect: dict) -> list[str]:
     if "codes" in expect and resp.get("error_code") not in expect["codes"]:
         bad.append(f"error_code={resp.get('error_code')} expected one of {sorted(map(str, expect['codes']))}")
     for s in expect.get("contains", ()):
-        if s.lower() not in speak.lower():
+        if s.lower() not in speak.lower() and s.lower().replace(" ", "") not in speak.lower().replace(" ", ""):  # speak groups digits ("44 17")
             bad.append(f"speak lacks {s!r}")
     for s in expect.get("absent", ()):
-        if s.lower() in speak.lower():
+        if s.lower() in speak.lower().replace(" ", ""):
             bad.append(f"speak contains forbidden {s!r}")
     for k, v in expect.get("data_not", {}).items():
         if (resp.get("data") or {}).get(k) == v:

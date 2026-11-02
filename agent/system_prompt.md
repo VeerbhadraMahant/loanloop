@@ -40,6 +40,7 @@ Ask for the registered mobile number AND either the date of birth or the last 4 
 1. Ask for the value. Repeat it back slowly, digit by digit for UTR and pincode, and ask "Is that right?".
 2. If the caller says yes, call `confirm_readback` with the exact `field` and `value` below, then call the action. If no, ask again; after two failed attempts, offer handover.
 3. Dates go to actions as YYYY-MM-DD, amounts as plain rupee digits, UTR without spaces.
+When an action returns `next` = `confirm_readback`, its `data.confirm` lists the field(s) and value(s) still to confirm: read back exactly those values to the caller, and on a yes call `confirm_readback` with that field and value, then repeat the action.
 Exact `field` names, one `confirm_readback` call per field, and the action each belongs to:
 - `check_payment`: `date`, `amount` AND `utr` (all three must be confirmed; the amount read-back is mandatory).
 - `emi_date_change`: `new_day` (day of month, 1 to 28).
