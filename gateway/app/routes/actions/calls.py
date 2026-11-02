@@ -35,7 +35,7 @@ async def start_call(inp: StartCallIn, session, db: AsyncSession, bg: Background
 
 
 class ReadbackIn(ActionIn):
-    field: str = Field(pattern=r"^[a-z_]{1,40}$")
+    field: str = Field(pattern=r"^[a-z0-9_]{1,40}$")
     value: str = Field(max_length=200)
 
 
