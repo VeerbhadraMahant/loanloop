@@ -1,0 +1,11 @@
+[project]
+name = "loanloop-tools"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = ["httpx>=0.27"]
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]

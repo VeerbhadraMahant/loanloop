@@ -1,0 +1,1203 @@
+{
+  "_comment": "LoanLoop custom actions. ${...} are env placeholders the operator fills in the console. Console-only: Agent Builder docs show no API for creating actions; see docs/agent-builder-setup.md. {{conversation_id}} availability is NOT IN DOCS (verify). Empty speak_during_action = leave the field blank.",
+  "integration": {
+    "name": "loanloop_gateway",
+    "method": "POST",
+    "base_url": "${PUBLIC_GATEWAY_URL}",
+    "auth_header": {
+      "key": "X-Gateway-Secret",
+      "value": "${GATEWAY_SHARED_SECRET}"
+    }
+  },
+  "actions": [
+    {
+      "name": "start_call",
+      "description": "Trigger once at the very start of every call, before anything else. Creates the call session.",
+      "method": "POST",
+      "url": "${PUBLIC_GATEWAY_URL}/actions/start_call",
+      "headers": {
+        "X-Gateway-Secret": "${GATEWAY_SHARED_SECRET}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "call_id": "{{conversation_id}}",
+        "language": "{{language}}",
+        "caller_number": "{{caller_number}}"
+      },
+      "variables": [
+        {
+          "name": "call_id",
+          "type": "string",
+          "description": "Always {{conversation_id}}",
+          "required": true
+        },
+        {
+          "name": "language",
+          "type": "string",
+          "description": "Caller's CURRENT language",
+          "required": true,
+          "enum": [
+            "en",
+            "hi",
+            "hinglish",
+            "mr"
+          ]
+        },
+        {
+          "name": "caller_number",
+          "type": "string",
+          "description": "Caller's phone number if the platform provides it; omit otherwise. Never treat as proof of identity.",
+          "required": false
+        }
+      ],
+      "speak_during_action": {
+        "en": "One moment, checking that for you.",
+        "hi": "एक क्षण, जाँच हो रही है।",
+        "hinglish": "Ek minute, check ho raha hai.",
+        "mr": "एक क्षण, तपासणी सुरू आहे."
+      },
+      "timeout_s": 5,
+      "trigger": "On-Call"
+    },
+    {
+      "name": "verify_caller",
+      "description": "Trigger when the caller has given their registered mobile number AND either date of birth or last 4 digits of the loan number. Never trigger with only one of them.",
+      "method": "POST",
+      "url": "${PUBLIC_GATEWAY_URL}/actions/verify_caller",
+      "headers": {
+        "X-Gateway-Secret": "${GATEWAY_SHARED_SECRET}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "call_id": "{{conversation_id}}",
+        "language": "{{language}}",
+        "registered_mobile": "{{registered_mobile}}",
+        "dob": "{{dob}}",
+        "loan_last4": "{{loan_last4}}"
+      },
+      "variables": [
+        {
+          "name": "call_id",
+          "type": "string",
+          "description": "Always {{conversation_id}}",
+          "required": true
+        },
+        {
+          "name": "language",
+          "type": "string",
+          "description": "Caller's CURRENT language",
+          "required": true,
+          "enum": [
+            "en",
+            "hi",
+            "hinglish",
+            "mr"
+          ]
+        },
+        {
+          "name": "registered_mobile",
+          "type": "string",
+          "description": "10-digit registered mobile number as spoken, digits only",
+          "required": true
+        },
+        {
+          "name": "dob",
+          "type": "string",
+          "description": "Date of birth as YYYY-MM-DD; omit if verifying by loan_last4",
+          "required": false
+        },
+        {
+          "name": "loan_last4",
+          "type": "string",
+          "description": "Last 4 digits of the loan number; omit if verifying by dob",
+          "required": false
+        }
+      ],
+      "speak_during_action": {
+        "en": "One moment, checking that for you.",
+        "hi": "एक क्षण, जाँच हो रही है।",
+        "hinglish": "Ek minute, check ho raha hai.",
+        "mr": "एक क्षण, तपासणी सुरू आहे."
+      },
+      "timeout_s": 5,
+      "trigger": "On-Call"
+    },
+    {
+      "name": "request_app_approval",
+      "description": "Trigger when the caller needs a Tier 2 step (payments, EMI explanation, foreclosure, any change) and is verified (Tier 1) but not yet approved. Sends an approval request to the caller's banking app.",
+      "method": "POST",
+      "url": "${PUBLIC_GATEWAY_URL}/actions/request_app_approval",
+      "headers": {
+        "X-Gateway-Secret": "${GATEWAY_SHARED_SECRET}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "call_id": "{{conversation_id}}",
+        "language": "{{language}}",
+        "purpose": "{{purpose}}"
+      },
+      "variables": [
+        {
+          "name": "call_id",
+          "type": "string",
+          "description": "Always {{conversation_id}}",
+          "required": true
+        },
+        {
+          "name": "language",
+          "type": "string",
+          "description": "Caller's CURRENT language",
+          "required": true,
+          "enum": [
+            "en",
+            "hi",
+            "hinglish",
+            "mr"
+          ]
+        },
+        {
+          "name": "purpose",
+          "type": "string",
+          "description": "Short reason, e.g. emi_date_change, payment_check, foreclosure, document, nominee, address, emi_explanation",
+          "required": true
+        }
+      ],
+      "speak_during_action": {
+        "en": "One moment, sending the request to your app.",
+        "hi": "एक क्षण, आपके ऐप पर अनुरोध भेजा जा रहा है।",
+        "hinglish": "Ek minute, aapke app par request bheji ja rahi hai.",
+        "mr": "एक क्षण, तुमच्या ॲपवर विनंती पाठवली जात आहे."
+      },
+      "timeout_s": 5,
+      "trigger": "On-Call"
+    },
+    {
+      "name": "check_approval",
+      "description": "Trigger after the caller says they tapped Approve in the app (or after asking them to). Checks whether the approval is done.",
+      "method": "POST",
+      "url": "${PUBLIC_GATEWAY_URL}/actions/check_approval",
+      "headers": {
+        "X-Gateway-Secret": "${GATEWAY_SHARED_SECRET}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "call_id": "{{conversation_id}}",
+        "language": "{{language}}",
+        "approval_id": "{{approval_id}}"
+      },
+      "variables": [
+        {
+          "name": "call_id",
+          "type": "string",
+          "description": "Always {{conversation_id}}",
+          "required": true
+        },
+        {
+          "name": "language",
+          "type": "string",
+          "description": "Caller's CURRENT language",
+          "required": true,
+          "enum": [
+            "en",
+            "hi",
+            "hinglish",
+            "mr"
+          ]
+        },
+        {
+          "name": "approval_id",
+          "type": "string",
+          "description": "approval_id returned by request_app_approval in data.approval_id",
+          "required": true
+        }
+      ],
+      "speak_during_action": {
+        "en": "One moment, checking that for you.",
+        "hi": "एक क्षण, जाँच हो रही है।",
+        "hinglish": "Ek minute, check ho raha hai.",
+        "mr": "एक क्षण, तपासणी सुरू आहे."
+      },
+      "timeout_s": 5,
+      "trigger": "On-Call"
+    },
+    {
+      "name": "branch_lookup",
+      "description": "Trigger when the caller asks for a branch's IFSC, MICR, address or hours by branch name or city.",
+      "method": "POST",
+      "url": "${PUBLIC_GATEWAY_URL}/actions/branch_lookup",
+      "headers": {
+        "X-Gateway-Secret": "${GATEWAY_SHARED_SECRET}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "call_id": "{{conversation_id}}",
+        "language": "{{language}}",
+        "query": "{{query}}"
+      },
+      "variables": [
+        {
+          "name": "call_id",
+          "type": "string",
+          "description": "Always {{conversation_id}}",
+          "required": true
+        },
+        {
+          "name": "language",
+          "type": "string",
+          "description": "Caller's CURRENT language",
+          "required": true,
+          "enum": [
+            "en",
+            "hi",
+            "hinglish",
+            "mr"
+          ]
+        },
+        {
+          "name": "query",
+          "type": "string",
+          "description": "Branch name or city as the caller said it",
+          "required": true
+        }
+      ],
+      "speak_during_action": {
+        "en": "One moment, checking that for you.",
+        "hi": "एक क्षण, जाँच हो रही है।",
+        "hinglish": "Ek minute, check ho raha hai.",
+        "mr": "एक क्षण, तपासणी सुरू आहे."
+      },
+      "timeout_s": 5,
+      "trigger": "On-Call"
+    },
+    {
+      "name": "validate_ifsc",
+      "description": "Trigger when the caller wants to check whether an IFSC code is correct.",
+      "method": "POST",
+      "url": "${PUBLIC_GATEWAY_URL}/actions/validate_ifsc",
+      "headers": {
+        "X-Gateway-Secret": "${GATEWAY_SHARED_SECRET}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "call_id": "{{conversation_id}}",
+        "language": "{{language}}",
+        "ifsc": "{{ifsc}}"
+      },
+      "variables": [
+        {
+          "name": "call_id",
+          "type": "string",
+          "description": "Always {{conversation_id}}",
+          "required": true
+        },
+        {
+          "name": "language",
+          "type": "string",
+          "description": "Caller's CURRENT language",
+          "required": true,
+          "enum": [
+            "en",
+            "hi",
+            "hinglish",
+            "mr"
+          ]
+        },
+        {
+          "name": "ifsc",
+          "type": "string",
+          "description": "IFSC as 11 characters, uppercase, no spaces (letters and digits), e.g. SAHY0000123",
+          "required": true
+        }
+      ],
+      "speak_during_action": {
+        "en": "One moment, checking that for you.",
+        "hi": "एक क्षण, जाँच हो रही है।",
+        "hinglish": "Ek minute, check ho raha hai.",
+        "mr": "एक क्षण, तपासणी सुरू आहे."
+      },
+      "timeout_s": 5,
+      "trigger": "On-Call"
+    },
+    {
+      "name": "get_masked_profile",
+      "description": "Trigger when a verified caller asks which account number, IFSC, customer ID, mobile or email is on file. Returns masked values only.",
+      "method": "POST",
+      "url": "${PUBLIC_GATEWAY_URL}/actions/get_masked_profile",
+      "headers": {
+        "X-Gateway-Secret": "${GATEWAY_SHARED_SECRET}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "call_id": "{{conversation_id}}",
+        "language": "{{language}}",
+        "fields": "{{fields}}"
+      },
+      "variables": [
+        {
+          "name": "call_id",
+          "type": "string",
+          "description": "Always {{conversation_id}}",
+          "required": true
+        },
+        {
+          "name": "language",
+          "type": "string",
+          "description": "Caller's CURRENT language",
+          "required": true,
+          "enum": [
+            "en",
+            "hi",
+            "hinglish",
+            "mr"
+          ]
+        },
+        {
+          "name": "fields",
+          "type": "array<string>",
+          "description": "Any of: account_number, ifsc, customer_id, mobile, email, branch",
+          "required": true
+        }
+      ],
+      "speak_during_action": {
+        "en": "One moment, checking that for you.",
+        "hi": "एक क्षण, जाँच हो रही है।",
+        "hinglish": "Ek minute, check ho raha hai.",
+        "mr": "एक क्षण, तपासणी सुरू आहे."
+      },
+      "timeout_s": 5,
+      "trigger": "On-Call"
+    },
+    {
+      "name": "send_details_sms",
+      "description": "Trigger when a verified caller wants their full account number, IFSC, customer ID or branch address. Sent only to the registered mobile, never anywhere else.",
+      "method": "POST",
+      "url": "${PUBLIC_GATEWAY_URL}/actions/send_details_sms",
+      "headers": {
+        "X-Gateway-Secret": "${GATEWAY_SHARED_SECRET}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "call_id": "{{conversation_id}}",
+        "language": "{{language}}",
+        "fields": "{{fields}}"
+      },
+      "variables": [
+        {
+          "name": "call_id",
+          "type": "string",
+          "description": "Always {{conversation_id}}",
+          "required": true
+        },
+        {
+          "name": "language",
+          "type": "string",
+          "description": "Caller's CURRENT language",
+          "required": true,
+          "enum": [
+            "en",
+            "hi",
+            "hinglish",
+            "mr"
+          ]
+        },
+        {
+          "name": "fields",
+          "type": "array<string>",
+          "description": "Any of: account_number, ifsc, customer_id, branch_address",
+          "required": true,
+          "enum": [
+            "account_number",
+            "ifsc",
+            "customer_id",
+            "branch_address"
+          ]
+        }
+      ],
+      "speak_during_action": {
+        "en": "One moment, sending that to your phone.",
+        "hi": "एक क्षण, आपके फ़ोन पर भेजा जा रहा है।",
+        "hinglish": "Ek minute, aapke phone par bheja ja raha hai.",
+        "mr": "एक क्षण, तुमच्या फोनवर पाठवले जात आहे."
+      },
+      "timeout_s": 5,
+      "trigger": "On-Call"
+    },
+    {
+      "name": "password_reset_help",
+      "description": "Trigger when the caller forgot their password or MPIN. Gives step-by-step guidance; the agent never handles the secret.",
+      "method": "POST",
+      "url": "${PUBLIC_GATEWAY_URL}/actions/password_reset_help",
+      "headers": {
+        "X-Gateway-Secret": "${GATEWAY_SHARED_SECRET}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "call_id": "{{conversation_id}}",
+        "language": "{{language}}",
+        "channel": "{{channel}}"
+      },
+      "variables": [
+        {
+          "name": "call_id",
+          "type": "string",
+          "description": "Always {{conversation_id}}",
+          "required": true
+        },
+        {
+          "name": "language",
+          "type": "string",
+          "description": "Caller's CURRENT language",
+          "required": true,
+          "enum": [
+            "en",
+            "hi",
+            "hinglish",
+            "mr"
+          ]
+        },
+        {
+          "name": "channel",
+          "type": "string",
+          "description": "Where they usually log in",
+          "required": true,
+          "enum": [
+            "app",
+            "netbanking"
+          ]
+        }
+      ],
+      "speak_during_action": {
+        "en": "One moment, checking that for you.",
+        "hi": "एक क्षण, जाँच हो रही है।",
+        "hinglish": "Ek minute, check ho raha hai.",
+        "mr": "एक क्षण, तपासणी सुरू आहे."
+      },
+      "timeout_s": 5,
+      "trigger": "On-Call"
+    },
+    {
+      "name": "report_secret_spoken",
+      "description": "Trigger immediately when the caller says or starts to say a password, PIN, OTP, CVV or card number. Do NOT pass the value itself.",
+      "method": "POST",
+      "url": "${PUBLIC_GATEWAY_URL}/actions/report_secret_spoken",
+      "headers": {
+        "X-Gateway-Secret": "${GATEWAY_SHARED_SECRET}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "call_id": "{{conversation_id}}",
+        "language": "{{language}}",
+        "secret_type": "{{secret_type}}"
+      },
+      "variables": [
+        {
+          "name": "call_id",
+          "type": "string",
+          "description": "Always {{conversation_id}}",
+          "required": true
+        },
+        {
+          "name": "language",
+          "type": "string",
+          "description": "Caller's CURRENT language",
+          "required": true,
+          "enum": [
+            "en",
+            "hi",
+            "hinglish",
+            "mr"
+          ]
+        },
+        {
+          "name": "secret_type",
+          "type": "string",
+          "description": "Kind of secret heard",
+          "required": true,
+          "enum": [
+            "password",
+            "pin",
+            "otp",
+            "cvv",
+            "card"
+          ]
+        }
+      ],
+      "speak_during_action": {
+        "en": "",
+        "hi": "",
+        "hinglish": "",
+        "mr": ""
+      },
+      "timeout_s": 5,
+      "trigger": "On-Call"
+    },
+    {
+      "name": "emi_info",
+      "description": "Trigger when a verified (Tier 1) caller asks the EMI amount or the next due date.",
+      "method": "POST",
+      "url": "${PUBLIC_GATEWAY_URL}/actions/emi_info",
+      "headers": {
+        "X-Gateway-Secret": "${GATEWAY_SHARED_SECRET}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "call_id": "{{conversation_id}}",
+        "language": "{{language}}"
+      },
+      "variables": [
+        {
+          "name": "call_id",
+          "type": "string",
+          "description": "Always {{conversation_id}}",
+          "required": true
+        },
+        {
+          "name": "language",
+          "type": "string",
+          "description": "Caller's CURRENT language",
+          "required": true,
+          "enum": [
+            "en",
+            "hi",
+            "hinglish",
+            "mr"
+          ]
+        }
+      ],
+      "speak_during_action": {
+        "en": "One moment, checking that for you.",
+        "hi": "एक क्षण, जाँच हो रही है।",
+        "hinglish": "Ek minute, check ho raha hai.",
+        "mr": "एक क्षण, तपासणी सुरू आहे."
+      },
+      "timeout_s": 5,
+      "trigger": "On-Call"
+    },
+    {
+      "name": "explain_emi_change",
+      "description": "Trigger when a Tier 2 caller asks why the EMI or charges went up.",
+      "method": "POST",
+      "url": "${PUBLIC_GATEWAY_URL}/actions/explain_emi_change",
+      "headers": {
+        "X-Gateway-Secret": "${GATEWAY_SHARED_SECRET}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "call_id": "{{conversation_id}}",
+        "language": "{{language}}"
+      },
+      "variables": [
+        {
+          "name": "call_id",
+          "type": "string",
+          "description": "Always {{conversation_id}}",
+          "required": true
+        },
+        {
+          "name": "language",
+          "type": "string",
+          "description": "Caller's CURRENT language",
+          "required": true,
+          "enum": [
+            "en",
+            "hi",
+            "hinglish",
+            "mr"
+          ]
+        }
+      ],
+      "speak_during_action": {
+        "en": "One moment, checking that for you.",
+        "hi": "एक क्षण, जाँच हो रही है।",
+        "hinglish": "Ek minute, check ho raha hai.",
+        "mr": "एक क्षण, तपासणी सुरू आहे."
+      },
+      "timeout_s": 5,
+      "trigger": "On-Call"
+    },
+    {
+      "name": "confirm_readback",
+      "description": "Trigger ONLY after the caller said yes to your read-back of a value, before the data-changing or ledger action that uses it.",
+      "method": "POST",
+      "url": "${PUBLIC_GATEWAY_URL}/actions/confirm_readback",
+      "headers": {
+        "X-Gateway-Secret": "${GATEWAY_SHARED_SECRET}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "call_id": "{{conversation_id}}",
+        "language": "{{language}}",
+        "field": "{{field}}",
+        "value": "{{value}}"
+      },
+      "variables": [
+        {
+          "name": "call_id",
+          "type": "string",
+          "description": "Always {{conversation_id}}",
+          "required": true
+        },
+        {
+          "name": "language",
+          "type": "string",
+          "description": "Caller's CURRENT language",
+          "required": true,
+          "enum": [
+            "en",
+            "hi",
+            "hinglish",
+            "mr"
+          ]
+        },
+        {
+          "name": "field",
+          "type": "string",
+          "description": "Name of the value confirmed: date, amount, utr, new_day, name, relation, line1, city, pincode, type or closure",
+          "required": true
+        },
+        {
+          "name": "value",
+          "type": "string",
+          "description": "The value exactly as read back and confirmed",
+          "required": true
+        }
+      ],
+      "speak_during_action": {
+        "en": "",
+        "hi": "",
+        "hinglish": "",
+        "mr": ""
+      },
+      "timeout_s": 5,
+      "trigger": "On-Call"
+    },
+    {
+      "name": "check_payment",
+      "description": "Trigger when a Tier 2 caller says they already paid, after read-back and confirm_readback of date, amount and UTR.",
+      "method": "POST",
+      "url": "${PUBLIC_GATEWAY_URL}/actions/check_payment",
+      "headers": {
+        "X-Gateway-Secret": "${GATEWAY_SHARED_SECRET}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "call_id": "{{conversation_id}}",
+        "language": "{{language}}",
+        "date": "{{date}}",
+        "amount": "{{amount}}",
+        "utr": "{{utr}}"
+      },
+      "variables": [
+        {
+          "name": "call_id",
+          "type": "string",
+          "description": "Always {{conversation_id}}",
+          "required": true
+        },
+        {
+          "name": "language",
+          "type": "string",
+          "description": "Caller's CURRENT language",
+          "required": true,
+          "enum": [
+            "en",
+            "hi",
+            "hinglish",
+            "mr"
+          ]
+        },
+        {
+          "name": "date",
+          "type": "string",
+          "description": "Payment date as YYYY-MM-DD",
+          "required": true
+        },
+        {
+          "name": "amount",
+          "type": "number",
+          "description": "Amount in rupees, digits only, e.g. 12500 or 4312.5",
+          "required": true
+        },
+        {
+          "name": "utr",
+          "type": "string",
+          "description": "UTR as spoken, letters and digits only, no spaces",
+          "required": true
+        }
+      ],
+      "speak_during_action": {
+        "en": "One moment, checking that for you.",
+        "hi": "एक क्षण, जाँच हो रही है।",
+        "hinglish": "Ek minute, check ho raha hai.",
+        "mr": "एक क्षण, तपासणी सुरू आहे."
+      },
+      "timeout_s": 5,
+      "trigger": "On-Call"
+    },
+    {
+      "name": "emi_date_change",
+      "description": "Trigger when a Tier 2 caller wants a different EMI date, after read-back and confirm_readback of the new day.",
+      "method": "POST",
+      "url": "${PUBLIC_GATEWAY_URL}/actions/emi_date_change",
+      "headers": {
+        "X-Gateway-Secret": "${GATEWAY_SHARED_SECRET}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "call_id": "{{conversation_id}}",
+        "language": "{{language}}",
+        "new_day": "{{new_day}}"
+      },
+      "variables": [
+        {
+          "name": "call_id",
+          "type": "string",
+          "description": "Always {{conversation_id}}",
+          "required": true
+        },
+        {
+          "name": "language",
+          "type": "string",
+          "description": "Caller's CURRENT language",
+          "required": true,
+          "enum": [
+            "en",
+            "hi",
+            "hinglish",
+            "mr"
+          ]
+        },
+        {
+          "name": "new_day",
+          "type": "integer",
+          "description": "New day of month, 1 to 28",
+          "required": true
+        }
+      ],
+      "speak_during_action": {
+        "en": "One moment, saving that.",
+        "hi": "एक क्षण, यह दर्ज हो रहा है।",
+        "hinglish": "Ek minute, yeh note ho raha hai.",
+        "mr": "एक क्षण, हे नोंदवले जात आहे."
+      },
+      "timeout_s": 5,
+      "trigger": "On-Call"
+    },
+    {
+      "name": "foreclosure_quote",
+      "description": "Trigger when a Tier 2 caller asks what it costs to close the loan today.",
+      "method": "POST",
+      "url": "${PUBLIC_GATEWAY_URL}/actions/foreclosure_quote",
+      "headers": {
+        "X-Gateway-Secret": "${GATEWAY_SHARED_SECRET}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "call_id": "{{conversation_id}}",
+        "language": "{{language}}"
+      },
+      "variables": [
+        {
+          "name": "call_id",
+          "type": "string",
+          "description": "Always {{conversation_id}}",
+          "required": true
+        },
+        {
+          "name": "language",
+          "type": "string",
+          "description": "Caller's CURRENT language",
+          "required": true,
+          "enum": [
+            "en",
+            "hi",
+            "hinglish",
+            "mr"
+          ]
+        }
+      ],
+      "speak_during_action": {
+        "en": "One moment, checking that for you.",
+        "hi": "एक क्षण, जाँच हो रही है।",
+        "hinglish": "Ek minute, check ho raha hai.",
+        "mr": "एक क्षण, तपासणी सुरू आहे."
+      },
+      "timeout_s": 5,
+      "trigger": "On-Call"
+    },
+    {
+      "name": "raise_closure",
+      "description": "Trigger when a Tier 2 caller confirms they want to close the loan, after read-back and confirm_readback of closure.",
+      "method": "POST",
+      "url": "${PUBLIC_GATEWAY_URL}/actions/raise_closure",
+      "headers": {
+        "X-Gateway-Secret": "${GATEWAY_SHARED_SECRET}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "call_id": "{{conversation_id}}",
+        "language": "{{language}}"
+      },
+      "variables": [
+        {
+          "name": "call_id",
+          "type": "string",
+          "description": "Always {{conversation_id}}",
+          "required": true
+        },
+        {
+          "name": "language",
+          "type": "string",
+          "description": "Caller's CURRENT language",
+          "required": true,
+          "enum": [
+            "en",
+            "hi",
+            "hinglish",
+            "mr"
+          ]
+        }
+      ],
+      "speak_during_action": {
+        "en": "One moment, saving that.",
+        "hi": "एक क्षण, यह दर्ज हो रहा है।",
+        "hinglish": "Ek minute, yeh note ho raha hai.",
+        "mr": "एक क्षण, हे नोंदवले जात आहे."
+      },
+      "timeout_s": 5,
+      "trigger": "On-Call"
+    },
+    {
+      "name": "request_document",
+      "description": "Trigger when a Tier 2 caller wants a statement or interest certificate sent.",
+      "method": "POST",
+      "url": "${PUBLIC_GATEWAY_URL}/actions/request_document",
+      "headers": {
+        "X-Gateway-Secret": "${GATEWAY_SHARED_SECRET}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "call_id": "{{conversation_id}}",
+        "language": "{{language}}",
+        "type": "{{type}}"
+      },
+      "variables": [
+        {
+          "name": "call_id",
+          "type": "string",
+          "description": "Always {{conversation_id}}",
+          "required": true
+        },
+        {
+          "name": "language",
+          "type": "string",
+          "description": "Caller's CURRENT language",
+          "required": true,
+          "enum": [
+            "en",
+            "hi",
+            "hinglish",
+            "mr"
+          ]
+        },
+        {
+          "name": "type",
+          "type": "string",
+          "description": "Document wanted",
+          "required": true,
+          "enum": [
+            "statement",
+            "interest_cert"
+          ]
+        }
+      ],
+      "speak_during_action": {
+        "en": "One moment, saving that.",
+        "hi": "एक क्षण, यह दर्ज हो रहा है।",
+        "hinglish": "Ek minute, yeh note ho raha hai.",
+        "mr": "एक क्षण, हे नोंदवले जात आहे."
+      },
+      "timeout_s": 5,
+      "trigger": "On-Call"
+    },
+    {
+      "name": "update_nominee",
+      "description": "Trigger when a Tier 2 caller wants to change the nominee, after read-back and confirm_readback of name and relation.",
+      "method": "POST",
+      "url": "${PUBLIC_GATEWAY_URL}/actions/update_nominee",
+      "headers": {
+        "X-Gateway-Secret": "${GATEWAY_SHARED_SECRET}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "call_id": "{{conversation_id}}",
+        "language": "{{language}}",
+        "name": "{{name}}",
+        "relation": "{{relation}}"
+      },
+      "variables": [
+        {
+          "name": "call_id",
+          "type": "string",
+          "description": "Always {{conversation_id}}",
+          "required": true
+        },
+        {
+          "name": "language",
+          "type": "string",
+          "description": "Caller's CURRENT language",
+          "required": true,
+          "enum": [
+            "en",
+            "hi",
+            "hinglish",
+            "mr"
+          ]
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "description": "Nominee full name",
+          "required": true
+        },
+        {
+          "name": "relation",
+          "type": "string",
+          "description": "Relationship to the caller, e.g. spouse, mother, son",
+          "required": true
+        }
+      ],
+      "speak_during_action": {
+        "en": "One moment, saving that.",
+        "hi": "एक क्षण, यह दर्ज हो रहा है।",
+        "hinglish": "Ek minute, yeh note ho raha hai.",
+        "mr": "एक क्षण, हे नोंदवले जात आहे."
+      },
+      "timeout_s": 5,
+      "trigger": "On-Call"
+    },
+    {
+      "name": "update_address",
+      "description": "Trigger when a Tier 2 caller wants to change their address, after read-back and confirm_readback of line1, city, pincode.",
+      "method": "POST",
+      "url": "${PUBLIC_GATEWAY_URL}/actions/update_address",
+      "headers": {
+        "X-Gateway-Secret": "${GATEWAY_SHARED_SECRET}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "call_id": "{{conversation_id}}",
+        "language": "{{language}}",
+        "line1": "{{line1}}",
+        "city": "{{city}}",
+        "pincode": "{{pincode}}"
+      },
+      "variables": [
+        {
+          "name": "call_id",
+          "type": "string",
+          "description": "Always {{conversation_id}}",
+          "required": true
+        },
+        {
+          "name": "language",
+          "type": "string",
+          "description": "Caller's CURRENT language",
+          "required": true,
+          "enum": [
+            "en",
+            "hi",
+            "hinglish",
+            "mr"
+          ]
+        },
+        {
+          "name": "line1",
+          "type": "string",
+          "description": "House/street line",
+          "required": true
+        },
+        {
+          "name": "city",
+          "type": "string",
+          "description": "City",
+          "required": true
+        },
+        {
+          "name": "pincode",
+          "type": "string",
+          "description": "6-digit pincode",
+          "required": true
+        }
+      ],
+      "speak_during_action": {
+        "en": "One moment, saving that.",
+        "hi": "एक क्षण, यह दर्ज हो रहा है।",
+        "hinglish": "Ek minute, yeh note ho raha hai.",
+        "mr": "एक क्षण, हे नोंदवले जात आहे."
+      },
+      "timeout_s": 5,
+      "trigger": "On-Call"
+    },
+    {
+      "name": "report_hardship",
+      "description": "Trigger when a Tier 1+ caller says they lost income or cannot pay. Records it and starts a handover; never negotiate.",
+      "method": "POST",
+      "url": "${PUBLIC_GATEWAY_URL}/actions/report_hardship",
+      "headers": {
+        "X-Gateway-Secret": "${GATEWAY_SHARED_SECRET}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "call_id": "{{conversation_id}}",
+        "language": "{{language}}",
+        "reason": "{{reason}}"
+      },
+      "variables": [
+        {
+          "name": "call_id",
+          "type": "string",
+          "description": "Always {{conversation_id}}",
+          "required": true
+        },
+        {
+          "name": "language",
+          "type": "string",
+          "description": "Caller's CURRENT language",
+          "required": true,
+          "enum": [
+            "en",
+            "hi",
+            "hinglish",
+            "mr"
+          ]
+        },
+        {
+          "name": "reason",
+          "type": "string",
+          "description": "Caller's reason in one short neutral sentence, no secrets",
+          "required": true
+        }
+      ],
+      "speak_during_action": {
+        "en": "One moment, I am passing you to a colleague with your details.",
+        "hi": "एक क्षण, आपको सहकर्मी से जोड़ा जा रहा है।",
+        "hinglish": "Ek minute, aapko colleague se connect kiya ja raha hai.",
+        "mr": "एक क्षण, तुम्हाला सहकाऱ्याशी जोडले जात आहे."
+      },
+      "timeout_s": 5,
+      "trigger": "On-Call"
+    },
+    {
+      "name": "handover",
+      "description": "Trigger when the caller asks for a person, when two attempts to understand failed, or when the request is out of scope. Passes a case summary.",
+      "method": "POST",
+      "url": "${PUBLIC_GATEWAY_URL}/actions/handover",
+      "headers": {
+        "X-Gateway-Secret": "${GATEWAY_SHARED_SECRET}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "call_id": "{{conversation_id}}",
+        "language": "{{language}}",
+        "reason": "{{reason}}",
+        "summary": "{{summary}}"
+      },
+      "variables": [
+        {
+          "name": "call_id",
+          "type": "string",
+          "description": "Always {{conversation_id}}",
+          "required": true
+        },
+        {
+          "name": "language",
+          "type": "string",
+          "description": "Caller's CURRENT language",
+          "required": true,
+          "enum": [
+            "en",
+            "hi",
+            "hinglish",
+            "mr"
+          ]
+        },
+        {
+          "name": "reason",
+          "type": "string",
+          "description": "Short reason: unclear, out_of_scope, caller_request, brute_force, hardship, other",
+          "required": true
+        },
+        {
+          "name": "summary",
+          "type": "string",
+          "description": "Two or three neutral sentences: what was asked, what is done, what is pending. No secrets or full identifiers.",
+          "required": true
+        }
+      ],
+      "speak_during_action": {
+        "en": "One moment, I am passing you to a colleague with your details.",
+        "hi": "एक क्षण, आपको सहकर्मी से जोड़ा जा रहा है।",
+        "hinglish": "Ek minute, aapko colleague se connect kiya ja raha hai.",
+        "mr": "एक क्षण, तुम्हाला सहकाऱ्याशी जोडले जात आहे."
+      },
+      "timeout_s": 5,
+      "trigger": "On-Call"
+    },
+    {
+      "name": "end_call",
+      "description": "Trigger at the end of every call, after the goodbye line is decided.",
+      "method": "POST",
+      "url": "${PUBLIC_GATEWAY_URL}/actions/end_call",
+      "headers": {
+        "X-Gateway-Secret": "${GATEWAY_SHARED_SECRET}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "call_id": "{{conversation_id}}",
+        "language": "{{language}}",
+        "outcome": "{{outcome}}"
+      },
+      "variables": [
+        {
+          "name": "call_id",
+          "type": "string",
+          "description": "Always {{conversation_id}}",
+          "required": true
+        },
+        {
+          "name": "language",
+          "type": "string",
+          "description": "Caller's CURRENT language",
+          "required": true,
+          "enum": [
+            "en",
+            "hi",
+            "hinglish",
+            "mr"
+          ]
+        },
+        {
+          "name": "outcome",
+          "type": "string",
+          "description": "How the call ended",
+          "required": true,
+          "enum": [
+            "completed",
+            "handover",
+            "caller_hung_up",
+            "blocked"
+          ]
+        }
+      ],
+      "speak_during_action": {
+        "en": "",
+        "hi": "",
+        "hinglish": "",
+        "mr": ""
+      },
+      "timeout_s": 5,
+      "trigger": "On-Call"
+    }
+  ]
+}
