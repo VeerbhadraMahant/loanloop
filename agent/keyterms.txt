@@ -1,0 +1,100 @@
+IFSC
+MICR
+UTR
+EMI
+NOC
+KYC
+OTP
+MPIN
+UPI
+NEFT
+RTGS
+foreclosure
+nominee
+Sahyadri
+Sahyadri Finance Bank
+SAHY
+customer ID
+loan number
+account number
+interest certificate
+statement
+reconciliation
+rate reset
+penal charges
+bounce charges
+processing fee
+Kothrud
+Shivajinagar
+Baner
+Andheri
+Dadar
+Thane
+Nashik Road
+Nagpur Sitabuldi
+Pune
+Mumbai
+Nagpur
+Nashik
+Aurangabad
+Kolhapur
+Solapur
+Hinjewadi
+Viman Nagar
+Hadapsar
+Borivali
+Bandra
+Kalyan
+Dharampeth
+Sadar
+Satara
+Sangli
+January
+February
+March
+April
+May
+June
+July
+August
+September
+October
+November
+December
+जनवरी
+फ़रवरी
+मार्च
+अप्रैल
+जून
+जुलाई
+अगस्त
+सितंबर
+अक्टूबर
+नवंबर
+दिसंबर
+किस्त
+ईएमआई
+आईएफएससी
+खाता संख्या
+ऋण
+कर्ज
+शाखा
+पता
+नामांकित
+नॉमिनी
+पासवर्ड
+पिन
+बकाया
+भुगतान
+रसीद
+हप्ता
+कर्ज खाते
+नामनिर्देशित
+थकबाकी
+एप्रिल
+मे
+ऑगस्ट
+सप्टेंबर
+ऑक्टोबर
+नोव्हेंबर
+डिसेंबर
