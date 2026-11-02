@@ -30,6 +30,7 @@ async def start_call(inp: StartCallIn, session, db: AsyncSession, bg: Background
     existing = await db.get(Call, inp.call_id)
     if existing is None:
         db.add(Call(call_id=inp.call_id, language=inp.language))
+    bg.add_task(events.publish, {"type": "call_start", "call_id": inp.call_id, "language": inp.language, "tier": 0})
     return ActionResponse(ok=True, speak=t("call_started", inp.language), data={"matched_caller": cust_id is not None})
 
 
@@ -50,8 +51,11 @@ class SecretSpokenIn(ActionIn):
 
 @action("report_secret_spoken", In=SecretSpokenIn, router=router, scan_exempt=("secret_type",))
 async def report_secret_spoken(inp: SecretSpokenIn, session, db: AsyncSession, bg: BackgroundTasks) -> ActionResponse:
-    await events.publish({"type": "security", "call_id": inp.call_id, "event": "SECRET_SPOKEN_REPORTED",
-                          "secret_type": inp.secret_type})
+    cref, ckey = await events.customer_info(db, session.customer_id)
+    await events.publish({"type": "security", "call_id": inp.call_id, "action": "report_secret_spoken",
+                          "tier": session.tier, "outcome": "blocked", "language": inp.language,
+                          "customer_ref": cref, "customer_key": ckey,
+                          "detail": f"Caller spoke a secret ({inp.secret_type}); not stored"})
     return ActionResponse(ok=True, speak=t("secret_reassure", inp.language), data={"secret_type": inp.secret_type})
 
 
@@ -64,4 +68,8 @@ async def end_call(inp: EndCallIn, session, db: AsyncSession, bg: BackgroundTask
     call = await db.get(Call, inp.call_id)
     if call is not None:
         call.ended_at, call.outcome, call.customer_id = now(), inp.outcome, session.customer_id
+    cref, ckey = await events.customer_info(db, session.customer_id)
+    bg.add_task(events.publish, {"type": "call_end", "call_id": inp.call_id, "language": inp.language,
+                                 "tier": session.tier, "customer_ref": cref, "customer_key": ckey,
+                                 "detail": inp.outcome})
     return ActionResponse(ok=True, speak=t("call_ended", inp.language), data={"outcome": inp.outcome})

@@ -76,10 +76,20 @@ def action(name: str, In: type[ActionIn], router: APIRouter, needs_session: bool
                 if commit:
                     await db.commit()
                 try:
+                    blocked = resp.error_code in events.BLOCKED_CODES
+                    cref = ckey = None
+                    cid = sess.customer_id if sess is not None else None
+                    if cid is not None:
+                        cref, ckey = await events.customer_info(db, cid)
+                    f = flags or {}
+                    detail = resp.error_code and (
+                        f"{resp.error_code}: field {f['field']} ({f.get('secret_type')})" if "field" in f and "security" in f
+                        else resp.error_code)
                     await events.publish({
-                        "type": "action", "call_id": call_id, "action": name, "tier": tier, "language": lang,
-                        "outcome": outcome, "latency_ms": ms(), "error_code": resp.error_code,
-                        "data": resp.data if resp.ok else {},
+                        "type": "security" if blocked else "action", "call_id": call_id, "action": name,
+                        "tier": tier, "language": lang, "outcome": "blocked" if blocked else outcome,
+                        "latency_ms": ms(), "error_code": resp.error_code, "customer_ref": cref,
+                        "customer_key": ckey, "detail": detail,
                     })
                 except Exception:  # live feed must never break an action
                     log.warning("event publish failed")
@@ -104,8 +114,6 @@ def action(name: str, In: type[ActionIn], router: APIRouter, needs_session: bool
             hit = _scan(body, exempt)
             if hit:
                 field, stype = hit
-                await events.publish({"type": "security", "call_id": call_id, "action": name,
-                                      "event": "SECRET_DETECTED", "field": field, "secret_type": stype})
                 return await finish(err("SECRET_DETECTED", "secret_warning"),
                                     flags={"security": "SECRET_DETECTED", "field": field, "secret_type": stype})
 
