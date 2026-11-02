@@ -1,5 +1,6 @@
 // Next 16 "proxy" (ex-middleware): HTTP Basic auth over the whole app when WEB_BASIC_AUTH=user:pass is set.
-// Unset = localhost dev. The phone page can approve tier-2, so never expose the web app without this.
+// Fails closed: with it unset, requests are refused unless WEB_AUTH_DISABLED=1 (localhost demo only).
+// The phone page can approve tier-2, so never expose the web app without WEB_BASIC_AUTH.
 import { NextResponse, type NextRequest } from "next/server";
 
 function safeEqual(a: string, b: string): boolean {
@@ -10,7 +11,10 @@ function safeEqual(a: string, b: string): boolean {
 
 export function proxy(req: NextRequest) {
   const want = process.env.WEB_BASIC_AUTH;
-  if (!want) return NextResponse.next();
+  if (!want) {
+    if (process.env.WEB_AUTH_DISABLED === "1") return NextResponse.next();
+    return new Response("WEB_BASIC_AUTH not set (set WEB_AUTH_DISABLED=1 for a localhost demo)", { status: 503 });
+  }
   const h = req.headers.get("authorization") ?? "";
   let got = "";
   if (h.startsWith("Basic ")) {
