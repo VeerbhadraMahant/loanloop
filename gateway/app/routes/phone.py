@@ -9,6 +9,7 @@ from app.db.session import get_db
 from app.routes.actions.approvals import APPROVAL_TTL, expire_if_stale
 from app.security.auth import require_dashboard
 from app.security.mask import mask_mobile
+from app.sms import PERSONAS
 
 router = APIRouter(prefix="/phone", dependencies=[Depends(require_dashboard)])
 
@@ -17,8 +18,8 @@ async def _customer(key: str, db: AsyncSession) -> Customer:
     key = key.lower()
     if key.startswith("c") and key[1:].isdigit():
         c = await db.get(Customer, int(key[1:]))
-    elif key in {"priya", "ramesh", "sunita"}:
-        c = (await db.execute(select(Customer).where(Customer.name.ilike(f"{key} %")).order_by(Customer.id))).scalars().first()
+    elif key in PERSONAS:
+        c = (await db.execute(select(Customer).where(Customer.name == PERSONAS[key]).order_by(Customer.id))).scalars().first()
     else:
         c = None
     if c is None:

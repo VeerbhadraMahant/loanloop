@@ -15,7 +15,9 @@ async def send_sms(customer: Customer, body: str, call_id: str | None = None) ->
                           "detail": f"SMS sent to {mask_mobile(customer.registered_mobile)}"})
 
 
+PERSONAS = {"priya": "Priya Deshmukh", "ramesh": "Ramesh Patil", "sunita": "Sunita Kulkarni"}
+
+
 def customer_key(customer: Customer) -> str:
-    """Phone-app key: persona first name for demo personas, else 'c<id>'."""
-    first = customer.name.split()[0].lower()
-    return first if first in {"priya", "ramesh", "sunita"} else f"c{customer.id}"
+    """Phone-app key: persona slug for the exact demo personas, else 'c<id>' (other seeded Priyas get c<id>)."""
+    return next((k for k, n in PERSONAS.items() if n == customer.name), f"c{customer.id}")
