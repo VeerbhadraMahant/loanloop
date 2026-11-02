@@ -1,8 +1,8 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-export const GATEWAY = process.env.NEXT_PUBLIC_GATEWAY_URL ?? "http://localhost:8000";
-const TOKEN = process.env.NEXT_PUBLIC_DASHBOARD_TOKEN ?? "";
+// Browser only talks to its own origin; app/gw/[...path]/route.ts proxies to the gateway with the token.
+export const GATEWAY = "/gw";
 
 export type EventType = "call_start" | "call_end" | "action" | "security" | "sms" | "approval" | "handover";
 export type Outcome = "ok" | "error" | "blocked";
@@ -54,16 +54,14 @@ export interface Metrics {
 export interface Sms { id: string; body: string; created_at: string }
 export interface Approval { id: string; purpose: string; status: string; created_at: string; expires_at: string }
 
-const headers = { Authorization: `Bearer ${TOKEN}` };
-
 export async function get<T>(path: string): Promise<T> {
-  const r = await fetch(`${GATEWAY}${path}`, { headers, cache: "no-store" });
+  const r = await fetch(`${GATEWAY}${path}`, { cache: "no-store" });
   if (!r.ok) throw new Error(`${path}: HTTP ${r.status}`);
   return r.json() as Promise<T>;
 }
 
 export async function post<T>(path: string): Promise<T> {
-  const r = await fetch(`${GATEWAY}${path}`, { method: "POST", headers });
+  const r = await fetch(`${GATEWAY}${path}`, { method: "POST" });
   if (!r.ok) throw new Error(`${path}: HTTP ${r.status}`);
   return r.json() as Promise<T>;
 }
@@ -74,7 +72,7 @@ export function useEvents(onEvent: (e: GwEvent) => void): boolean {
   const cb = useRef(onEvent);
   useEffect(() => { cb.current = onEvent; });
   useEffect(() => {
-    const es = new EventSource(`${GATEWAY}/events/stream?token=${encodeURIComponent(TOKEN)}`);
+    const es = new EventSource(`${GATEWAY}/events/stream`);
     es.onopen = () => setLive(true);
     es.onerror = () => setLive(false);
     es.onmessage = (m) => {
