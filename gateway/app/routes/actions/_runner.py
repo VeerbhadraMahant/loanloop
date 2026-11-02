@@ -57,7 +57,7 @@ def _scan(body: Any, exempt: set[str]) -> tuple[str, str] | None:
 
 
 def action(name: str, In: type[ActionIn], router: APIRouter, needs_session: bool = True, ends_session: bool = False, scan_exempt: tuple[str, ...] = ()):
-    exempt = set(scan_exempt)
+    exempt = set(scan_exempt) | {"call_id"}  # platform-issued id (regex-validated), never caller speech; all-digit ids tripped the card check
 
     def deco(fn: Handler) -> Handler:
         @router.post(f"/{name}", name=name, dependencies=[Depends(require_agent)], response_model=ActionResponse)

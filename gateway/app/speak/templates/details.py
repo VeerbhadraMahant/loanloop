@@ -7,7 +7,7 @@ LABELS = {
     "ifsc": {"en": "branch IFSC", "hi": "ब्रांच का आईएफएससी", "hinglish": "branch ka IFSC", "mr": "शाखेचा आयएफएससी"},
     "branch": {"en": "branch", "hi": "ब्रांच", "hinglish": "branch", "mr": "शाखा"},
 }
-ENDING = {"en": "ending {d}", "hi": "{d} पर समाप्त", "hinglish": "{d} par khatam hone wala", "mr": "{d} वर संपणारा"}
+ENDING = {"en": "ending {d}", "hi": "{d} पर समाप्त होने वाला", "hinglish": "{d} se khatam hone wala", "mr": "{d} ने संपणारा"}
 
 
 def spell_ifsc(ifsc: str) -> str:
@@ -54,9 +54,9 @@ T = {
     },
     "sms_sent": {
         "en": "I have sent the details by SMS to your number {v}. For your safety I do not read them out.",
-        "hi": "मैंने विवरण आपके नंबर {v} पर एसएमएस से भेज दिया है। आपकी सुरक्षा के लिए मैं इन्हें बोलकर नहीं बताती।",
-        "hinglish": "Maine details aapke number {v} par SMS se bhej di hain. Aapki safety ke liye main inhe bolkar nahi batati.",
-        "mr": "मी तपशील तुमच्या क्रमांक {v} वर एसएमएसने पाठवले आहेत. तुमच्या सुरक्षेसाठी मी ते बोलून सांगत नाही.",
+        "hi": "मैंने विवरण आपके {v} नंबर पर एसएमएस से भेज दिया है। आपकी सुरक्षा के लिए मैं इन्हें बोलकर नहीं बताती।",
+        "hinglish": "Maine details aapke {v} number par SMS se bhej di hain. Aapki safety ke liye main inhe bolkar nahi batati.",
+        "mr": "मी तपशील तुमच्या {v} क्रमांकावर एसएमएसने पाठवले आहेत. तुमच्या सुरक्षेसाठी मी ते बोलून सांगत नाही.",
     },
     "pw_app": {
         "en": "To reset your password in the Sahyadri app: open the app, tap Forgot Password on the login screen, enter your registered mobile number, and follow the steps on screen. The bank will never ask you for your password, PIN or OTP, not even on a call.",

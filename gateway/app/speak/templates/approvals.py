@@ -2,7 +2,7 @@ T = {
     "approval_sent": {
         "en": "I have sent a request to the Sahyadri app on your phone. Please open it and tap Approve, then tell me when you are done.",
         "hi": "मैंने आपके फ़ोन पर सह्याद्रि ऐप में अनुरोध भेजा है। कृपया उसे खोलकर मंज़ूर करें पर टैप करें, फिर मुझे बताएं।",
-        "hinglish": "Maine aapke phone ke Sahyadri app mein request bheji hai. Please use kholkar Approve par tap kijiye, phir mujhe bataiye.",
+        "hinglish": "Maine aapke phone ke Sahyadri app mein request bheji hai. Please ise kholkar Approve par tap kijiye, phir mujhe bataiye.",
         "mr": "मी तुमच्या फोनवरील सह्याद्री ॲपमध्ये विनंती पाठवली आहे. कृपया ते उघडून मंजूर करा वर टॅप करा, मग मला सांगा.",
     },
     "approval_pending": {

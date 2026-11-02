@@ -227,3 +227,8 @@ async def test_audit_written_for_actions(client):
     async with SessionLocal() as db:
         rows = (await db.execute(select(AuditLog).where(AuditLog.call_id == "aud1"))).scalars().all()
         assert rows and rows[0].action == "start_call" and rows[0].latency_ms >= 0
+
+
+async def test_digit_only_call_id_is_not_a_secret(client):
+    cid = "4111111111111111"  # Luhn-valid 16 digits: a platform call id, not a card
+    assert (await call(client, "start_call", call_id=cid))["ok"]

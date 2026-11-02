@@ -29,6 +29,8 @@ def _env(key: str, default: str) -> str:
 SECRET = _env("GATEWAY_SHARED_SECRET", "dev-shared-secret-change-me")
 TOKEN = _env("DASHBOARD_TOKEN", "dev-dashboard-token-change-me")
 ROWS = fixtures.load()
+# 1-3 s think time at 1,000 users is ~500 rps (a stress run); the spec target of 50-125 rps needs LL_THINK=8,16
+THINK_LO, THINK_HI = (float(x) for x in os.environ.get("LL_THINK", "1,3").split(","))
 LANGS = ["en", "hi", "hinglish", "mr"]
 IFSCS = ["SAHY0000101", "SAHY0000105", "SAHY0000112", "SAHY0000199"]  # last one does not exist
 BRANCHES = ["Kothrud", "Baner", "Nashik Road", "Sitabuldi", "Hadapsar"]
@@ -41,7 +43,7 @@ class Caller(HttpUser):
         self.client.headers["X-Gateway-Secret"] = SECRET
 
     def think(self):
-        gevent.sleep(random.uniform(1, 3))  # caller speaking + agent turn
+        gevent.sleep(random.uniform(THINK_LO, THINK_HI))  # caller speaking + agent turn
 
     def act(self, action: str, ok: bool | None = True, **body) -> dict:
         body.update(call_id=self.cid, language=self.lang)
@@ -104,8 +106,11 @@ class Caller(HttpUser):
 
     @task(20)
     def wrong_verify_call(self):
+        # a guesser with a fresh unregistered number each call: using real customers would trip their 3/hour lockout
+        # (correct behaviour, CLAUDE.md 6.5) and fail the legitimate calls of the same customers
         c = fixtures.pick(ROWS)
         self.begin(c)
+        mobile = "91" + "".join(random.choices("0123456789", k=8))
         for _ in range(2):
-            self.act("verify_caller", ok=False, registered_mobile=c["mobile"], dob=fixtures.wrong_dob(c["dob"]))
+            self.act("verify_caller", ok=False, registered_mobile=mobile, dob=fixtures.wrong_dob(c["dob"]))
         self.act("end_call", outcome="blocked")

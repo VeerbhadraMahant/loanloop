@@ -18,8 +18,12 @@ def redact(text: str) -> str:
 
 class RedactFilter(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
-        record.msg = redact(record.getMessage())
-        record.args = ()
+        if record.name == "uvicorn.access" and isinstance(record.args, tuple):
+            # uvicorn's AccessFormatter unpacks the 5 args itself; redact them in place instead of flattening
+            record.args = tuple(redact(a) if isinstance(a, str) else a for a in record.args)
+        else:
+            record.msg = redact(record.getMessage())
+            record.args = ()
         if record.exc_info:  # tracebacks may embed values
             record.exc_text = redact(logging.Formatter().formatException(record.exc_info))
             record.exc_info = None

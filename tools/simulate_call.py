@@ -76,8 +76,18 @@ class Sim:
         r = self.c.request("POST" if post else "GET", f"/phone/{key}{path}", headers=self.auth)
         return r.json() if r.status_code == 200 else None
 
+    def last_sms(self, key: str) -> int:
+        return max([m["id"] for m in self.phone(key, "/sms") or []], default=0)  # inbox is capped at 50, so compare ids
+
+    def new_sms(self, key: str, n0: int) -> bool:
+        for _ in range(10):  # SMS is a background task: it lands just after the response
+            if self.last_sms(key) > n0:
+                return True
+            time.sleep(0.2)
+        return False
+
     def expect(self, label: str, cond: bool, why: str) -> None:
-        self._report(label, 0, cond, None, why, [] if cond else [why])
+        self._report(label, 0, cond, None, "" if cond else why, [] if cond else [why])
 
 
 def priya(base: str) -> int:
@@ -86,9 +96,9 @@ def priya(base: str) -> int:
     s.act("check_payment", {"ok": False, "codes": {"SECRET_DETECTED"}}, date=p["date"], amount=1, utr="my password is Tiger@123")
     s.act("report_secret_spoken", secret_type="password")
     s.act("verify_caller", registered_mobile=p["mobile"], dob=p["dob"])
-    n0 = len(s.phone(p["key"], "/sms") or [])
+    n0 = s.last_sms(p["key"])
     s.act("send_details_sms", {"ok": True, "contains": ["4417"]}, fields=["ifsc", "customer_id"])
-    s.expect("sms in mock phone", len(s.phone(p["key"], "/sms") or []) > n0, "no new SMS in /phone/priya/sms")
+    s.expect("sms in mock phone", s.new_sms(p["key"], n0), "no new SMS in /phone/priya/sms")
     j = s.act("request_app_approval", purpose="Check my payment")
     aid = (j.get("data") or {}).get("approval_id")
     s.expect("approval id returned", bool(aid), "data.approval_id missing")
@@ -112,9 +122,9 @@ def attacker(base: str) -> int:
     s.act("start_call", caller_number=p["mobile"])
     s.act("send_details_sms", tier, fields=["account_number"])  # caller ID alone is not proof
     s.act("verify_caller", registered_mobile=p["mobile"], dob=p["dob"])  # attacker knows mobile + DOB: tier 1 only
-    n0 = len(s.phone(p["key"], "/sms") or [])
+    n0 = s.last_sms(p["key"])
     s.act("send_details_sms", {"ok": True, "contains": ["4417"], "absent": [ATTACKER_MOBILE[-4:], p["mobile"]]}, fields=["account_number", "ifsc"])
-    s.expect("SMS went to Priya's phone", len(s.phone(p["key"], "/sms") or []) > n0, "no new SMS in /phone/priya/sms")
+    s.expect("SMS went to Priya's phone", s.new_sms(p["key"], n0), "no new SMS in /phone/priya/sms")
     j = s.act("request_app_approval", purpose="Attacker approval")
     aid = (j.get("data") or {}).get("approval_id")  # never approved
     if aid:
@@ -126,6 +136,7 @@ def attacker(base: str) -> int:
 
 
 def main(argv=None) -> int:
+    sys.stdout.reconfigure(encoding="utf-8")  # speak text has Rupee signs and Devanagari; Windows default is cp1252
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--scenario", choices=["priya", "attacker", "all"], default="all")
     ap.add_argument("--base", default="http://localhost:8000")
