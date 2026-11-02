@@ -1,0 +1,21 @@
+# Personas (fixed values, produced by `app/db/seed.py`)
+
+Reference "today" for the seed is 2026-11-01. All data is synthetic.
+
+## Priya Deshmukh (customer id 1) - Hinglish/Marathi, floating home loan
+- Registered mobile `9000014417` (ending 4417), DOB `1991-08-14`, email priya.deshmukh@example.com, CIF `SFB00000001`
+- Account ending `0417`, branch Sahyadri Finance Bank Kothrud, IFSC `SAHY0000101`
+- Home loan, loan_last4 `7391`, principal 35,00,000, 240 months, floating, EMI day 5
+- Rate reset effective 2026-09-21: 8.75% -> 9.25%, EMI Rs 30,930 -> Rs 32,055 (current EMI 32,055), outstanding Rs 32,86,450
+- Charges: bounce Rs 590 on 2026-09-06, penal Rs 354 on 2026-09-20
+- Unmatched payment: 2026-10-04, Rs 32,055, UTR `SAHYR61004738291`, channel upi
+
+## Ramesh Patil (id 2) - Hindi, personal loan
+- Mobile `9000023158`, DOB `1984-03-22`, Nashik Road branch, loan_last4 `5520`
+- Personal loan Rs 5,00,000, 48 months, fixed 13.5%, EMI Rs 13,538, EMI day 10, outstanding Rs 3,91,800
+
+## Sunita Kulkarni (id 3) - Marathi, vehicle loan, hardship
+- Mobile `9000030912`, DOB `1979-11-05`, loan_last4 `8864`
+- Vehicle loan Rs 8,00,000, 60 months, fixed 10.5%, EMI Rs 17,195, EMI day 15, outstanding Rs 6,12,300, loan status `hardship`
+
+Seed: `cd gateway && uv run python ../tools/seed_data.py` (drops and recreates all tables in DATABASE_URL; 200 customers, 25 branches, 35 rate resets, 40 loans with charges, 25 unmatched payments, 5 hardship loans).

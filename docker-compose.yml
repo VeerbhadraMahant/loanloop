@@ -1,0 +1,13 @@
+services:
+  postgres:
+    image: postgres:16
+    environment: {POSTGRES_USER: loanloop, POSTGRES_PASSWORD: loanloop, POSTGRES_DB: loanloop}
+    ports: ["55432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+  redis:
+    image: redis:7
+    ports: ["56379:6379"]
+    volumes: [redisdata:/data]
+volumes:
+  pgdata:
+  redisdata:

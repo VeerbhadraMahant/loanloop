@@ -1,0 +1,74 @@
+T = {
+    "secret_warning": {
+        "en": "Please do not share your password, PIN, OTP or card details with me. I have not saved it. Let us continue without it.",
+        "hi": "कृपया अपना पासवर्ड, पिन, ओटीपी या कार्ड की जानकारी मुझे न बताएं। मैंने इसे सेव नहीं किया है। हम इसके बिना आगे बढ़ते हैं।",
+        "hinglish": "Please apna password, PIN, OTP ya card details mujhe mat bataiye. Maine ise save nahi kiya hai. Hum iske bina aage badhte hain.",
+        "mr": "कृपया तुमचा पासवर्ड, पिन, ओटीपी किंवा कार्डची माहिती मला सांगू नका. मी ती सेव्ह केलेली नाही. आपण ती न घेता पुढे जाऊ.",
+    },
+    "secret_reassure": {
+        "en": "Thank you for stopping. Nothing was saved. Never share these with anyone, including the bank.",
+        "hi": "रुकने के लिए धन्यवाद। कुछ भी सेव नहीं हुआ। इन्हें किसी के साथ, बैंक के साथ भी, कभी साझा न करें।",
+        "hinglish": "Rukne ke liye thank you. Kuch bhi save nahi hua. Ye cheezein kisi ko, bank ko bhi, kabhi share mat kijiye.",
+        "mr": "थांबल्याबद्दल धन्यवाद. काहीही सेव्ह झाले नाही. हे कोणालाही, बँकेलाही, कधीही सांगू नका.",
+    },
+    "not_verified": {
+        "en": "I need to verify you first. Please tell me your registered mobile number and date of birth.",
+        "hi": "पहले मुझे आपकी पहचान सत्यापित करनी होगी। कृपया अपना पंजीकृत मोबाइल नंबर और जन्मतिथि बताएं।",
+        "hinglish": "Pehle mujhe aapko verify karna hoga. Please apna registered mobile number aur date of birth bataiye.",
+        "mr": "आधी मला तुमची ओळख पडताळावी लागेल. कृपया तुमचा नोंदणीकृत मोबाइल नंबर आणि जन्मतारीख सांगा.",
+    },
+    "tier_too_low": {
+        "en": "For this I need your approval in the bank app on your phone. I will send a request.",
+        "hi": "इसके लिए मुझे आपके फ़ोन पर बैंक ऐप में आपकी मंज़ूरी चाहिए। मैं एक अनुरोध भेजती हूँ।",
+        "hinglish": "Iske liye mujhe aapke phone ke bank app mein aapki approval chahiye. Main ek request bhejti hoon.",
+        "mr": "यासाठी मला तुमच्या फोनवरील बँक ॲपमध्ये तुमची मंजुरी हवी आहे. मी विनंती पाठवते.",
+    },
+    "need_approval": {
+        "en": "Please open the bank app on your phone and tap Approve.",
+        "hi": "कृपया अपने फ़ोन पर बैंक ऐप खोलें और मंज़ूर करें पर टैप करें।",
+        "hinglish": "Please apne phone par bank app kholiye aur Approve par tap kijiye.",
+        "mr": "कृपया तुमच्या फोनवर बँक ॲप उघडा आणि मंजूर करा वर टॅप करा.",
+    },
+    "invalid_input": {
+        "en": "I could not understand that detail. Could you say it again?",
+        "hi": "मैं वह जानकारी समझ नहीं पाई। क्या आप दोबारा बता सकते हैं?",
+        "hinglish": "Main wo detail samajh nahi payi. Kya aap dobara bata sakte hain?",
+        "mr": "ती माहिती मला समजली नाही. कृपया पुन्हा सांगाल का?",
+    },
+    "rate_limited": {
+        "en": "Too many attempts. I will connect you to a colleague who can help.",
+        "hi": "बहुत अधिक प्रयास हो गए। मैं आपको हमारे सहकर्मी से जोड़ती हूँ।",
+        "hinglish": "Bahut zyada attempts ho gaye. Main aapko hamare colleague se connect karti hoon.",
+        "mr": "खूप प्रयत्न झाले. मी तुम्हाला आमच्या सहकाऱ्याशी जोडते.",
+    },
+    "not_found": {
+        "en": "I could not find that. Could you check and tell me again?",
+        "hi": "मुझे वह नहीं मिला। कृपया जाँचकर फिर बताएं।",
+        "hinglish": "Mujhe wo nahi mila. Please check karke phir bataiye.",
+        "mr": "ते मला सापडले नाही. कृपया तपासून पुन्हा सांगा.",
+    },
+    "generic_error": {
+        "en": "Sorry, something went wrong on our side. Let me connect you to a colleague.",
+        "hi": "क्षमा करें, हमारी तरफ़ से कुछ गड़बड़ हुई। मैं आपको सहकर्मी से जोड़ती हूँ।",
+        "hinglish": "Sorry, hamari taraf se kuch gadbad ho gayi. Main aapko colleague se connect karti hoon.",
+        "mr": "क्षमस्व, आमच्याकडून काहीतरी चूक झाली. मी तुम्हाला सहकाऱ्याशी जोडते.",
+    },
+    "call_started": {
+        "en": "Welcome to Sahyadri Finance Bank. How can I help you today?",
+        "hi": "सह्याद्रि फ़ाइनेंस बैंक में आपका स्वागत है। मैं आपकी क्या मदद कर सकती हूँ?",
+        "hinglish": "Sahyadri Finance Bank mein aapka swagat hai. Main aapki kya madad kar sakti hoon?",
+        "mr": "सह्याद्री फायनान्स बँकेत आपले स्वागत आहे. मी तुमची काय मदत करू?",
+    },
+    "readback_ok": {
+        "en": "Noted, thank you.",
+        "hi": "ठीक है, धन्यवाद।",
+        "hinglish": "Theek hai, thank you.",
+        "mr": "ठीक आहे, धन्यवाद.",
+    },
+    "call_ended": {
+        "en": "Thank you for calling Sahyadri Finance Bank. Goodbye.",
+        "hi": "सह्याद्रि फ़ाइनेंस बैंक को कॉल करने के लिए धन्यवाद। नमस्कार।",
+        "hinglish": "Sahyadri Finance Bank ko call karne ke liye thank you. Namaste.",
+        "mr": "सह्याद्री फायनान्स बँकेला कॉल केल्याबद्दल धन्यवाद. नमस्कार.",
+    },
+}

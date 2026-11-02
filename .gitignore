@@ -6,3 +6,4 @@ node_modules/
 *.pyc
 tools/out/
 .pytest_cache/
+.claude/worktrees/

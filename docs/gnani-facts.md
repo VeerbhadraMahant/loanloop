@@ -27,5 +27,12 @@
 - Embedding: `POST /api/v1/tts/voice-clone/embeddings`, multipart `audio_file`, 5–30 s clean audio. Returns `data.voice_clone_embedding {embedding, shape [1,768], dtype}`.
 - Synthesis: same TTS endpoints with `model: "vachana-vc-v1"` and `speaker_embedding {embedding, shape, dtype}`, no `voice`.
 
-## Agent Builder
-See NOTES.md section "Agent Builder findings".
+## Agent Builder (Platform API)
+- Base `https://api.inya.ai/platform`, header `x-api-key`. Envelope `{status, requestId, message, response}`. 429 → exponential backoff; 409 duplicate name.
+- `GET /v1/agents/config/llm_models` lists claude/gpt models too — we MUST use only Gnani "Pampa Go" / "Pampa Priority" (exact strings, with space). Both functionCalling true.
+- `POST /v1/agents` (201, botId); `PUT /v1/agents/{botId}`; `POST /v1/agents/{botId}/trigger_call?environment=development` body {phone, countryCode "+91", name}; `POST /v1/conversations/logs?environment=development` {pageNo, botId}; `GET /v1/conversations/{id}/stats`; `GET /v1/conversations/{id}/audio` (audio/mpeg).
+- Agent `asrParams.phraseConfig.phrase` (≤100 entries) + `phraseWeight` 0–2 for vocabulary-capable ASR. Transcriber list shows `gnani_vachana_rest`, `gnani_v2` (Prisma v3 keyterms in Agent Builder: NOT IN DOCS).
+- `ttsParams {provider, voice, language, ttsRate 0.5–2.0, enableCaching}`, example provider `vachana_timbre-v2.5`.
+- Custom Actions (console): name [A-Za-z0-9_], description (when to trigger), method+URL from an integration, Headers/Params/Body toggles, body vars `{{var}}`, timeout seconds (range NOT IN DOCS; timeout → error), On-Call with "Speak During Action" + before/after variables, or Post-Call.
+- Variables `{{name}}` usable in greeting/system prompt; `conversation_id` exists. Caller ANI variable: NOT IN DOCS → agent asks for registered mobile; we treat caller_number as a claim only.
+- Concurrency limit, log redaction/retention: NOT IN DOCS.
