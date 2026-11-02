@@ -1,5 +1,10 @@
 import type { Metadata } from "next";
+import { Inter, Instrument_Serif } from "next/font/google";
 import "./globals.css";
+
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
+// Substitute for Gnani's Gambarino display serif (Fontshare, not on Google Fonts).
+const instrument = Instrument_Serif({ subsets: ["latin"], weight: "400", variable: "--font-instrument", display: "swap" });
 
 export const metadata: Metadata = {
   title: "LoanLoop",
@@ -8,8 +13,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className="min-h-screen bg-slate-50 text-slate-900 antialiased">{children}</body>
+    <html lang="en" className={`${inter.variable} ${instrument.variable}`}>
+      <body className="min-h-screen antialiased">{children}</body>
     </html>
   );
 }

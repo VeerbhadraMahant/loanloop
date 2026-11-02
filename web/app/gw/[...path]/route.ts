@@ -30,7 +30,23 @@ async function proxy(req: Request, ctx: { params: Promise<{ path: string[] }> })
     headers.set("content-type", upstream.headers.get("content-type") ?? "application/json");
     headers.set("cache-control", "no-cache, no-transform");
     headers.set("x-accel-buffering", "no");
-    return new Response(upstream.body, { status: upstream.status, headers });
+    // Next holds response headers until the first body chunk, so an idle SSE stream looks disconnected.
+    // Prime it with an SSE comment (ignored by EventSource) so headers flush at once.
+    let body: BodyInit | null = upstream.body;
+    if (joined === "events/stream" && upstream.body) {
+      const src = upstream.body.getReader();
+      body = new ReadableStream({
+        start(c) { c.enqueue(new TextEncoder().encode(": connected\n\n")); },
+        async pull(c) {
+          try {
+            const r = await src.read();
+            if (r.done) c.close(); else c.enqueue(r.value);
+          } catch { c.close(); } // upstream dropped or client left
+        },
+        cancel(reason) { return src.cancel(reason); },
+      });
+    }
+    return new Response(body, { status: upstream.status, headers });
   } catch {
     return Response.json({ error: "gateway unreachable" }, { status: 502 });
   }

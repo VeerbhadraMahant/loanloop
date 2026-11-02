@@ -1,10 +1,134 @@
 @import "tailwindcss";
 
-body {
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+/* Semantic tokens (Gnani-style: light, calm, monochrome with a sparing orange/peach accent). */
+:root {
+  --bg: #f9fafb;
+  --card: #ffffff;
+  --line: #e6e6e6;
+  --fg: #000000;
+  --muted: #55555c;
+  --primary: #000000;
+  --primary-fg: #ffffff;
+  --accent: #ff7a1a;
+  --accent-soft: #ffd8b8;
+  --accent-ink: #9a3a00;
+  --ok-bg: #dcfce7;
+  --ok-fg: #14532d;
+  --warn-bg: #ffedd5;
+  --warn-fg: #7c2d12;
+  --danger-bg: #fee2e2;
+  --danger-fg: #7f1d1d;
+  --danger-line: #b91c1c;
+  --sunken: #f3f4f6;
+  --wash-from: #ffd8b8;
+  --wash-to: #f9fafb;
+  --ring: #000000;
+  --bezel: #1c1c1e;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b0b0c;
+    --card: #161618;
+    --line: #26262a;
+    --fg: #f5f5f5;
+    --muted: #a1a1aa;
+    --primary: #ffffff;
+    --primary-fg: #000000;
+    --accent: #ff8a33;
+    --accent-soft: #5a2e10;
+    --accent-ink: #ffb27a;
+    --ok-bg: #052e16;
+    --ok-fg: #86efac;
+    --warn-bg: #3a1a08;
+    --warn-fg: #fdba74;
+    --danger-bg: #450a0a;
+    --danger-fg: #fca5a5;
+    --danger-line: #f87171;
+    --sunken: #101012;
+    --wash-from: #3b1d0a;
+    --wash-to: #0b0b0c;
+    --ring: #ffffff;
+    --bezel: #2a2a2e;
+  }
 }
 
-:focus-visible {
-  outline: 2px solid #1d4ed8;
-  outline-offset: 2px;
+@theme inline {
+  --color-bg: var(--bg);
+  --color-card: var(--card);
+  --color-line: var(--line);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-primary: var(--primary);
+  --color-primary-fg: var(--primary-fg);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-ink: var(--accent-ink);
+  --color-ok-bg: var(--ok-bg);
+  --color-ok-fg: var(--ok-fg);
+  --color-warn-bg: var(--warn-bg);
+  --color-warn-fg: var(--warn-fg);
+  --color-danger-bg: var(--danger-bg);
+  --color-danger-fg: var(--danger-fg);
+  --color-danger-line: var(--danger-line);
+  --color-sunken: var(--sunken);
+  --color-bezel: var(--bezel);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  /* Gnani uses Gambarino (Fontshare); Instrument Serif is the Google Fonts substitute. */
+  --font-serif: var(--font-instrument), ui-serif, Georgia, serif;
 }
+
+@custom-variant hov {
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      @slot;
+    }
+  }
+}
+
+html { background: var(--bg); }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+.num { font-variant-numeric: tabular-nums; }
+.serif { font-family: var(--font-serif); font-weight: 400; letter-spacing: -0.01em; }
+
+:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; border-radius: 4px; }
+
+/* Buttons: black primary, white secondary, 8px radius, no shadow, 44px touch target. */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 44px; padding: 0 20px; border-radius: 8px; font-weight: 500; font-size: 15px;
+  border: 1px solid transparent; cursor: pointer; text-decoration: none; white-space: nowrap;
+  transition: transform 160ms var(--ease-out), background-color 160ms var(--ease-out), opacity 160ms var(--ease-out);
+}
+.btn:active:not(:disabled) { transform: scale(0.97); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary { background: var(--primary); color: var(--primary-fg); }
+.btn-secondary { background: var(--card); color: var(--fg); border-color: var(--line); }
+@media (hover: hover) and (pointer: fine) {
+  .btn-primary:hover:not(:disabled) { opacity: 0.85; }
+  .btn-secondary:hover:not(:disabled) { background: var(--sunken); }
+}
+.btn-sm { min-height: 44px; padding: 0 14px; font-size: 14px; }
+
+/* Entry motion: only for freshly mounted nodes (stable keys mean polling never replays it). */
+@keyframes enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.enter { animation: enter 240ms var(--ease-out) both; }
+@keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+.pulse { animation: pulse-dot 1.8s ease-in-out infinite; }
+@keyframes shimmer { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+.skeleton { background: var(--sunken); border-radius: 6px; animation: shimmer 1.4s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .enter { animation-name: enter-fade; }
+  .pulse, .skeleton { animation: none; }
+  .btn:active:not(:disabled) { transform: none; }
+  .bar { transition: none !important; }
+}
+@keyframes enter-fade { from { opacity: 0; } to { opacity: 1; } }

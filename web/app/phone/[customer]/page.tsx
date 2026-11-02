@@ -1,15 +1,10 @@
 import { Suspense } from "react";
-import PhoneApp from "./phone-app";
+import PhoneRoute from "./phone-route";
 
-async function Inner({ params }: { params: Promise<{ customer: string }> }) {
-  const { customer } = await params;
-  return <PhoneApp customer={customer} />;
-}
-
-export default function Page({ params }: { params: Promise<{ customer: string }> }) {
+export default function Page() {
   return (
-    <Suspense fallback={<p className="p-6">Loading…</p>}>
-      <Inner params={params} />
+    <Suspense fallback={<main className="flex min-h-screen items-center justify-center bg-sunken"><p className="text-muted">Loading…</p></main>}>
+      <PhoneRoute />
     </Suspense>
   );
 }
