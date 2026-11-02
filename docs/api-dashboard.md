@@ -1,10 +1,12 @@
 # Dashboard and phone API (gateway side)
 
-Consumed by `web/`. The browser never calls the gateway directly: it calls its own origin at `/gw/<path>`, and the Next.js route handler `web/app/gw/[...path]/route.ts` forwards GET/POST to the server-only env `GATEWAY_URL` (default `http://localhost:8000`), streaming SSE unbuffered. The proxy adds `Authorization: Bearer <DASHBOARD_TOKEN>` (server-only env, read-only dashboard token) to every request and `?token=<same token>` on `/events/stream`. Gateway CORS stays closed (CLAUDE.md 6.6). The routes below are the gateway's own paths.
+Consumed by `web/`. The browser never calls the gateway directly: it calls its own origin at `/gw/<path>`, and the Next.js route handler `web/app/gw/[...path]/route.ts` forwards GET/POST to the server-only env `GATEWAY_URL` (default `http://localhost:8000`), streaming SSE unbuffered. The proxy adds `Authorization: Bearer <token>` (server-only envs) to every request, including SSE (no `?token=`): `PHONE_TOKEN` for `phone/*` paths, `DASHBOARD_TOKEN` (read-only) for the rest. It forwards `Last-Event-ID`.
+
+**Exposing the web app.** The phone page can approve tier-2, so the demo phone and ops views must sit behind HTTP Basic auth or stay on localhost. `web/proxy.ts` (Next 16 proxy, ex-middleware) enforces Basic auth on every route when `WEB_BASIC_AUTH=user:pass` is set; unset means localhost dev only. Gateway CORS stays closed (CLAUDE.md 6.6). The routes below are the gateway's own paths.
 
 All dashboard data is already redacted/masked: no full identifiers, no secrets. The `/phone/*` routes serve the customer's own device and may show full details.
 
-## SSE: `GET /events/stream?token=...`
+## SSE: `GET /events/stream` (Authorization header only)
 
 Each message is `data: <json>\n\n`:
 
@@ -20,7 +22,7 @@ Each message is `data: <json>\n\n`:
 
 The phone UI refreshes on events whose `customer_key` matches and `type` is `sms` or `approval`. The ops UI refetches on any event.
 
-## Dashboard (bearer token)
+## Dashboard (bearer `DASHBOARD_TOKEN`)
 
 | Route | Response |
 |---|---|
@@ -42,7 +44,7 @@ The phone UI refreshes on events whose `customer_key` matches and `type` is `sms
 
 Nulls render as "not measured yet". The metrics page marks an action PASS when `p95 < 50` ms.
 
-## Phone (customer device)
+## Phone (customer device, bearer `PHONE_TOKEN`)
 
 `customer_key` examples: `priya`, `ramesh`, `sunita`.
 

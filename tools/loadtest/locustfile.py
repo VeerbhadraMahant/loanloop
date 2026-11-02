@@ -27,7 +27,7 @@ def _env(key: str, default: str) -> str:
 
 
 SECRET = _env("GATEWAY_SHARED_SECRET", "dev-shared-secret-change-me")
-TOKEN = _env("DASHBOARD_TOKEN", "dev-dashboard-token-change-me")
+TOKEN = _env("PHONE_TOKEN", "dev-phone-token-change-me")  # phone endpoints only
 ROWS = fixtures.load()
 # 1-3 s think time at 1,000 users is ~500 rps (a stress run); the spec target of 50-125 rps needs LL_THINK=8,16
 THINK_LO, THINK_HI = (float(x) for x in os.environ.get("LL_THINK", "1,3").split(","))

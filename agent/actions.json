@@ -354,7 +354,7 @@
         {
           "name": "fields",
           "type": "array<string>",
-          "description": "Any of: account_number, ifsc, customer_id, mobile, email, branch",
+          "description": "Any of: account_number, ifsc, customer_id, mobile, email, branch. Pass as a JSON array of strings, e.g. [\"ifsc\",\"customer_id\"], never a comma-separated string",
           "required": true
         }
       ],
@@ -403,7 +403,7 @@
         {
           "name": "fields",
           "type": "array<string>",
-          "description": "Any of: account_number, ifsc, customer_id, branch_address",
+          "description": "Any of: account_number, ifsc, customer_id, branch_address. Pass as a JSON array of strings, e.g. [\"ifsc\",\"customer_id\"], never a comma-separated string",
           "required": true,
           "enum": [
             "account_number",
@@ -652,7 +652,7 @@
         {
           "name": "field",
           "type": "string",
-          "description": "Name of the value confirmed: date, amount, utr, new_day, name, relation, line1, city, pincode, type or closure",
+          "description": "Exact name of the action input confirmed, one of: date, amount, utr (check_payment); new_day (emi_date_change); name, relation (update_nominee); line1, city, pincode (update_address); type (request_document); closure (raise_closure, value yes)",
           "required": true
         },
         {
@@ -673,7 +673,7 @@
     },
     {
       "name": "check_payment",
-      "description": "Trigger when a Tier 2 caller says they already paid, after read-back and confirm_readback of date, amount and UTR.",
+      "description": "Trigger when a Tier 2 caller says they already paid, after read-back and confirm_readback of date, amount AND utr (three separate confirm_readback calls, fields date, amount, utr).",
       "method": "POST",
       "url": "${PUBLIC_GATEWAY_URL}/actions/check_payment",
       "headers": {
@@ -736,7 +736,7 @@
     },
     {
       "name": "emi_date_change",
-      "description": "Trigger when a Tier 2 caller wants a different EMI date, after read-back and confirm_readback of the new day.",
+      "description": "Trigger when a Tier 2 caller wants a different EMI date, after read-back and confirm_readback with field new_day and value the day number.",
       "method": "POST",
       "url": "${PUBLIC_GATEWAY_URL}/actions/emi_date_change",
       "headers": {
@@ -827,7 +827,7 @@
     },
     {
       "name": "raise_closure",
-      "description": "Trigger when a Tier 2 caller confirms they want to close the loan, after read-back and confirm_readback of closure.",
+      "description": "Trigger when a Tier 2 caller confirms they want to close the loan, after asking \"Shall I raise the closure request?\" and confirm_readback with field closure and value yes.",
       "method": "POST",
       "url": "${PUBLIC_GATEWAY_URL}/actions/raise_closure",
       "headers": {
@@ -869,7 +869,7 @@
     },
     {
       "name": "request_document",
-      "description": "Trigger when a Tier 2 caller wants a statement or interest certificate sent.",
+      "description": "Trigger when a Tier 2 caller wants a statement or interest certificate sent, after confirm_readback with field type and the same value (statement or interest_cert).",
       "method": "POST",
       "url": "${PUBLIC_GATEWAY_URL}/actions/request_document",
       "headers": {
@@ -922,7 +922,7 @@
     },
     {
       "name": "update_nominee",
-      "description": "Trigger when a Tier 2 caller wants to change the nominee, after read-back and confirm_readback of name and relation.",
+      "description": "Trigger when a Tier 2 caller wants to change the nominee, after read-back and confirm_readback of field name and field relation (two calls).",
       "method": "POST",
       "url": "${PUBLIC_GATEWAY_URL}/actions/update_nominee",
       "headers": {
@@ -978,7 +978,7 @@
     },
     {
       "name": "update_address",
-      "description": "Trigger when a Tier 2 caller wants to change their address, after read-back and confirm_readback of line1, city, pincode.",
+      "description": "Trigger when a Tier 2 caller wants to change their address, after read-back and confirm_readback of fields line1, city and pincode (three calls).",
       "method": "POST",
       "url": "${PUBLIC_GATEWAY_URL}/actions/update_address",
       "headers": {

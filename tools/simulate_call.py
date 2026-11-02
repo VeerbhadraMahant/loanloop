@@ -2,7 +2,7 @@
 
     python tools/simulate_call.py --scenario priya|attacker|all --base http://localhost:8000
 
-Exits non-zero if any expectation fails. Secrets: GATEWAY_SHARED_SECRET / DASHBOARD_TOKEN from env or ../.env.
+Exits non-zero if any expectation fails. Secrets: GATEWAY_SHARED_SECRET / PHONE_TOKEN from env or ../.env.
 Input names follow docs/agent-builder-setup.md; the approval id is read from data.approval_id.
 """
 import argparse
@@ -51,7 +51,7 @@ def check(resp: dict, expect: dict) -> list[str]:
 class Sim:
     def __init__(self, base: str, lang: str = "hinglish"):
         self.c = httpx.Client(base_url=base, timeout=10, headers={"X-Gateway-Secret": _env("GATEWAY_SHARED_SECRET", "dev-shared-secret-change-me")})
-        self.auth = {"Authorization": "Bearer " + _env("DASHBOARD_TOKEN", "dev-dashboard-token-change-me")}
+        self.auth = {"Authorization": "Bearer " + _env("PHONE_TOKEN", "dev-phone-token-change-me")}
         self.cid, self.lang, self.failed = f"sim-{uuid.uuid4().hex[:12]}", lang, 0
 
     def _report(self, label: str, ms: float, ok, code, speak: str, bad: list[str]) -> None:

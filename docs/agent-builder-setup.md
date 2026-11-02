@@ -49,7 +49,7 @@ All actions receive `call_id` (string, = conversation id) and `language` (`en|hi
 | `report_secret_spoken` | `secret_type`: password, pin, otp, cvv or card (never the value) |
 | `emi_info` | none |
 | `explain_emi_change` | none |
-| `confirm_readback` | `field`: string (date, amount, utr, new_day, name, relation, line1, city, pincode, type, closure), `value`: string |
+| `confirm_readback` | `field`: string, exactly one of date, amount, utr (check_payment), new_day (emi_date_change), name, relation (update_nominee), line1, city, pincode (update_address), type (request_document), closure (raise_closure; value `yes`); `value`: string |
 | `check_payment` | `date`: string (YYYY-MM-DD), `amount`: number (rupees), `utr`: string (no spaces) |
 | `emi_date_change` | `new_day`: integer (1-28) |
 | `foreclosure_quote` | none |
@@ -61,7 +61,7 @@ All actions receive `call_id` (string, = conversation id) and `language` (`en|hi
 | `handover` | `reason`: string, `summary`: string |
 | `end_call` | `outcome`: completed, handover, caller_hung_up or blocked |
 
-Note for the gateway: `confirm_readback.field` names the action input being confirmed; `closure` is used before `raise_closure`. The agent sends `check_payment.amount` as a JSON number only if the console variable type is number; if the console only sends strings, parse leniently.
+Gateway read-back requirements: `check_payment` needs confirmed `utr` AND `amount` (and `date`); `request_document` needs `type`; `raise_closure` needs `closure` = `yes`; `emi_date_change` needs `new_day`. List inputs (`fields`) must be sent as JSON arrays (set the console variable type to array). `report_secret_spoken.secret_type` accepts `card`. `confirm_readback.field` names the action input being confirmed. The agent sends `check_payment.amount` as a JSON number only if the console variable type is number; if the console only sends strings, parse leniently.
 
 ## 4. Test call
 

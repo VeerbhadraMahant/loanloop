@@ -19,7 +19,7 @@ uv run --project tools python tools/loadtest/run.py                      # -u 10
 ```
 
 Output: `tools/out/loadtest.json` (`users, duration_s, rps, per_action[{action,p50,p95,p99,count,failures}], overall, measured_at, host_note`), latencies in ms.
-Reads `GATEWAY_SHARED_SECRET` / `DASHBOARD_TOKEN` from env or `../.env` (dev defaults otherwise).
+Reads `GATEWAY_SHARED_SECRET` / `PHONE_TOKEN` from env or `../.env` (dev defaults otherwise).
 
 ## Caveat: one Windows box
 

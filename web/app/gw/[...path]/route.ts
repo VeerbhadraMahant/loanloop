@@ -1,6 +1,7 @@
 // Same-origin proxy to the gateway: the browser never sees the token and the gateway keeps CORS closed.
 const GATEWAY = process.env.GATEWAY_URL ?? "http://localhost:8000";
-const TOKEN = process.env.DASHBOARD_TOKEN ?? "";
+const DASHBOARD_TOKEN = process.env.DASHBOARD_TOKEN ?? "";
+const PHONE_TOKEN = process.env.PHONE_TOKEN ?? "";
 
 async function proxy(req: Request, ctx: { params: Promise<{ path: string[] }> }) {
   const { path } = await ctx.params;
@@ -15,11 +16,13 @@ async function proxy(req: Request, ctx: { params: Promise<{ path: string[] }> })
     return new Response("Forbidden", { status: 403 });
   }
   const url = new URL(`${GATEWAY}/${path.map(encodeURIComponent).join("/")}`);
-  if (path.join("/") === "events/stream") url.searchParams.set("token", TOKEN);
+  const fwd: Record<string, string> = { Authorization: `Bearer ${joined.startsWith("phone/") ? PHONE_TOKEN : DASHBOARD_TOKEN}` };
+  const lastId = req.headers.get("last-event-id");
+  if (lastId) fwd["Last-Event-ID"] = lastId;
   try {
     const upstream = await fetch(url, {
       method: req.method,
-      headers: { Authorization: `Bearer ${TOKEN}` },
+      headers: fwd,
       cache: "no-store",
       signal: req.signal,
     });

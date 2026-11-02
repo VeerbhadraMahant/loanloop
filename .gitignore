@@ -4,6 +4,10 @@ __pycache__/
 node_modules/
 .next/
 *.pyc
-tools/out/
+tools/out/*
+!tools/out/loadtest.json
+!tools/out/simulate_transcript.txt
+!tools/out/stt_benchmark.json
+!tools/out/e2e_latency.json
 .pytest_cache/
 .claude/worktrees/
