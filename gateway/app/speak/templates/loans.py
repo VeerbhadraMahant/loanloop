@@ -44,11 +44,11 @@ T: dict[str, dict[str, str]] = {
         "hinglish": "Aapke loan par mujhe recent rate change ya extra charges nahi dikh rahe.",
         "mr": "तुमच्या कर्जावर मला अलीकडील दर बदल किंवा अतिरिक्त शुल्क दिसत नाही.",
     },
-    "readback_utr": {
-        "en": "Let me confirm the UTR: {utr}. Is that correct? Please say yes, then I will check.",
-        "hi": "मैं यूटीआर दोहराती हूँ: {utr}। क्या यह सही है? कृपया हाँ कहें, फिर मैं जाँच करूँगी।",
-        "hinglish": "Main UTR dohrati hoon: {utr}. Kya ye sahi hai? Please haan boliye, phir main check karungi.",
-        "mr": "मी यूटीआर पुन्हा सांगते: {utr}. हे बरोबर आहे का? कृपया हो म्हणा, मग मी तपासते.",
+    "readback_payment": {
+        "en": "Let me confirm: the UTR is {utr} and the amount is {amount}. Is that correct? Please say yes, then I will check.",
+        "hi": "मैं दोहराती हूँ: यूटीआर {utr} और राशि {amount}। क्या यह सही है? कृपया हाँ कहें, फिर मैं जाँच करूँगी।",
+        "hinglish": "Main dohrati hoon: UTR {utr} aur amount {amount}. Kya ye sahi hai? Please haan boliye, phir main check karungi.",
+        "mr": "मी पुन्हा सांगते: यूटीआर {utr} आणि रक्कम {amount}. हे बरोबर आहे का? कृपया हो म्हणा, मग मी तपासते.",
     },
     "payment_matched": {
         "en": "I can see your payment of {amount} on {date} in our records. Thank you, it is received.",
@@ -99,16 +99,16 @@ T: dict[str, dict[str, str]] = {
         "mr": "तुमची ईएमआय तारीख आधीच दर महिन्याची {day} आहे.",
     },
     "foreclosure_quote": {
-        "en": "To close the loan {loan} today you would pay {total}: outstanding {outstanding}, unpaid charges {charges} and a foreclosure fee of {fee}.",
-        "hi": "आज लोन {loan} बंद करने के लिए आपको {total} देने होंगे: बकाया {outstanding}, अदत्त शुल्क {charges} और फोरक्लोज़र शुल्क {fee}।",
-        "hinglish": "Aaj loan {loan} close karne ke liye aapko {total} dene honge: outstanding {outstanding}, unpaid charges {charges} aur foreclosure fee {fee}.",
-        "mr": "आज कर्ज {loan} बंद करण्यासाठी तुम्हाला {total} भरावे लागतील: थकबाकी {outstanding}, न भरलेले शुल्क {charges} आणि फोरक्लोजर शुल्क {fee}.",
+        "en": "To close the loan {loan} today you would pay {total}: outstanding {outstanding}, charges on record {charges} and a foreclosure fee of {fee}.",
+        "hi": "आज लोन {loan} बंद करने के लिए आपको {total} देने होंगे: बकाया {outstanding}, रिकॉर्ड पर शुल्क {charges} और फोरक्लोज़र शुल्क {fee}।",
+        "hinglish": "Aaj loan {loan} close karne ke liye aapko {total} dene honge: outstanding {outstanding}, charges on record {charges} aur foreclosure fee {fee}.",
+        "mr": "आज कर्ज {loan} बंद करण्यासाठी तुम्हाला {total} भरावे लागतील: थकबाकी {outstanding}, नोंदीतील शुल्क {charges} आणि फोरक्लोजर शुल्क {fee}.",
     },
     "foreclosure_quote_nofee": {
-        "en": "To close the loan {loan} today you would pay {total}: outstanding {outstanding} and unpaid charges {charges}. There is no foreclosure charge on floating-rate loans.",
-        "hi": "आज लोन {loan} बंद करने के लिए आपको {total} देने होंगे: बकाया {outstanding} और अदत्त शुल्क {charges}। फ्लोटिंग दर वाले लोन पर कोई फोरक्लोज़र शुल्क नहीं है।",
-        "hinglish": "Aaj loan {loan} close karne ke liye aapko {total} dene honge: outstanding {outstanding} aur unpaid charges {charges}. Floating rate loan par koi foreclosure charge nahi hai.",
-        "mr": "आज कर्ज {loan} बंद करण्यासाठी तुम्हाला {total} भरावे लागतील: थकबाकी {outstanding} आणि न भरलेले शुल्क {charges}. फ्लोटिंग दराच्या कर्जावर फोरक्लोजर शुल्क नाही.",
+        "en": "To close the loan {loan} today you would pay {total}: outstanding {outstanding} and charges on record {charges}. There is no foreclosure charge on floating-rate loans.",
+        "hi": "आज लोन {loan} बंद करने के लिए आपको {total} देने होंगे: बकाया {outstanding} और रिकॉर्ड पर शुल्क {charges}। फ्लोटिंग दर वाले लोन पर कोई फोरक्लोज़र शुल्क नहीं है।",
+        "hinglish": "Aaj loan {loan} close karne ke liye aapko {total} dene honge: outstanding {outstanding} aur charges on record {charges}. Floating rate loan par koi foreclosure charge nahi hai.",
+        "mr": "आज कर्ज {loan} बंद करण्यासाठी तुम्हाला {total} भरावे लागतील: थकबाकी {outstanding} आणि नोंदीतील शुल्क {charges}. फ्लोटिंग दराच्या कर्जावर फोरक्लोजर शुल्क नाही.",
     },
     "readback_closure": {
         "en": "You want to close the loan {loan}. Is that correct? Please say yes.",

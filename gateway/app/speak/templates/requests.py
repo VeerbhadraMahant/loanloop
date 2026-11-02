@@ -1,6 +1,12 @@
 T: dict[str, dict[str, str]] = {
     "doc_statement": {"en": "loan statement", "hi": "लोन स्टेटमेंट", "hinglish": "loan statement", "mr": "कर्ज स्टेटमेंट"},
     "doc_interest_cert": {"en": "interest certificate", "hi": "ब्याज प्रमाणपत्र", "hinglish": "interest certificate", "mr": "व्याज प्रमाणपत्र"},
+    "readback_document": {
+        "en": "You want your {doc} sent to your registered email. Is that correct? Please say yes.",
+        "hi": "आप अपना {doc} पंजीकृत ईमेल पर मँगवाना चाहते हैं। क्या यह सही है? कृपया हाँ कहें।",
+        "hinglish": "Aap apna {doc} registered email par mangwana chahte hain. Kya ye sahi hai? Please haan boliye.",
+        "mr": "तुम्हाला तुमचे {doc} नोंदणीकृत ईमेलवर हवे आहे. हे बरोबर आहे का? कृपया हो म्हणा.",
+    },
     "document_raised": {
         "en": "Request {ticket} is raised for your {doc}. It will be emailed to your registered email. I have also sent you an SMS.",
         "hi": "आपके {doc} के लिए अनुरोध {ticket} बना दिया गया है। यह आपके पंजीकृत ईमेल पर भेजा जाएगा। मैंने आपको एसएमएस भी भेजा है।",

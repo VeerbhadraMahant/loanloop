@@ -5,10 +5,11 @@ Also shared helpers for requests.py / handover.py. session.tasks is list[str]: e
 from datetime import date, datetime, timedelta, timezone
 
 from fastapi import APIRouter, BackgroundTasks
-from pydantic import Field
+from pydantic import Field, field_validator
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.clock import today_ist
 from app.contract import ActionIn, ActionResponse
 from app.db.models import Charge, EmiSchedule, Loan, Payment, RateReset, Reminder, ServiceRequest, now
 from app.routes.actions._runner import action
@@ -16,6 +17,7 @@ from app.security.mask import mask_loan
 from app.sessions import Session
 from app.speak import t
 from app.speak.format import digits, fmt_date, rupees
+from app.speak.templates.details import ending
 
 router = APIRouter(prefix="/actions")
 
@@ -34,8 +36,10 @@ def missing_readback(session: Session, pairs: dict[str, str]) -> list[str]:
     return [f for f, v in pairs.items() if not session.has_readback(f, v)]
 
 
-def readback_needed(lang: str, key: str, missing: list[str], **kw) -> ActionResponse:
-    return ActionResponse(ok=False, speak=t(key, lang, **kw), data={"fields": missing}, next="confirm_readback")
+def readback_needed(lang: str, key: str, missing: list[str], confirm: dict[str, str] | None = None, **kw) -> ActionResponse:
+    """`data.confirm` tells the agent which field/value to pass to confirm_readback once the caller agrees."""
+    data = {"fields": missing, "confirm": {f: v for f, v in (confirm or {}).items() if f in missing}}
+    return ActionResponse(ok=False, speak=t(key, lang, **kw), data=data, next="confirm_readback")
 
 
 async def new_request(db: AsyncSession, session: Session, rtype: str, payload: dict) -> ServiceRequest:
@@ -59,10 +63,10 @@ async def emi_info(inp: NoInput, session: Session, db: AsyncSession, bg: Backgro
         return no_loan(inp.language)
     nxt = (await db.execute(
         select(EmiSchedule.due_date).where(EmiSchedule.loan_id == loan.id, EmiSchedule.status != "paid",
-                                           EmiSchedule.due_date >= date.today()).order_by(EmiSchedule.due_date).limit(1)
+                                           EmiSchedule.due_date >= today_ist()).order_by(EmiSchedule.due_date).limit(1)
     )).scalar_one_or_none()
-    kw = dict(loan=mask_loan(loan.loan_last4), amount=rupees(loan.emi_amount))
-    data = {"emi": loan.emi_amount, "loan": kw["loan"], "next_due": nxt.isoformat() if nxt else None}
+    kw = dict(loan=ending(loan.loan_last4, inp.language), amount=rupees(loan.emi_amount))
+    data = {"emi": loan.emi_amount, "loan": mask_loan(loan.loan_last4), "next_due": nxt.isoformat() if nxt else None}
     if nxt is None:
         return ActionResponse(ok=True, speak=t("emi_no_due", inp.language, **kw), data=data)
     return ActionResponse(ok=True, speak=t("emi_info", inp.language, date=fmt_date(nxt, inp.language), **kw), data=data)
@@ -82,7 +86,7 @@ async def explain_emi_change(inp: NoInput, session: Session, db: AsyncSession, b
     rr = (await db.execute(select(RateReset).where(RateReset.loan_id == loan.id)
                            .order_by(RateReset.effective_date.desc()).limit(1))).scalar_one_or_none()
     charges = (await db.execute(
-        select(Charge).where(Charge.loan_id == loan.id, Charge.date >= date.today() - timedelta(days=180))
+        select(Charge).where(Charge.loan_id == loan.id, Charge.date >= today_ist() - timedelta(days=180))
         .order_by(Charge.date.desc()).limit(5))).scalars().all()
     parts, data = [], {"reset": None, "charges": []}
     if rr:
@@ -108,27 +112,34 @@ class CheckPaymentIn(ActionIn):
     amount: float = Field(gt=0, le=10_000_000)
     utr: str = Field(pattern=r"^[A-Za-z0-9]{8,22}$")
 
+    @field_validator("utr", mode="before")
+    @classmethod
+    def _strip_utr(cls, v):
+        return "".join(v.split()) if isinstance(v, str) else v
+
 
 @action("check_payment", In=CheckPaymentIn, router=router)
 async def check_payment(inp: CheckPaymentIn, session: Session, db: AsyncSession, bg: BackgroundTasks) -> ActionResponse:
     lang = inp.language
-    if not session.has_readback("utr", inp.utr):
-        return readback_needed(lang, "readback_utr", ["utr"], utr=digits(inp.utr.upper(), 4))
+    amount = round(inp.amount)
+    utr = inp.utr.upper()
+    miss = missing_readback(session, {"utr": utr, "amount": str(amount)})  # date read-back is optional
+    if miss:
+        return readback_needed(lang, "readback_payment", miss, {"utr": utr, "amount": str(amount)},
+                               utr=digits(utr, 4), amount=rupees(amount))
     loan = await get_loan(db, session)
     if loan is None:
         return no_loan(lang)
     session.consume_readback("utr")
-    amount = round(inp.amount)
-    pay = (await db.execute(select(Payment).where(Payment.loan_id == loan.id, Payment.utr == inp.utr.upper())
+    session.consume_readback("amount")
+    pay = (await db.execute(select(Payment).where(Payment.loan_id == loan.id, Payment.utr == utr)
                             .limit(1))).scalar_one_or_none()
     kw = dict(amount=rupees(amount), date=fmt_date(inp.date, lang))
     if pay and pay.status == "matched" and pay.amount == amount and pay.date == inp.date:
         session.tasks.append("check_payment:done")
         return ActionResponse(ok=True, speak=t("payment_matched", lang, **kw), data={"matched": True})
-    if pay:
-        pay.status = "unmatched"
     sr = await new_request(db, session, "reconciliation",
-                           {"utr_last4": inp.utr[-4:], "amount": amount, "date": inp.date.isoformat()})
+                           {"utr_last4": utr[-4:], "amount": amount, "date": inp.date.isoformat()})
     until = now() + timedelta(days=7)
     res = await db.execute(update(Reminder).where(Reminder.loan_id == loan.id).values(paused_until=until))
     if res.rowcount == 0:
@@ -155,7 +166,7 @@ async def emi_date_change(inp: EmiDateIn, session: Session, db: AsyncSession, bg
     if loan.status != "active":
         return no("ineligible_status")
     overdue = (await db.execute(select(EmiSchedule.id).where(
-        EmiSchedule.loan_id == loan.id, EmiSchedule.due_date < date.today(), EmiSchedule.status != "paid").limit(1))).first()
+        EmiSchedule.loan_id == loan.id, EmiSchedule.due_date < today_ist(), EmiSchedule.status != "paid").limit(1))).first()
     if overdue:
         return no("ineligible_overdue")
     cutoff = datetime.now(timezone.utc) - timedelta(days=183)
@@ -167,7 +178,7 @@ async def emi_date_change(inp: EmiDateIn, session: Session, db: AsyncSession, bg
     if inp.new_day == loan.emi_day:
         return no("ineligible_same", day=inp.new_day)
     if not session.has_readback("new_day", str(inp.new_day)):
-        return readback_needed(lang, "readback_new_day", ["new_day"], day=inp.new_day)
+        return readback_needed(lang, "readback_new_day", ["new_day"], {"new_day": str(inp.new_day)}, day=inp.new_day)
     session.consume_readback("new_day")
     sr = await new_request(db, session, "emi_date_change", {"old_day": loan.emi_day, "new_day": inp.new_day})
     return ActionResponse(ok=True, speak=t("emi_date_changed", lang, ticket=sr.id, day=inp.new_day),
@@ -184,14 +195,14 @@ async def foreclosure_quote(inp: NoInput, session: Session, db: AsyncSession, bg
     # RBI: no foreclosure charge on floating-rate loans to individuals; fixed-rate 2% (policy assumption)
     fee = 0 if loan.rate_type == "floating" else round(loan.outstanding * 0.02)
     total = loan.outstanding + charges + fee
-    kw = dict(loan=mask_loan(loan.loan_last4), total=rupees(total), outstanding=rupees(loan.outstanding),
+    kw = dict(loan=ending(loan.loan_last4, inp.language), total=rupees(total), outstanding=rupees(loan.outstanding),
               charges=rupees(charges))
     key = "foreclosure_quote_nofee" if fee == 0 else "foreclosure_quote"
     if fee:
         kw["fee"] = rupees(fee)
     return ActionResponse(ok=True, speak=t(key, inp.language, **kw),
                           data={"total": total, "outstanding": loan.outstanding, "charges": charges, "fee": fee,
-                                "as_of": date.today().isoformat()})
+                                "as_of": today_ist().isoformat()})
 
 
 # ---- raise_closure ----
@@ -204,10 +215,10 @@ async def raise_closure(inp: ClosureIn, session: Session, db: AsyncSession, bg: 
     loan = await get_loan(db, session)
     if loan is None:
         return no_loan(inp.language)
-    loan_m = mask_loan(loan.loan_last4)
-    if not session.has_readback("closure", "yes"):
-        return readback_needed(inp.language, "readback_closure", ["closure"], loan=loan_m)
+    loan_m = ending(loan.loan_last4, inp.language)
+    if not session.has_readback("closure", "yes"):  # yes/haan/ho/हाँ/होय all normalise to "yes"
+        return readback_needed(inp.language, "readback_closure", ["closure"], {"closure": "yes"}, loan=loan_m)
     session.consume_readback("closure")
-    sr = await new_request(db, session, "closure", {"loan": loan_m})
+    sr = await new_request(db, session, "closure", {"loan": mask_loan(loan.loan_last4)})
     return ActionResponse(ok=True, speak=t("closure_raised", inp.language, ticket=sr.id, loan=loan_m),
                           data={"ticket": sr.id, "noc_days": 30})

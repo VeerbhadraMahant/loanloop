@@ -5,6 +5,7 @@ os.environ["DATABASE_URL"] = "postgresql+asyncpg://loanloop:loanloop@localhost:5
 os.environ["REDIS_URL"] = "redis://localhost:56379/15"
 os.environ["GATEWAY_SHARED_SECRET"] = "test-secret"
 os.environ["DASHBOARD_TOKEN"] = "test-dash"
+os.environ["PHONE_TOKEN"] = "test-phone"
 
 import asyncpg  # noqa: E402
 import httpx  # noqa: E402

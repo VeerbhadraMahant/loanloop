@@ -15,7 +15,7 @@ from app.routes.actions._runner import action
 from app.security import mask
 from app.sms import send_sms
 from app.speak import digits, t
-from app.speak.templates.details import ENDING, LABELS, spell_ifsc
+from app.speak.templates.details import LABELS, ending, spell_ifsc
 
 router = APIRouter(prefix="/actions")
 IFSC_RE = re.compile(r"^[A-Z]{4}0[A-Z0-9]{6}$")
@@ -35,6 +35,18 @@ def _score(q: str, b: Branch) -> float:
     return best
 
 
+_BRANCHES: list[Branch] | None = None  # branches are static: load once per process
+
+
+async def _branches(db: AsyncSession) -> list[Branch]:
+    global _BRANCHES
+    if _BRANCHES is None:
+        _BRANCHES = list((await db.execute(select(Branch))).scalars())
+        for b in _BRANCHES:
+            db.expunge(b)  # detached copies are safe to share across requests
+    return _BRANCHES
+
+
 class BranchIn(ActionIn):
     query: str = Field(min_length=2, max_length=80)
 
@@ -42,7 +54,7 @@ class BranchIn(ActionIn):
 @action("branch_lookup", In=BranchIn, router=router)
 async def branch_lookup(inp: BranchIn, session, db: AsyncSession, bg: BackgroundTasks) -> ActionResponse:
     q = inp.query.lower().strip()
-    ranked = sorted(((_score(q, b), b) for b in (await db.execute(select(Branch))).scalars()), key=lambda x: -x[0])
+    ranked = sorted(((_score(q, b), b) for b in await _branches(db)), key=lambda x: -x[0])
     if not ranked or ranked[0][0] < 0.7:
         return ActionResponse(ok=False, speak=t("not_found", inp.language), error_code="NOT_FOUND")
     b = ranked[0][1]
@@ -85,8 +97,8 @@ async def get_masked_profile(inp: ProfileIn, session, db: AsyncSession, bg: Back
     loans = (await db.execute(select(Loan).where(Loan.customer_id == c.id).order_by(Loan.id))).scalars().all()
     branch = await db.get(Branch, acct.branch_ifsc) if acct else None
 
-    def end(masked: str) -> str:  # masked is "ending NNNN": speak the digits grouped
-        return ENDING.get(lang, ENDING["en"]).format(d=masked[-4:])
+    def end(masked: str) -> str:  # masked is "ending NNNN": speak it localised, digits grouped
+        return ending(masked[-4:], lang)
 
     values: dict[str, str | None] = {
         "mobile": end(mask.mask_mobile(c.registered_mobile)),
@@ -143,7 +155,7 @@ async def send_details_sms(inp: SmsIn, session, db: AsyncSession, bg: Background
         else:
             return ActionResponse(ok=False, speak=t("not_found", inp.language), error_code="NOT_FOUND")
     bg.add_task(_deliver, c, parts, inp.call_id)
-    return ActionResponse(ok=True, speak=t("sms_sent", inp.language, v=ENDING.get(inp.language, ENDING["en"]).format(d=mask.mask_mobile(c.registered_mobile)[-4:])),
+    return ActionResponse(ok=True, speak=t("sms_sent", inp.language, v=ending(c.registered_mobile[-4:], inp.language)),
                           data={"sent_to": mask.mask_mobile(c.registered_mobile), "fields": fields})
 
 

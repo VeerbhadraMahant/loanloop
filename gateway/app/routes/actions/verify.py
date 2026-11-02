@@ -35,10 +35,6 @@ def _norm(m: str) -> str:
     return d[2:] if len(d) == 12 and d.startswith("91") else d
 
 
-async def _peek(key: str) -> int:
-    return int(await sessions.redis.get(f"ll:rl:{key}") or 0)
-
-
 @action("verify_caller", In=VerifyIn, router=router)
 async def verify_caller(inp: VerifyIn, session, db: AsyncSession, bg: BackgroundTasks) -> ActionResponse:
     def limited() -> ActionResponse:
@@ -50,7 +46,7 @@ async def verify_caller(inp: VerifyIn, session, db: AsyncSession, bg: Background
     mobile = _norm(inp.registered_mobile)
     cust = (await db.execute(select(Customer).where(Customer.registered_mobile == mobile))).scalar_one_or_none()
     key = f"verify:c{cust.id}" if cust else "verify:m" + hashlib.sha256(mobile.encode()).hexdigest()[:16]
-    if await _peek(key) >= MAX_FAILS:
+    if await sessions.incr(key, HOUR) > MAX_FAILS:  # atomic: INCR first, then compare
         return limited()
 
     ok = False
@@ -65,11 +61,11 @@ async def verify_caller(inp: VerifyIn, session, db: AsyncSession, bg: Background
 
     if not ok:  # generic: never reveals which part was wrong
         session.failed_attempts += 1
-        await sessions.incr(key, HOUR)
         await events.publish({"type": "security", "call_id": inp.call_id, "event": "VERIFY_FAILED"})
         return ActionResponse(ok=False, speak=t("verify_failed", inp.language), error_code="NOT_VERIFIED",
                               next="handover" if session.failed_attempts >= MAX_FAILS else None)
 
+    await sessions.redis.decr(f"ll:rl:{key}")  # a success is not a failed attempt
     mismatch = session.prefetched_customer_id is not None and session.prefetched_customer_id != cust.id
     if session.customer_id != cust.id:
         session.tier, session.approval_id = 1, None  # switching identity never keeps an old tier-2

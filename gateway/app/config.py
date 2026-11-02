@@ -1,3 +1,5 @@
+import logging
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -8,6 +10,7 @@ class Settings(BaseSettings):
     inya_platform_api_key: str = ""
     gateway_shared_secret: str = "dev-shared-secret-change-me"
     dashboard_token: str = "dev-dashboard-token-change-me"
+    phone_token: str = "dev-phone-token-change-me"  # mock phone app only; the dashboard token must not open /phone
     database_url: str = "postgresql+asyncpg://loanloop:loanloop@localhost:55432/loanloop"
     redis_url: str = "redis://localhost:56379/0"
     encryption_key: str = ""
@@ -15,4 +18,16 @@ class Settings(BaseSettings):
     session_ttl_s: int = 1800
 
 
+DEV_DEFAULTS = {"gateway_shared_secret": "dev-shared-secret-change-me", "dashboard_token": "dev-dashboard-token-change-me",
+                "phone_token": "dev-phone-token-change-me"}
+
 settings = Settings()
+
+
+def check_settings(s: Settings = settings) -> None:
+    """Startup check: refuse to run without an encryption key; shout if dev default secrets are in use."""
+    if not s.encryption_key:
+        raise RuntimeError("ENCRYPTION_KEY is empty: refusing to start")
+    for name, default in DEV_DEFAULTS.items():
+        if getattr(s, name) == default:
+            logging.getLogger("config").warning("SECURITY: %s is the dev default. Change it before exposing the gateway.", name.upper())

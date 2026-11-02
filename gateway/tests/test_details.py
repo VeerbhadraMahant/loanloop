@@ -45,7 +45,8 @@ async def test_masked_profile_all_langs(client, make_session, priya, lang):
     r = await call(client, "get_masked_profile", language=lang,
                    fields=["mobile", "email", "account", "loan", "customer_id", "ifsc", "branch"])
     assert r["ok"]
-    assert "4417" in r["speak"] and "0417" in r["speak"] and "7391" in r["speak"] and "p***@example.com" in r["speak"]
+    sp = r["speak"].replace(" ", "")
+    assert "4417" in sp and "0417" in sp and "7391" in sp and "p***@example.com" in r["speak"]
     assert_no_leak(r["speak"] + json.dumps(r["data"]), priya)
 
 
@@ -63,7 +64,7 @@ async def test_send_details_sms(client, make_session, priya):
         acct = (await db.execute(select(Account).where(Account.customer_id == priya.id))).scalars().first()
         full = decrypt(acct.account_number)
     r = await call(client, "send_details_sms", fields=["account_number", "ifsc", "customer_id", "branch_address"])
-    assert r["ok"] and "ending 4417" in r["speak"]
+    assert r["ok"] and "ending 44 17" in r["speak"]
     blob = json.dumps(r) + str(await sessions.redis.xrange("ll:events"))
     assert full not in blob and priya.customer_id not in blob and priya.registered_mobile not in blob
     assert_no_leak(json.dumps(r), priya)

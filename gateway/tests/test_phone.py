@@ -1,7 +1,7 @@
 from app.db.models import SmsOutbox
 from app.db.session import SessionLocal
 
-H = {"Authorization": "Bearer test-dash"}
+H = {"Authorization": "Bearer test-phone"}
 
 
 async def test_phone_auth_required(client):

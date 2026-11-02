@@ -32,6 +32,7 @@ async def test_hardship_creates_packet(client, make_session, priya):
 
 async def test_hardship_packet_lists_done_tasks(client, make_session):
     await make_session(tier=2)
+    await call(client, "confirm_readback", field="type", value="statement")
     await call(client, "request_document", type="statement")
     await call(client, "report_hardship", reason="medical emergency")
     (h,) = await packets()
@@ -52,6 +53,7 @@ async def test_handover_tier0_no_session(client):
 
 async def test_handover_verified_customer(client, make_session, priya):
     await make_session(tier=2)
+    await call(client, "confirm_readback", field="type", value="statement")
     await call(client, "request_document", type="statement")
     r = await call(client, "handover", reason="wants callback", summary="Wants a callback.")
     assert r["ok"]

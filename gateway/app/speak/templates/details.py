@@ -10,6 +10,13 @@ LABELS = {
 ENDING = {"en": "ending {d}", "hi": "{d} पर समाप्त होने वाला", "hinglish": "{d} se khatam hone wala", "mr": "{d} ने संपणारा"}
 
 
+def ending(last4: str, lang: str = "en") -> str:
+    """Localised 'ending 44 17' (digits grouped for speech). Speech only: data fields use security.mask."""
+    from app.speak.format import digits  # local: avoid import cycle at template load
+
+    return ENDING.get(lang, ENDING["en"]).format(d=digits(last4, 2))
+
+
 def spell_ifsc(ifsc: str) -> str:
     """'SAHY0000101' -> 'S A H Y zero, 0 0 0 1 0 1': bank code spelled, then the 6-char branch code spaced."""
     return f"{' '.join(ifsc[:4])} zero, {' '.join(ifsc[5:])}"

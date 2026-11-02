@@ -46,7 +46,7 @@ async def confirm_readback(inp: ReadbackIn, session, db: AsyncSession, bg: Backg
 
 
 class SecretSpokenIn(ActionIn):
-    secret_type: Literal["password", "pin", "otp", "cvv", "card_number", "other"] = "other"
+    secret_type: Literal["password", "pin", "otp", "cvv", "card", "card_number", "other"] = "other"
 
 
 @action("report_secret_spoken", In=SecretSpokenIn, router=router, scan_exempt=("secret_type",))

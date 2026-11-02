@@ -16,7 +16,9 @@ scan_exempt: field names skipped by the secret scan (e.g. report_secret_spoken.s
 """
 import json
 import logging
+import re
 import time
+import typing
 from collections.abc import Awaitable, Callable
 from typing import Any
 
@@ -29,7 +31,7 @@ from app.audit import write_audit
 from app.contract import ActionIn, ActionResponse
 from app.db.session import get_db
 from app.security.auth import require_agent
-from app.security.scrub import find_secret
+from app.security.scrub import find_secret, redact_secret
 from app.security.tiers import TIER_FOR_ACTION
 from app.speak import t
 
@@ -37,6 +39,9 @@ log = logging.getLogger("actions")
 LANGS = {"en", "hi", "hinglish", "mr"}
 
 Handler = Callable[[Any, "sessions.Session | None", AsyncSession, BackgroundTasks], Awaitable[ActionResponse]]
+
+
+_TEMPLATE = re.compile(r"^\s*\{\{.*\}\}\s*$", re.S)
 
 
 def _scan(body: Any, exempt: set[str]) -> tuple[str, str] | None:
@@ -56,7 +61,7 @@ def _scan(body: Any, exempt: set[str]) -> tuple[str, str] | None:
     return None
 
 
-def action(name: str, In: type[ActionIn], router: APIRouter, needs_session: bool = True, ends_session: bool = False, scan_exempt: tuple[str, ...] = ()):
+def action(name: str, In: type[ActionIn], router: APIRouter, needs_session: bool = True, ends_session: bool = False, scan_exempt: tuple[str, ...] = (), redact_fields: tuple[str, ...] = ()):
     exempt = set(scan_exempt) | {"call_id"}  # platform-issued id (regex-validated), never caller speech; all-digit ids tripped the card check
 
     def deco(fn: Handler) -> Handler:
@@ -110,6 +115,27 @@ def action(name: str, In: type[ActionIn], router: APIRouter, needs_session: bool
             if body.get("language") in LANGS:
                 lang = body["language"]
 
+            # 1b. Agent Builder quirks: empty / unreplaced "{{var}}" values mean "missing"
+            for k in [k for k, v in body.items() if isinstance(v, str) and (not v.strip() or _TEMPLATE.match(v))]:
+                del body[k]
+            for k, f in In.model_fields.items():  # list field sent as a string: JSON, else comma-separated
+                v = body.get(k)
+                if isinstance(v, str) and typing.get_origin(f.annotation) is list:
+                    try:
+                        parsed = json.loads(v)
+                    except ValueError:
+                        parsed = None
+                    body[k] = parsed if isinstance(parsed, list) else [x.strip() for x in v.split(",") if x.strip()]
+
+            # 2a. free-text fields: redact the secret span and carry on (audited by field name only)
+            redacted: list[str] = []
+            for k in redact_fields:
+                if isinstance(body.get(k), str):
+                    r = redact_secret(k, body[k])
+                    if r:
+                        body[k] = r[0]
+                        redacted.append(k)
+
             # 2. secret scan (before validation, so nothing secret is ever kept or echoed)
             hit = _scan(body, exempt)
             if hit:
@@ -137,9 +163,14 @@ def action(name: str, In: type[ActionIn], router: APIRouter, needs_session: bool
                         return await finish(err("NOT_VERIFIED", "not_verified", "need_tier_1"))
                     return await finish(err("TIER_TOO_LOW", "tier_too_low", "need_tier_2"))
 
-            # 5. handler
+            for k in redacted:
+                write_audit(db, call_id=call_id, action=name, tier=tier, outcome="redacted", error_code="SECRET_DETECTED",
+                            latency_ms=ms(), flags={"security": "SECRET_DETECTED", "field": k})
+
+            # 5. handler; commit before the Redis session is saved, events are published after (in finish)
             try:
                 resp = await fn(inp, sess, db, bg)
+                await db.commit()
             except Exception as e:
                 await db.rollback()
                 log.error("handler %s failed: %s", name, type(e).__name__)  # never log the message

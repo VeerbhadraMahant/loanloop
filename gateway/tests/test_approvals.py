@@ -5,7 +5,7 @@ from app.db.models import Approval, now
 from app.db.session import SessionLocal
 from tests.conftest import call
 
-H = {"Authorization": "Bearer test-dash"}
+H = {"Authorization": "Bearer test-phone"}
 
 
 async def _req(client, make_session, cid="call1", tier=1):
