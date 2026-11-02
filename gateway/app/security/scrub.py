@@ -47,10 +47,14 @@ def redact_secret(field_name: str, value: str) -> tuple[str, str] | None:
     stype = find_secret(field_name, value)
     if not stype:
         return None
-    out = _CARD.sub(lambda m: REMOVED if _luhn(re.sub(r"\D", "", m.group())) else m.group(), value)
-    out = _KW_VALUE.sub(REMOVED, out)
-    if find_secret(field_name, out):  # field-name digit rule or leftovers
-        out = _DIGITS.sub(REMOVED, out)
-        if find_secret(field_name, out):
-            out = REMOVED
+    # Drop every sentence that carries a secret: removing only the keyword leaves the value
+    # behind ("my pin number is 4321" -> "my [secret removed] is 4321").
+    parts = re.split(r"(?<=[.!?।\n])\s*", value)
+    out = " ".join(REMOVED if find_secret(field_name, p) or _has_card(p) else p for p in parts if p)
+    if find_secret(field_name, out) or _has_card(out):
+        out = REMOVED
     return out, stype
+
+
+def _has_card(text: str) -> bool:
+    return any(_luhn(re.sub(r"\D", "", m.group())) for m in _CARD.finditer(text))

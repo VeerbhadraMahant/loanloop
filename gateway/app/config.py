@@ -29,5 +29,7 @@ def check_settings(s: Settings = settings) -> None:
     if not s.encryption_key:
         raise RuntimeError("ENCRYPTION_KEY is empty: refusing to start")
     for name, default in DEV_DEFAULTS.items():
+        if not getattr(s, name):  # an empty token would accept a bare "Bearer "
+            raise RuntimeError(f"{name.upper()} is empty: refusing to start")
         if getattr(s, name) == default:
             logging.getLogger("config").warning("SECURITY: %s is the dev default. Change it before exposing the gateway.", name.upper())
