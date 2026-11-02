@@ -139,7 +139,7 @@ async def test_confirm_readback_and_helpers(client):
     assert r["ok"]
     s = await sessions.get("call1")
     assert s.has_readback("utr") and s.has_readback("utr", "SAHYR61004738291") and not s.has_readback("amount")
-    assert s.consume_readback("utr") == "SAHYR61004738291" and not s.has_readback("utr")
+    assert s.consume_readback("utr") == "sahyr61004738291" and not s.has_readback("utr")
 
 
 async def test_report_secret_spoken(client):

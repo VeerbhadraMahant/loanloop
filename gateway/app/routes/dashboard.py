@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app import sessions
 from app.db.models import Approval, AuditLog, Call, Handover
 from app.db.session import get_db
+from app.routes.actions.approvals import expire_if_stale
 from app.events import BLOCKED_CODES, _clean, customer_info
 from app.security.auth import require_dashboard
 
@@ -99,8 +100,11 @@ async def security(db: AsyncSession = Depends(get_db)):
         .order_by(AuditLog.id.desc()).limit(200))).scalars().all()
     refs = await _refs(db, {a.call_id for a in audits})
     ev = [_event(a, *refs.get(a.call_id, (None, None, None))) for a in audits]
-    for ap in (await db.execute(select(Approval).where(Approval.status.in_(("denied", "expired")))
-                                .order_by(Approval.id.desc()).limit(50))).scalars():
+    aps = (await db.execute(select(Approval).where(Approval.status.in_(("denied", "expired", "pending")))
+                            .order_by(Approval.id.desc()).limit(50))).scalars().all()
+    if any([expire_if_stale(a) for a in aps]):  # untapped approvals past the TTL are expired for good
+        await db.commit()
+    for ap in (a for a in aps if a.status != "pending"):
         ref, key = await customer_info(db, ap.customer_id)
         ev.append({"id": f"p{ap.id}", "ts": _iso(ap.created_at), "type": "approval", "call_id": ap.session_id,
                    "outcome": "blocked", "customer_ref": ref, "customer_key": key,

@@ -36,3 +36,21 @@ def find_secret(field_name: str, value: str) -> str | None:
     if _FIELD_KW.search(field_name) and _DIGITS.search(value):
         return "otp"
     return None
+
+
+REMOVED = "[secret removed]"
+_KW_VALUE = re.compile("(?:" + _KW.pattern + r")(?:\s*(?:is|are|was|:|=|-|है|हा|आहे)?\s*\S+)?", re.I)
+
+
+def redact_secret(field_name: str, value: str) -> tuple[str, str] | None:
+    """For free-text fields only: (value with secret spans replaced, secret_type), or None if clean."""
+    stype = find_secret(field_name, value)
+    if not stype:
+        return None
+    out = _CARD.sub(lambda m: REMOVED if _luhn(re.sub(r"\D", "", m.group())) else m.group(), value)
+    out = _KW_VALUE.sub(REMOVED, out)
+    if find_secret(field_name, out):  # field-name digit rule or leftovers
+        out = _DIGITS.sub(REMOVED, out)
+        if find_secret(field_name, out):
+            out = REMOVED
+    return out, stype

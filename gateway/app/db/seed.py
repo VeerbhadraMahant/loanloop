@@ -8,10 +8,10 @@ from datetime import date, datetime, time, timedelta, timezone
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
+from app.clock import today_ist
 from app.db import models as m
 from app.db.crypto import encrypt
 
-REF = date(2026, 11, 1)  # fixed "today" so the seed is reproducible
 HOURS = "Mon-Fri 10:00-16:00, Sat 10:00-14:00"
 
 BRANCHES = [  # (name, city, area)
@@ -47,6 +47,7 @@ def add_months(d: date, n: int) -> date:
 
 def build() -> list:
     rnd = random.Random(42)
+    REF = today_ist()  # every date is relative to today (IST); amounts, UTRs and rates stay fixed
     out: list = []
     branches = []
     for i, (name, city, area) in enumerate(BRANCHES):
@@ -119,8 +120,8 @@ def build() -> list:
     charge_ids = [1] + rnd.sample(non_persona, 39)
     for i in charge_ids:
         if i == 1:
-            out.append(m.Charge(loan_id=1, date=date(2026, 9, 6), type="bounce", amount=590, reason="EMI auto-debit returned for insufficient balance"))
-            out.append(m.Charge(loan_id=1, date=date(2026, 9, 20), type="penal", amount=354, reason="Penal interest for delayed EMI"))
+            out.append(m.Charge(loan_id=1, date=REF - timedelta(days=56), type="bounce", amount=590, reason="EMI auto-debit returned for insufficient balance"))
+            out.append(m.Charge(loan_id=1, date=REF - timedelta(days=42), type="penal", amount=354, reason="Penal interest for delayed EMI"))
         else:
             t_ = rnd.choice(["bounce", "penal"])
             out.append(m.Charge(loan_id=i, date=REF - timedelta(days=rnd.randint(5, 60)), type=t_,
@@ -134,7 +135,7 @@ def build() -> list:
                              channel=rnd.choice(["upi", "netbanking", "nach"]), status="matched"))
     for i in unmatched:
         ln = loans[i]
-        d = date(2026, 10, 4) if i == 1 else REF - timedelta(days=rnd.randint(2, 20))
+        d = REF - timedelta(days=28) if i == 1 else REF - timedelta(days=rnd.randint(2, 20))
         utr = "SAHYR61004738291" if i == 1 else f"SAHYR{rnd.randint(10**10, 10**11 - 1)}"
         out.append(m.Payment(loan_id=i, date=d, amount=ln.emi_amount, utr=utr, channel="upi", status="unmatched"))
     # hardship
@@ -164,4 +165,9 @@ async def seed(engine: AsyncEngine, n_only: bool = False) -> int:
         for tbl in ("customers", "accounts", "loans"):  # explicit ids were used
             await s.execute(text(f"SELECT setval(pg_get_serial_sequence('{tbl}','id'), (SELECT max(id) FROM {tbl}))"))
         await s.commit()
+    from app import sessions  # reseed must fully reset: sessions, rate-limit counters, cref cache
+
+    keys = [k async for k in sessions.redis.scan_iter("ll:*")]
+    if keys:
+        await sessions.redis.delete(*keys)
     return sum(isinstance(r, m.Customer) for r in rows)

@@ -1,14 +1,14 @@
 # Personas (fixed values, produced by `app/db/seed.py`)
 
-Reference "today" for the seed is 2026-11-01. All data is synthetic.
+All seed dates are relative to today (IST) at seed time; amounts, UTRs and rates are fixed. Reseed also flushes Redis `ll:*` keys. All data is synthetic.
 
 ## Priya Deshmukh (customer id 1) - Hinglish/Marathi, floating home loan
 - Registered mobile `9000014417` (ending 4417), DOB `1991-08-14`, email priya.deshmukh@example.com, CIF `SFB00000001`
 - Account ending `0417`, branch Sahyadri Finance Bank Kothrud, IFSC `SAHY0000101`
 - Home loan, loan_last4 `7391`, principal 35,00,000, 240 months, floating, EMI day 5
-- Rate reset effective 2026-09-21: 8.75% -> 9.25%, EMI Rs 30,930 -> Rs 32,055 (current EMI 32,055), outstanding Rs 32,86,450
-- Charges: bounce Rs 590 on 2026-09-06, penal Rs 354 on 2026-09-20
-- Unmatched payment: 2026-10-04, Rs 32,055, UTR `SAHYR61004738291`, channel upi
+- Rate reset effective 41 days ago (about 6 weeks): 8.75% -> 9.25%, EMI Rs 30,930 -> Rs 32,055 (current EMI 32,055), outstanding Rs 32,86,450
+- Charges: bounce Rs 590 56 days ago, penal Rs 354 42 days ago
+- Unmatched payment: 28 days ago (4 weeks), Rs 32,055, UTR `SAHYR61004738291`, channel upi
 
 ## Ramesh Patil (id 2) - Hindi, personal loan
 - Mobile `9000023158`, DOB `1984-03-22`, Nashik Road branch, loan_last4 `5520`

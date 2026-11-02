@@ -24,6 +24,9 @@ class DocumentIn(ActionIn):
 @action("request_document", In=DocumentIn, router=router)
 async def request_document(inp: DocumentIn, session: Session, db: AsyncSession, bg: BackgroundTasks) -> ActionResponse:
     lang = inp.language
+    if not session.has_readback("type", inp.type):
+        return readback_needed(lang, "readback_document", ["type"], {"type": inp.type}, doc=t(f"doc_{inp.type}", lang))
+    session.consume_readback("type")
     sr = await new_request(db, session, inp.type, {"channel": "registered_email"})
     customer = await db.get(Customer, session.customer_id)
     bg.add_task(send_sms, customer, t("sms_document", "en", doc=t(f"doc_{inp.type}", "en"), ticket=sr.id), inp.call_id)
@@ -41,7 +44,7 @@ async def update_nominee(inp: NomineeIn, session: Session, db: AsyncSession, bg:
     pairs = {"name": inp.name, "relation": inp.relation}
     miss = missing_readback(session, pairs)
     if miss:
-        return readback_needed(inp.language, "readback_nominee", miss, **pairs)
+        return readback_needed(inp.language, "readback_nominee", miss, pairs, **pairs)
     for f in pairs:
         session.consume_readback(f)
     sr = await new_request(db, session, "nominee", pairs)
@@ -60,7 +63,7 @@ async def update_address(inp: AddressIn, session: Session, db: AsyncSession, bg:
     miss = missing_readback(session, pairs)
     spoken = {**pairs, "pincode": digits(inp.pincode, 3)}
     if miss:
-        return readback_needed(inp.language, "readback_address", miss, **spoken)
+        return readback_needed(inp.language, "readback_address", miss, pairs, **spoken)
     for f in pairs:
         session.consume_readback(f)
     sr = await new_request(db, session, "address", pairs)

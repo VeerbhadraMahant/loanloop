@@ -1,4 +1,4 @@
-"""Mock phone / bank-app endpoints (SMS inbox, approval tap). Dashboard-token auth. Serves the customer's own device."""
+"""Mock phone / bank-app endpoints (SMS inbox, approval tap). Phone-token auth (separate from the read-only dashboard token). Serves the customer's own device."""
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -7,11 +7,11 @@ from app import events
 from app.db.models import Approval, Customer, SmsOutbox
 from app.db.session import get_db
 from app.routes.actions.approvals import APPROVAL_TTL, expire_if_stale
-from app.security.auth import require_dashboard
+from app.security.auth import require_phone
 from app.security.mask import mask_mobile
 from app.sms import PERSONAS
 
-router = APIRouter(prefix="/phone", dependencies=[Depends(require_dashboard)])
+router = APIRouter(prefix="/phone", dependencies=[Depends(require_phone)])
 
 
 async def _customer(key: str, db: AsyncSession) -> Customer:

@@ -23,6 +23,9 @@ async def rb(client, field, value):
 async def test_request_document(client, make_session, priya):
     await make_session(tier=2)
     r = await call(client, "request_document", type="interest_cert")
+    assert r["next"] == "confirm_readback" and r["data"]["confirm"] == {"type": "interest_cert"}
+    await rb(client, "type", "interest_cert")
+    r = await call(client, "request_document", type="interest_cert")
     assert r["ok"] and "interest certificate" in r["speak"] and "@" not in r["speak"]
     async with SessionLocal() as db:
         assert (await db.get(ServiceRequest, r["data"]["ticket"])).type == "interest_cert"

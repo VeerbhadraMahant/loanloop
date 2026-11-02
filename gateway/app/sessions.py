@@ -7,6 +7,23 @@ from app.config import settings
 redis: aioredis.Redis = aioredis.from_url(settings.redis_url, decode_responses=True, max_connections=200)
 
 
+_YES = {"yes", "y", "haan", "han", "ha", "haa", "ho", "hoy", "हाँ", "हां", "हा", "हो", "होय"}
+
+
+def norm_readback(field: str, value: str) -> str:
+    """Case/whitespace-insensitive compare form; amounts compare numerically; closure yes-words collapse to 'yes'."""
+    v = "".join(value.split()).lower()
+    if field == "amount":
+        try:
+            f = float(v.replace(",", "").replace("₹", ""))
+            return str(int(f)) if f == int(f) else str(f)
+        except ValueError:
+            return v
+    if field == "closure" and v in _YES:
+        return "yes"
+    return v
+
+
 class Session(BaseModel):
     call_id: str
     customer_id: int | None = None
@@ -19,10 +36,10 @@ class Session(BaseModel):
     prefetched_customer_id: int | None = None  # caller-ID claim only; tier stays 0
 
     def confirm_readback(self, field: str, value: str) -> None:
-        self.readbacks[field] = value
+        self.readbacks[field] = norm_readback(field, value)
 
     def has_readback(self, field: str, value: str | None = None) -> bool:
-        return field in self.readbacks and (value is None or self.readbacks[field] == value)
+        return field in self.readbacks and (value is None or self.readbacks[field] == norm_readback(field, value))
 
     def consume_readback(self, field: str) -> str | None:
         """Pop a confirmed read-back (one-shot: a change needs a fresh confirmation)."""
