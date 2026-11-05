@@ -130,6 +130,8 @@ def main(argv=None) -> int:
     ap.add_argument("--gateway", default="http://127.0.0.1:8000")
     ap.add_argument("--env", type=Path, help="gateway .env file holding PHONE_TOKEN (default gateway/.env)")
     ap.add_argument("--scenario", choices=["priya", "attacker", "all"], default="all")
+    ap.add_argument("--no-reseed", action="store_true",
+                    help="accepted for clarity: this script NEVER reseeds (seed_data.py is a separate manual step)")
     a = ap.parse_args(argv)
     token = env("PHONE_TOKEN", a.env) or "dev-phone-token-change-me"
     fails, lat, lines = 0, [], []

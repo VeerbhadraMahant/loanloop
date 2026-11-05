@@ -385,6 +385,162 @@ def test_auto_confirm_after_yes_retries_held_action():
     assert all(g[2] == d["call_id"] for g in st["gw"])
 
 
+def scripted(llm, gw, seen=None, tts_fail=False):
+    """Handler: llm = list of ollama messages popped in order; gw = {action: response dict or callable(body)}."""
+    def handler(req):
+        url = str(req.url)
+        if "11434" in url:
+            seen is not None and seen.append(("llm", json.loads(req.content)))
+            return httpx.Response(200, json={"message": llm.pop(0) if llm else {"role": "assistant", "content": "ok"}})
+        if "/actions/" in url:
+            name, body = url.rsplit("/", 1)[1], json.loads(req.content)
+            seen is not None and seen.append((name, body))
+            r = gw.get(name, {"ok": True, "speak": f"{name} done"})
+            return httpx.Response(200, json=r(body) if callable(r) else r)
+        if tts_fail:
+            return httpx.Response(500)
+        return httpx.Response(200, content=b"RIFF")
+    return handler
+
+
+RB = {"ok": False, "speak": "UTR 1 2 3 4. Is that right?", "next": "confirm_readback",
+      "data": {"fields": ["utr"], "confirm": {"utr": "SAHYR1234"}}}
+
+
+def test_model_cannot_confirm_readback_same_turn():
+    seen = []
+    llm = [tc("check_payment", utr="SAHYR1234", amount=1, date="2026-10-04"),
+           tc("confirm_readback", field="utr", value="SAHYR1234"),
+           tc("check_payment", utr="SAHYR1234", amount=1, date="2026-10-04"),
+           {"role": "assistant", "content": "all done, payment checked"}]
+    with swap_app(scripted(llm, {"check_payment": RB}, seen)) as c:
+        d = c.post("/calls?tts=false", json={}).json()
+        r = turn(c, d, "I paid").json()
+    assert not any(n == "confirm_readback" for n, _ in seen)  # never reached the gateway
+    assert r["agent_text"] == RB["speak"]
+    assert {"name": "confirm_readback", "ok": False} in r["actions"]
+
+
+def test_auto_confirm_only_on_the_next_turn_and_after_delivery():
+    seen = []
+    llm = [tc("check_payment", utr="SAHYR1234", amount=1, date="2026-10-04"), {"role": "assistant", "content": "x"},
+           {"role": "assistant", "content": "weather is fine"}, {"role": "assistant", "content": "ok"}]
+    with swap_app(scripted(llm, {"check_payment": RB}, seen)) as c:
+        d = c.post("/calls?tts=false", json={}).json()
+        turn(c, d, "I paid")
+        turn(c, d, "what about the weather")  # unrelated turn: the read-back goes stale
+        n = len([1 for k, _ in seen if k == "llm"])
+        r = turn(c, d, "haan")
+    assert not any(n_ == "confirm_readback" for n_, _ in seen)
+    assert len([1 for k, _ in seen if k == "llm"]) == n + 1  # went to the LLM, not auto-confirmed
+    assert r.status_code == 200
+    # a read-back whose audio was never delivered (TTS failure) is not "heard"
+    llm2 = [tc("check_payment", utr="SAHYR1234", amount=1, date="2026-10-04"), {"role": "assistant", "content": "x"},
+            {"role": "assistant", "content": "ok"}]
+    seen2 = []
+    with swap_app(scripted(llm2, {"check_payment": RB}, seen2, tts_fail=True)) as c:
+        d = c.post("/calls?tts=false", json={}).json()
+        r1 = c.post(f"/calls/{d['call_id']}/turn", json={"text": "I paid"}).json()  # tts on, fails
+        assert r1["audio_b64"] == ""
+        turn(c, d, "haan")
+    assert not any(n_ == "confirm_readback" for n_, _ in seen2)
+
+
+def test_failed_turn_clears_readback(env):
+    c, fake = env
+    d = new_call(c)
+    fake.llm_script = [tc("emi_info"), {"role": "assistant", "content": "ok"}]
+    turn(c, d, "x")
+    cc = c.app.state.calls[d["call_id"]]
+    cc["pending_rb"], cc["rb_turn"] = ("emi_info", {}, {"f": "v"}), cc["turn"]
+    n = len(cc["messages"])
+    fake.fail = "gw"  # the auto-confirm path hits the failing gateway mid-turn
+    assert turn(c, d, "haan").status_code == 502
+    assert cc["pending_rb"] is None and cc["rb_new"] is None and cc["rb_active"] is None
+    assert len(cc["messages"]) == n
+
+
+def test_bare_affirmative_rules():
+    from voice.app import is_bare_affirmative as a
+    assert a("haan sahi hai") and a("yes") and a("हो") and a("होय, बरोबर") and a("Haan.")
+    assert not a("yes but change the amount") and not a("haan 5000") and not a("nahi") and not a("बदला")
+    assert not a("haan date galat hai") and not a("yes yes yes yes") and not a("don't") and not a("yes wait")
+    assert not a("नको") and not a("हा चुकीचे") and not a("hoyyy") and not a("हो बदला")
+
+
+def test_mask_spoken_counts_digits_across_separators():
+    from voice.app import mask_spoken as m
+    for t in ("+91-98765-43210", "9876 543 210", "ID9876543210", "9876.543.210", "9876543210"):
+        out = m(f"number {t} ok")
+        assert out.count("*") >= 5 and out.endswith("3210 ok"[-6:]) and "9876" not in out, out
+    assert m("IFSC SAHY0000101 EMI ₹32,055 MICR 411 670 487") == "IFSC SAHY0000101 EMI ₹32,055 MICR 411 670 487"
+    assert m("UTR SAHYR61004738291", {"61004738291"}) == "UTR SAHYR61004738291"
+    assert "61004738291" not in m("UTR SAHYR61004738291")
+    assert m("ref 610 0473 8291", {"61004738291"}) == "ref 610 0473 8291"
+
+
+def test_gateway_speak_fallback_is_masked_too():
+    gw = {"start_call": {"ok": True, "speak": "Hello 98765 43210"}, "emi_info": {"ok": True, "speak": "Call 98765 43210 now"}}
+    llm = [tc("emi_info"), {"role": "assistant", "content": ""}]  # empty final text: the gateway speak is spoken instead
+    with swap_app(scripted(llm, gw)) as c:
+        d = c.post("/calls?tts=false", json={}).json()
+        assert "98765" not in d["agent_text"]
+        r = turn(c, d, "emi").json()
+    assert "98765" not in r["agent_text"] and r["agent_text"].endswith("3210 now")
+
+
+def test_goodbye_rules():
+    from voice.app import is_goodbye as g
+    assert g("bye") and g("Okay, bye.") and g("theek hai, bye") and g("ठीक आहे, धन्यवाद, बाय.") and g("that's all")
+    assert not g("बायको कहाँ है") and not g("bye but change my emi date") and not g("no bye") and not g("ok bye also send sms now")
+    assert not g("I need a statement, bye bye bye")
+
+
+def test_pending_tier_hint_expires():
+    notes = []
+    llm = [tc("emi_info"), {"role": "assistant", "content": "verify first"}] + [{"role": "assistant", "content": "ok"}] * 3 + \
+          [tc("verify_caller", registered_mobile="1", dob="x"), {"role": "assistant", "content": "done"}]
+    gw = {"emi_info": {"ok": False, "speak": "verify", "next": "need_tier_1"}, "verify_caller": {"ok": True, "speak": "verified"}}
+    seen = []
+    with swap_app(scripted(llm, gw, seen)) as c:
+        d = c.post("/calls?tts=false", json={}).json()
+        for t in ("emi?", "hmm", "hmm", "hmm", "my number"):
+            turn(c, d, t)
+    last_tool = [json.loads(m["content"]) for k, b in seen if k == "llm" for m in b["messages"] if m.get("tool_name") == "verify_caller"]
+    assert not any("pending_request" in x for x in last_tool)
+
+
+def test_approval_id_cleared_after_failure_and_after_decision():
+    seen = []
+    llm = [tc("request_app_approval", purpose="x"), {"role": "assistant", "content": "a"},
+           tc("check_approval", approval_id="55"), {"role": "assistant", "content": "b"}]
+    gw = {"request_app_approval": {"ok": False, "speak": "no", "error_code": "NOT_VERIFIED"}}
+    with swap_app(scripted(llm, gw, seen)) as c:
+        d = c.post("/calls?tts=false", json={}).json()
+        turn(c, d, "approve")
+        turn(c, d, "done")
+    assert [b for n, b in seen if n == "check_approval"][0]["approval_id"] == "55"  # not a stale service id
+    seen2 = []
+    llm = [tc("request_app_approval", purpose="x"), {"role": "assistant", "content": "a"},
+           tc("check_approval", approval_id="1"), {"role": "assistant", "content": "b"},
+           tc("check_approval", approval_id="66"), {"role": "assistant", "content": "c"}]
+    gw = {"request_app_approval": {"ok": True, "speak": "sent", "data": {"approval_id": 7}},
+          "check_approval": {"ok": True, "speak": "approved", "data": {"status": "approved"}}}
+    with swap_app(scripted(llm, gw, seen2)) as c:
+        d = c.post("/calls?tts=false", json={}).json()
+        for t in ("approve", "done", "again"):
+            turn(c, d, t)
+    ids = [b["approval_id"] for n, b in seen2 if n == "check_approval"]
+    assert ids == ["7", "66"]
+
+
+def test_final_text_known_figures_only_from_ok_speaks():
+    from voice.app import final_text
+    assert final_text("Your EMI is 5000", [(True, "EMI noted")]) == "EMI noted"  # caller digits are not gateway figures
+    assert final_text("figure 100", [(False, "100 refused"), (True, "ok done")]) == "ok done"
+    assert final_text("EMI is 32055 rupees", [(True, "EMI ₹32,055")]) == "EMI is 32055 rupees"
+
+
 def test_goodbye_safety_net_calls_end_call(env):
     c, fake = env
     d = new_call(c)
