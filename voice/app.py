@@ -300,6 +300,21 @@ APPROVAL_WORDS = {"approve", "approved", "approval", "tapped", "tap", "done", "k
                   "अप्रूव", "मंजूर", "कर", "दिया", "केले", "केलं", "झाले"}
 
 
+_DATE_WORDS = {"date", "tareekh", "tarikh", "tarik", "dinank", "तारीख", "तारिख", "दिनांक"}
+_CHANGE_CUES = {"change", "badal", "badlo", "badalna", "badla", "karaycha", "karna", "karo", "karne", "shift", "move",
+                "करा", "करायचा", "करायची", "बदल", "बदला", "बदलो", "बदलना", "लावा"}
+
+
+def fallback_action(text: str) -> tuple[str, dict] | None:
+    """Only when the model answered with prose and no action: 'EMI date 10 la karaycha aahe' is unambiguous enough
+    to run emi_date_change(new_day=10) ourselves (the read-back and approval flows then take over)."""
+    t = set(_tokens(text))
+    if not ({"emi", "ईएमआय", "एमआय"} & t and _DATE_WORDS & t and _CHANGE_CUES & t):
+        return None
+    days = [int(n) for n in re.findall(r"(?<!\d)\d{1,2}(?!\d)", text.translate(_DEVA_DIGITS)) if 1 <= int(n) <= 31]
+    return ("emi_date_change", {"new_day": days[0]}) if len(days) == 1 else None
+
+
 def claims_approved(text: str) -> bool:
     """'Approve kar diya' / 'I approved it': the caller says it is done (a request like 'send the approval' is not)."""
     t = set(_tokens(text))
@@ -520,6 +535,11 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             tcs = tcs if isinstance(tcs, list) else []
             argl = [clean_args(tc) for tc in tcs]
             c["messages"].append(msg)
+            if not tcs and not st["done"] and not st.get("fb") and (fb := fallback_action(c.get("user_text", ""))):
+                st["fb"] = True  # replace the model's prose with the action it should have called
+                msg = {"role": "assistant", "content": "", "tool_calls": [{"function": {"name": fb[0], "arguments": fb[1]}}]}
+                c["messages"][-1] = msg
+                tcs, argl = msg["tool_calls"], [fb[1]]
             if not tcs and st.pop("dup_appr", False):
                 # the model asked for a second approval, got refused and answered with prose: push it to act once
                 c["messages"].append({"role": "user", "content": "[service note: the approval is already confirmed. "

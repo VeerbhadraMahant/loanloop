@@ -863,6 +863,21 @@ def test_requesting_an_approval_is_not_claiming_one():
     assert not k("Yes, please send the approval request.") and not k("approval bhej do") and not k("haan")
 
 
+def test_fallback_runs_emi_date_change_when_model_only_talks():
+    from voice.app import fallback_action as fb
+    assert fb("Ab Marathi madhe bola. Maza EMI date 10 la karaycha aahe") == ("emi_date_change", {"new_day": 10})
+    assert fb("माझ्या EMI ची तारीख १० करा") == ("emi_date_change", {"new_day": 10})
+    assert fb("EMI date kya hai?") is None and fb("EMI date 10 ya 12 karo") is None and fb("my emi is 5000") is None
+    seen = []
+    gw = {"emi_date_change": {"ok": False, "speak": "Read back 10. Right?", "next": "confirm_readback",
+                              "data": {"fields": ["new_day"], "confirm": {"new_day": "10"}}}}
+    with swap_app(scripted([{"role": "assistant", "content": "garbled marathi prose"}], gw, seen)) as c:
+        d = c.post("/calls?tts=false", json={}).json()
+        r = turn(c, d, "Maza EMI date 10 la karaycha aahe").json()
+    assert [b for n, b in seen if n == "emi_date_change"][0]["new_day"] == 10
+    assert r["agent_text"] == "Read back 10. Right?" and r["actions"] == [{"name": "emi_date_change", "ok": False}]
+
+
 def test_call_ids_never_contain_a_long_digit_run():
     import re
     from voice.app import new_call_id
