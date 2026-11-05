@@ -15,3 +15,6 @@ tools/out/*
 # personal task list, kept local
 TASKS.md
 .env.local
+
+# local run state
+.run/

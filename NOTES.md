@@ -9,6 +9,14 @@
 - `ActionIn.language` is sent on every call and written to session.language by the runner.
 - account_last4 / loan_last4 are plaintext columns so masking and verification never decrypt.
 
+## Decision: own voice agent (2026-11-06)
+- Why: no Gnani Agent Builder access, so the planned Agent Builder + Custom Actions + tunnel setup cannot be used.
+- What it replaces: Agent Builder (telephony, Pampa LLM, Timbre TTS wiring, tunnel). Now `voice/` (FastAPI, 127.0.0.1:8100): browser WAV -> Gnani Prisma STT (api.vachana.ai /stt/v3) -> local Ollama `qwen3:8b` (think off, tools = the 23 actions in agent/actions.json, prompt = agent/system_prompt.md) -> gateway :8000 -> Gnani Timbre TTS (timbre-v3.0, WAV). Caller page: `web/app/call/[customer]`. No tunnel needed. `agent/apply_agent.py` and docs/agent-builder-setup.md are reference only.
+- Rule change (owner decision): "no non-Gnani AI at runtime" is relaxed for the LLM only. STT, TTS and voice cloning are still Gnani.
+- Security: spoken secrets are caught before the LLM and reported via report_secret_spoken (type only); the gateway still enforces tiers, masking and audit.
+- Measured: model picked the right action in 4/4 test utterances (Hinglish IFSC, verification with mobile+DOB, spoken password -> report_secret_spoken with type only, Marathi EMI question). About 1 s per tool call on an RTX 4060 after a ~60 s first load; model ~5 GB, stored on D: (OLLAMA_MODELS=D:\Work\Hackathons\gnani\ollama-models).
+- Gnani credits are limited: tests fake Gnani; typed tests use tts=false.
+
 ## Needs user approval
 - `cryptography` (Fernet for tokenisation of account/loan numbers) is not in the Section 7 allow-list. Added to gateway/pyproject.toml.
 - `pydantic-settings` and `asyncpg` (explicitly needed for config / Postgres) also beyond the literal list.
@@ -39,15 +47,13 @@ Machine: i7-13650HX (20 threads), Windows 11, one box: Locust, gateway (`uvicorn
 - Dependencies beyond CLAUDE.md section 7 needing owner approval: `cryptography`, `pydantic-settings`, `asyncpg`, `locust`.
 
 ## Needs the owner
-- [ ] Gnani API keys in `.env` (`GNANI_SPEECH_API_KEY`, `INYA_PLATFORM_API_KEY`).
-- [ ] Create the GitHub repo and push (blocked for the agent).
-- [ ] Agent Builder console: create the integration and the 23 custom actions per docs/agent-builder-setup.md; run `agent/apply_agent.py --apply`.
-- [ ] Tunnel (cloudflared/ngrok) or VM; set `PUBLIC_GATEWAY_URL`.
-- [ ] Run `tools/make_test_audio.py` then `tools/stt_benchmark.py` (STT numbers).
+- [ ] Gnani speech API key available to the voice service (`GNANI_SPEECH_API_KEY`).
+- [x] Create the GitHub repo and push.
+- [ ] Mic test at /call/priya (hold to talk, Hinglish and Marathi).
+- [ ] Short live Gnani STT/TTS check (credits are limited).
+- [ ] Run `tools/make_test_audio.py` then `tools/stt_benchmark.py` (STT numbers), if credits allow.
 - [ ] Record a voice clone for the attacker demo.
-- [ ] 20 scripted calls (`tools/scripted_calls.md`) and end-to-end latency measurement.
 - [ ] Demo video.
-- [ ] Confirm the open questions below in the console.
 
 ## Open questions (CLAUDE.md has no section 4.5; these are the open items from docs/gnani-facts.md)
 1. Caller ANI variable in Agent Builder? Not in docs; agent asks for registered mobile, caller_number is a claim only (guess).
