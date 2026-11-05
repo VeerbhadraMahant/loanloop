@@ -8,7 +8,7 @@ T = {
     "secret_reassure": {
         "en": "Thank you for stopping. Nothing was saved. Never share these with anyone, including the bank.",
         "hi": "रुकने के लिए धन्यवाद। कुछ भी सेव नहीं हुआ। इन्हें किसी के साथ, बैंक के साथ भी, कभी साझा न करें।",
-        "hinglish": "Aapke rukne ke liye ke liye thank you. Kuch bhi save nahi hua. Ye cheezein kisi ko, bank ko bhi, kabhi share mat kijiye.",
+        "hinglish": "Rukne ke liye thank you. Kuch bhi save nahi hua. Ye cheezein kisi ko, bank ko bhi, kabhi share mat kijiye.",
         "mr": "थांबल्याबद्दल धन्यवाद. काहीही सेव्ह झाले नाही. हे कोणालाही, बँकेलाही, कधीही सांगू नका.",
     },
     "not_verified": {
