@@ -3,6 +3,20 @@ const GATEWAY = process.env.GATEWAY_URL ?? "http://localhost:8000";
 const DASHBOARD_TOKEN = process.env.DASHBOARD_TOKEN ?? "";
 const PHONE_TOKEN = process.env.PHONE_TOKEN ?? "";
 
+const ORIGIN_ALLOW = new Set(["http://localhost:3000", "http://127.0.0.1:3000"]);
+
+// Fail closed: a POST must carry an Origin equal to the request's own origin (Host / X-Forwarded-*) or an allowlisted one.
+function originOk(req: Request) {
+  const origin = req.headers.get("origin");
+  if (!origin) return false;
+  if (ORIGIN_ALLOW.has(origin)) return true;
+  const first = (h: string) => req.headers.get(h)?.split(",")[0].trim();
+  const host = first("x-forwarded-host") ?? req.headers.get("host");
+  if (!host) return false;
+  const proto = first("x-forwarded-proto") ?? new URL(req.url).protocol.replace(":", "");
+  return origin === `${proto}://${host}`;
+}
+
 async function proxy(req: Request, ctx: { params: Promise<{ path: string[] }> }) {
   const { path } = await ctx.params;
   if (path.some((s) => s === "" || s.includes(".."))) return new Response("Not found", { status: 404 });
@@ -12,7 +26,7 @@ async function proxy(req: Request, ctx: { params: Promise<{ path: string[] }> })
       ? joined === "events/stream" || /^(dashboard|phone)(\/|$)/.test(joined)
       : req.method === "POST" && /^phone\/[^/]+\/approvals\/[^/]+\/(approve|deny)$/.test(joined);
   if (!allowed) return new Response("Not found", { status: 404 });
-  if (req.method === "POST" && req.headers.get("origin") !== new URL(req.url).origin) {
+  if (req.method === "POST" && !originOk(req)) {
     return new Response("Forbidden", { status: 403 });
   }
   const url = new URL(`${GATEWAY}/${path.map(encodeURIComponent).join("/")}`);
