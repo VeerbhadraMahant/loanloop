@@ -32,4 +32,7 @@ def check_settings(s: Settings = settings) -> None:
         if not getattr(s, name):  # an empty token would accept a bare "Bearer "
             raise RuntimeError(f"{name.upper()} is empty: refusing to start")
         if getattr(s, name) == default:
+            # the defaults are in the public repo: never accept them on a publicly reachable gateway
+            if not s.public_gateway_url.startswith(("http://localhost", "http://127.0.0.1")):
+                raise RuntimeError(f"{name.upper()} is the dev default but PUBLIC_GATEWAY_URL is public: refusing to start")
             logging.getLogger("config").warning("SECURITY: %s is the dev default. Change it before exposing the gateway.", name.upper())

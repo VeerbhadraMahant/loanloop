@@ -130,6 +130,8 @@ def test_config_checks(caplog):
     with caplog.at_level(logging.WARNING, logger="config"):
         check_settings(Settings(encryption_key="k", _env_file=None, **DEV_DEFAULTS))
     assert sum("dev default" in m for m in caplog.messages) == len(DEV_DEFAULTS)
+    with pytest.raises(RuntimeError, match="public"):
+        check_settings(Settings(encryption_key="k", _env_file=None, public_gateway_url="https://x.trycloudflare.com", **DEV_DEFAULTS))
 
 
 # 8
