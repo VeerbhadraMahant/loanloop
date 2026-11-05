@@ -17,6 +17,13 @@
 - Measured: model picked the right action in 4/4 test utterances (Hinglish IFSC, verification with mobile+DOB, spoken password -> report_secret_spoken with type only, Marathi EMI question). About 1 s per tool call on an RTX 4060 after a ~60 s first load; model ~5 GB, stored on D: (OLLAMA_MODELS=D:\Work\Hackathons\gnani\ollama-models).
 - Gnani credits are limited: tests fake Gnani; typed tests use tts=false.
 
+### Voice agent: final state (2026-11-06)
+- Tests: gateway 170 passed, voice 65 passed (all upstreams faked; no Gnani calls). `web` build + lint clean.
+- `tools/voice_e2e.py --scenario all` (typed, tts=false, after reseed from the MAIN checkout's gateway/): Priya original 13/13 and Priya browser phrasings 9/9 on 4 runs; attacker 6/6 on 3 of 4 runs (1 run the model skipped send_details_sms: a missed action, not a leak). Median typed turn ~2.0 s on RTX 4060 (no STT/TTS).
+- Browser QA (Playwright, typed, voice replies off): full Priya flow 10/10 steps, /ops timeline shows all events, no full mobile/password/account/CIF visible outside the customer's own SMS inbox.
+- Service-side guards added because an 8B model is unreliable: secrets never reach the LLM (service calls report_secret_spoken), model cannot confirm read-backs (service confirms only on a bare affirmative the turn after the read-back was spoken), action values must be traceable to the caller's words, app approval requested/checked by the service, duplicate approvals blocked, tool names stripped from speech, spoken digit runs >= 9 masked, call ids never contain 9+ digit runs (gateway redaction would mangle them).
+- Known limits: model's Marathi/Hinglish wording is sometimes rough (gateway `speak` text is used for all figures); call history is in memory (restart drops calls); voice service accepts only Host 127.0.0.1/localhost on VOICE_PORT (8100); seed from the main checkout (worktree .env lacks ENCRYPTION_KEY); live Gnani STT/TTS and the mic path are NOT yet tested.
+
 ## Needs user approval
 - `cryptography` (Fernet for tokenisation of account/loan numbers) is not in the Section 7 allow-list. Added to gateway/pyproject.toml.
 - `pydantic-settings` and `asyncpg` (explicitly needed for config / Postgres) also beyond the literal list.
