@@ -7,6 +7,7 @@ node_modules/
 tools/out/*
 !tools/out/loadtest.json
 !tools/out/simulate_transcript.txt
+!tools/out/voice_e2e_transcript.txt
 !tools/out/stt_benchmark.json
 !tools/out/e2e_latency.json
 .pytest_cache/
