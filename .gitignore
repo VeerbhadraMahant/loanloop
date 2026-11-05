@@ -11,3 +11,6 @@ tools/out/*
 !tools/out/e2e_latency.json
 .pytest_cache/
 .claude/worktrees/
+
+# personal task list, kept local
+TASKS.md
