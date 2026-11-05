@@ -523,7 +523,9 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             if not tcs and st.pop("dup_appr", False):
                 # the model asked for a second approval, got refused and answered with prose: push it to act once
                 c["messages"].append({"role": "user", "content": "[service note: the approval is already confirmed. "
-                                      "Call the Tier 2 action that answers the caller's last request now; do not answer from memory.]"})
+                                      "Call the Tier 2 action that answers the caller's last request now; do not answer from memory. Why did my EMI change: "
+                                      "explain_emi_change. Change the EMI date to day N: emi_date_change with new_day N. Close the loan: "
+                                      "foreclosure_quote / raise_closure. Statement or certificate: request_document.]"})
                 continue
             if not tcs:
                 # gateway sentences are trusted as-is; only the model's own words are scrubbed of tool names
