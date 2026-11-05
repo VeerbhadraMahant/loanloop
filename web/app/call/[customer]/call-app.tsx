@@ -34,7 +34,7 @@ export default function CallApp({ customer }: { customer: string }) {
   const [lang, setLang] = useState<string | null>(null);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [voiceReplies, setVoiceReplies] = useState(true);
+  const [voiceReplies, setVoiceReplies] = useState(false); // off by default: saves Gnani TTS credits
   const [text, setText] = useState("");
   const [talking, setTalking] = useState(false);
   const callId = useRef<string | null>(null);
@@ -46,6 +46,14 @@ export default function CallApp({ customer }: { customer: string }) {
   const abort = useRef<AbortController | null>(null);
   const voiceRef = useRef(voiceReplies);
   voiceRef.current = voiceReplies; // eslint-disable-line react-hooks/refs -- latest value for timer/handler closures
+  useEffect(() => { // restore after mount (avoids a hydration mismatch)
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time restore from storage after mount
+    try { if (localStorage.getItem("loanloop.voiceReplies") === "1") setVoiceReplies(true); } catch { /* storage blocked */ }
+  }, []);
+  const toggleVoice = (on: boolean) => {
+    setVoiceReplies(on);
+    try { localStorage.setItem("loanloop.voiceReplies", on ? "1" : "0"); } catch { /* storage blocked */ }
+  };
   const ended = status === "ended";
   const inCall = status !== "idle" && status !== "connecting" && !ended;
   const busy = status === "thinking" || status === "connecting";
@@ -177,6 +185,13 @@ export default function CallApp({ customer }: { customer: string }) {
     const r = rec.current; if (r) { clearTimeout(r.timer); rec.current = null; r.stop(); }
   }, []);
 
+  const voiceSwitch = (
+    <label className="flex min-h-11 min-w-11 cursor-pointer items-center gap-3 text-sm text-muted">
+      <input type="checkbox" role="switch" checked={voiceReplies} onChange={(e) => toggleVoice(e.target.checked)} className="peer sr-only" />
+      <span aria-hidden className="relative h-6 w-11 shrink-0 rounded-full border border-line bg-sunken transition-colors peer-checked:border-transparent peer-checked:bg-accent peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--ring)] after:absolute after:left-0.5 after:top-0.5 after:h-[18px] after:w-[18px] after:rounded-full after:bg-fg after:transition-transform peer-checked:after:translate-x-5" />
+      Voice replies
+    </label>
+  );
   const listening = status === "listening" && talking;
   const keyHold = (down: boolean) => (e: React.KeyboardEvent) => {
     if (e.code !== "Space" && e.code !== "Enter") return;
@@ -226,7 +241,10 @@ export default function CallApp({ customer }: { customer: string }) {
 
         <div className="space-y-3 border-t border-line bg-card px-4 pb-5 pt-3">
           {(status === "idle" || status === "connecting" || ended) ? (
-            <Button className="w-full" onClick={start} disabled={status === "connecting"}>{ended ? "Start a new call" : "Start call"}</Button>
+            <>
+              {voiceSwitch}
+              <Button className="w-full" onClick={start} disabled={status === "connecting"}>{ended ? "Start a new call" : "Start call"}</Button>
+            </>
           ) : (
             <>
               <button type="button" {...talkProps} disabled={!inCall || busy}
@@ -241,10 +259,7 @@ export default function CallApp({ customer }: { customer: string }) {
                 <Button type="submit" small disabled={!inCall || busy || !text.trim()}>Send</Button>
               </form>
               <div className="flex items-center justify-between">
-                <label className="flex min-h-11 items-center gap-2 text-sm text-muted">
-                  <input type="checkbox" checked={voiceReplies} onChange={(e) => setVoiceReplies(e.target.checked)} className="h-4 w-4" />
-                  Voice replies
-                </label>
+                {voiceSwitch}
                 <Button small variant="secondary" onClick={end}>End call</Button>
               </div>
             </>
