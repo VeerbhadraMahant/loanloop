@@ -377,7 +377,7 @@ def test_auto_confirm_after_yes_retries_held_action():
         return httpx.Response(200, json={"ok": True, "speak": "payment matched"})
     with swap_app(handler) as c:
         d = c.post("/calls?tts=false", json={}).json()
-        r1 = turn(c, d, "I paid already").json()
+        r1 = turn(c, d, "I paid already 100 rupees, UTR SAHYR1").json()
         assert r1["agent_text"] == "read back UTR and amount"  # the gateway's read-back sentence, verbatim
         r2 = turn(c, d, "haan sahi hai").json()
     assert [a["name"] for a in r2["actions"]] == ["confirm_readback", "confirm_readback", "check_payment"]
@@ -415,7 +415,7 @@ def test_model_cannot_confirm_readback_same_turn():
            {"role": "assistant", "content": "all done, payment checked"}]
     with swap_app(scripted(llm, {"check_payment": RB}, seen)) as c:
         d = c.post("/calls?tts=false", json={}).json()
-        r = turn(c, d, "I paid").json()
+        r = turn(c, d, "I paid 1 rupee UTR SAHYR1234 on 4 October").json()
     assert not any(n == "confirm_readback" for n, _ in seen)  # never reached the gateway
     assert r["agent_text"] == RB["speak"]
     assert {"name": "confirm_readback", "ok": False} in r["actions"]
@@ -427,7 +427,7 @@ def test_auto_confirm_only_on_the_next_turn_and_after_delivery():
            {"role": "assistant", "content": "weather is fine"}, {"role": "assistant", "content": "ok"}]
     with swap_app(scripted(llm, {"check_payment": RB}, seen)) as c:
         d = c.post("/calls?tts=false", json={}).json()
-        turn(c, d, "I paid")
+        turn(c, d, "I paid 1 rupee UTR SAHYR1234 on 4 October")
         turn(c, d, "what about the weather")  # unrelated turn: the read-back goes stale
         n = len([1 for k, _ in seen if k == "llm"])
         r = turn(c, d, "haan")
@@ -440,7 +440,7 @@ def test_auto_confirm_only_on_the_next_turn_and_after_delivery():
     seen2 = []
     with swap_app(scripted(llm2, {"check_payment": RB}, seen2, tts_fail=True)) as c:
         d = c.post("/calls?tts=false", json={}).json()
-        r1 = c.post(f"/calls/{d['call_id']}/turn", json={"text": "I paid"}).json()  # tts on, fails
+        r1 = c.post(f"/calls/{d['call_id']}/turn", json={"text": "I paid 1 rupee UTR SAHYR1234 on 4 October"}).json()  # tts on, fails
         assert r1["audio_b64"] == ""
         turn(c, d, "haan")
     assert not any(n_ == "confirm_readback" for n_, _ in seen2)
@@ -539,6 +539,63 @@ def test_final_text_known_figures_only_from_ok_speaks():
     assert final_text("Your EMI is 5000", [(True, "EMI noted")]) == "EMI noted"  # caller digits are not gateway figures
     assert final_text("figure 100", [(False, "100 refused"), (True, "ok done")]) == "ok done"
     assert final_text("EMI is 32055 rupees", [(True, "EMI ₹32,055")]) == "EMI is 32055 rupees"
+
+
+def test_invented_payment_details_never_reach_gateway():
+    seen = []
+    invented = tc("check_payment", utr="SAHYR99999999", amount=32055, date="2026-10-04")
+    llm = [invented, {"role": "assistant", "content": "Please tell me your UTR and amount"}]
+    with swap_app(scripted(llm, {}, seen)) as c:
+        d = c.post("/calls?tts=false", json={}).json()
+        r = turn(c, d, "Maine EMI already pay kiya hai").json()
+    assert not any(n == "check_payment" for n, _ in seen)
+    assert r["actions"] == [{"name": "check_payment", "ok": False}]
+    tool = [m for k, b in seen if k == "llm" for m in b["messages"] if m.get("tool_name") == "check_payment"][0]
+    assert "Ask the caller for utr, amount" in tool["content"] and "never invent" in tool["content"]
+
+
+def test_traceable_values_pass_the_guard():
+    from voice.app import untraceable as u
+    said = ["Payment 4 October ko ₹32,055 ki thi, UTR S A H Y R 6 1 0 0 4 7 3 8 2 9 1"]
+    assert u("check_payment", {"utr": "SAHYR61004738291", "amount": 32055, "date": "2026-10-04"}, said) == []
+    assert u("check_payment", {"utr": "SAHYR61004738291", "amount": 32055, "date": "2020-01-01"}, said) == []  # date lenient
+    assert u("check_payment", {"utr": "SAHYR61004738292", "amount": 3205, "date": "x"}, said) == ["utr", "amount"]
+    assert u("emi_date_change", {"new_day": 10}, ["तारीख १० करा"]) == []
+    assert u("emi_date_change", {"new_day": 1}, ["तारीख 10 करा"]) == ["new_day"]  # 1 is not 10
+    addr = {"line1": "12 MG Road", "city": "Pune", "pincode": "411038"}
+    assert u("update_address", addr, ["mera address 12 MG road, Pune, 411038 hai"]) == []
+    assert u("update_address", addr, ["Pune 411038"]) == ["line1"]
+    assert u("update_nominee", {"name": "Ravi Kumar", "relation": "son"}, ["nominee Ravi Kumar"]) == []
+    assert u("update_nominee", {"name": "Ravi Kumar"}, ["nominee badalna hai"]) == ["name"]
+
+
+def test_tool_names_never_spoken():
+    from voice.app import clean_spoken
+    names = {"check_payment", "emi_info"}
+    assert clean_spoken("Ab main check_payment kar rahi hoon. Kripya wait kijiye.", names) == "Kripya wait kijiye."
+    assert clean_spoken("I will call some_other_thing now.", names) == ""
+    assert clean_spoken("Your EMI is due.", names) == "Your EMI is due."
+    llm = [{"role": "assistant", "content": "Ab main check_payment kar rahi hoon."}]
+    with swap_app(scripted(llm, {"emi_info": {"ok": True, "speak": "EMI sentence"}})) as c:
+        d = c.post("/calls?tts=false", json={}).json()
+        assert "check_payment" not in turn(c, d, "hello").json()["agent_text"]
+
+
+def test_duplicate_approval_rejected_once_approved():
+    seen = []
+    llm = [tc("request_app_approval", purpose="x"), {"role": "assistant", "content": "a"},
+           tc("check_approval", approval_id="1"), {"role": "assistant", "content": "b"},
+           tc("request_app_approval", purpose="another"), {"role": "assistant", "content": "c"}]
+    gw = {"request_app_approval": {"ok": True, "speak": "sent", "data": {"approval_id": 7}},
+          "check_approval": {"ok": True, "speak": "approved", "data": {"status": "approved"}}}
+    with swap_app(scripted(llm, gw, seen)) as c:
+        d = c.post("/calls?tts=false", json={}).json()
+        for t in ("approve", "done", "also approve again"):
+            r = turn(c, d, t).json()
+    assert [n for n, _ in seen if n == "request_app_approval"] == ["request_app_approval"]  # only the first reached the gateway
+    assert r["actions"] == [{"name": "request_app_approval", "ok": False}]
+    tool = [m for k, b in seen if k == "llm" for m in b["messages"] if m.get("tool_name") == "request_app_approval"][-1]
+    assert "Already approved" in tool["content"]
 
 
 def test_goodbye_safety_net_calls_end_call(env):

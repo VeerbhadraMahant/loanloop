@@ -199,6 +199,58 @@ def infer_language(text: str, current: str) -> str:
     return "hinglish" if current in ("hi", "mr") else current
 
 
+_DEVA_DIGITS = str.maketrans("०१२३४५६७८९", "0123456789")
+_IDENT = re.compile(r"\b[A-Za-z]+(?:_[A-Za-z0-9]+)+\b")
+
+
+def clean_spoken(text: str, names: set[str]) -> str:
+    """Never speak tool names: drop every sentence that contains an action name or a snake_case identifier."""
+    if not text:
+        return text
+    bad = re.compile(r"\b(?:" + "|".join(sorted(map(re.escape, names), key=len, reverse=True)) + r")\b")
+    parts = re.split(r"(?<=[.!?\u0964])\s+", text)
+    return " ".join(x for x in parts if not (_IDENT.search(x) or bad.search(x))).strip()
+
+
+def _flat(text: str) -> str:
+    return re.sub(r"[^A-Za-z0-9]", "", text.translate(_DEVA_DIGITS)).upper()
+
+
+def untraceable(name: str, args: dict, said: list[str]) -> list[str]:
+    """Argument names whose values the caller never said in this call (a small model invents plausible ones)."""
+    t = " ".join(said).translate(_DEVA_DIGITS)
+    flat, nocomma = _flat(t), re.sub(r"(?<=\d)[,\s](?=\d)", "", t)
+    bad = []
+
+    def has_text(v) -> bool:
+        return bool(v) and _flat(str(v)) in flat
+
+    def has_number(v) -> bool:
+        try:
+            n = str(round(float(v)))
+        except (TypeError, ValueError):
+            return False
+        return re.search(rf"(?<!\d){re.escape(n)}(?!\d)", nocomma) is not None
+
+    if name == "check_payment":
+        if not has_text(args.get("utr")):
+            bad.append("utr")
+        if not has_number(args.get("amount")):
+            bad.append("amount")
+        # date: only checked implicitly; if utr and amount trace, the date is accepted
+    elif name == "emi_date_change":
+        if not has_number(args.get("new_day")):
+            bad.append("new_day")
+    elif name == "update_address":
+        if not has_number(args.get("pincode")) or len(str(args.get("pincode"))) != 6:
+            bad.append("pincode")
+        bad += [f for f in ("line1", "city") if not has_text(args.get(f))]
+    elif name == "update_nominee":
+        if not has_text(args.get("name")):
+            bad.append("name")
+    return bad
+
+
 def final_text(model_text: str, speaks: list[tuple[bool, str]]) -> str:
     """Numbers must come from the gateway. If the model's text carries a figure that is not in this turn's ok `speak`
     texts (a hallucination, an echo of the caller's digits, or a paraphrase that changed a number), speak the gateway
@@ -305,6 +357,8 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             res["instruction"] = (f"Ask the caller to tap Approve in the bank app and tell you when done, then call "
                                   f"check_approval with approval_id {data.get('approval_id')}.")
         status = data.get("status")
+        if ok and name == "check_approval" and status == "approved":
+            c["approved"], c["approved_for"] = True, (p[0] if p else c.get("approved_for"))
         if name == "check_approval" and status in ("approved", "denied", "expired"):
             c["approval_id"] = None
         if not (ok and p):
@@ -345,6 +399,12 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             res = {"ok": False, "error_code": "INVALID_INPUT", "speak": "",
                    "instruction": "You may not confirm read-backs. Read the values back to the caller and wait for their "
                                   "yes; the system records it. Do not claim anything was confirmed."}
+        elif not internal and name == "request_app_approval" and c.get("approved"):
+            res = {"ok": False, "error_code": "INVALID_INPUT", "speak": "",
+                   "instruction": f"Already approved; now call {c.get('approved_for') or 'the caller request'}. Do not request again."}
+        elif not internal and (missing := untraceable(name, args, c.get("said", []))):
+            res = {"ok": False, "error_code": "INVALID_INPUT", "speak": "",
+                   "instruction": f"Ask the caller for {', '.join(missing)}; never invent values. Do not call {name} until they say them."}
         else:
             utr = args.get("utr")
             if isinstance(utr, str) and len(re.sub(r"\D", "", utr)) >= 6:
@@ -384,7 +444,8 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             argl = [clean_args(tc) for tc in tcs]
             c["messages"].append(msg)
             if not tcs:
-                text = final_text((msg.get("content") or "").strip(), st["speaks"]) or st["last"]
+                # gateway sentences are trusted as-is; only the model's own words are scrubbed of tool names
+                text = final_text(clean_spoken((msg.get("content") or "").strip(), known), st["speaks"]) or st["last"]
                 return st["rb"] or text, st["done"]
             for tc, args in zip(tcs, argl):
                 fn = tc.get("function") if isinstance(tc, dict) else None
@@ -503,6 +564,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         stype = _find_secret("user_text", user_text)
         c["deva"], c["user_text"] = bool(_DEVANAGARI.search(user_text)), "" if stype else user_text
         if not stype:
+            c.setdefault("said", []).append(user_text)
             lang0 = c["language"]
             auto = await auto_confirm(c, user_text)
             if not auto:
