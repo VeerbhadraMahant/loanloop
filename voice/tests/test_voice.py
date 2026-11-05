@@ -669,9 +669,182 @@ def test_model_pushed_to_act_after_refused_duplicate_approval():
     with swap_app(scripted(llm, gw, seen)) as c:
         d = c.post("/calls?tts=false", json={}).json()
         turn(c, d, "approve")
-        r = turn(c, d, "why did my EMI go up").json()
+        r = turn(c, d, "approve kar diya, why did my EMI go up").json()
     assert any(n == "explain_emi_change" for n, _ in seen)  # the nudge made the model call the real action
     assert r["agent_text"] == "done"  # the model's own short wrap-up (no figures) is kept
+
+
+LONG = "please tell me something about my loan account details today"  # long, no approval keyword
+
+
+def held_app(gw_extra=None, llm=(), first="mera EMI kyun badha", action="explain_emi_change"):
+    """An app with an approval pending and `action` held (turn 1 done)."""
+    seen = []
+    gw = {action: T2, "request_app_approval": {"ok": True, "speak": "Tap Approve.", "data": {"approval_id": 9}},
+          "check_approval": {"ok": True, "speak": "approved", "data": {"status": "approved"}}, **(gw_extra or {})}
+    cm = swap_app(scripted([tc(action), *llm], gw, seen))
+    c = cm.__enter__()
+    d = c.post("/calls?tts=false", json={}).json()
+    turn(c, d, first)
+    return cm, c, d, seen, c.app.state.calls[d["call_id"]]
+
+
+def n_calls(seen, name):
+    return len([1 for k, _ in seen if k == name])
+
+
+def test_held_expires_after_two_turns():
+    cm, c, d, seen, cc = held_app(llm=[{"role": "assistant", "content": "m1"}, {"role": "assistant", "content": "m2"},
+                                       {"role": "assistant", "content": "m3"}, {"role": "assistant", "content": "m4"}])
+    try:
+        for _ in range(2):  # long turns: the precheck stays out of it and the model answers
+            turn(c, d, LONG)
+        assert cc["held"] is not None and cc["approval_id"] == 9  # state kept while the model handles turns
+        turn(c, d, LONG)  # third turn after the request: the held action has expired (approval itself stays pending)
+        assert cc["held"] is None and cc["approval_id"] == 9
+        explains = n_calls(seen, "explain_emi_change")
+        turn(c, d, "approve kar diya")  # held is now 4 turns old: dropped, not retried
+        assert cc["held"] is None and n_calls(seen, "explain_emi_change") == explains
+        assert n_calls(seen, "check_approval") >= 1
+    finally:
+        cm.__exit__(None, None, None)
+
+
+def test_held_dropped_when_caller_cancels_and_precheck_skips_long_turns():
+    cm, c, d, seen, cc = held_app(llm=[{"role": "assistant", "content": "ok, cancelled"}, {"role": "assistant", "content": "m"}])
+    try:
+        checks = n_calls(seen, "check_approval")
+        r = turn(c, d, LONG).json()
+        assert n_calls(seen, "check_approval") == checks and r["agent_text"] == "ok, cancelled"  # model handled it
+        assert cc["approval_id"] == 9 and cc["held"] is not None
+        turn(c, d, "nahi cancel karo")  # a short negation: the held action is dropped first
+        assert cc["held"] is None
+        explains = n_calls(seen, "explain_emi_change")
+        turn(c, d, "approve kar diya")
+        assert n_calls(seen, "explain_emi_change") == explains  # never auto-retried
+    finally:
+        cm.__exit__(None, None, None)
+
+
+def test_held_closure_needs_caller_intent():
+    # the caller never said anything about closing the loan: approval confirmed, nothing retried, the model carries on
+    cm, c, d, seen, cc = held_app(first="hello there", action="raise_closure",
+                                  llm=[{"role": "assistant", "content": "what do you need?"}])
+    try:
+        r = turn(c, d, "approve kar diya").json()
+        assert n_calls(seen, "raise_closure") == 1 and cc["held"] is None  # only the model's own first attempt
+        assert r["agent_text"] == "what do you need?" and cc["approved"] is True
+    finally:
+        cm.__exit__(None, None, None)
+    gw_ok = {"raise_closure": lambda b: T2 if not st_["ok"] else {"ok": True, "speak": "Closure raised"}}
+    st_ = {"ok": False}
+    cm, c, d, seen, cc = held_app(first="mera loan close karna hai", action="raise_closure", gw_extra=gw_ok)
+    try:
+        st_["ok"] = True
+        r = turn(c, d, "approve kar diya").json()
+        assert r["agent_text"] == "approved Closure raised" and n_calls(seen, "raise_closure") == 2
+    finally:
+        cm.__exit__(None, None, None)
+
+
+def test_intent_keywords():
+    from voice.app import intent_ok
+    assert intent_ok("raise_closure", ["Loan band karna hai"]) and not intent_ok("raise_closure", ["hello"])
+    assert intent_ok("request_document", ["send my statement"]) and not intent_ok("request_document", ["my emi"])
+    assert intent_ok("explain_emi_change", ["EMI kyun badha"]) and intent_ok("update_address", ["mera pata badalna hai"])
+    assert intent_ok("check_payment", ["anything"])  # no keyword gate where the value guard already applies
+
+
+def test_rollback_restores_state_and_held_cleared_only_after_retry_succeeds():
+    seen = []
+    mode = {"retry": "refuse"}
+
+    def explain(b):
+        if not mode.get("approved"):
+            return T2
+        return {"ok": False, "speak": "Not possible now", "error_code": "INVALID_INPUT"}
+    gw = {"explain_emi_change": explain, "request_app_approval": {"ok": True, "speak": "Tap.", "data": {"approval_id": 9}},
+          "check_approval": {"ok": True, "speak": "approved", "data": {"status": "approved"}}}
+    with swap_app(scripted([tc("explain_emi_change")], gw, seen)) as c:
+        d = c.post("/calls?tts=false", json={}).json()
+        turn(c, d, "mera EMI kyun badha")
+        cc = c.app.state.calls[d["call_id"]]
+        mode["approved"] = True
+        turn(c, d, "approve kar diya")  # retry refused for another reason: held is kept, not cleared
+        assert cc["held"] is not None and cc["approved"] is True
+    # rollback: an exception after the check_approval call restores approval bookkeeping
+    seen2 = []
+    boom = {"on": False}
+
+    def explain2(b):
+        if boom["on"]:
+            raise RuntimeError("x")
+        return T2
+    gw2 = {"explain_emi_change": explain2, "request_app_approval": {"ok": True, "speak": "Tap.", "data": {"approval_id": 9}},
+           "check_approval": {"ok": True, "speak": "approved", "data": {"status": "approved"}}}
+
+    def handler(req):
+        url = str(req.url)
+        if "/actions/explain_emi_change" in url and boom["on"]:
+            return httpx.Response(500)
+        return scripted([tc("explain_emi_change")], gw2, seen2)(req)
+    with swap_app(handler) as c:
+        d = c.post("/calls?tts=false", json={}).json()
+        turn(c, d, "mera EMI kyun badha")
+        cc = c.app.state.calls[d["call_id"]]
+        boom["on"] = True
+        assert turn(c, d, "approve kar diya").status_code == 502
+        assert cc["approval_id"] == 9 and cc["held"] is not None and not cc.get("approved") and cc["appr_checks"] == 0
+
+
+def test_check_approval_error_keeps_state_and_denied_resets():
+    cm, c, d, seen, cc = held_app(
+        gw_extra={"check_approval": {"ok": False, "speak": "nf", "error_code": "NOT_FOUND"}},
+        llm=[{"role": "assistant", "content": "model here"}])
+    try:
+        r = turn(c, d, "approve kar diya").json()
+        assert cc["approval_id"] == 9 and cc["held"] is not None and r["agent_text"] == "model here"
+        assert [a["name"] for a in r["actions"]][0] == "check_approval"
+    finally:
+        cm.__exit__(None, None, None)
+    cm, c, d, seen, cc = held_app(gw_extra={"check_approval": {"ok": True, "speak": "denied", "data": {"status": "denied"}}})
+    try:
+        turn(c, d, "approve kar diya")
+        assert cc["approval_id"] is None and cc["held"] is None
+    finally:
+        cm.__exit__(None, None, None)
+
+
+def test_no_second_approval_request_while_one_is_pending_and_no_model_instruction():
+    cm, c, d, seen, cc = held_app(llm=[tc("explain_emi_change"), {"role": "assistant", "content": "wait for the app"}])
+    try:
+        turn(c, d, LONG)  # the model tries the tier-2 action again; the pending approval is not re-requested
+        assert n_calls(seen, "request_app_approval") == 1
+        msgs = c.app.state.calls[d["call_id"]]["messages"]
+        tool = [json.loads(m["content"]) for m in msgs if m.get("tool_name") == "explain_emi_change"]
+        assert tool and all("request_app_approval" not in json.dumps(t.get("instruction", "")) for t in tool)
+    finally:
+        cm.__exit__(None, None, None)
+
+
+def test_approved_flag_cleared_when_tier2_refused_again():
+    cm, c, d, seen, cc = held_app(llm=[tc("explain_emi_change"), {"role": "assistant", "content": "m"}])
+    try:
+        turn(c, d, "approve kar diya")  # approved, but the retry hits need_tier_2 again (window expired)
+        assert cc["approved"] is False
+        turn(c, d, LONG)  # the model tries again: a fresh approval is requested
+        assert n_calls(seen, "request_app_approval") == 2
+    finally:
+        cm.__exit__(None, None, None)
+
+
+def test_held_cleared_when_model_confirms_approval_itself():
+    cm, c, d, seen, cc = held_app(llm=[tc("check_approval"), {"role": "assistant", "content": "approved, how can I help"}])
+    try:
+        turn(c, d, LONG)
+        assert cc["approved"] is True and cc["held"] is None
+    finally:
+        cm.__exit__(None, None, None)
 
 
 def test_call_ids_never_contain_a_long_digit_run():
