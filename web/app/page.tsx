@@ -74,6 +74,7 @@ export default function Home() {
             {["ramesh", "sunita"].map((c, i) => (
               <span key={c}>{i > 0 && ", "}<Link className="underline underline-offset-4" href={`/phone/${c}`}>{c}</Link></span>
             ))}
+            {" · "}<Link className="underline underline-offset-4" href="/call/priya">Call as Priya</Link>
           </p>
         </section>
       </main>
