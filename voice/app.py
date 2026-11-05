@@ -300,6 +300,12 @@ APPROVAL_WORDS = {"approve", "approved", "approval", "tapped", "tap", "done", "k
                   "अप्रूव", "मंजूर", "कर", "दिया", "केले", "केलं", "झाले"}
 
 
+def claims_approved(text: str) -> bool:
+    """'Approve kar diya' / 'I approved it': the caller says it is done (a request like 'send the approval' is not)."""
+    t = set(_tokens(text))
+    return bool(t & {"approved", "tapped"} or (t & {"approve", "approval", "अप्रूव"} and t & {"diya", "kiya", "done", "दिया", "केले", "केलं"}))
+
+
 def intent_ok(name: str, said: list[str]) -> bool:
     keys = INTENT.get(name)
     return True if not keys else any(k in " ".join(said).lower() for k in keys)
@@ -552,6 +558,9 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         held = c.get("held")
         if held and (c["turn"] - held[2] > 2 or set(_tokens(user_text)) & NEGATE_WORDS):
             c["held"] = held = None  # stale or cancelled by the caller; the approval itself stays pending
+        if not c.get("approval_id") and not c.get("approved") and claims_approved(user_text):
+            c["note"] = "no approval request is pending in this call yet; tell the caller that and ask what they need"
+            return None
         if (not c.get("approval_id") or c.get("approved") or c.get("appr_checks", 0) >= 3 or is_goodbye(user_text)
                 or not looks_like_approval_turn(user_text)):
             return None

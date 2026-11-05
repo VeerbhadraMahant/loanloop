@@ -847,6 +847,22 @@ def test_held_cleared_when_model_confirms_approval_itself():
         cm.__exit__(None, None, None)
 
 
+def test_approve_before_any_approval_gets_a_note():
+    seen = []
+    with swap_app(scripted([{"role": "assistant", "content": "No approval is pending yet."}], {}, seen)) as c:
+        d = c.post("/calls?tts=false", json={}).json()
+        r = turn(c, d, "Approve kar diya").json()
+    users = [m["content"] for k, b in seen if k == "llm" for m in b["messages"] if m.get("role") == "user"]
+    assert any("no approval request is pending" in u for u in users)
+    assert r["agent_text"] == "No approval is pending yet." and not any(n == "check_approval" for n, _ in seen)
+
+
+def test_requesting_an_approval_is_not_claiming_one():
+    from voice.app import claims_approved as k
+    assert k("Approve kar diya") and k("I approved it") and k("approval done") and k("tapped approve")
+    assert not k("Yes, please send the approval request.") and not k("approval bhej do") and not k("haan")
+
+
 def test_call_ids_never_contain_a_long_digit_run():
     import re
     from voice.app import new_call_id
