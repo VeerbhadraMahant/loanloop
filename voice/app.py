@@ -121,6 +121,31 @@ def mask_digits(text: str, min_digits: int = 6, grouped: bool = True) -> str:
     return _DIGITS.sub(sub, text)
 
 
+_SPOKEN = re.compile(r"(?P<ifsc>\b[A-Z]{4}0[A-Z0-9]{6}\b)|(?P<d>\+?\d(?:[ \-.]?\d)*)")
+
+
+def mask_spoken(text: str, refs: set[str] | None = None) -> str:
+    """Last line of defence before TTS/browser: mask phone/account-like digit strings, keep the last 4 digits.
+    Counts digits across single space/dash/dot separators, also when glued to letters. 9+ contiguous or 10+ separated
+    digits are masked (MICR 411 670 487, amounts with commas, IFSC and the caller's own UTR digits stay readable)."""
+    def sub(m):
+        g = m.group()
+        if m.group("ifsc"):
+            return g
+        digits = re.sub(r"\D", "", g)
+        if len(digits) < (9 if g.lstrip("+").isdigit() else 10) or any(digits in r for r in (refs or ()) if len(digits) >= 6):
+            return g
+        seen, out = 0, []
+        for ch in g:
+            if ch.isdigit():
+                seen += 1
+                out.append(ch if seen > len(digits) - 4 else "*")
+            else:
+                out.append(ch)
+        return "".join(out)
+    return _SPOKEN.sub(sub, text)
+
+
 def redact(text: str) -> str:
     r = _redact_secret("user_text", text)
     if r:
@@ -136,10 +161,34 @@ def trim(msgs: list[dict]) -> list[dict]:
     return msgs[:1] + tail
 
 
-AFFIRM = re.compile(r"\b(yes|yeah|yep|correct|right|haan|han|haa|ji|sahi|theek|thik|ok|okay|confirm)\b|हाँ|हां|सही|ठीक|हो|होय|बरोबर|बदला", re.I)
-NEGATE = re.compile(r"\b(no|not|nahi|nahin|galat|wrong|incorrect|naa)\b|नहीं|नाही|गलत|चूक", re.I)
-GOODBYE = re.compile(r"\b(bye|goodbye|good bye|alvida|that'?s all|nothing else|bas itna hi|bas itna|khuda hafiz)\b"
-                     r"|बाय|अलविदा|बस इतना|बस एवढंच|एवढंच|कुछ नहीं चाहिए", re.I)
+_TOKEN = re.compile(r"[A-Za-z0-9'’]+|[ऀ-ॿ]+")  # explicit Devanagari range: matras are not \w, so no \b for it
+AFFIRM_WORDS = {"yes", "yeah", "yep", "yup", "correct", "right", "haan", "han", "haa", "ji", "jee", "sahi", "theek", "thik",
+                "hai", "hain", "ok", "okay", "confirm", "confirmed", "ho", "hoy", "that", "that's", "thats", "is", "it", "its",
+                "हाँ", "हां", "सही", "ठीक", "है", "हैं", "हो", "होय", "बरोबर", "आहे", "हा", "जी"}
+NEGATE_WORDS = {"no", "not", "nope", "naa", "na", "nahi", "nahin", "don't", "dont", "cancel", "stop", "wait", "change", "wrong",
+                "incorrect", "galat", "मत", "ना", "नहीं", "नको", "नका", "चुकीचे", "चुक", "नाही", "गलत"}
+BYE_WORDS = {"bye", "goodbye", "alvida", "बाय", "अलविदा"}
+FILLER_WORDS = AFFIRM_WORDS | {"thanks", "thank", "you", "dhanyavaad", "dhanyawad", "shukriya", "bas", "all", "nothing", "else",
+                               "itna", "hi", "then", "good", "chalo", "धन्यवाद", "शुक्रिया", "आभार", "चलो", "बस", "इतना"}
+
+
+def _tokens(text: str) -> list[str]:
+    return [t.lower() for t in _TOKEN.findall(text)]
+
+
+def is_bare_affirmative(text: str) -> bool:
+    """A whole reply of at most 3 words, all affirmative, no digits, no negation: 'haan sahi hai', 'yes', 'हो'."""
+    t = _tokens(text)
+    return 1 <= len(t) <= 3 and not re.search(r"\d", text) and not set(t) & NEGATE_WORDS and all(w in AFFIRM_WORDS for w in t)
+
+
+def is_goodbye(text: str) -> bool:
+    """Short farewell only (<=5 words, nothing but farewell/filler words, no negation)."""
+    t = _tokens(text)
+    if not t or len(t) > 5 or set(t) & NEGATE_WORDS or not all(w in BYE_WORDS | FILLER_WORDS | {"that's", "thats"} for w in t):
+        return False
+    s = set(t)
+    return bool(s & BYE_WORDS or {"that's", "all"} <= s or {"thats", "all"} <= s or {"nothing", "else"} <= s or {"bas", "itna"} <= s)
 _MARATHI = re.compile(r"आहे|आहेत|(?:^|\s)मी(?:\s|$)|तुम्ही|आपण|करा|(?:^|\s)आता|(?:^|\s)मला|तुमची")  # no \b: matras are not \w
 
 
@@ -150,16 +199,16 @@ def infer_language(text: str, current: str) -> str:
     return "hinglish" if current in ("hi", "mr") else current
 
 
-def final_text(model_text: str, speaks: list[tuple[bool, str]], user_text: str) -> str:
-    """Numbers must come from the gateway. If the model's text carries a figure that is in neither this turn's
-    `speak` texts nor the caller's own words (a hallucination or a paraphrase that changed a number), speak the
-    gateway text verbatim instead. Paraphrases without new figures are kept: they keep the conversational question."""
+def final_text(model_text: str, speaks: list[tuple[bool, str]]) -> str:
+    """Numbers must come from the gateway. If the model's text carries a figure that is not in this turn's ok `speak`
+    texts (a hallucination, an echo of the caller's digits, or a paraphrase that changed a number), speak the gateway
+    text verbatim instead. Paraphrases without new figures are kept: they keep the conversational question."""
     if not speaks:
         return model_text
     ok_speaks = [s for ok, s in speaks if ok] or [speaks[-1][1]]
     verbatim = " ".join(dict.fromkeys(ok_speaks))
     norm = lambda s: re.sub(r"(?<=\d)[,\s](?=\d)", "", s)
-    known = set(re.findall(r"\d+", norm(" ".join(s for _, s in speaks) + " " + user_text)))
+    known = set(re.findall(r"\d+", norm(" ".join(ok_speaks))))  # only figures the gateway said this turn, not the caller's
     if not model_text or any(n not in known for n in re.findall(r"\d+", norm(model_text))):
         return verbatim
     return model_text
@@ -224,45 +273,45 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         except (httpx.HTTPError, KeyError, ValueError):
             raise bad_gateway("ollama", c["id"]) from None
 
+    FLOW = {"verify_caller", "request_app_approval", "check_approval", "report_secret_spoken", "start_call"}
+
     def note_pending(c: dict, name: str, args: dict, res: dict) -> None:
-        """Remember a request refused for lack of a tier; once the caller has the tier, tell the model to retry it."""
+        """Track refusals so the model gets a hint to retry once the caller has the tier. Read-backs are NOT confirmed
+        here: a refusal with confirm_readback only records a candidate (`rb_new`); the turn handler promotes it to
+        `pending_rb` once the sentence has actually been delivered, and only the service's auto_confirm may confirm."""
         ok, nxt = bool(res.get("ok")), res.get("next")
         data = res.get("data") if isinstance(res.get("data"), dict) else {}
+        p = c.get("pending")
+        if p and (c["turn"] - p[2] > 2 or (ok and name not in FLOW and name != p[0])):
+            c["pending"] = p = None  # stale (2 turns) or the caller moved on to something else
+        if name == "request_app_approval" and not ok:
+            c["approval_id"] = None
         if not ok and nxt in NEED_TIER:
-            c["pending"] = (name, nxt)
+            c["pending"] = (name, nxt, c["turn"])
             if nxt == "need_tier_2":
                 res["instruction"] = ("Tell the caller you are sending an approval request to their bank app, call "
                                       "request_app_approval with a short purpose, then ask them to tap Approve.")
             return
         if not ok and nxt == "confirm_readback":
             conf = data.get("confirm") if isinstance(data.get("confirm"), dict) else {}
-            c["pending_rb"] = (name, args, dict(conf))
-            res["instruction"] = (f"Read back to the caller exactly these values: {json.dumps(conf, ensure_ascii=False)}, then ask "
-                                  f"'Is that right?'. When the caller says yes, call confirm_readback once for EACH field "
-                                  f"in the same turn, then call {name} again.")
+            c["rb_new"] = (name, dict(args), dict(conf))
+            res["instruction"] = ("Read the gateway's sentence to the caller and WAIT for their answer. Do NOT call "
+                                  "confirm_readback yourself; the system records the caller's yes and retries the action.")
             return
-        if name == (c.get("pending_rb") or (None,))[0] and ok:
-            c["pending_rb"] = None
+        if ok and c.get("rb_new") and name == c["rb_new"][0]:
+            c["rb_new"] = None
         if ok and name == "request_app_approval":
             c["approval_id"] = data.get("approval_id")
             res["instruction"] = (f"Ask the caller to tap Approve in the bank app and tell you when done, then call "
                                   f"check_approval with approval_id {data.get('approval_id')}.")
-        if ok and name == "confirm_readback" and c.get("pending_rb"):
-            n, a, conf = c["pending_rb"]
-            conf.pop(args.get("field"), None)
-            if conf:  # the caller's yes covers everything that was read back together
-                res["instruction"] = (f"Still to confirm for {n}: {json.dumps(conf, ensure_ascii=False)}. If the caller said yes "
-                                      f"to those values, call confirm_readback for each now.")
-            else:
-                res["instruction"] = f"All read-backs confirmed. Call {n} NOW with {json.dumps(a, ensure_ascii=False)}."
-        p = c.get("pending")
+        status = data.get("status")
+        if name == "check_approval" and status in ("approved", "denied", "expired"):
+            c["approval_id"] = None
         if not (ok and p):
             return
         if name == p[0]:
             c["pending"] = None
-            return
-        status = data.get("status")
-        if name == "verify_caller" and p[1] == "need_tier_1":
+        elif name == "verify_caller" and p[1] == "need_tier_1":
             res["pending_request"], res["instruction"] = p[0], f"Now call {p[0]} (the caller's earlier request)."
             c["pending"] = None
         elif name == "verify_caller":  # still needs the app approval
@@ -287,12 +336,19 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         fn["arguments"] = args
         return args
 
-    async def exec_call(c: dict, name, args: dict, st: dict) -> dict:
+    async def exec_call(c: dict, name, args: dict, st: dict, internal: bool = False) -> dict:
         """Run one tool call (model's or the service's own) against the gateway; track speaks and pending state."""
         t0 = time.monotonic()
         if not isinstance(name, str) or name not in known:
             res, name = {"ok": False, "error_code": "INVALID_INPUT", "speak": ""}, "unknown"
+        elif name == "confirm_readback" and not internal:
+            res = {"ok": False, "error_code": "INVALID_INPUT", "speak": "",
+                   "instruction": "You may not confirm read-backs. Read the values back to the caller and wait for their "
+                                  "yes; the system records it. Do not claim anything was confirmed."}
         else:
+            utr = args.get("utr")
+            if isinstance(utr, str) and len(re.sub(r"\D", "", utr)) >= 6:
+                c.setdefault("refs", set()).add(re.sub(r"\D", "", utr))  # the caller's own UTR may be read back
             if args.get("language") == "hi" and not c.get("deva"):
                 args["language"] = "hinglish"  # Roman-script input is Hinglish, not Devanagari Hindi
             if name == "check_approval" and c.get("approval_id"):
@@ -328,7 +384,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             argl = [clean_args(tc) for tc in tcs]
             c["messages"].append(msg)
             if not tcs:
-                text = final_text((msg.get("content") or "").strip(), st["speaks"], c.get("user_text", "")) or st["last"]
+                text = final_text((msg.get("content") or "").strip(), st["speaks"]) or st["last"]
                 return st["rb"] or text, st["done"]
             for tc, args in zip(tcs, argl):
                 fn = tc.get("function") if isinstance(tc, dict) else None
@@ -340,10 +396,11 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         return st["rb"] or " ".join(dict.fromkeys(s for ok, s in st["speaks"] if ok)) or st["last"], st["done"]
 
     async def auto_confirm(c: dict, user_text: str) -> tuple[str, list[dict]] | None:
-        """The caller said yes to a read-back the gateway asked for: record every read-back and retry the held action
-        ourselves. A small model often forgets one of them or says it did the action without calling it."""
-        rb = c.get("pending_rb")
-        if not rb or len(user_text.split()) > 12 or not AFFIRM.search(user_text) or NEGATE.search(user_text):
+        """The caller said a bare yes to the read-back spoken on the previous turn: record every read-back and retry the
+        held action ourselves (a small model forgets one, or claims it acted without calling). The model can never
+        confirm; stale or same-turn read-backs are never accepted."""
+        rb = c.get("rb_active")
+        if not rb or not is_bare_affirmative(user_text):
             return None
         name, args, conf = rb
         if not conf:
@@ -355,7 +412,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         c["messages"].append({"role": "assistant", "content": "", "tool_calls": [
             {"function": {"name": n, "arguments": a}} for n, a in calls_]})
         for n, a in calls_:
-            res = await exec_call(c, n, a, st)
+            res = await exec_call(c, n, a, st, internal=True)
             c["messages"].append({"role": "tool", "tool_name": n, "content": json.dumps(res, ensure_ascii=False)})
             if n == "confirm_readback" and not res.get("ok"):
                 break
@@ -411,10 +468,10 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             raise HTTPException(422, "invalid json")
         return body
 
-    def redact_agent(text) -> str:
+    def redact_agent(text, refs=None) -> str:
         # digits only: keyword redaction would delete legitimate "never share your PIN" warnings
         # only 9+ digit runs (mobiles, account numbers): amounts like 32,055 and IFSC codes are spoken as-is
-        return mask_digits(text, 9, grouped=False) if isinstance(text, str) else ""
+        return mask_spoken(text, refs) if isinstance(text, str) else ""
 
     @app.get("/health")
     async def health():
@@ -431,6 +488,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             raise HTTPException(429, "too many calls")
         cid = uuid.uuid4().hex
         c = {"id": cid, "language": "hinglish", "ended": False, "ts": now, "lock": asyncio.Lock(),
+             "turn": 0, "rb_turn": -9, "pending_rb": None, "rb_new": None, "rb_active": None,
              "messages": [{"role": "system", "content": prompt.replace("{{conversation_id}}", cid)}]}
         res = await gateway(cid, "start_call", {"language": c["language"]})
         text = redact_agent(res.get("speak"))
@@ -452,7 +510,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             text, acts = auto if auto else await run_actions(c)
             if c["language"] == lang0:  # no action carried a language: infer it from the reply script
                 c["language"] = infer_language(text, lang0)
-            if GOODBYE.search(user_text) and not c["ended"]:  # safety net: a small model often just says bye
+            if is_goodbye(user_text) and not c["ended"]:  # safety net: a small model often just says bye
                 outcome = "handover" if any(a["name"] == "handover" and a["ok"] for a in c.get("done", [])) else "completed"
                 res = await gateway(c["id"], "end_call", {"language": c["language"], "outcome": outcome})
                 acts.append({"name": "end_call", "ok": bool(res.get("ok"))})
@@ -498,16 +556,24 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
                 raise HTTPException(409, "call ended")
             c["messages"] = trim(c["messages"])
             n0 = len(c["messages"])
+            c["turn"] += 1
+            rb = c.get("pending_rb")  # single use: valid only on the turn right after it was delivered
+            c["rb_active"] = rb if rb and c["turn"] == c["rb_turn"] + 1 else None
+            c["pending_rb"] = c["rb_new"] = None
             try:
                 if wav is not None:
                     user_text = await stt(wav, c["language"], call_id)
                 text, acts = await handle_text(c, user_text)
             except BaseException:
                 del c["messages"][n0:]  # failed turn leaves no half-finished history
+                c["pending_rb"] = c["rb_new"] = c["rb_active"] = None
                 raise
             c["ts"] = time.time()
-            text = redact_agent(text)
+            text = redact_agent(text, c.get("refs"))
             audio = await tts(text, c["language"], call_id) if text and want_tts else ""
+            if c.get("rb_new") and (audio or not want_tts):  # a read-back counts as heard only once it was delivered
+                c["pending_rb"], c["rb_turn"] = c["rb_new"], c["turn"]
+            c["rb_new"] = c["rb_active"] = None
             return reply(c, text, acts, audio, user_text=redact(user_text))
 
     return app
