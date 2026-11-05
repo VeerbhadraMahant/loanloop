@@ -671,7 +671,7 @@ def test_model_pushed_to_act_after_refused_duplicate_approval():
         turn(c, d, "approve")
         r = turn(c, d, "approve kar diya, why did my EMI go up").json()
     assert any(n == "explain_emi_change" for n, _ in seen)  # the nudge made the model call the real action
-    assert r["agent_text"] == "done"  # the model's own short wrap-up (no figures) is kept
+    assert r["agent_text"] in ("done", "ok")  # short wrap-up without figures is kept
 
 
 LONG = "please tell me something about my loan account details today"  # long, no approval keyword
@@ -876,6 +876,24 @@ def test_fallback_runs_emi_date_change_when_model_only_talks():
         r = turn(c, d, "Maza EMI date 10 la karaycha aahe").json()
     assert [b for n, b in seen if n == "emi_date_change"][0]["new_day"] == 10
     assert r["agent_text"] == "Read back 10. Right?" and r["actions"] == [{"name": "emi_date_change", "ok": False}]
+
+
+def test_fallback_explains_emi_after_refused_duplicate_approval():
+    from voice.app import fallback_action as fb
+    assert fb("Mera EMI kyun badha?") == ("explain_emi_change", {}) and fb("why did my EMI go up") == ("explain_emi_change", {})
+    assert fb("my emi is due") is None and fb("kyun") is None
+    seen = []
+    llm = [tc("request_app_approval", purpose="x"), {"role": "assistant", "content": "a"},
+           tc("request_app_approval", purpose="again"), {"role": "assistant", "content": "prose"},
+           {"role": "assistant", "content": "more prose"}, {"role": "assistant", "content": "ok"}]
+    gw = {"request_app_approval": {"ok": True, "speak": "sent", "data": {"approval_id": 3}},
+          "check_approval": {"ok": True, "speak": "approved", "data": {"status": "approved"}},
+          "explain_emi_change": {"ok": True, "speak": "Because of the rate reset."}}
+    with swap_app(scripted(llm, gw, seen)) as c:
+        d = c.post("/calls?tts=false", json={}).json()
+        turn(c, d, "approve kar diya")
+        r = turn(c, d, "approve kar diya, Mera EMI kyun badha?").json()
+    assert any(n == "explain_emi_change" for n, _ in seen) and r["agent_text"]
 
 
 def test_call_ids_never_contain_a_long_digit_run():

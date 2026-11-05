@@ -305,10 +305,16 @@ _CHANGE_CUES = {"change", "badal", "badlo", "badalna", "badla", "karaycha", "kar
                 "करा", "करायचा", "करायची", "बदल", "बदला", "बदलो", "बदलना", "लावा"}
 
 
+_WHY_WORDS = {"why", "kyun", "kyu", "kyon", "kaaran", "karan", "क्यों", "क्यूं", "कारण", "का", "कसा", "का"}
+_UP_WORDS = {"badha", "badh", "badhi", "badhgayi", "increase", "increased", "up", "hike", "बढ़ी", "बढ़ा", "वाढली", "वाढला", "वाढले"}
+
+
 def fallback_action(text: str) -> tuple[str, dict] | None:
     """Only when the model answered with prose and no action: 'EMI date 10 la karaycha aahe' is unambiguous enough
     to run emi_date_change(new_day=10) ourselves (the read-back and approval flows then take over)."""
     t = set(_tokens(text))
+    if {"emi", "ईएमआय", "एमआय"} & t and _WHY_WORDS & t and _UP_WORDS & t:
+        return ("explain_emi_change", {})
     if not ({"emi", "ईएमआय", "एमआय"} & t and _DATE_WORDS & t and _CHANGE_CUES & t):
         return None
     days = [int(n) for n in re.findall(r"(?<!\d)\d{1,2}(?!\d)", text.translate(_DEVA_DIGITS)) if 1 <= int(n) <= 31]
@@ -479,7 +485,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
                    "instruction": "You may not confirm read-backs. Read the values back to the caller and wait for their "
                                   "yes; the system records it. Do not claim anything was confirmed."}
         elif not internal and name == "request_app_approval" and (c.get("approved") or c.get("approval_id")):
-            st["dup_appr"] = bool(c.get("approved"))
+            st["dup_appr"] = st["dup_seen"] = bool(c.get("approved"))
             res = {"ok": False, "error_code": "INVALID_INPUT", "speak": "",
                    "instruction": (f"Already approved; now call {c.get('approved_for') or 'the action that serves the caller'}. "
                                    "Do not request again. Tier 2 is open: call explain_emi_change, check_payment, foreclosure_quote, "
@@ -535,7 +541,8 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             tcs = tcs if isinstance(tcs, list) else []
             argl = [clean_args(tc) for tc in tcs]
             c["messages"].append(msg)
-            if not tcs and not st["done"] and not st.get("fb") and (fb := fallback_action(c.get("user_text", ""))):
+            if (not tcs and not st.get("fb") and (not st["done"] or st.get("dup_seen"))
+                    and (fb := fallback_action(c.get("user_text", "")))):
                 st["fb"] = True  # replace the model's prose with the action it should have called
                 msg = {"role": "assistant", "content": "", "tool_calls": [{"function": {"name": fb[0], "arguments": fb[1]}}]}
                 c["messages"][-1] = msg
