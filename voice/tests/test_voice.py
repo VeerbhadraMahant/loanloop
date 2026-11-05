@@ -522,8 +522,7 @@ def test_approval_id_cleared_after_failure_and_after_decision():
     assert [b for n, b in seen if n == "check_approval"][0]["approval_id"] == "55"  # not a stale service id
     seen2 = []
     llm = [tc("request_app_approval", purpose="x"), {"role": "assistant", "content": "a"},
-           tc("check_approval", approval_id="1"), {"role": "assistant", "content": "b"},
-           tc("check_approval", approval_id="66"), {"role": "assistant", "content": "c"}]
+           tc("check_approval", approval_id="66"), {"role": "assistant", "content": "c"}]  # turn 2 is the service's own check
     gw = {"request_app_approval": {"ok": True, "speak": "sent", "data": {"approval_id": 7}},
           "check_approval": {"ok": True, "speak": "approved", "data": {"status": "approved"}}}
     with swap_app(scripted(llm, gw, seen2)) as c:
@@ -531,7 +530,7 @@ def test_approval_id_cleared_after_failure_and_after_decision():
         for t in ("approve", "done", "again"):
             turn(c, d, t)
     ids = [b["approval_id"] for n, b in seen2 if n == "check_approval"]
-    assert ids == ["7", "66"]
+    assert ids == ["7"]  # the service's own check; the model's later check_approval("66") is refused as already approved
 
 
 def test_final_text_known_figures_only_from_ok_speaks():
@@ -550,8 +549,137 @@ def test_invented_payment_details_never_reach_gateway():
         r = turn(c, d, "Maine EMI already pay kiya hai").json()
     assert not any(n == "check_payment" for n, _ in seen)
     assert r["actions"] == [{"name": "check_payment", "ok": False}]
-    tool = [m for k, b in seen if k == "llm" for m in b["messages"] if m.get("tool_name") == "check_payment"][0]
+    assert r["agent_text"] == "Kripya payment ka UTR number aur amount bataiye."  # service sentence, not model prose
+    assert len([1 for k, _ in seen if k == "llm"]) == 1  # no second LLM call to word it
+    msgs = c.app.state.calls[d["call_id"]]["messages"]
+    tool = [m for m in msgs if m.get("tool_name") == "check_payment"][0]
     assert "Ask the caller for utr, amount" in tool["content"] and "never invent" in tool["content"]
+
+
+def test_ask_text_templates():
+    from voice.app import ask_text
+    assert ask_text("en", ["utr", "amount"], "check_payment") == "Please tell me the UTR number and the amount."
+    assert ask_text("hinglish", ["new_day"]) == "Kripya mahine ka din bataiye."
+    assert "पिनकोड" in ask_text("hi", ["pincode"]) and "पिनकोड" in ask_text("mr", ["pincode"])
+
+
+T2 = {"ok": False, "speak": "Approval chahiye.", "next": "need_tier_2", "error_code": "TIER_TOO_LOW"}
+
+
+def approval_flow(check_status, extra_gw=None, llm_extra=()):
+    seen = []
+    state = {"checks": 0}
+
+    def check(body):
+        state["checks"] += 1
+        return {"ok": True, "speak": f"check {check_status}", "data": {"status": check_status}}
+    gw = {"explain_emi_change": lambda b: T2 if not state.get("ok") else {"ok": True, "speak": "EMI explained"},
+          "request_app_approval": {"ok": True, "speak": "Tap Approve in the app.", "data": {"approval_id": 9}},
+          "check_approval": check, **(extra_gw or {})}
+    llm = [tc("explain_emi_change"), *llm_extra]  # the model's own text after the refusal is never requested
+    return seen, state, gw, llm
+
+
+def test_service_requests_approval_itself_on_need_tier_2():
+    seen, state, gw, llm = approval_flow("pending")
+    with swap_app(scripted(llm, gw, seen)) as c:
+        d = c.post("/calls?tts=false", json={}).json()
+        r = turn(c, d, "mera EMI kyun badha").json()
+    names = [n for n, _ in seen if n != "llm"]
+    assert "request_app_approval" in names  # the service called it, the model never did
+    assert [n for n, _ in seen if n == "llm"] == ["llm"]  # one LLM call only: model text discarded
+    assert r["agent_text"] == "Tap Approve in the app."
+    assert r["actions"][-1] == {"name": "request_app_approval", "ok": True}
+    purpose = [b for n, b in seen if n == "request_app_approval"][0]["purpose"]
+    assert purpose == "EMI change explanation"
+
+
+def test_pending_approval_is_checked_by_service_without_llm_capped_at_3():
+    seen, state, gw, llm = approval_flow("pending", llm_extra=[{"role": "assistant", "content": "model speaking"}])
+    with swap_app(scripted(llm, gw, seen)) as c:
+        d = c.post("/calls?tts=false", json={}).json()
+        turn(c, d, "mera EMI kyun badha")
+        llm_calls = len([1 for k, _ in seen if k == "llm"])
+        for _ in range(3):
+            r = turn(c, d, "approve kar diya").json()
+            assert r["agent_text"] == "check pending"
+        assert len([1 for k, _ in seen if k == "llm"]) == llm_calls  # three turns, no LLM
+        r = turn(c, d, "approve kar diya").json()  # cap reached: the model continues
+    assert state["checks"] == 3 and r["agent_text"] == "model speaking"
+
+
+def test_approved_retries_held_action_and_denied_clears_state():
+    seen, state, gw, llm = approval_flow("approved")
+    with swap_app(scripted(llm, gw, seen)) as c:
+        d = c.post("/calls?tts=false", json={}).json()
+        turn(c, d, "mera EMI kyun badha")
+        state["ok"] = True
+        r = turn(c, d, "approve kar diya").json()
+    assert r["agent_text"] == "check approved EMI explained"
+    assert [a["name"] for a in r["actions"]] == ["check_approval", "explain_emi_change"]
+    seen, state, gw, llm = approval_flow("denied", llm_extra=[{"role": "assistant", "content": "offer handover"}])
+    with swap_app(scripted(llm, gw, seen)) as c:
+        d = c.post("/calls?tts=false", json={}).json()
+        turn(c, d, "mera EMI kyun badha")
+        assert turn(c, d, "approve kar diya").json()["agent_text"] == "check denied"
+        cc = c.app.state.calls[d["call_id"]]
+        assert cc["approval_id"] is None and cc["held"] is None
+        assert turn(c, d, "ok").json()["agent_text"] == "offer handover"  # state cleared, the model takes over
+
+
+def test_approved_with_missing_values_asks_for_them():
+    held_args = tc("check_payment", utr="SAHYR1234", amount=100, date="2026-10-04")
+    state = {"ok": False}
+    gw = {"check_payment": lambda b: T2, "request_app_approval": {"ok": True, "speak": "Tap Approve.", "data": {"approval_id": 3}},
+          "check_approval": {"ok": True, "speak": "Approved.", "data": {"status": "approved"}}}
+    seen = []
+    # the caller says the values, then the approval path runs; clearing `said` simulates values that cannot be traced
+    with swap_app(scripted([held_args, {"role": "assistant", "content": "x"}], gw, seen)) as c:
+        d = c.post("/calls?tts=false", json={}).json()
+        turn(c, d, "payment 100 rupees UTR SAHYR1234")
+        c.app.state.calls[d["call_id"]]["said"] = []
+        r = turn(c, d, "approve kar diya").json()
+    assert r["agent_text"] == "Approved. Kripya payment ka UTR number aur amount bataiye."
+    assert not any(n == "check_payment" and False for n, _ in seen)
+
+
+def test_model_check_approval_refused_after_approved_and_precheck_action_listed():
+    seen = []
+    llm = [tc("request_app_approval", purpose="x"), {"role": "assistant", "content": "a"},
+           tc("check_approval", approval_id="3"), {"role": "assistant", "content": "b"}]
+    gw = {"request_app_approval": {"ok": True, "speak": "sent", "data": {"approval_id": 3}},
+          "check_approval": {"ok": True, "speak": "approved", "data": {"status": "approved"}}}
+    with swap_app(scripted(llm, gw, seen)) as c:
+        d = c.post("/calls?tts=false", json={}).json()
+        turn(c, d, "approve")
+        r = turn(c, d, "done").json()
+    assert [n for n, _ in seen if n == "check_approval"] == ["check_approval"]  # only the service's check hit the gateway
+    assert [a["name"] for a in r["actions"]] == ["check_approval", "check_approval"]
+    assert [a["ok"] for a in r["actions"]] == [True, False]
+
+
+def test_model_pushed_to_act_after_refused_duplicate_approval():
+    seen = []
+    llm = [tc("request_app_approval", purpose="x"), {"role": "assistant", "content": "a"},
+           tc("request_app_approval", purpose="again"), {"role": "assistant", "content": "prose answer from memory"},
+           tc("explain_emi_change"), {"role": "assistant", "content": "done"}]
+    gw = {"request_app_approval": {"ok": True, "speak": "sent", "data": {"approval_id": 3}},
+          "check_approval": {"ok": True, "speak": "approved", "data": {"status": "approved"}},
+          "explain_emi_change": {"ok": True, "speak": "EMI went up because of the reset"}}
+    with swap_app(scripted(llm, gw, seen)) as c:
+        d = c.post("/calls?tts=false", json={}).json()
+        turn(c, d, "approve")
+        r = turn(c, d, "why did my EMI go up").json()
+    assert any(n == "explain_emi_change" for n, _ in seen)  # the nudge made the model call the real action
+    assert r["agent_text"] == "done"  # the model's own short wrap-up (no figures) is kept
+
+
+def test_call_ids_never_contain_a_long_digit_run():
+    import re
+    from voice.app import new_call_id
+    ids = [new_call_id() for _ in range(10_000)]
+    assert not any(re.search(r"\d{9,}", i) for i in ids)
+    assert all(re.fullmatch(r"[A-Za-z0-9_\-]{1,64}", i) for i in ids) and len(set(ids)) == 10_000
 
 
 def test_traceable_values_pass_the_guard():
@@ -584,18 +712,19 @@ def test_tool_names_never_spoken():
 def test_duplicate_approval_rejected_once_approved():
     seen = []
     llm = [tc("request_app_approval", purpose="x"), {"role": "assistant", "content": "a"},
-           tc("check_approval", approval_id="1"), {"role": "assistant", "content": "b"},
-           tc("request_app_approval", purpose="another"), {"role": "assistant", "content": "c"}]
+           tc("request_app_approval", purpose="another"), {"role": "assistant", "content": "c"}]  # turn 2: service checks
     gw = {"request_app_approval": {"ok": True, "speak": "sent", "data": {"approval_id": 7}},
           "check_approval": {"ok": True, "speak": "approved", "data": {"status": "approved"}}}
     with swap_app(scripted(llm, gw, seen)) as c:
         d = c.post("/calls?tts=false", json={}).json()
-        for t in ("approve", "done", "also approve again"):
-            r = turn(c, d, t).json()
+        rs = [turn(c, d, t).json() for t in ("approve", "done also approve again")]
     assert [n for n, _ in seen if n == "request_app_approval"] == ["request_app_approval"]  # only the first reached the gateway
-    assert r["actions"] == [{"name": "request_app_approval", "ok": False}]
+    # turn 2: the service confirmed the approval (nothing held), the model then asked again and was refused
+    assert [a["name"] for a in rs[1]["actions"]] == ["check_approval", "request_app_approval"] and rs[1]["actions"][1]["ok"] is False
     tool = [m for k, b in seen if k == "llm" for m in b["messages"] if m.get("tool_name") == "request_app_approval"][-1]
     assert "Already approved" in tool["content"]
+    note = [m for k, b in seen if k == "llm" for m in b["messages"] if m.get("role") == "user" and "service note" in m["content"]]
+    assert note  # the model was told Tier 2 is open
 
 
 def test_goodbye_safety_net_calls_end_call(env):
