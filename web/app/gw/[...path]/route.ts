@@ -3,18 +3,18 @@ const GATEWAY = process.env.GATEWAY_URL ?? "http://localhost:8000";
 const DASHBOARD_TOKEN = process.env.DASHBOARD_TOKEN ?? "";
 const PHONE_TOKEN = process.env.PHONE_TOKEN ?? "";
 
-const ORIGIN_ALLOW = new Set(["http://localhost:3000", "http://127.0.0.1:3000"]);
+// Fixed allowlist, never derived from Host (a DNS-rebinding page would control Host and Origin alike).
+// WEB_ALLOWED_ORIGINS (comma-separated) adds origins when the app is served elsewhere.
+const ORIGIN_ALLOW = new Set([
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  ...(process.env.WEB_ALLOWED_ORIGINS ?? "").split(",").map((s) => s.trim()).filter(Boolean),
+]);
 
-// Fail closed: a POST must carry an Origin equal to the request's own origin (Host / X-Forwarded-*) or an allowlisted one.
+// Fail closed: a POST must carry an allowlisted Origin.
 function originOk(req: Request) {
   const origin = req.headers.get("origin");
-  if (!origin) return false;
-  if (ORIGIN_ALLOW.has(origin)) return true;
-  const first = (h: string) => req.headers.get(h)?.split(",")[0].trim();
-  const host = first("x-forwarded-host") ?? req.headers.get("host");
-  if (!host) return false;
-  const proto = first("x-forwarded-proto") ?? new URL(req.url).protocol.replace(":", "");
-  return origin === `${proto}://${host}`;
+  return !!origin && ORIGIN_ALLOW.has(origin);
 }
 
 async function proxy(req: Request, ctx: { params: Promise<{ path: string[] }> }) {
