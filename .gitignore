@@ -14,3 +14,4 @@ tools/out/*
 
 # personal task list, kept local
 TASKS.md
+.env.local
