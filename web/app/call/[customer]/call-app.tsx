@@ -12,18 +12,22 @@ type Action = { name: string; ok: boolean };
 type Msg = { who: "caller" | "agent"; text: string; actions?: Action[] };
 type Reply = { user_text?: string; agent_text: string; audio_b64?: string; mime?: string; language?: string; actions?: Action[]; ended?: boolean };
 
+class HttpError extends Error { constructor(msg: string, readonly status: number) { super(msg); } }
+
 async function call<T>(path: string, init: RequestInit): Promise<T> {
   const r = await fetch(`${VOICE}${path}`, init);
   if (!r.ok) {
     let d = `HTTP ${r.status}`;
     try { const j = await r.json(); if (j?.detail) d = typeof j.detail === "string" ? j.detail : JSON.stringify(j.detail); } catch { /* keep status */ }
-    throw new Error(d);
+    throw new HttpError(d, r.status);
   }
   return r.json();
 }
 const jsonPost = (body: unknown): RequestInit => ({ method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
 
 const statusTone = { idle: "neutral", connecting: "warn", listening: "accent", thinking: "warn", speaking: "accent", ended: "neutral" } as const;
+
+type Rec = { stop: () => Float32Array; rate: number; timer: ReturnType<typeof setTimeout> };
 
 export default function CallApp({ customer }: { customer: string }) {
   const [status, setStatus] = useState<Status>("idle");
@@ -32,16 +36,23 @@ export default function CallApp({ customer }: { customer: string }) {
   const [error, setError] = useState<string | null>(null);
   const [voiceReplies, setVoiceReplies] = useState(true);
   const [text, setText] = useState("");
+  const [talking, setTalking] = useState(false);
   const callId = useRef<string | null>(null);
   const audio = useRef<HTMLAudioElement | null>(null);
-  const rec = useRef<{ stop: () => Float32Array; rate: number; timer: ReturnType<typeof setTimeout> } | null>(null);
-  const holding = useRef(false);
-  const [talking, setTalking] = useState(false);
+  const rec = useRef<Rec | null>(null);
+  const holding = useRef(false);   // talk control is currently pressed
+  const opening = useRef(false);   // getUserMedia in flight
+  const gen = useRef(0);           // bumped on end/unmount so late responses are ignored
+  const abort = useRef<AbortController | null>(null);
+  const voiceRef = useRef(voiceReplies);
+  voiceRef.current = voiceReplies; // eslint-disable-line react-hooks/refs -- latest value for timer/handler closures
   const ended = status === "ended";
   const inCall = status !== "idle" && status !== "connecting" && !ended;
   const busy = status === "thinking" || status === "connecting";
 
-  const stopAudio = useCallback(() => { const a = audio.current; if (a) { a.pause(); a.src = ""; } }, []);
+  const stopAudio = useCallback(() => { const a = audio.current; if (a) { a.onended = a.onerror = null; a.pause(); a.removeAttribute("src"); } }, []);
+
+  const finish = useCallback(() => { callId.current = null; setStatus("ended"); }, []);
 
   const apply = useCallback((r: Reply) => {
     setMsgs((m) => [
@@ -50,29 +61,39 @@ export default function CallApp({ customer }: { customer: string }) {
       { who: "agent", text: r.agent_text, actions: r.actions },
     ]);
     if (r.language) setLang(r.language);
-    if (r.ended) { setStatus("ended"); return; }
+    const after = () => (r.ended ? finish() : setStatus((s) => (s === "speaking" ? "listening" : s)));
     if (r.audio_b64) {
       const a = (audio.current ??= new Audio());
-      a.onended = a.onerror = () => setStatus((s) => (s === "speaking" ? "listening" : s));
-      a.src = `data:${r.mime};base64,${r.audio_b64}`;
+      a.onended = a.onerror = after;
+      a.src = `data:${r.mime ?? "audio/wav"};base64,${r.audio_b64}`;
       setStatus("speaking");
-      a.play().catch(() => setStatus("listening")); // autoplay blocked: text is still shown
-    } else setStatus("listening");
-  }, []);
+      a.play().catch(after); // autoplay blocked: text is still shown
+    } else if (r.ended) finish();
+    else setStatus("listening");
+  }, [finish]);
 
-  const start = async () => {
-    setError(null); setStatus("connecting");
+  // Runs a request; drops the result if the call was ended meanwhile.
+  const run = async (path: string, init: RequestInit, onOk: (r: Reply & { call_id: string }) => void, onFail: Status) => {
+    const g = gen.current, ac = (abort.current = new AbortController());
     try {
-      const r = await call<Reply & { call_id: string }>("/calls", jsonPost({ customer, tts: voiceReplies }));
-      callId.current = r.call_id; setMsgs([]); apply(r);
-    } catch (e) { setStatus("idle"); setError(e instanceof Error ? e.message : "failed"); }
+      const r = await call<Reply & { call_id: string }>(path, { ...init, signal: ac.signal });
+      if (g === gen.current) onOk(r);
+    } catch (e) {
+      if (g !== gen.current) return;
+      if (e instanceof HttpError && e.status === 409) { setError("The call has already ended."); finish(); return; }
+      setStatus(onFail); setError(e instanceof Error ? e.message : "failed");
+    }
   };
 
-  const send = async (init: RequestInit) => {
+  const start = () => {
+    setError(null); setStatus("connecting");
+    run("/calls", jsonPost({ customer, tts: voiceReplies }), (r) => { callId.current = r.call_id; setMsgs([]); apply(r); }, "idle");
+  };
+
+  const send = (init: RequestInit) => {
     if (!callId.current) return;
     setError(null); setStatus("thinking");
-    try { apply(await call<Reply>(`/calls/${callId.current}/turn`, init)); }
-    catch (e) { setStatus("listening"); setError(e instanceof Error ? e.message : "failed"); }
+    run(`/calls/${callId.current}/turn`, init, apply, "listening");
   };
 
   const sendText = () => {
@@ -82,34 +103,7 @@ export default function CallApp({ customer }: { customer: string }) {
     send(jsonPost({ text: t, tts: voiceReplies }));
   };
 
-  const beginTalk = async () => {
-    if (!inCall || busy || holding.current || rec.current) return;
-    holding.current = true; stopAudio(); setError(null);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const ctx = new AudioContext();
-      const src = ctx.createMediaStreamSource(stream);
-      const proc = ctx.createScriptProcessor(4096, 1, 1); // shortcut: deprecated but simplest; move to AudioWorklet if it is ever removed
-      const chunks: Float32Array[] = [];
-      proc.onaudioprocess = (e) => chunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));
-      src.connect(proc); proc.connect(ctx.destination);
-      const stop = () => {
-        proc.disconnect(); src.disconnect(); stream.getTracks().forEach((t) => t.stop()); ctx.close();
-        const all = new Float32Array(chunks.reduce((n, c) => n + c.length, 0));
-        let o = 0; for (const c of chunks) { all.set(c, o); o += c.length; }
-        return all;
-      };
-      rec.current = { stop, rate: ctx.sampleRate, timer: setTimeout(endTalk, MAX_SECONDS * 1000) };
-      if (!holding.current) { endTalk(); return; } // released while the mic was opening
-      setTalking(true);
-      setStatus("listening");
-    } catch {
-      holding.current = false;
-      setError("Microphone unavailable. Allow mic access, or type instead.");
-    }
-  };
-
-  const endTalk = () => {
+  const endTalk = useCallback(() => {
     holding.current = false;
     const r = rec.current; if (!r) return;
     rec.current = null; clearTimeout(r.timer); setTalking(false);
@@ -117,29 +111,82 @@ export default function CallApp({ customer }: { customer: string }) {
     if (pcm.length < MIN_SECONDS * 16000) { setStatus("listening"); return; }
     const form = new FormData();
     form.append("audio", new Blob([encodeWav(pcm)], { type: "audio/wav" }), "turn.wav");
-    form.append("tts", String(voiceReplies));
+    form.append("tts", String(voiceRef.current));
     send({ method: "POST", body: form });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- send only touches refs and stable setters
+  }, []);
+
+  const beginTalk = async () => {
+    if (!inCall || busy || holding.current || opening.current || rec.current) return;
+    holding.current = true; opening.current = true; stopAudio(); setError(null);
+    const ctx = new AudioContext(); // created inside the gesture so Safari lets it run
+    let stream: MediaStream | undefined;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      await ctx.resume();
+      const src = ctx.createMediaStreamSource(stream);
+      const proc = ctx.createScriptProcessor(4096, 1, 1); // shortcut: deprecated but simplest; move to AudioWorklet if it is ever removed
+      const chunks: Float32Array[] = [];
+      proc.onaudioprocess = (e) => chunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+      src.connect(proc); proc.connect(ctx.destination);
+      const tracks = stream.getTracks();
+      let closed = false;
+      const stop = () => {
+        proc.disconnect(); src.disconnect(); tracks.forEach((t) => t.stop());
+        if (!closed) { closed = true; ctx.close(); }
+        const all = new Float32Array(chunks.reduce((n, c) => n + c.length, 0));
+        let o = 0; for (const c of chunks) { all.set(c, o); o += c.length; }
+        return all;
+      };
+      opening.current = false;
+      rec.current = { stop, rate: ctx.sampleRate, timer: setTimeout(endTalk, MAX_SECONDS * 1000) };
+      if (!holding.current) { endTalk(); return; } // released while the mic was opening
+      setTalking(true); setStatus("listening");
+    } catch {
+      opening.current = false; holding.current = false;
+      stream?.getTracks().forEach((t) => t.stop());
+      ctx.close().catch(() => {});
+      setError("Microphone unavailable. Allow mic access, or type instead.");
+    }
   };
 
-  const end = async () => {
-    stopAudio(); setStatus("ended");
+  const end = () => {
+    gen.current++; abort.current?.abort();
     if (rec.current) { clearTimeout(rec.current.timer); rec.current.stop(); rec.current = null; setTalking(false); }
+    holding.current = false;
+    finish();
   };
 
-  // Space = hold to talk (not while typing in a field).
+  // Space = hold to talk anywhere except form controls; the talk button handles its own keys.
   useEffect(() => {
-    const typing = (t: EventTarget | null) => t instanceof HTMLElement && /^(INPUT|TEXTAREA|BUTTON)$/.test(t.tagName);
+    const typing = (t: EventTarget | null) => t instanceof HTMLElement && /^(INPUT|TEXTAREA|BUTTON|SELECT)$/.test(t.tagName);
     const down = (e: KeyboardEvent) => { if (e.code === "Space" && !e.repeat && !typing(e.target)) { e.preventDefault(); beginTalk(); } };
-    const up = (e: KeyboardEvent) => { if (e.code === "Space" && holding.current) { e.preventDefault(); endTalk(); } };
+    const up = (e: KeyboardEvent) => { if (e.code === "Space" && holding.current && !typing(e.target)) { e.preventDefault(); endTalk(); } };
+    const cancel = () => { if (holding.current) endTalk(); };
+    const vis = () => { if (document.hidden) cancel(); };
     window.addEventListener("keydown", down); window.addEventListener("keyup", up);
-    return () => { window.removeEventListener("keydown", down); window.removeEventListener("keyup", up); };
+    window.addEventListener("blur", cancel); document.addEventListener("visibilitychange", vis);
+    return () => {
+      window.removeEventListener("keydown", down); window.removeEventListener("keyup", up);
+      window.removeEventListener("blur", cancel); document.removeEventListener("visibilitychange", vis);
+    };
   });
-  useEffect(() => () => { audio.current?.pause(); rec.current?.stop(); }, []);
+  useEffect(() => () => {
+    gen.current++; abort.current?.abort();
+    const a = audio.current; if (a) { a.onended = a.onerror = null; a.pause(); }
+    const r = rec.current; if (r) { clearTimeout(r.timer); rec.current = null; r.stop(); }
+  }, []);
 
   const listening = status === "listening" && talking;
+  const keyHold = (down: boolean) => (e: React.KeyboardEvent) => {
+    if (e.code !== "Space" && e.code !== "Enter") return;
+    e.preventDefault();
+    if (down) { if (!e.repeat) beginTalk(); } else endTalk();
+  };
   const talkProps = {
     onMouseDown: beginTalk, onMouseUp: endTalk, onMouseLeave: () => holding.current && endTalk(),
-    onTouchStart: (e: React.TouchEvent) => { e.preventDefault(); beginTalk(); }, onTouchEnd: endTalk,
+    onTouchStart: beginTalk, onTouchEnd: endTalk, onTouchCancel: endTalk,
+    onKeyDown: keyHold(true), onKeyUp: keyHold(false), onBlur: () => holding.current && endTalk(),
   };
 
   return (
@@ -183,12 +230,12 @@ export default function CallApp({ customer }: { customer: string }) {
           ) : (
             <>
               <button type="button" {...talkProps} disabled={!inCall || busy}
-                aria-label="Hold to talk" aria-pressed={listening}
+                aria-pressed={listening}
                 className={`btn mx-auto flex h-20 w-full select-none items-center justify-center rounded-full text-base font-medium touch-none ${listening ? "btn-primary ring-4 ring-accent" : "btn-secondary"} disabled:opacity-50`}>
                 {listening ? "Listening… release to send" : busy ? "Thinking…" : "Hold to talk (or hold Space)"}
               </button>
               <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); sendText(); }}>
-                <input value={text} onChange={(e) => setText(e.target.value)} disabled={!inCall || busy}
+                <input value={text} onChange={(e) => setText(e.target.value)} readOnly={busy} disabled={!inCall}
                   aria-label="Type instead of speaking" placeholder="Type instead of speaking"
                   className="min-h-11 min-w-0 flex-1 rounded-lg border border-line bg-bg px-3 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]" />
                 <Button type="submit" small disabled={!inCall || busy || !text.trim()}>Send</Button>
