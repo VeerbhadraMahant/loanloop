@@ -1,5 +1,6 @@
 out/*
 !out/loadtest.json
 !out/simulate_transcript.txt
+!out/voice_e2e_transcript.txt
 !out/stt_benchmark.json
 !out/e2e_latency.json
