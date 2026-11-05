@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 
 from voice.app import Settings, create_app, load_tools, redact
 
+BASE = "http://127.0.0.1:8100"
 KEY = "KEY-SHOULD-NEVER-LEAK-123"
 SECRET = "GW-SECRET-XYZ"
 
@@ -55,7 +56,7 @@ def env():
     fake = Fake()
     client = httpx.AsyncClient(transport=httpx.MockTransport(fake.handler))
     cfg = Settings(gnani_speech_api_key=KEY, gateway_shared_secret=SECRET)
-    with TestClient(create_app(cfg, client)) as tc_:
+    with TestClient(create_app(cfg, client), base_url=BASE) as tc_:
         yield tc_, fake
 
 
@@ -149,14 +150,13 @@ def test_audio_turn_calls_stt_and_redacts(env):
     u = r.json()["user_text"]
     assert "4321" not in u and "9876543210" not in u
     assert redact("call me on 9876543210") == "call me on ******3210"  # long digit runs masked, last 4 kept
-    # raw transcript still reached the LLM (it is the caller's words) but redaction is for the browser
-    assert fake.of("llm")
+    assert not fake.of("llm")  # the transcript held a PIN: handled without the LLM
 
 
 def test_upstream_errors_are_generic_502(env):
     c, fake = env
     d = new_call(c)
-    for kind in ("llm", "gw", "tts"):
+    for kind in ("llm", "gw"):
         fake.fail = kind
         fake.llm_script = [tc("emi_info")] if kind == "gw" else []
         r = c.post(f"/calls/{d['call_id']}/turn", json={"text": "hi"})
@@ -171,10 +171,171 @@ def test_keys_not_in_logs_or_responses(env, caplog):
     caplog.set_level(logging.DEBUG)
     d = new_call(c)
     fake.llm_script = [tc("emi_info"), {"role": "assistant", "content": "fine"}]
-    r = c.post(f"/calls/{d['call_id']}/turn", json={"text": "my otp is 123456"})
+    r = c.post(f"/calls/{d['call_id']}/turn", json={"text": "my emi 123456"})
     fake.fail = "tts"
     c.post(f"/calls/{d['call_id']}/turn", json={"text": "again"})
     logs = caplog.text
     for secret in (KEY, SECRET, "123456"):
         assert secret not in logs and secret not in r.text
     assert "emi_info" in logs
+
+
+def turn(c, d, text):
+    return c.post(f"/calls/{d['call_id']}/turn?tts=false", json={"text": text})
+
+
+def swap_app(handler):
+    cl = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    return TestClient(create_app(Settings(gnani_speech_api_key=KEY), cl), base_url=BASE)
+
+
+def test_raw_secret_never_reaches_ollama_or_history(env, caplog):
+    c, fake = env
+    caplog.set_level(logging.DEBUG)
+    d = new_call(c)
+    llm_before = len(fake.of("llm"))
+    j = turn(c, d, "my pin is 4321").json()
+    assert j["agent_text"] == "report_secret_spoken done"
+    assert j["actions"] == [{"name": "report_secret_spoken", "ok": True}]
+    assert len(fake.of("llm")) == llm_before  # no LLM call
+    gw = fake.of("gw")[-1]
+    assert gw[2]["secret_type"] == "pin" and gw[2]["call_id"] == d["call_id"]
+    assert turn(c, d, "what is my emi").status_code == 200  # next LLM call sees only the placeholder
+    blob = json.dumps(fake.of("llm")[-1][2]) + json.dumps(j) + caplog.text
+    assert "4321" not in blob and "it was removed" in blob
+
+
+def test_string_arguments_parsed_and_written_back(env):
+    c, fake = env
+    d = new_call(c)
+    msg = {"role": "assistant", "content": "", "tool_calls": [{"function": {"name": "emi_info", "arguments": '{"language": "hi"}'}}]}
+    fake.llm_script = [msg, {"role": "assistant", "content": "ok"}]
+    assert turn(c, d, "emi").json()["language"] == "hi"
+    sent = fake.of("llm")[-1][2]["messages"]
+    assistant = next(m for m in sent if m.get("tool_calls"))
+    assert assistant["tool_calls"][0]["function"]["arguments"] == {"language": "hi"}
+    bad = {"role": "assistant", "content": "", "tool_calls": [{"function": {"name": "emi_info", "arguments": "{bad"}}]}
+    fake.llm_script = [bad, {"role": "assistant", "content": "ok"}]
+    assert turn(c, d, "again").status_code == 200
+
+
+def test_non_string_language_ignored(env):
+    c, fake = env
+    d = new_call(c)
+    fake.llm_script = [tc("emi_info", language=["mr"]), {"role": "assistant", "content": "ok"}]
+    assert turn(c, d, "emi").json()["language"] == "hinglish"
+
+
+def test_ended_call_409_and_expired_404(env):
+    c, fake = env
+    d = new_call(c)
+    fake.llm_script = [tc("end_call", outcome="done"), {"role": "assistant", "content": "bye"}]
+    assert turn(c, d, "bye").json()["ended"] is True
+    assert turn(c, d, "hello").status_code == 409
+    d2 = new_call(c)
+    c.app.state.calls[d2["call_id"]]["ts"] -= 4000
+    assert turn(c, d2, "hi").status_code == 404
+    assert d2["call_id"] not in c.app.state.calls
+
+
+def test_failed_turn_truncates_history_and_tts_is_soft(env):
+    c, fake = env
+    d = new_call(c)
+    n = len(c.app.state.calls[d["call_id"]]["messages"])
+    fake.fail = "llm"
+    assert turn(c, d, "hi").status_code == 502
+    assert len(c.app.state.calls[d["call_id"]]["messages"]) == n
+    fake.fail = "tts"
+    r = c.post(f"/calls/{d['call_id']}/turn", json={"text": "hi"})
+    assert r.status_code == 200 and r.json()["audio_b64"] == "" and r.json()["agent_text"]
+
+
+def test_history_capped_and_num_ctx(env):
+    c, fake = env
+    d = new_call(c)
+    for i in range(25):
+        turn(c, d, f"msg {i}")
+    sent = fake.of("llm")[-1][2]
+    assert sent["options"] == {"num_ctx": 8192}
+    assert len(sent["messages"]) <= 31 and sent["messages"][0]["role"] == "system"
+    assert sent["messages"][1]["role"] != "tool"
+
+
+def test_oversize_413_and_binary_wav(env):
+    c, fake = env
+    d = new_call(c)
+    big = c.post(f"/calls/{d['call_id']}/turn", files={"audio": ("t.wav", b"\0" * 2_100_000, "audio/wav")})
+    assert big.status_code == 413 and not fake.of("stt")
+    wav = bytes(range(256)) * 4 + b"\r\n--boundary\r\n"  # binary incl. CRLF bytes
+    c.post(f"/calls/{d['call_id']}/turn?tts=false", files={"audio": ("t.wav", wav, "audio/wav")})
+    assert wav in fake.of("stt")[-1][2]
+
+
+def test_empty_transcript_reprompts_without_llm():
+    seen = []
+
+    def handler(req):
+        seen.append(str(req.url))
+        if "stt/v3" in str(req.url):
+            return httpx.Response(200, json={"success": True, "transcript": "  "})
+        if "/actions/" in str(req.url):
+            return httpx.Response(200, json={"ok": True, "speak": "hi"})
+        return httpx.Response(200, content=b"RIFF")
+    with swap_app(handler) as c:
+        d = c.post("/calls?tts=false", json={}).json()
+        r = c.post(f"/calls/{d['call_id']}/turn?tts=false", files={"audio": ("t.wav", b"RIFFx", "audio/wav")}).json()
+    assert "sunai nahi diya" in r["agent_text"] and r["actions"] == []
+    assert not any("11434" in u for u in seen)
+
+
+def test_content_type_host_and_call_cap(env):
+    c, _ = env
+    d = new_call(c)
+    r = c.post(f"/calls/{d['call_id']}/turn", content='{"text": "hi"}', headers={"content-type": "text/plain"})
+    assert r.status_code == 415
+    assert c.get("/health", headers={"host": "evil.com"}).status_code == 400
+    for _ in range(49):
+        assert c.post("/calls?tts=false", json={}).status_code == 200
+    assert c.post("/calls?tts=false", json={}).status_code == 429
+
+
+def test_mask_digits_grouped_and_dates():
+    from voice.app import mask_digits
+    assert mask_digits("call 9876 543 210 now") == "call **** **3 210 now"
+    assert mask_digits("9876-543-210") == "****-**3-210"
+    assert mask_digits("due 2024-11-06") == "due 2024-11-06"
+    assert mask_digits("ending 4417") == "ending 4417"
+
+
+def test_agent_text_redacted_before_return(env):
+    c, fake = env
+    d = new_call(c)
+    fake.llm_script = [{"role": "assistant", "content": "your number is 9876543210"}]
+    r = turn(c, d, "hello").json()
+    assert "9876543210" not in r["agent_text"] and r["agent_text"].endswith("3210")
+
+
+def test_gateway_non_dict_is_502():
+    def handler(req):
+        return httpx.Response(200, json=["x"])
+    with swap_app(handler) as c:
+        assert c.post("/calls", json={}).status_code == 502
+
+
+def test_concurrent_turns_serialised():
+    import asyncio
+    fake = Fake()
+
+    async def slow(req):
+        await asyncio.sleep(0.05)
+        return fake.handler(req)
+
+    app = create_app(Settings(gnani_speech_api_key=KEY), httpx.AsyncClient(transport=httpx.MockTransport(slow)))
+
+    async def go():
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url=BASE) as cl:
+            d = (await cl.post("/calls?tts=false", json={})).json()
+            url = f"/calls/{d['call_id']}/turn?tts=false"
+            await asyncio.gather(cl.post(url, json={"text": "a"}), cl.post(url, json={"text": "b"}))
+            return [m["role"] for m in app.state.calls[d["call_id"]]["messages"]]
+    assert asyncio.run(go()) == ["system", "user", "assistant", "user", "assistant", "user", "assistant"]

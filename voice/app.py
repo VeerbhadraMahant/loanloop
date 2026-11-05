@@ -1,4 +1,5 @@
 """LoanLoop voice agent: browser audio -> Gnani Prisma STT -> Ollama LLM (23 gateway tools) -> Gnani Timbre TTS."""
+import asyncio
 import base64
 import email
 import importlib.util
@@ -10,7 +11,8 @@ import uuid
 from pathlib import Path
 
 import httpx
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -24,7 +26,13 @@ TTS_LANG = {"en": "en-IN", "hi": "hi-IN", "hinglish": "hi-IN", "mr": "mr-IN"}
 STT_LANG = {"en": "en-IN", "hinglish": "hi-IN,en-IN", "hi": "hi-IN,en-IN", "mr": "mr-IN,en-IN"}
 VOICE = "Shivani"
 AUDIO_CONFIG = {"sample_rate": 16000, "num_channels": 1, "sample_width": 2, "encoding": "linear_pcm", "container": "wav"}
-TTL_S, MAX_ROUNDS = 1800, 5
+TTL_S, MAX_ROUNDS, MAX_CALLS, MAX_UPLOAD, KEEP_MSGS = 1800, 5, 50, 2_000_000, 30
+ALLOWED_HOSTS = {"127.0.0.1:8100", "localhost:8100"}
+SECRET_KINDS = {"password", "pin", "otp", "cvv", "card"}
+REPROMPT = {"en": "Sorry, I could not hear that. Could you say it again?",
+            "hi": "माफ़ कीजिए, मैं सुन नहीं पाया। क्या आप दोबारा बोल सकते हैं?",
+            "hinglish": "Sorry, mujhe sunai nahi diya. Kya aap dobara bol sakte hain?",
+            "mr": "माफ करा, मला ऐकू आले नाही. कृपया पुन्हा सांगाल का?"}
 
 
 class Settings(BaseSettings):
@@ -70,23 +78,50 @@ def _load_scrub():
     spec = importlib.util.spec_from_file_location("ll_scrub", ROOT / "gateway" / "app" / "security" / "scrub.py")
     m = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(m)
-    return m.redact_secret
+    return m.find_secret, m.redact_secret
 
 
-_redact_secret = _load_scrub()
-_DIGITS = re.compile(r"\d{6,}")
+_find_secret, _redact_secret = _load_scrub()
+_DIGITS = re.compile(r"\d(?:[ -]?\d){5,}")
+_ISO_DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
+
+
+def mask_digits(text: str) -> str:
+    """Mask digit runs of 6+ (also when grouped by spaces/dashes) except the last 4 digits."""
+    def sub(m):
+        g = m.group()
+        if _ISO_DATE.fullmatch(g):
+            return g
+        n, out = sum(ch.isdigit() for ch in g), []
+        seen = 0
+        for ch in g:
+            if ch.isdigit():
+                seen += 1
+                out.append(ch if seen > n - 4 else "*")
+            else:
+                out.append(ch)
+        return "".join(out)
+    return _DIGITS.sub(sub, text)
 
 
 def redact(text: str) -> str:
     r = _redact_secret("user_text", text)
     if r:
         text = r[0]
-    return _DIGITS.sub(lambda m: "*" * (len(m.group()) - 4) + m.group()[-4:], text)
+    return mask_digits(text)
+
+
+def trim(msgs: list[dict]) -> list[dict]:
+    """System + last KEEP_MSGS messages, never starting on an orphaned tool result."""
+    tail = msgs[1:][-KEEP_MSGS:]
+    while tail and tail[0].get("role") == "tool":
+        tail = tail[1:]
+    return msgs[:1] + tail
 
 
 def parse_audio(content_type: str, body: bytes) -> bytes | None:
     """Minimal multipart reader (python-multipart is not a dependency): returns the `audio` part."""
-    msg = email.message_from_bytes(f"Content-Type: {content_type}\r\n\r\n".encode() + body)
+    msg = email.message_from_bytes(b"Content-Type: " + content_type.encode() + b"\r\n\r\n" + body)
     for part in msg.walk():
         if part.get_param("name", header="content-disposition") == "audio":
             return part.get_payload(decode=True)
@@ -102,8 +137,15 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
     http = client or httpx.AsyncClient(timeout=120)
 
     app = FastAPI(title="LoanLoop voice agent")
+    app.state.calls = calls
     app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
                        allow_methods=["GET", "POST"], allow_headers=["*"])
+
+    @app.middleware("http")
+    async def host_check(request: Request, call_next):  # DNS-rebinding guard
+        if request.headers.get("host", "") not in ALLOWED_HOSTS:
+            return JSONResponse({"detail": "bad host"}, status_code=400)
+        return await call_next(request)
 
     def bad_gateway(what: str, cid: str = "-"):
         log.warning("call=%s upstream_error=%s", cid, what)
@@ -116,42 +158,63 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
                                 headers={"X-Gateway-Secret": cfg.gateway_shared_secret}, timeout=15)
             if r.status_code >= 500 or r.status_code in (401, 403):
                 raise bad_gateway("gateway", cid)
-            return r.json()
+            res = r.json()
         except (httpx.HTTPError, ValueError):
             raise bad_gateway("gateway", cid) from None
+        if not isinstance(res, dict):
+            raise bad_gateway("gateway", cid)
+        return res
 
     async def llm(c: dict) -> dict:
         try:
-            r = await http.post(f"{cfg.ollama_url}/api/chat", json={"model": cfg.ollama_model, "messages": c["messages"],
-                                "tools": tools, "stream": False, "think": False})
+            r = await http.post(f"{cfg.ollama_url}/api/chat", json={
+                "model": cfg.ollama_model, "messages": trim(c["messages"]), "tools": tools, "stream": False,
+                "think": False, "options": {"num_ctx": 8192}})
             r.raise_for_status()
-            return r.json()["message"]
+            msg = r.json()["message"]
+            if not isinstance(msg, dict):
+                raise ValueError
+            return msg
         except (httpx.HTTPError, KeyError, ValueError):
             raise bad_gateway("ollama", c["id"]) from None
+
+    def clean_args(tc) -> dict:
+        """Ollama rejects string arguments on the next call: parse and write the dict back."""
+        fn = tc.get("function") if isinstance(tc, dict) else None
+        if not isinstance(fn, dict):
+            return {}
+        args = fn.get("arguments")
+        if isinstance(args, str):
+            try:
+                args = json.loads(args)
+            except ValueError:
+                args = {}
+        if not isinstance(args, dict):
+            args = {}
+        fn["arguments"] = args
+        return args
 
     async def run_actions(c: dict) -> tuple[str, list[dict]]:
         done, last_speak = [], ""
         for _ in range(MAX_ROUNDS):
             t0 = time.monotonic()
             msg = await llm(c)
+            tcs = msg.get("tool_calls")
+            tcs = tcs if isinstance(tcs, list) else []
+            argl = [clean_args(tc) for tc in tcs]
             c["messages"].append(msg)
-            tcs = msg.get("tool_calls") or []
             if not tcs:
                 return (msg.get("content") or "").strip() or last_speak, done
-            for tc in tcs:
-                fn = tc.get("function", {})
-                name, args = fn.get("name"), fn.get("arguments") or {}
-                if isinstance(args, str):
-                    try:
-                        args = json.loads(args)
-                    except ValueError:
-                        args = {}
-                if name not in known or not isinstance(args, dict):
+            for tc, args in zip(tcs, argl):
+                fn = tc.get("function") if isinstance(tc, dict) else None
+                name = fn.get("name") if isinstance(fn, dict) else None
+                if not isinstance(name, str) or name not in known:
                     res, name = {"ok": False, "error_code": "INVALID_INPUT", "speak": ""}, "unknown"
                 else:
-                    if args.get("language") in TTS_LANG:
-                        c["language"] = args["language"]
                     res = await gateway(c["id"], name, args)
+                    lang = args.get("language")
+                    if res.get("ok") and isinstance(lang, str) and lang in TTS_LANG:
+                        c["language"] = lang
                     last_speak = res.get("speak") or last_speak
                 ok = bool(res.get("ok"))
                 done.append({"name": name, "ok": ok})
@@ -169,10 +232,11 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
                                 files={"audio_file": ("turn.wav", wav, "audio/wav")}, timeout=60)
             r.raise_for_status()
             return (r.json().get("transcript") or "").strip()
-        except (httpx.HTTPError, ValueError):
+        except (httpx.HTTPError, ValueError, AttributeError):
             raise bad_gateway("stt", cid) from None
 
     async def tts(text: str, lang: str, cid: str) -> str:
+        """Soft failure: no audio, text still returned (a retry would repeat data-changing actions)."""
         payload = {"text": text, "model": "timbre-v3.0", "voice": VOICE, "language": TTS_LANG.get(lang, "hi-IN"),
                    "speed": 1.0, "audio_config": AUDIO_CONFIG}
         try:
@@ -180,65 +244,121 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             r.raise_for_status()
             return base64.b64encode(r.content).decode()
         except httpx.HTTPError:
-            raise bad_gateway("tts", cid) from None
+            log.warning("call=%s tts_failed", cid)
+            return ""
 
     def reply(c: dict, text: str, acts: list[dict], audio: str, **extra) -> dict:
         return {**extra, "agent_text": text, "audio_b64": audio, "mime": "audio/wav", "language": c["language"],
                 "actions": acts, "ended": c["ended"]}
+
+    async def read_body(request: Request) -> bytes:
+        try:
+            too_big = int(request.headers.get("content-length") or 0) > MAX_UPLOAD
+        except ValueError:
+            too_big = True
+        if too_big:
+            raise HTTPException(413, "too large")
+        raw = await request.body()
+        if len(raw) > MAX_UPLOAD:
+            raise HTTPException(413, "too large")
+        return raw
+
+    def json_body(request: Request, raw: bytes) -> dict:
+        if not request.headers.get("content-type", "").startswith("application/json"):
+            raise HTTPException(415, "expected application/json")
+        try:
+            body = json.loads(raw)
+        except ValueError:
+            raise HTTPException(422, "invalid json") from None
+        if not isinstance(body, dict):
+            raise HTTPException(422, "invalid json")
+        return body
+
+    def redact_agent(text) -> str:
+        # digits only: keyword redaction would delete legitimate "never share your PIN" warnings
+        return mask_digits(text) if isinstance(text, str) else ""
 
     @app.get("/health")
     async def health():
         return {"ok": True, "model": cfg.ollama_model}
 
     @app.post("/calls")
-    async def start(request: Request, tts: bool = True):
-        try:
-            body = await request.json()
-        except ValueError:
-            body = {}
-        want_tts = tts and not (isinstance(body, dict) and body.get("tts") is False)
+    async def start(request: Request, tts_q: bool = Query(True, alias="tts")):
+        raw = await read_body(request)
+        body = json_body(request, raw) if raw.strip() else {}
         now = time.time()
         for k in [k for k, v in calls.items() if now - v["ts"] > TTL_S]:
             del calls[k]
+        if len(calls) >= MAX_CALLS:
+            raise HTTPException(429, "too many calls")
         cid = uuid.uuid4().hex
-        c = {"id": cid, "language": "hinglish", "ended": False, "ts": now,
+        c = {"id": cid, "language": "hinglish", "ended": False, "ts": now, "lock": asyncio.Lock(),
              "messages": [{"role": "system", "content": prompt.replace("{{conversation_id}}", cid)}]}
         res = await gateway(cid, "start_call", {"language": c["language"]})
-        text = res.get("speak") or ""
+        text = redact_agent(res.get("speak"))
         c["messages"] += [{"role": "user", "content": "(call connected)"}, {"role": "assistant", "content": text}]
         calls[cid] = c
-        audio = await _tts(text, c["language"], cid) if text and want_tts else ""
+        audio = await tts(text, c["language"], cid) if text and tts_q and body.get("tts") is not False else ""
         return {"call_id": cid, **reply(c, text, [{"name": "start_call", "ok": bool(res.get("ok"))}], audio)}
 
-    _tts = tts  # `/calls` shadows the name with its query flag
+    async def handle_text(c: dict, user_text: str) -> tuple[str, list[dict]]:
+        if not user_text:
+            return REPROMPT.get(c["language"], REPROMPT["hinglish"]), []
+        stype = _find_secret("user_text", user_text)
+        if not stype:
+            c["messages"].append({"role": "user", "content": user_text})
+            return await run_actions(c)
+        # secret: the value never enters history, logs or the LLM; the gateway is told, we answer directly
+        stype = "card" if stype == "card_number" else stype
+        stype = stype if stype in SECRET_KINDS else "password"
+        res = await gateway(c["id"], "report_secret_spoken", {"language": c["language"], "secret_type": stype})
+        speak = res.get("speak") if isinstance(res.get("speak"), str) else ""
+        c["messages"] += [{"role": "user", "content": f"[caller started to say a secret ({stype}); it was removed]"},
+                          {"role": "assistant", "content": speak}]
+        log.info("call=%s action=report_secret_spoken ok=%s", c["id"], bool(res.get("ok")))
+        return speak, [{"name": "report_secret_spoken", "ok": bool(res.get("ok"))}]
 
     @app.post("/calls/{call_id}/turn")
-    async def turn(call_id: str, request: Request, tts: bool = True):
+    async def turn(call_id: str, request: Request, tts_q: bool = Query(True, alias="tts")):
         c = calls.get(call_id)
-        if not c or time.time() - c["ts"] > TTL_S:
+        if c and time.time() - c["ts"] > TTL_S:
+            calls.pop(call_id, None)
+            c = None
+        if not c:
             raise HTTPException(404, "unknown call")
+        raw = await read_body(request)
         ctype = request.headers.get("content-type", "")
-        raw = await request.body()
-        want_tts = tts
+        want_tts = tts_q
+        wav = user_text = None
         if ctype.startswith("multipart/"):
             wav = parse_audio(ctype, raw)
             if not wav:
                 raise HTTPException(422, "missing audio")
-            user_text = await stt(wav, c["language"], call_id)
         else:
+            body = json_body(request, raw)
+            if not isinstance(body.get("text"), str):
+                raise HTTPException(422, "expected audio or text")
+            user_text, want_tts = body["text"].strip(), tts_q and body.get("tts") is not False
+        async with c["lock"]:  # one turn at a time per call
+            if c["ended"]:
+                raise HTTPException(409, "call ended")
+            c["messages"] = trim(c["messages"])
+            n0 = len(c["messages"])
             try:
-                body = json.loads(raw)
-                user_text = str(body["text"])
-            except (ValueError, KeyError, TypeError):
-                raise HTTPException(422, "expected audio or text") from None
-            want_tts = tts and body.get("tts") is not False
-        c["ts"] = time.time()
-        c["messages"].append({"role": "user", "content": user_text})
-        text, acts = await run_actions(c)
-        audio = await _tts(text, c["language"], call_id) if text and want_tts else ""
-        return reply(c, text, acts, audio, user_text=redact(user_text))
+                if wav is not None:
+                    user_text = await stt(wav, c["language"], call_id)
+                text, acts = await handle_text(c, user_text)
+            except BaseException:
+                del c["messages"][n0:]  # failed turn leaves no half-finished history
+                raise
+            c["ts"] = time.time()
+            text = redact_agent(text)
+            audio = await tts(text, c["language"], call_id) if text and want_tts else ""
+            return reply(c, text, acts, audio, user_text=redact(user_text))
 
     return app
 
 
 app = create_app()
+
+
