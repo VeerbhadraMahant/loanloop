@@ -353,6 +353,73 @@ def test_pending_request_hint_after_verify():
     assert any('"pending_request": "emi_info"' in s and "Now call emi_info" in s for s in seen)
 
 
+def test_auto_confirm_after_yes_retries_held_action():
+    st = {"confirmed": set(), "llm": 0, "gw": []}
+
+    def handler(req):
+        url = str(req.url)
+        if "11434" in url:
+            st["llm"] += 1
+            if st["llm"] == 1:
+                return httpx.Response(200, json={"message": tc("check_payment", date="2026-10-04", amount=100, utr="SAHYR1")})
+            if st["llm"] == 2:
+                return httpx.Response(200, json={"message": {"role": "assistant", "content": "Is that right?"}})
+            raise AssertionError("no LLM call expected on the confirming turn")
+        name = url.rsplit("/", 1)[1]
+        body = json.loads(req.content)
+        st["gw"].append((name, body.get("field"), body["call_id"]))
+        if name == "confirm_readback":
+            st["confirmed"].add(body["field"])
+            return httpx.Response(200, json={"ok": True, "speak": "noted"})
+        if name == "check_payment" and st["confirmed"] != {"utr", "amount"}:
+            return httpx.Response(200, json={"ok": False, "speak": "read back UTR and amount", "next": "confirm_readback",
+                                             "data": {"fields": ["utr", "amount"], "confirm": {"utr": "SAHYR1", "amount": "100"}}})
+        return httpx.Response(200, json={"ok": True, "speak": "payment matched"})
+    with swap_app(handler) as c:
+        d = c.post("/calls?tts=false", json={}).json()
+        r1 = turn(c, d, "I paid already").json()
+        assert r1["agent_text"] == "read back UTR and amount"  # the gateway's read-back sentence, verbatim
+        r2 = turn(c, d, "haan sahi hai").json()
+    assert [a["name"] for a in r2["actions"]] == ["confirm_readback", "confirm_readback", "check_payment"]
+    assert r2["agent_text"].endswith("payment matched")
+    assert all(g[2] == d["call_id"] for g in st["gw"])
+
+
+def test_goodbye_safety_net_calls_end_call(env):
+    c, fake = env
+    d = new_call(c)
+    fake.llm_script = [{"role": "assistant", "content": "ok then"}]
+    r = turn(c, d, "theek hai, bye").json()
+    assert r["actions"] == [{"name": "end_call", "ok": True}] and r["ended"] is True
+    assert fake.of("gw")[-1][2]["outcome"] == "completed"
+
+
+def test_check_approval_id_comes_from_the_service():
+    script = [tc("request_app_approval", purpose="x"), {"role": "assistant", "content": "tap"},
+              tc("check_approval", approval_id="999"), {"role": "assistant", "content": "ok"}]
+    sent = []
+
+    def handler(req):
+        url = str(req.url)
+        if "11434" in url:
+            return httpx.Response(200, json={"message": script.pop(0)})
+        sent.append((url.rsplit("/", 1)[1], json.loads(req.content)))
+        return httpx.Response(200, json={"ok": True, "speak": "s", "data": {"approval_id": 7}})
+    with swap_app(handler) as c:
+        d = c.post("/calls?tts=false", json={}).json()
+        turn(c, d, "yes send approval")
+        turn(c, d, "done")
+    assert [b for n, b in sent if n == "check_approval"][0]["approval_id"] == "7"
+
+
+def test_infer_language_from_reply_script():
+    from voice.app import infer_language
+    assert infer_language("मी आता मराठीत बोलत आहे", "hinglish") == "mr"
+    assert infer_language("मैं आपकी मदद करूँगी", "hinglish") == "hi"
+    assert infer_language("Main aapki madad karungi", "mr") == "hinglish"
+    assert infer_language("How can I help", "en") == "en"
+
+
 def test_mask_digits_grouped_and_dates():
     from voice.app import mask_digits
     assert mask_digits("call 9876 543 210 now") == "call **** **3 210 now"

@@ -146,7 +146,7 @@ def main(argv=None) -> int:
             ("verified once only (no re-verification)", n("verify_caller") == 1),
             ("send_details_sms + SMS on Priya's phone", n("send_details_sms") >= 1 and len(r.g.get("/phone/priya/sms").json()) > sms0),
             ("request_app_approval + check_approval", n("request_app_approval") >= 1 and n("check_approval") >= 1),
-            ("confirm_readback x3 (date, amount, UTR)", n("confirm_readback") >= 4),  # 3 for payment + new_day
+            ("confirm_readback (UTR + amount for the payment, new_day)", n("confirm_readback") >= 3),  # date read-back is optional
             ("check_payment", n("check_payment") >= 1),
             ("explain_emi_change", n("explain_emi_change") >= 1),
             ("Marathi switch (language mr)", "mr" in r.langs),
