@@ -18,7 +18,7 @@ Project rules:
 ## 1. Context
 
 - Gnani.ai "Great Indian AI Internship Challenge". Deadline 11:59 PM IST, 10 Nov 2026.
-- Every AI component (STT, TTS, voice cloning, LLM) must come from Gnani. No other AI provider at runtime.
+- Every AI component (STT, TTS, voice cloning, LLM) must come from Gnani. No other AI provider at runtime. Exception (owner decision, 2026-11-06): Agent Builder access was unavailable, so the LLM is a local open model (Ollama `qwen3:8b`) in our own `voice/` service; all speech AI (STT, TTS, voice clone) is still Gnani.
 - Synthetic data only.
 - Latency goal ~1 s voice-to-voice; our gateway must never be the slow part.
 - Design for 1,000 concurrent calls; prove our part with a load test.
@@ -78,12 +78,12 @@ Loan servicing:
 
 ## 4. Architecture
 
-1. Gnani Agent Builder runs the conversation (telephony, Prisma STT, Pampa LLM, Timbre TTS) and calls our gateway through on-call Custom Actions.
+1. Our own voice service (`voice/`, FastAPI :8100) runs the conversation: browser WAV -> Gnani Prisma STT -> local open LLM via Ollama (`qwen3:8b`, tools = the 23 actions in `agent/actions.json`, prompt = `agent/system_prompt.md`) -> our gateway -> Gnani Timbre TTS. (Agent Builder was the original plan; no access, so `agent/` and `docs/agent-builder-setup.md` are reference only.)
 2. Secure Bank Gateway (FastAPI): the only thing the agent can reach. Tiers, masking, out-of-band delivery, secret scrubbing, audit, mock core banking data.
 3. Mock Bank App + Ops Dashboard (Next.js).
 4. Offline tools (Python): seeding, synthetic caller audio via Gnani TTS + voice cloning, STT benchmark, load test.
 
-Request flow: Agent Builder POSTs action inputs → gateway authenticates, scrubs inputs, checks tier, runs action on Postgres/Redis, writes audit, publishes live event, returns `{ok, speak, data, next}` → agent speaks `speak` exactly → SMS/push sent asynchronously after the response.
+Request flow: the voice service's LLM tool calls POST action inputs → gateway authenticates, scrubs inputs, checks tier, runs action on Postgres/Redis, writes audit, publishes live event, returns `{ok, speak, data, next}` → agent speaks `speak` exactly → SMS/push sent asynchronously after the response.
 
 ### 4.3 Response contract (every action)
 - `ok`: bool
@@ -128,11 +128,13 @@ Write tests for every rule.
 
 ## 7. Tech stack and layout
 
-Gateway: Python 3.11+, FastAPI, Uvicorn, Pydantic v2, SQLAlchemy 2 async + asyncpg, redis-py async, httpx, pytest. Data: Postgres 16, Redis 7 via docker-compose. Frontend: Next.js App Router TS + Tailwind; live updates via SSE from gateway. Offline tools: Python + httpx. Load test: Locust or k6. Tunnel: cloudflared/ngrok.
+Gateway: Python 3.11+, FastAPI, Uvicorn, Pydantic v2, SQLAlchemy 2 async + asyncpg, redis-py async, httpx, pytest. Data: Postgres 16, Redis 7 via docker-compose. Frontend: Next.js App Router TS + Tailwind; live updates via SSE from gateway. Offline tools: Python + httpx. Load test: Locust or k6. Voice service: FastAPI + Ollama (`qwen3:8b`, models on D:). No tunnel needed (all local).
 
 Layout:
 - `gateway/app/main.py`, `config.py`; `routes/actions/{verify,details,loans,requests,handover,approvals}.py`; `security/{scrub,mask,auth,tiers}.py`; `speak/` (templates en/hi/hinglish/mr + number formatting); `db/` (models, session, seed); `events.py` (Redis stream + SSE); `tests/`
-- `web/`: `/phone/[customer]`, `/ops`, `/metrics`
+- `web/`: `/phone/[customer]`, `/ops`, `/metrics`, `/call/[customer]` (hold-to-talk caller page)
+- `voice/`: voice agent service (STT -> Ollama LLM tool loop -> gateway -> TTS), `voice.app:app` on :8100
+- `start.ps1` / `stop.ps1`: launch and stop everything on Windows
 - `agent/`: system prompt, action definitions, keyterms, apply script (Platform API)
 - `tools/`: `seed_data.py`, `make_test_audio.py`, `stt_benchmark.py`, `loadtest/`
 - `docker-compose.yml`, `.env.example`, `README.md`, `NOTES.md`

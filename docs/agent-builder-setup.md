@@ -1,5 +1,7 @@
 # Agent Builder setup
 
+> Kept for reference only. Agent Builder is not used: LoanLoop runs its own voice agent (`voice/`, see README and NOTES.md, 2026-11-06).
+
 Everything below is based on docs.gnani.ai (read 2026-11-02). Items marked **NOT IN DOCS** must be checked in the console; do not assume.
 
 ## 0. Files
