@@ -60,6 +60,7 @@ class Settings(BaseSettings):
 TOOL_HINTS = {
     "send_details_sms": " ALWAYS use this when the caller says send / SMS / bhej / pathva for their account number, IFSC, customer ID or branch address.",
     "get_masked_profile": " ONLY for questions about what is on file (linked mobile or email). Never for 'send me my details': use send_details_sms.",
+    "request_app_approval": " Only after a Tier 2 action was refused and nothing is approved yet. Never for 'why did my EMI change' etc.: call explain_emi_change.",
     "end_call": " Call it as soon as the caller says goodbye / bye / that is all, in any language.",
 }
 
@@ -435,9 +436,15 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
                    "instruction": "You may not confirm read-backs. Read the values back to the caller and wait for their "
                                   "yes; the system records it. Do not claim anything was confirmed."}
         elif not internal and name == "request_app_approval" and (c.get("approved") or c.get("approval_id")):
+            st["dup_appr"] = bool(c.get("approved"))
             res = {"ok": False, "error_code": "INVALID_INPUT", "speak": "",
-                   "instruction": (f"Already approved; now call {c.get('approved_for') or 'the caller request'}. Do not request again."
+                   "instruction": (f"Already approved; now call {c.get('approved_for') or 'the action that serves the caller'}. "
+                                   "Do not request again. Tier 2 is open: call explain_emi_change, check_payment, foreclosure_quote, "
+                                   "raise_closure, emi_date_change, request_document, update_nominee or update_address as the caller asked."
                                    if c.get("approved") else "An approval is already pending; the system checks it. Do not request again.")}
+        elif not internal and name == "check_approval" and c.get("approved"):
+            res = {"ok": False, "error_code": "INVALID_INPUT", "speak": "",
+                   "instruction": "The approval is already confirmed. Carry on with the caller's request; do not check again."}
         elif not internal and (missing := untraceable(name, args, c.get("said", []))):
             st["ask"] = (name, missing)
             res = {"ok": False, "error_code": "INVALID_INPUT", "speak": "",
@@ -483,6 +490,11 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             tcs = tcs if isinstance(tcs, list) else []
             argl = [clean_args(tc) for tc in tcs]
             c["messages"].append(msg)
+            if not tcs and st.pop("dup_appr", False):
+                # the model asked for a second approval, got refused and answered with prose: push it to act once
+                c["messages"].append({"role": "user", "content": "[service note: the approval is already confirmed. "
+                                      "Call the Tier 2 action that answers the caller's last request now; do not answer from memory.]"})
+                continue
             if not tcs:
                 # gateway sentences are trusted as-is; only the model's own words are scrubbed of tool names
                 text = final_text(clean_spoken((msg.get("content") or "").strip(), known), st["speaks"]) or st["last"]
@@ -517,22 +529,25 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             return None
         st = new_state()
         c["appr_checks"] = c.get("appr_checks", 0) + 1
-        c["messages"].append({"role": "user", "content": user_text})
         res = await exec_call(c, "check_approval", {"language": c["language"]}, st, internal=True)
         status = (res.get("data") or {}).get("status") if isinstance(res.get("data"), dict) else None
         text = res.get("speak") if isinstance(res.get("speak"), str) else ""
         if res.get("ok") and status == "approved":
             held, c["held"] = c.get("held"), None
-            if held:
-                name, args = held
-                if missing := untraceable(name, args, c.get("said", [])):
-                    c["held"] = held  # values still missing: ask for them, the model retries once it has them
-                    text = f"{text} {ask_text(c['language'], missing, name)}".strip()
-                else:
-                    await exec_call(c, name, dict(args), st, internal=True)
-                    text = st["rb"] or " ".join(dict.fromkeys(x for ok, x in st["speaks"] if ok)) or text
+            if not held:  # nothing held: the caller's message still needs the model, which is told Tier 2 is open
+                c["note"] = "the caller's app approval was just confirmed; Tier 2 is open, carry on with their request"
+                c["pre_acts"] = st["done"]  # the check still shows up in this turn's actions
+                return None
+            name, args = held
+            if missing := untraceable(name, args, c.get("said", [])):
+                c["held"] = held  # values still missing: ask for them, the model retries once it has them
+                text = f"{text} {ask_text(c['language'], missing, name)}".strip()
+            else:
+                await exec_call(c, name, dict(args), st, internal=True)
+                text = st["rb"] or " ".join(dict.fromkeys(x for ok, x in st["speaks"] if ok)) or text
         elif not (res.get("ok") and status == "pending"):
             c["held"], c["appr_checks"], c["approval_id"] = None, 0, None  # denied / expired / unknown: start over
+        c["messages"].append({"role": "user", "content": user_text})
         c["messages"].append({"role": "assistant", "content": text})
         return text, st["done"]
 
@@ -648,8 +663,10 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             lang0 = c["language"]
             auto = await approval_precheck(c, user_text) or await auto_confirm(c, user_text)
             if not auto:
-                c["messages"].append({"role": "user", "content": user_text})
+                note = c.pop("note", None)
+                c["messages"].append({"role": "user", "content": f"{user_text}\n[service note: {note}]" if note else user_text})
             text, acts = auto if auto else await run_actions(c)
+            acts = c.pop("pre_acts", []) + acts
             if c["language"] == lang0:  # no action carried a language: infer it from the reply script
                 c["language"] = infer_language(text, lang0)
             if is_goodbye(user_text) and not c["ended"]:  # safety net: a small model often just says bye
