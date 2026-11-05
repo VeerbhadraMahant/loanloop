@@ -27,7 +27,7 @@ STT_LANG = {"en": "en-IN", "hinglish": "hi-IN,en-IN", "hi": "hi-IN,en-IN", "mr":
 VOICE = "Shivani"
 AUDIO_CONFIG = {"sample_rate": 16000, "num_channels": 1, "sample_width": 2, "encoding": "linear_pcm", "container": "wav"}
 TTL_S, MAX_ROUNDS, MAX_CALLS, MAX_UPLOAD, KEEP_MSGS = 1800, 5, 50, 2_000_000, 30
-ALLOWED_HOSTS = {"127.0.0.1:8100", "localhost:8100"}
+NEED_TIER = {"need_tier_1", "need_tier_2"}
 SECRET_KINDS = {"password", "pin", "otp", "cvv", "card"}
 REPROMPT = {"en": "Sorry, I could not hear that. Could you say it again?",
             "hi": "माफ़ कीजिए, मैं सुन नहीं पाया। क्या आप दोबारा बोल सकते हैं?",
@@ -42,6 +42,7 @@ class Settings(BaseSettings):
     gateway_shared_secret: str = "dev-shared-secret-change-me"
     ollama_url: str = "http://127.0.0.1:11434"
     ollama_model: str = "qwen3:8b"
+    voice_port: int = 8100  # only used for the Host-header check
 
     def gnani_key(self) -> str:
         if self.gnani_speech_api_key:
@@ -82,17 +83,18 @@ def _load_scrub():
 
 
 _find_secret, _redact_secret = _load_scrub()
-_DIGITS = re.compile(r"\d(?:[ -]?\d){5,}")
+_DIGITS = re.compile(r"(?P<ifsc>\b[A-Z]{4}0[A-Z0-9]{6}\b)|(?P<d>\d(?:[ -]?\d){5,})")  # IFSC codes are public: exempt
 _ISO_DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
+_DEVANAGARI = re.compile("[ऀ-ॿ]")
 
 
-def mask_digits(text: str) -> str:
-    """Mask digit runs of 6+ (also when grouped by spaces/dashes) except the last 4 digits."""
+def mask_digits(text: str, min_digits: int = 6) -> str:
+    """Mask digit runs of min_digits+ (also when grouped by spaces/dashes) except the last 4 digits."""
     def sub(m):
         g = m.group()
-        if _ISO_DATE.fullmatch(g):
-            return g
         n, out = sum(ch.isdigit() for ch in g), []
+        if m.group("ifsc") or n < min_digits or _ISO_DATE.fullmatch(g):
+            return g
         seen = 0
         for ch in g:
             if ch.isdigit():
@@ -119,6 +121,21 @@ def trim(msgs: list[dict]) -> list[dict]:
     return msgs[:1] + tail
 
 
+def final_text(model_text: str, speaks: list[tuple[bool, str]], user_text: str) -> str:
+    """Numbers must come from the gateway. If the model's text carries a figure that is in neither this turn's
+    `speak` texts nor the caller's own words (a hallucination or a paraphrase that changed a number), speak the
+    gateway text verbatim instead. Paraphrases without new figures are kept: they keep the conversational question."""
+    if not speaks:
+        return model_text
+    ok_speaks = [s for ok, s in speaks if ok] or [speaks[-1][1]]
+    verbatim = " ".join(dict.fromkeys(ok_speaks))
+    norm = lambda s: re.sub(r"(?<=\d)[,\s](?=\d)", "", s)
+    known = set(re.findall(r"\d+", norm(" ".join(s for _, s in speaks) + " " + user_text)))
+    if not model_text or any(n not in known for n in re.findall(r"\d+", norm(model_text))):
+        return verbatim
+    return model_text
+
+
 def parse_audio(content_type: str, body: bytes) -> bytes | None:
     """Minimal multipart reader (python-multipart is not a dependency): returns the `audio` part."""
     msg = email.message_from_bytes(b"Content-Type: " + content_type.encode() + b"\r\n\r\n" + body)
@@ -143,7 +160,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
 
     @app.middleware("http")
     async def host_check(request: Request, call_next):  # DNS-rebinding guard
-        if request.headers.get("host", "") not in ALLOWED_HOSTS:
+        if request.headers.get("host", "") not in {f"127.0.0.1:{cfg.voice_port}", f"localhost:{cfg.voice_port}"}:
             return JSONResponse({"detail": "bad host"}, status_code=400)
         return await call_next(request)
 
@@ -178,6 +195,28 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         except (httpx.HTTPError, KeyError, ValueError):
             raise bad_gateway("ollama", c["id"]) from None
 
+    def note_pending(c: dict, name: str, args: dict, res: dict) -> None:
+        """Remember a request refused for lack of a tier; once the caller has the tier, tell the model to retry it."""
+        ok, nxt = bool(res.get("ok")), res.get("next")
+        if not ok and nxt in NEED_TIER:
+            c["pending"] = (name, nxt)
+            return
+        p = c.get("pending")
+        if not (ok and p):
+            return
+        if name == p[0]:
+            c["pending"] = None
+            return
+        status = (res.get("data") or {}).get("status") if isinstance(res.get("data"), dict) else None
+        if name == "verify_caller" and p[1] == "need_tier_1":
+            res["pending_request"], res["instruction"] = p[0], f"Now call {p[0]} (the caller's earlier request)."
+            c["pending"] = None
+        elif name == "verify_caller":  # still needs the app approval
+            res["pending_request"], res["instruction"] = p[0], f"Next call request_app_approval, then {p[0]}."
+        elif name == "check_approval" and status == "approved":
+            res["pending_request"], res["instruction"] = p[0], f"Now call {p[0]} (the caller's earlier request)."
+            c["pending"] = None
+
     def clean_args(tc) -> dict:
         """Ollama rejects string arguments on the next call: parse and write the dict back."""
         fn = tc.get("function") if isinstance(tc, dict) else None
@@ -195,7 +234,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         return args
 
     async def run_actions(c: dict) -> tuple[str, list[dict]]:
-        done, last_speak = [], ""
+        done, last_speak, speaks = [], "", []
         for _ in range(MAX_ROUNDS):
             t0 = time.monotonic()
             msg = await llm(c)
@@ -204,25 +243,30 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             argl = [clean_args(tc) for tc in tcs]
             c["messages"].append(msg)
             if not tcs:
-                return (msg.get("content") or "").strip() or last_speak, done
+                return final_text((msg.get("content") or "").strip(), speaks, c.get("user_text", "")) or last_speak, done
             for tc, args in zip(tcs, argl):
                 fn = tc.get("function") if isinstance(tc, dict) else None
                 name = fn.get("name") if isinstance(fn, dict) else None
                 if not isinstance(name, str) or name not in known:
                     res, name = {"ok": False, "error_code": "INVALID_INPUT", "speak": ""}, "unknown"
                 else:
+                    if args.get("language") == "hi" and not c.get("deva"):
+                        args["language"] = "hinglish"  # Roman-script input is Hinglish, not Devanagari Hindi
                     res = await gateway(c["id"], name, args)
                     lang = args.get("language")
                     if res.get("ok") and isinstance(lang, str) and lang in TTS_LANG:
                         c["language"] = lang
+                    if isinstance(res.get("speak"), str) and res["speak"]:
+                        speaks.append((bool(res.get("ok")), res["speak"]))
                     last_speak = res.get("speak") or last_speak
+                    note_pending(c, name, args, res)
                 ok = bool(res.get("ok"))
                 done.append({"name": name, "ok": ok})
                 log.info("call=%s action=%s ok=%s ms=%d", c["id"], name, ok, (time.monotonic() - t0) * 1000)
                 if name == "end_call" and ok:
                     c["ended"] = True
                 c["messages"].append({"role": "tool", "tool_name": name, "content": json.dumps(res, ensure_ascii=False)})
-        return last_speak, done  # round cap hit: speak the last action's sentence
+        return " ".join(dict.fromkeys(s for ok, s in speaks if ok)) or last_speak, done  # round cap hit: speak the actions' sentences
 
     async def stt(wav: bytes, lang: str, cid: str) -> str:
         data = {"model": "prisma-v3.0", "language_code": STT_LANG.get(lang, STT_LANG["hinglish"]), "format": "transcribe",
@@ -276,7 +320,8 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
 
     def redact_agent(text) -> str:
         # digits only: keyword redaction would delete legitimate "never share your PIN" warnings
-        return mask_digits(text) if isinstance(text, str) else ""
+        # only 9+ digit runs (mobiles, account numbers): amounts like 32,055 and IFSC codes are spoken as-is
+        return mask_digits(text, 9) if isinstance(text, str) else ""
 
     @app.get("/health")
     async def health():
@@ -305,6 +350,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         if not user_text:
             return REPROMPT.get(c["language"], REPROMPT["hinglish"]), []
         stype = _find_secret("user_text", user_text)
+        c["deva"], c["user_text"] = bool(_DEVANAGARI.search(user_text)), "" if stype else user_text
         if not stype:
             c["messages"].append({"role": "user", "content": user_text})
             return await run_actions(c)

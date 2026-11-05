@@ -210,7 +210,7 @@ def test_string_arguments_parsed_and_written_back(env):
     d = new_call(c)
     msg = {"role": "assistant", "content": "", "tool_calls": [{"function": {"name": "emi_info", "arguments": '{"language": "hi"}'}}]}
     fake.llm_script = [msg, {"role": "assistant", "content": "ok"}]
-    assert turn(c, d, "emi").json()["language"] == "hi"
+    assert turn(c, d, "मेरी ईएमआई").json()["language"] == "hi"
     sent = fake.of("llm")[-1][2]["messages"]
     assistant = next(m for m in sent if m.get("tool_calls"))
     assert assistant["tool_calls"][0]["function"]["arguments"] == {"language": "hi"}
@@ -297,6 +297,60 @@ def test_content_type_host_and_call_cap(env):
     for _ in range(49):
         assert c.post("/calls?tts=false", json={}).status_code == 200
     assert c.post("/calls?tts=false", json={}).status_code == 429
+
+
+def test_ifsc_and_amounts_survive_agent_text_but_mobiles_do_not(env):
+    c, fake = env
+    d = new_call(c)
+    fake.llm_script = [{"role": "assistant", "content": "IFSC SAHY0000101 EMI 32,055 ID 1234567 mobile 9000014417"}]
+    t = turn(c, d, "hello").json()["agent_text"]
+    assert "SAHY0000101" in t and "32,055" in t and "1234567" in t and "9000014417" not in t and t.endswith("4417")
+    from voice.app import mask_digits
+    assert mask_digits("SAHY0000101") == "SAHY0000101"  # also exempt in the stricter user-text mask
+
+
+def test_roman_script_hi_becomes_hinglish_and_devanagari_keeps_hi(env):
+    c, fake = env
+    d = new_call(c)
+    fake.llm_script = [tc("emi_info", language="hi"), {"role": "assistant", "content": "ok"}]
+    assert turn(c, d, "mera emi kitna hai").json()["language"] == "hinglish"
+    assert fake.of("gw")[-1][2]["language"] == "hinglish"
+    fake.llm_script = [tc("emi_info", language="hi"), {"role": "assistant", "content": "ok"}]
+    assert turn(c, d, "मेरी ईएमआई कितनी है").json()["language"] == "hi"
+    assert fake.of("gw")[-1][2]["language"] == "hi"
+
+
+def test_pending_request_hint_after_verify():
+    state = {"verified": False}
+
+    def handler(req):
+        url = str(req.url)
+        if "11434" in url:
+            body = json.loads(req.content)
+            last = body["messages"][-1]
+            if last["role"] == "user" and "emi" in last["content"]:
+                return httpx.Response(200, json={"message": tc("emi_info")})
+            if last["role"] == "tool" and last["tool_name"] == "emi_info":
+                return httpx.Response(200, json={"message": {"role": "assistant", "content": "done"}})
+            if last["role"] == "user":
+                return httpx.Response(200, json={"message": tc("verify_caller", registered_mobile="9000014417", dob="1991-08-14")})
+            seen.append(last["content"])
+            return httpx.Response(200, json={"message": {"role": "assistant", "content": "verified"}})
+        if url.endswith("/actions/emi_info"):
+            if not state["verified"]:
+                return httpx.Response(200, json={"ok": False, "speak": "please verify", "next": "need_tier_1"})
+            return httpx.Response(200, json={"ok": True, "speak": "EMI is X"})
+        if url.endswith("/actions/verify_caller"):
+            state["verified"] = True
+            return httpx.Response(200, json={"ok": True, "speak": "verified", "next": None})
+        return httpx.Response(200, json={"ok": True, "speak": "hi"})
+    seen = []
+    with swap_app(handler) as c:
+        d = c.post("/calls?tts=false", json={}).json()
+        r1 = turn(c, d, "what is my emi")
+        assert r1.json()["actions"] == [{"name": "emi_info", "ok": False}]
+        turn(c, d, "my number is nine")
+    assert any('"pending_request": "emi_info"' in s and "Now call emi_info" in s for s in seen)
 
 
 def test_mask_digits_grouped_and_dates():
