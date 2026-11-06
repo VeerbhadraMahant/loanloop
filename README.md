@@ -95,7 +95,7 @@ Manual steps:
 
 ```
 cp .env.example gateway/.env          # then set ENCRYPTION_KEY (command in the file)
-cp .env.example web/.env.local        # web needs the tokens and PHONE_TOKEN
+cp web/.env.example web/.env.local    # same DASHBOARD_TOKEN and PHONE_TOKEN as gateway/.env
 docker compose up -d                  # Postgres :55432, Redis :56379
 cd gateway && uv sync
 uv run python ../tools/seed_data.py   # 200 synthetic customers (drops and recreates the dev DB)
