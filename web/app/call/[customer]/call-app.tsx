@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button, Pill } from "@/components/ui";
 import { downsample, encodeWav } from "@/lib/wav";
+import { LLMS, SessionSummary, TurnStat, type LlmId, type Stat, type Timings, type Turn } from "@/components/turn-stats";
 
 const VOICE = process.env.NEXT_PUBLIC_VOICE_URL ?? "http://127.0.0.1:8100";
 const MIN_SECONDS = 0.3;
@@ -9,8 +10,9 @@ const MAX_SECONDS = 25;
 
 type Status = "idle" | "connecting" | "listening" | "thinking" | "speaking" | "ended";
 type Action = { name: string; ok: boolean };
-type Msg = { who: "caller" | "agent"; text: string; actions?: Action[] };
-type Reply = { user_text?: string; agent_text: string; audio_b64?: string; mime?: string; language?: string; actions?: Action[]; ended?: boolean };
+type Msg = { who: "caller" | "agent"; text: string; actions?: Action[]; stat?: Stat };
+type Health = Record<string, { model?: string; ready?: boolean }>;
+type Reply = { user_text?: string; agent_text: string; audio_b64?: string; mime?: string; language?: string; actions?: Action[]; ended?: boolean; timings?: Timings };
 
 class HttpError extends Error { constructor(msg: string, readonly status: number) { super(msg); } }
 
@@ -37,6 +39,10 @@ export default function CallApp({ customer }: { customer: string }) {
   const [voiceReplies, setVoiceReplies] = useState(false); // off by default: saves Gnani TTS credits
   const [text, setText] = useState("");
   const [talking, setTalking] = useState(false);
+  const [llmPick, setLlmPick] = useState<LlmId>("ollama");
+  const [health, setHealth] = useState<Health | null>(null); // null = /health has no providers field (or failed): Local only
+  const [turns, setTurns] = useState<Turn[]>([]);
+  const callLlm = useRef<LlmId>("ollama"); // fallback provider tag when the server sends no timings
   const callId = useRef<string | null>(null);
   const audio = useRef<HTMLAudioElement | null>(null);
   const rec = useRef<Rec | null>(null);
@@ -50,6 +56,17 @@ export default function CallApp({ customer }: { customer: string }) {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time restore from storage after mount
     try { if (localStorage.getItem("loanloop.voiceReplies") === "1") setVoiceReplies(true); } catch { /* storage blocked */ }
   }, []);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time restore from storage after mount
+    try { const v = localStorage.getItem("loanloop.llm"); if (LLMS.some((l) => l.id === v)) setLlmPick(v as LlmId); } catch { /* storage blocked */ }
+    fetch(`${VOICE}/health`).then((r) => r.json()).then((j) => setHealth(j?.providers ?? null)).catch(() => setHealth(null));
+  }, []);
+  const ready = (id: string) => (id === "ollama" ? health?.ollama?.ready !== false : health?.[id]?.ready === true);
+  const llm: LlmId = ready(llmPick) ? llmPick : "ollama";
+  const pickLlm = (v: LlmId) => {
+    setLlmPick(v);
+    try { localStorage.setItem("loanloop.llm", v); } catch { /* storage blocked */ }
+  };
   const toggleVoice = (on: boolean) => {
     setVoiceReplies(on);
     try { localStorage.setItem("loanloop.voiceReplies", on ? "1" : "0"); } catch { /* storage blocked */ }
@@ -62,12 +79,16 @@ export default function CallApp({ customer }: { customer: string }) {
 
   const finish = useCallback(() => { callId.current = null; setStatus("ended"); }, []);
 
-  const apply = useCallback((r: Reply) => {
-    setMsgs((m) => [
-      ...m,
-      ...(r.user_text ? [{ who: "caller" as const, text: r.user_text }] : []),
-      { who: "agent", text: r.agent_text, actions: r.actions },
-    ]);
+  const apply = useCallback((r: Reply, clientMs: number, input: Stat["input"]) => {
+    setTurns((t) => {
+      const stat: Stat = { n: t.length + 1, clientMs, input, timings: r.timings };
+      setMsgs((m) => [
+        ...m,
+        ...(r.user_text ? [{ who: "caller" as const, text: r.user_text }] : []),
+        { who: "agent", text: r.agent_text, actions: r.actions, stat },
+      ]);
+      return [...t, { ...stat, provider: r.timings?.provider ?? callLlm.current, model: r.timings?.model ?? "", actions: (r.actions ?? []).map((a) => a.name) }];
+    });
     if (r.language) setLang(r.language);
     const after = () => (r.ended ? finish() : setStatus((s) => (s === "speaking" ? "listening" : s)));
     if (r.audio_b64) {
@@ -81,11 +102,12 @@ export default function CallApp({ customer }: { customer: string }) {
   }, [finish]);
 
   // Runs a request; drops the result if the call was ended meanwhile.
-  const run = async (path: string, init: RequestInit, onOk: (r: Reply & { call_id: string }) => void, onFail: Status) => {
+  const run = async (path: string, init: RequestInit, onOk: (r: Reply & { call_id: string }, ms: number) => void, onFail: Status) => {
     const g = gen.current, ac = (abort.current = new AbortController());
     try {
+      const t0 = performance.now(); // request sent (for audio: upload start)
       const r = await call<Reply & { call_id: string }>(path, { ...init, signal: ac.signal });
-      if (g === gen.current) onOk(r);
+      if (g === gen.current) onOk(r, performance.now() - t0);
     } catch (e) {
       if (g !== gen.current) return;
       if (e instanceof HttpError && e.status === 409) { setError("The call has already ended."); finish(); return; }
@@ -94,21 +116,21 @@ export default function CallApp({ customer }: { customer: string }) {
   };
 
   const start = () => {
-    setError(null); setStatus("connecting");
-    run("/calls", jsonPost({ customer, tts: voiceReplies }), (r) => { callId.current = r.call_id; setMsgs([]); apply(r); }, "idle");
+    setError(null); setStatus("connecting"); callLlm.current = llm;
+    run("/calls", jsonPost({ customer, tts: voiceReplies, llm }), (r, ms) => { callId.current = r.call_id; setMsgs([]); setTurns([]); apply(r, ms, "start"); }, "idle");
   };
 
-  const send = (init: RequestInit) => {
+  const send = (init: RequestInit, input: Stat["input"]) => {
     if (!callId.current) return;
     setError(null); setStatus("thinking");
-    run(`/calls/${callId.current}/turn`, init, apply, "listening");
+    run(`/calls/${callId.current}/turn`, init, (r, ms) => apply(r, ms, input), "listening");
   };
 
   const sendText = () => {
     const t = text.trim();
     if (!t || !inCall || busy) return;
     stopAudio(); setText("");
-    send(jsonPost({ text: t, tts: voiceReplies }));
+    send(jsonPost({ text: t, tts: voiceReplies }), "typed");
   };
 
   const endTalk = useCallback(() => {
@@ -120,7 +142,7 @@ export default function CallApp({ customer }: { customer: string }) {
     const form = new FormData();
     form.append("audio", new Blob([encodeWav(pcm)], { type: "audio/wav" }), "turn.wav");
     form.append("tts", String(voiceRef.current));
-    send({ method: "POST", body: form });
+    send({ method: "POST", body: form }, "voice");
     // eslint-disable-next-line react-hooks/exhaustive-deps -- send only touches refs and stable setters
   }, []);
 
@@ -192,6 +214,17 @@ export default function CallApp({ customer }: { customer: string }) {
       Voice replies
     </label>
   );
+  const llmSelect = (
+    <div className="space-y-1">
+      <label className="flex items-center justify-between gap-3 text-sm text-muted">
+        Language model
+        <select value={llm} onChange={(e) => pickLlm(e.target.value as LlmId)} className="min-h-11 rounded-lg border border-line bg-bg px-2 text-sm text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]">
+          {LLMS.map((l) => <option key={l.id} value={l.id} disabled={!ready(l.id)} title={ready(l.id) ? undefined : "not configured"}>{l.label}{ready(l.id) ? "" : " (not configured)"}</option>)}
+        </select>
+      </label>
+      <p className="text-xs text-muted">Takes effect when you start the next call.</p>
+    </div>
+  );
   const listening = status === "listening" && talking;
   const keyHold = (down: boolean) => (e: React.KeyboardEvent) => {
     if (e.code !== "Space" && e.code !== "Enter") return;
@@ -212,6 +245,7 @@ export default function CallApp({ customer }: { customer: string }) {
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <Pill tone={statusTone[status]}><span role="status" aria-live="polite">{status}</span></Pill>
             {lang && <Pill>{lang}</Pill>}
+            {!!turns.length && <Pill>LLM: {turns[0].provider}</Pill>}
           </div>
         </header>
         <p className="border-b border-line bg-warn-bg px-5 py-1.5 text-xs text-warn-fg">Demo call · synthetic data</p>
@@ -228,6 +262,7 @@ export default function CallApp({ customer }: { customer: string }) {
                   {m.actions.map((a, j) => <li key={j}><Pill tone={a.ok ? "ok" : "danger"} icon={a.ok ? "check" : "x"}>{a.name}</Pill></li>)}
                 </ul>
               )}
+              {m.stat && <TurnStat s={m.stat} />}
             </div>
           ))}
           {ended && <p className="text-center text-sm font-medium text-muted">Call ended</p>}
@@ -239,9 +274,11 @@ export default function CallApp({ customer }: { customer: string }) {
           </p>
         )}
 
-        <div className="space-y-3 border-t border-line bg-card px-4 pb-5 pt-3">
+        <div className="max-h-[45%] space-y-3 overflow-y-auto border-t border-line bg-card px-4 pb-5 pt-3">
+          <SessionSummary turns={turns} />
           {(status === "idle" || status === "connecting" || ended) ? (
             <>
+              {llmSelect}
               {voiceSwitch}
               <Button className="w-full" onClick={start} disabled={status === "connecting"}>{ended ? "Start a new call" : "Start call"}</Button>
             </>
