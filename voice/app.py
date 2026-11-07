@@ -59,6 +59,7 @@ class Settings(BaseSettings):
 
 
 TOOL_HINTS = {
+    "verify_caller": " ONLY call this tool when the caller has stated BOTH their 10-digit mobile number AND their date of birth (or loan number). If they only gave the mobile number, DO NOT call this tool yet: ask them for their date of birth first. Convert dob to YYYY-MM-DD.",
     "send_details_sms": " ALWAYS use this when the caller says send / SMS / bhej / pathva for their account number, IFSC, customer ID or branch address.",
     "get_masked_profile": " ONLY for questions about what is on file (linked mobile or email). Never for 'send me my details': use send_details_sms.",
     "request_app_approval": " Only after a Tier 2 action was refused and nothing is approved yet. Never for 'why did my EMI change' etc.: call explain_emi_change.",
@@ -309,9 +310,60 @@ _WHY_WORDS = {"why", "kyun", "kyu", "kyon", "kaaran", "karan", "क्यों"
 _UP_WORDS = {"badha", "badh", "badhi", "badhgayi", "increase", "increased", "up", "hike", "बढ़ी", "बढ़ा", "वाढली", "वाढला", "वाढले"}
 
 
-def fallback_action(text: str) -> tuple[str, dict] | None:
+_MONTHS_MAP = {
+    "jan": 1, "january": 1, "जनवरी": 1, "जानेवारी": 1,
+    "feb": 2, "february": 2, "फ़रवरी": 2, "फेब्रुवारी": 2, "फरवरी": 2,
+    "mar": 3, "march": 3, "मार्च": 3,
+    "apr": 4, "april": 4, "अप्रैल": 4, "एप्रिल": 4,
+    "may": 5, "मई": 5, "मे": 5,
+    "jun": 6, "june": 6, "जून": 6,
+    "jul": 7, "july": 7, "जुलाई": 7, "जुलै": 7,
+    "aug": 8, "august": 8, "अगस्त": 8, "ऑगस्ट": 8,
+    "sep": 9, "september": 9, "सितंबर": 9, "सप्टेंबर": 9, "सितम्बर": 9,
+    "oct": 10, "october": 10, "अक्टूबर": 10, "ऑक्टोबर": 10,
+    "nov": 11, "november": 11, "नवंबर": 11, "नोव्हेंबर": 11,
+    "dec": 12, "december": 12, "दिसंबर": 12, "डिसेंबर": 12,
+}
+
+
+def _parse_dob(v: str) -> str | None:
+    m = re.search(r"\b(\d{4})[/\-.](\d{1,2})[/\-.](\d{1,2})\b", v)
+    if m:
+        return f"{m.group(1)}-{int(m.group(2)):02d}-{int(m.group(3)):02d}"
+    m = re.search(r"\b(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{4})\b", v)
+    if m:
+        return f"{m.group(3)}-{int(m.group(2)):02d}-{int(m.group(1)):02d}"
+    m = re.search(r"(\d{1,2})(?:st|nd|rd|th)?\s+([a-zA-Z\u0900-\u097f]+)[,\s]+(\d{4})", v)
+    if m and m.group(2).lower() in _MONTHS_MAP:
+        return f"{m.group(3)}-{_MONTHS_MAP[m.group(2).lower()]:02d}-{int(m.group(1)):02d}"
+    m = re.search(r"([a-zA-Z\u0900-\u097f]+)\s+(\d{1,2})(?:st|nd|rd|th)?[,\s]+(\d{4})", v)
+    if m and m.group(1).lower() in _MONTHS_MAP:
+        return f"{m.group(3)}-{_MONTHS_MAP[m.group(1).lower()]:02d}-{int(m.group(2)):02d}"
+    return None
+
+
+def _extract_verify(text: str, said: list[str] | None = None) -> tuple[str, dict] | None:
+    t = text.translate(_DEVA_DIGITS)
+    all_text = (" ".join(said) + " " + text).translate(_DEVA_DIGITS) if said else t
+    m_mob = re.search(r"(?:(?:\+?91|0)?[ -]?)?([6-9]\d{9})\b", all_text)
+    if not m_mob:
+        return None
+    mob = m_mob.group(1)
+    dob = _parse_dob(all_text)
+    if dob:
+        return ("verify_caller", {"registered_mobile": mob, "dob": dob})
+    m_loan = re.search(r"(?:loan|कर्ज|खाते|last\s*4|last\s*four)\D{0,15}(\d{4})\b", all_text, re.I)
+    if m_loan:
+        return ("verify_caller", {"registered_mobile": mob, "loan_last4": m_loan.group(1)})
+    return None
+
+
+def fallback_action(text: str, said: list[str] | None = None) -> tuple[str, dict] | None:
     """Only when the model answered with prose and no action: 'EMI date 10 la karaycha aahe' is unambiguous enough
     to run emi_date_change(new_day=10) ourselves (the read-back and approval flows then take over)."""
+    fb_v = _extract_verify(text, said)
+    if fb_v:
+        return fb_v
     t = set(_tokens(text))
     if {"emi", "ईएमआय", "एमआय"} & t and _WHY_WORDS & t and _UP_WORDS & t:
         return ("explain_emi_change", {})
@@ -494,11 +546,40 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         elif not internal and name == "check_approval" and c.get("approved"):
             res = {"ok": False, "error_code": "INVALID_INPUT", "speak": "",
                    "instruction": "The approval is already confirmed. Carry on with the caller's request; do not check again."}
+        elif not internal and name == "verify_caller" and not args.get("dob") and not args.get("loan_last4") and not _parse_dob(" ".join(c.get("said", []))):
+            ask = ("Please also tell me your date of birth or the last four digits of your loan number."
+                   if c.get("language") == "en" else
+                   "Kripya apni date of birth ya loan number ke last 4 digits bhi bataiye."
+                   if c.get("language") == "hinglish" else
+                   "कृपया अपनी जन्मतिथि या लोन नंबर के आखिरी चार अंक भी बताइए।"
+                   if c.get("language") == "hi" else
+                   "कृपया तुमची जन्मतारीख किंवा कर्ज क्रमांकाचे शेवटचे चार अंक सांगा.")
+            st["speaks"].append((False, ask))
+            st["last"] = ask
+            res = {"ok": False, "error_code": "INVALID_INPUT", "speak": ask,
+                   "instruction": "Verification requires BOTH mobile and date of birth (or loan last 4). Ask the caller for their date of birth; do not call verify_caller again until they state it."}
         elif not internal and (missing := untraceable(name, args, c.get("said", []))):
             st["ask"] = (name, missing)
             res = {"ok": False, "error_code": "INVALID_INPUT", "speak": "",
                    "instruction": f"Ask the caller for {', '.join(missing)}; never invent values. Do not call {name} until they say them."}
         else:
+            if name == "verify_caller":
+                if not args.get("registered_mobile"):
+                    m_prev = re.search(r"(?:(?:\+?91|0)?[ -]?)?([6-9]\d{9})\b", " ".join(c.get("said", [])))
+                    if m_prev:
+                        args["registered_mobile"] = m_prev.group(1)
+                elif isinstance(args.get("registered_mobile"), str):
+                    d = re.sub(r"\D", "", args["registered_mobile"])
+                    if len(d) >= 10:
+                        args["registered_mobile"] = d[-10:]
+                if not args.get("dob") and not args.get("loan_last4"):
+                    dob_prev = _parse_dob(" ".join(c.get("said", [])))
+                    if dob_prev:
+                        args["dob"] = dob_prev
+                if args.get("dob") and isinstance(args["dob"], str):
+                    p_dob = _parse_dob(args["dob"])
+                    if p_dob:
+                        args["dob"] = p_dob
             utr = args.get("utr")
             if isinstance(utr, str) and len(re.sub(r"\D", "", utr)) >= 6:
                 c.setdefault("refs", set()).add(re.sub(r"\D", "", utr))  # the caller's own UTR may be read back
@@ -542,7 +623,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             argl = [clean_args(tc) for tc in tcs]
             c["messages"].append(msg)
             if (not tcs and not st.get("fb") and (not st["done"] or st.get("dup_seen"))
-                    and (fb := fallback_action(c.get("user_text", "")))):
+                    and (fb := fallback_action(c.get("user_text", ""), c.get("said", [])))):
                 st["fb"] = True  # replace the model's prose with the action it should have called
                 msg = {"role": "assistant", "content": "", "tool_calls": [{"function": {"name": fb[0], "arguments": fb[1]}}]}
                 c["messages"][-1] = msg
