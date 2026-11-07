@@ -18,7 +18,7 @@ Project rules:
 ## 1. Context
 
 - Gnani.ai "Great Indian AI Internship Challenge". Deadline 11:59 PM IST, 10 Nov 2026.
-- Every AI component (STT, TTS, voice cloning, LLM) must come from Gnani. No other AI provider at runtime. Exception (owner decision, 2026-11-06): Agent Builder access was unavailable, so the LLM is a local open model (Ollama `qwen3:8b`) in our own `voice/` service; all speech AI (STT, TTS, voice clone) is still Gnani.
+- Every AI component (STT, TTS, voice cloning, LLM) must come from Gnani. No other AI provider at runtime. Exception (owner decision, 2026-11-06): Agent Builder access was unavailable, so the LLM is a local open model (Ollama `qwen3:8b`) in our own `voice/` service; all speech AI (STT, TTS, voice clone) is still Gnani. Hosted LLMs (Gemini, Sarvam) were added later (2026-11-08) only for latency comparison; the default stays local qwen3:8b and speech stays Gnani.
 - Synthetic data only.
 - Latency goal ~1 s voice-to-voice; our gateway must never be the slow part.
 - Design for 1,000 concurrent calls; prove our part with a load test.

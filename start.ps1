@@ -15,8 +15,19 @@ Pop-Location
 if ($rc -ne 0) { Write-Host 'docker compose up failed.' -ForegroundColor Red; exit 1 }
 
 # Ollama + model
-try { $tags = Invoke-RestMethod "$ollama/api/tags" -TimeoutSec 5 }
-catch { Write-Host "Ollama is not reachable at $ollama. Start it (ollama serve) and run this again." -ForegroundColor Red; exit 1 }
+$tags = $null
+try { $tags = Invoke-RestMethod "$ollama/api/tags" -TimeoutSec 5 } catch {}
+if (-not $tags) {
+  Write-Host 'Ollama is not running; starting it in its own window...'
+  $env:OLLAMA_MODELS = 'D:\Work\Hackathons\gnani\ollama-models'
+  $env:OLLAMA_KEEP_ALIVE = '-1'
+  Start-Process powershell -ArgumentList '-NoExit', '-Command', "`$Host.UI.RawUI.WindowTitle='loanloop-ollama'; ollama serve"
+  for ($i = 0; $i -lt 15 -and -not $tags; $i++) {
+    Start-Sleep 2
+    try { $tags = Invoke-RestMethod "$ollama/api/tags" -TimeoutSec 2 } catch {}
+  }
+  if (-not $tags) { Write-Host "Ollama did not come up at $ollama within 30 s. Check its window." -ForegroundColor Red; exit 1 }
+}
 if (-not ($tags.models | Where-Object { $_.name -eq $model })) {
   Write-Host "Model $model is not pulled. Run:" -ForegroundColor Red
   Write-Host "  `$env:OLLAMA_MODELS='D:\Work\Hackathons\gnani\ollama-models'; ollama pull $model"

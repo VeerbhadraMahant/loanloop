@@ -78,7 +78,8 @@ def test_tools_from_actions_json():
 
 def test_health_and_cors(env):
     c, _ = env
-    assert c.get("/health").json() == {"ok": True, "model": "qwen3:8b"}
+    h = c.get("/health").json()
+    assert h["ok"] and h["model"] == "qwen3:8b" and h["default"] == "ollama"
     r = c.options("/calls", headers={"Origin": "http://localhost:3000", "Access-Control-Request-Method": "POST"})
     assert r.headers["access-control-allow-origin"] == "http://localhost:3000"
     r = c.options("/calls", headers={"Origin": "http://evil.com", "Access-Control-Request-Method": "POST"})
@@ -101,16 +102,18 @@ def test_text_turn_injects_call_id_and_tracks_language(env):
     d = new_call(c)
     fake.llm_script = [tc("emi_info", call_id="ATTACKER", language="mr"), {"role": "assistant", "content": "Your EMI is X"}]
     r = c.post(f"/calls/{d['call_id']}/turn", json={"text": "emi?"}).json()
-    assert r["agent_text"] == "Your EMI is X" and r["language"] == "mr"
+    # emi_info is a shortcut action: the gateway sentence is the answer, no second LLM round (behaviour changed on purpose)
+    assert r["agent_text"] == "emi_info done" and r["language"] == "mr" and len(fake.of("llm")) == 1
     assert r["actions"] == [{"name": "emi_info", "ok": True}]
     kind, url, body, headers = fake.of("gw")[-1]
     assert body["call_id"] == d["call_id"] and url.endswith("/actions/emi_info")
     assert headers["x-gateway-secret"] == SECRET
     assert fake.of("stt") == []
     assert fake.of("tts")[-1][2]["language"] == "mr-IN"
-    # system prompt has the call id substituted
-    sysmsg = fake.of("llm")[-1][2]["messages"][0]["content"]
-    assert d["call_id"] in sysmsg and "{{conversation_id}}" not in sysmsg
+    # the call id is in the first user message, never in the (cacheable) system prompt
+    msgs = fake.of("llm")[-1][2]["messages"]
+    assert d["call_id"] not in msgs[0]["content"] and "{{conversation_id}}" not in msgs[0]["content"]
+    assert msgs[1]["content"] == f"(call connected, call_id={d['call_id']})"
 
 
 def test_unknown_tool_rejected(env):
@@ -125,10 +128,10 @@ def test_unknown_tool_rejected(env):
 def test_tool_loop_stops_at_5_and_falls_back_to_speak(env):
     c, fake = env
     d = new_call(c)
-    fake.llm_script = [tc("emi_info") for _ in range(20)]
+    fake.llm_script = [tc("request_document") for _ in range(20)]
     r = c.post(f"/calls/{d['call_id']}/turn?tts=false", json={"text": "hi"}).json()
     assert len(fake.of("llm")) == 5 and len(r["actions"]) == 5
-    assert r["agent_text"] == "emi_info done"
+    assert r["agent_text"] == "request_document done"
 
 
 def test_empty_llm_text_falls_back_to_speak_and_end_call(env):
@@ -208,13 +211,13 @@ def test_raw_secret_never_reaches_ollama_or_history(env, caplog):
 def test_string_arguments_parsed_and_written_back(env):
     c, fake = env
     d = new_call(c)
-    msg = {"role": "assistant", "content": "", "tool_calls": [{"function": {"name": "emi_info", "arguments": '{"language": "hi"}'}}]}
+    msg = {"role": "assistant", "content": "", "tool_calls": [{"function": {"name": "request_document", "arguments": '{"language": "hi"}'}}]}
     fake.llm_script = [msg, {"role": "assistant", "content": "ok"}]
     assert turn(c, d, "मेरी ईएमआई").json()["language"] == "hi"
     sent = fake.of("llm")[-1][2]["messages"]
     assistant = next(m for m in sent if m.get("tool_calls"))
     assert assistant["tool_calls"][0]["function"]["arguments"] == {"language": "hi"}
-    bad = {"role": "assistant", "content": "", "tool_calls": [{"function": {"name": "emi_info", "arguments": "{bad"}}]}
+    bad = {"role": "assistant", "content": "", "tool_calls": [{"function": {"name": "request_document", "arguments": "{bad"}}]}
     fake.llm_script = [bad, {"role": "assistant", "content": "ok"}]
     assert turn(c, d, "again").status_code == 200
 
@@ -671,7 +674,7 @@ def test_model_pushed_to_act_after_refused_duplicate_approval():
         turn(c, d, "approve")
         r = turn(c, d, "approve kar diya, why did my EMI go up").json()
     assert any(n == "explain_emi_change" for n, _ in seen)  # the nudge made the model call the real action
-    assert r["agent_text"] in ("done", "ok")  # short wrap-up without figures is kept
+    assert r["agent_text"] == "EMI went up because of the reset"  # explain_emi_change is a shortcut action: gateway sentence, no wrap-up round
 
 
 LONG = "please tell me something about my loan account details today"  # long, no approval keyword
@@ -1024,3 +1027,124 @@ def test_concurrent_turns_serialised():
             await asyncio.gather(cl.post(url, json={"text": "a"}), cl.post(url, json={"text": "b"}))
             return [m["role"] for m in app.state.calls[d["call_id"]]["messages"]]
     assert asyncio.run(go()) == ["system", "user", "assistant", "user", "assistant", "user", "assistant"]
+
+
+# ---- latency work: keep_alive, cacheable prompt, shortcut, timings, per-call provider ----
+import time  # noqa: E402
+
+from voice import providers  # noqa: E402
+
+TIMING_KEYS = {"stt_ms", "llm_ms", "llm_calls", "gateway_ms", "gateway_calls", "tts_ms", "total_ms", "other_ms", "provider", "model"}
+
+
+def test_keep_alive_sent_and_warmup_is_opt_in():
+    fake = Fake()
+    cfg = Settings(gnani_speech_api_key=KEY, warmup=True)
+    with TestClient(create_app(cfg, httpx.AsyncClient(transport=httpx.MockTransport(fake.handler))), base_url=BASE) as c:
+        for _ in range(100):
+            if fake.of("llm"):
+                break
+            time.sleep(0.05)
+        w = fake.of("llm")[0][2]
+        assert w["keep_alive"] == -1 and w["tools"] and w["messages"][1]["content"] == "(warm-up)"
+        d = new_call(c)
+        fake.llm_script = [{"role": "assistant", "content": "hi"}]
+        c.post(f"/calls/{d['call_id']}/turn?tts=false", json={"text": "hello"})
+        assert fake.of("llm")[-1][2]["keep_alive"] == -1
+
+
+def test_warmup_failure_is_swallowed():
+    fake = Fake()
+    fake.fail = "llm"
+    cfg = Settings(gnani_speech_api_key=KEY, warmup=True)
+    with TestClient(create_app(cfg, httpx.AsyncClient(transport=httpx.MockTransport(fake.handler))), base_url=BASE) as c:
+        assert c.get("/health").status_code == 200
+
+
+def test_system_prompt_identical_across_calls_and_has_no_call_id(env):
+    c, fake = env
+    ids = [new_call(c)["call_id"] for _ in range(2)]
+    sys_msgs, tools_sent = [], []
+    for i in ids:
+        fake.llm_script = [{"role": "assistant", "content": "hi"}]
+        c.post(f"/calls/{i}/turn?tts=false", json={"text": "hello"})
+        body = fake.of("llm")[-1][2]
+        sys_msgs.append(body["messages"][0]["content"])
+        tools_sent.append(json.dumps(body["tools"], sort_keys=True))
+        assert body["messages"][1]["content"] == f"(call connected, call_id={i})"
+    assert sys_msgs[0] == sys_msgs[1] and tools_sent[0] == tools_sent[1]
+    assert not any(i in sys_msgs[0] for i in ids) and "{{" not in sys_msgs[0] and "first user message" in sys_msgs[0]
+
+
+def test_whitelisted_action_makes_one_llm_call_others_two(env):
+    c, fake = env
+    d = new_call(c)
+    fake.llm_script = [tc("branch_lookup", branch="Kothrud"), {"role": "assistant", "content": "never used"}]
+    r = turn(c, d, "ifsc of kothrud").json()
+    assert len(fake.of("llm")) == 1 and r["agent_text"] == "branch_lookup done" and r["timings"]["llm_calls"] == 1
+    n = len(fake.of("llm"))
+    fake.llm_script = [tc("request_document", type="statement"), {"role": "assistant", "content": "wrapped"}]
+    r = turn(c, d, "send statement").json()
+    assert len(fake.of("llm")) - n == 2 and r["agent_text"] == "wrapped" and r["timings"]["llm_calls"] == 2
+
+
+def test_timings_on_calls_and_turn(env):
+    c, fake = env
+    d = new_call(c)
+    assert TIMING_KEYS <= set(d["timings"])
+    fake.llm_script = [tc("request_document"), {"role": "assistant", "content": "ok"}]
+    t = c.post(f"/calls/{d['call_id']}/turn", json={"text": "hi"}).json()["timings"]
+    assert TIMING_KEYS <= set(t) and t["provider"] == "ollama" and t["model"] == "qwen3:8b"
+    assert t["llm_calls"] == 2 and t["gateway_calls"] == 1
+    for k in ("stt_ms", "llm_ms", "gateway_ms", "tts_ms", "other_ms"):
+        assert isinstance(t[k], int) and 0 <= t[k] <= t["total_ms"]
+    assert d["timings"]["gateway_calls"] == 1 and d["timings"]["tts_ms"] >= 0
+
+
+def gem_env():
+    fake = Fake()
+    cfg = Settings(gnani_speech_api_key=KEY, gemini_api_key="G-KEY")
+    return TestClient(create_app(cfg, httpx.AsyncClient(transport=httpx.MockTransport(fake.handler))), base_url=BASE), fake
+
+
+def test_gemini_dispatches_to_provider_adapter(monkeypatch):
+    c, fake = gem_env()
+    seen = []
+
+    async def fake_chat(http, *, base_url, api_key, model, messages, tools, provider, timeout=30.0):
+        seen.append((base_url, api_key, model, provider, messages[0]["role"], bool(tools)))
+        return {"role": "assistant", "content": "hello from gemini", "tool_calls": []}
+
+    monkeypatch.setattr(providers, "openai_chat", fake_chat)
+    with c:
+        d = c.post("/calls?tts=false", json={"llm": "gemini"}).json()
+        assert d["timings"]["provider"] == "gemini" and d["timings"]["model"] == "gemini-3.5-flash-lite"
+        r = c.post(f"/calls/{d['call_id']}/turn?tts=false", json={"text": "hello"}).json()
+    assert r["agent_text"] == "hello from gemini" and fake.of("llm") == []
+    assert seen == [("https://generativelanguage.googleapis.com/v1beta/openai", "G-KEY", "gemini-3.5-flash-lite", "gemini", "system", True)]
+    assert "G-KEY" not in json.dumps(r)
+
+
+def test_provider_error_is_502_and_unknown_or_keyless_provider_is_422(monkeypatch):
+    async def boom(*a, **k):
+        raise providers.ProviderError("x")
+
+    monkeypatch.setattr(providers, "openai_chat", boom)
+    c, _ = gem_env()
+    with c:
+        d = c.post("/calls?tts=false", json={"llm": "gemini"}).json()
+        r = c.post(f"/calls/{d['call_id']}/turn?tts=false", json={"text": "hello"})
+        assert r.status_code == 502 and "G-KEY" not in r.text
+        assert c.post("/calls", json={"llm": "gpt"}).status_code == 422
+        assert c.post("/calls", json={"llm": 5}).status_code == 422
+        r = c.post("/calls", json={"llm": "sarvam"})
+        assert r.status_code == 422 and "SARVAM_API_KEY" in r.json()["detail"]
+
+
+def test_health_lists_providers(env):
+    c, _ = env
+    h = c.get("/health").json()
+    assert h["default"] == "ollama"
+    assert h["providers"]["ollama"] == {"model": "qwen3:8b", "ready": True}
+    assert h["providers"]["gemini"]["model"] == "gemini-3.5-flash-lite" and h["providers"]["sarvam"]["model"] == "sarvam-m"
+    assert set(h["providers"]) == {"ollama", "gemini", "sarvam"}

@@ -71,6 +71,10 @@ Machine: i7-13650HX (20 threads), Windows 11, one box: Locust, gateway (`uvicorn
 6. Exact keyterms wire format (JSON list vs comma string)? Try JSON list, fall back to comma (guess).
 7. Does `language` get sent by Agent Builder each call? Orchestrator says yes; the runner relies on it.
 
+## 2026-11-08
+- Owner decision: hosted LLMs (Gemini, Sarvam) added only for latency comparison; default stays local qwen3:8b; speech stays Gnani.
+- Voice latency: Ollama `keep_alive=-1` plus startup warm-up; call id moved out of the system prompt so the prefix cache hits across calls; single read-only actions skip the second LLM round; per-stage `timings` on every call/turn.
+
 ## How to run
 ```
 docker compose up -d
