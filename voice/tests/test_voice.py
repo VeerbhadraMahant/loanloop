@@ -674,7 +674,7 @@ def test_model_pushed_to_act_after_refused_duplicate_approval():
         turn(c, d, "approve")
         r = turn(c, d, "approve kar diya, why did my EMI go up").json()
     assert any(n == "explain_emi_change" for n, _ in seen)  # the nudge made the model call the real action
-    assert r["agent_text"] == "EMI went up because of the reset"  # explain_emi_change is a shortcut action: gateway sentence, no wrap-up round
+    assert r["agent_text"] in ("done", "ok")  # the text has a comma (multi-request): no shortcut, the wrap-up round runs
 
 
 LONG = "please tell me something about my loan account details today"  # long, no approval keyword
@@ -1103,7 +1103,7 @@ def test_timings_on_calls_and_turn(env):
 
 def gem_env():
     fake = Fake()
-    cfg = Settings(gnani_speech_api_key=KEY, gemini_api_key="G-KEY")
+    cfg = Settings(gnani_speech_api_key=KEY, gemini_api_key="G-KEY", VOICE_DEV=True)
     return TestClient(create_app(cfg, httpx.AsyncClient(transport=httpx.MockTransport(fake.handler))), base_url=BASE), fake
 
 
@@ -1176,7 +1176,7 @@ def test_unknown_argument_keys_dropped_before_gateway(env, caplog):
 # ---- developer lab ----
 def dev_env(**kw):
     fake = Fake()
-    cfg = Settings(gnani_speech_api_key=KEY, dev=True, **kw)
+    cfg = Settings(gnani_speech_api_key=KEY, VOICE_DEV=True, **kw)
     return TestClient(create_app(cfg, httpx.AsyncClient(transport=httpx.MockTransport(fake.handler))), base_url=BASE), fake
 
 
@@ -1268,9 +1268,9 @@ def test_shortcut_actions_false_forces_two_rounds():
 def test_stt_and_tts_settings_reach_gnani():
     c, fake = dev_env()
     with c:
-        d = c.post("/calls", json={"settings": {"tts_voice": "Avinash", "tts_speed": 1.2, "stt_keyterms": False,
+        d = c.post("/calls", json={"settings": {"tts_voice": "Avinash", "tts_speed": 1.1, "stt_keyterms": False,
                                                 "stt_language": "mr-IN"}}).json()
-        assert fake.of("tts")[-1][2]["voice"] == "Avinash" and fake.of("tts")[-1][2]["speed"] == 1.2
+        assert fake.of("tts")[-1][2]["voice"] == "Avinash" and fake.of("tts")[-1][2]["speed"] == 1.1
         c.post(f"/calls/{d['call_id']}/turn?tts=false", files={"audio": ("a.wav", b"RIFF", "audio/wav")})
     stt_body = fake.of("stt")[-1][2]
     assert b"mr-IN" in stt_body and b"keyterms" not in stt_body
@@ -1341,7 +1341,7 @@ def test_bench_job_limit_two_running():
             await asyncio.sleep(0.3)
         return fake.handler(req)
 
-    cfg = Settings(gnani_speech_api_key=KEY, dev=True)
+    cfg = Settings(gnani_speech_api_key=KEY, VOICE_DEV=True)
     with TestClient(create_app(cfg, httpx.AsyncClient(transport=httpx.MockTransport(slow))), base_url=BASE) as c:
         body = {"configs": [{"llm": "ollama"}], "script": ["a"]}
         r1, r2, r3 = (c.post("/dev/bench", json=body) for _ in range(3))
@@ -1355,3 +1355,75 @@ def test_dev_warmup_endpoint():
     with c:
         r = c.post("/dev/warmup", json={"llm": "ollama"})
     assert r.status_code == 200 and r.json()["ok"] and fake.of("llm")[-1][2]["messages"][1]["content"] == "(warm-up)"
+
+
+# ---- review fixes ----
+def test_failed_readback_leaves_no_unanswered_tool_calls():
+    seen = []
+    llm = [{"role": "assistant", "content": "ok"}]
+    gw = {"confirm_readback": {"ok": False, "speak": "no", "error_code": "INVALID_INPUT"}, "check_payment": RB}
+    with swap_app(scripted(llm, gw, seen)) as c:
+        d = c.post("/calls?tts=false", json={}).json()
+        cl = c.app.state.calls[d["call_id"]]
+        cl["rb_active"] = ("check_payment", {"utr": "SAHYR1234"}, {"utr": "SAHYR1234", "amount": "5"})
+        cl["rb_turn"], cl["turn"] = 0, 0
+        cl["rb_active"] = cl["rb_active"]
+        # drive auto_confirm through a turn: pending_rb valid only on the turn after delivery
+        cl["pending_rb"], cl["rb_turn"] = cl["rb_active"], 0
+        r = turn(c, d, "haan")
+        assert r.status_code == 200
+        msgs = cl["messages"]
+        asst = next(m for m in msgs if m.get("tool_calls"))
+        answered = sum(1 for m in msgs if m["role"] == "tool")
+        assert len(asst["tool_calls"]) == answered == 1  # the second confirm and the action never ran
+
+
+def test_hosted_llm_selection_is_dev_only(env):
+    c, _ = env
+    assert c.post("/calls?tts=false", json={"llm": "ollama"}).status_code == 200  # the default is allowed
+    r = c.post("/calls?tts=false", json={"llm": "gemini"})
+    assert r.status_code == 403 and "dev-only" in r.json()["detail"]
+    assert c.get("/health").json()["dev"] is False
+    c2, _ = dev_env(gemini_api_key="G")
+    with c2:
+        assert c2.get("/health").json()["dev"] is True
+        assert c2.post("/calls?tts=false", json={"llm": "gemini"}).status_code == 200
+
+
+def test_shortcut_skipped_for_multi_request_text(env):
+    c, fake = env
+    d = new_call(c)
+    fake.llm_script = [tc("emi_info"), {"role": "assistant", "content": "wrapped"}]
+    r = turn(c, d, "EMI kab hai aur SMS bhej do").json()
+    assert len(fake.of("llm")) == 2 and r["agent_text"] == "wrapped"
+    from voice.app import multi_request
+    assert all(multi_request(t) for t in ["emi and sms", "EMI, SMS", "माझा EMI आणि SMS", "ifsc ; emi"])
+    assert not any(multi_request(t) for t in ["EMI kab hai", "amount 32,055", "kothrud ka ifsc"])
+
+
+def test_tts_speed_range_and_reasoning_options_by_provider():
+    from voice.app import KNOB_BY_KEY, validate_settings
+    k = KNOB_BY_KEY["tts_speed"]
+    assert (k["min"], k["max"]) == (0.85, 1.15)
+    assert validate_settings({"tts_speed": 1.15}, "ollama")["tts_speed"] == 1.15
+    with pytest.raises(Exception):
+        validate_settings({"tts_speed": 1.2}, "ollama")
+    r = KNOB_BY_KEY["reasoning"]
+    assert r["options_by_provider"]["sarvam"] == ["off", "low", "medium"] and set(r["options_by_provider"]["gemini"]) <= set(r["options"])
+
+
+def test_multipart_tts_field_disables_tts(env):
+    c, fake = env
+    d = new_call(c)
+    n = len(fake.of("tts"))
+    c.post(f"/calls/{d['call_id']}/turn", files={"audio": ("a.wav", b"RIFF", "audio/wav"), "tts": (None, "false")})
+    assert len(fake.of("tts")) == n
+    c.post(f"/calls/{d['call_id']}/turn", files={"audio": ("a.wav", b"RIFF", "audio/wav")})
+    assert len(fake.of("tts")) == n + 1
+
+
+def test_only_voice_dev_enables_dev(monkeypatch):
+    assert Settings(dev=True).dev is False
+    assert Settings(VOICE_DEV=True).dev is True
+    monkeypatch.setenv("VOICE_DEV", "1")
+    assert Settings().dev is True

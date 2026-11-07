@@ -18,7 +18,7 @@ import httpx
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import AliasChoices, Field
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from voice import providers
@@ -76,7 +76,8 @@ KNOBS = [
     _k("temperature", "Temperature", "number", None, "LLM", "Sampling temperature; unset = provider default (hosted 0.2).", min=0, max=1, step=0.05),
     _k("max_tokens", "Max output tokens", "number", None, "LLM", "Cap on reply length; unset = hosted 300, Ollama unlimited.", min=50, max=1000, step=10),
     _k("num_ctx", "Context window (Ollama)", "select", 8192, "LLM", "Ollama only: larger windows cost memory and prompt time.", options=[4096, 8192, 16384]),
-    _k("reasoning", "Reasoning effort", "select", None, "LLM", "Hosted only: gemini minimal/low/medium, sarvam off/low/medium; ignored for Ollama.", options=["minimal", "off", "low", "medium"]),
+    _k("reasoning", "Reasoning effort", "select", None, "LLM", "Hosted only: gemini minimal/low/medium, sarvam off/low/medium; ignored for Ollama.", options=["minimal", "off", "low", "medium"],
+       options_by_provider={"gemini": ["minimal", "low", "medium"], "sarvam": ["off", "low", "medium"]}),
     _k("cache_prompt", "Cacheable prompt", "bool", True, "Latency", "On: call id in first user message (cache hits across calls). Off: old per-call id in the system prompt."),
     _k("shortcut_actions", "Skip 2nd LLM round", "bool", True, "Latency", "On: read-only actions answer with the gateway sentence. Off: always two LLM rounds."),
     _k("keep_msgs", "History length", "number", 30, "Latency", "How many recent messages are sent to the LLM.", min=10, max=60, step=1),
@@ -84,7 +85,7 @@ KNOBS = [
     _k("stt_keyterms", "STT keyterms", "bool", True, "Speech", "Send the banking keyterm list to Prisma STT."),
     _k("stt_language", "STT language", "select", "auto", "Speech", "auto follows the call language; others force one hint.", options=["auto", "en-IN", "hi-IN", "mr-IN"]),
     _k("tts_voice", "TTS voice", "select", "Shivani", "Speech", "Timbre v3 voice (all speak all languages).", options=TIMBRE_VOICES),
-    _k("tts_speed", "TTS speed", "number", 1.0, "Speech", "Speech rate multiplier.", min=0.8, max=1.3, step=0.05),
+    _k("tts_speed", "TTS speed", "number", 1.0, "Speech", "Speech rate multiplier.", min=0.85, max=1.15, step=0.05),
     _k("tool_hints", "Tool hints", "bool", True, "Conversation", "Per-tool nudges added to tool descriptions for the small local model."),
 ]
 KNOB_BY_KEY = {k["key"]: k for k in KNOBS}
@@ -169,7 +170,7 @@ class Settings(BaseSettings):
     ollama_model: str = "qwen3:8b"
     voice_port: int = 8100  # only used for the Host-header check
     llm_provider: str = "ollama"  # default per call: ollama | gemini | sarvam
-    dev: bool = Field(False, validation_alias=AliasChoices("VOICE_DEV", "dev"))  # developer lab: /dev/* routes, per-call settings
+    dev: bool = Field(False, validation_alias="VOICE_DEV")  # developer lab: /dev/* routes, per-call settings
     warmup: bool = True  # background Ollama warm-up at startup (tests turn it off)
     gemini_api_key: str = ""
     sarvam_api_key: str = ""
@@ -548,6 +549,23 @@ def final_text(model_text: str, speaks: list[tuple[bool, str]]) -> str:
     return model_text
 
 
+_MULTI_WORDS = {"and", "also", "plus", "aur", "bhi", "tatha", "ani", "aani", "आणि", "और", "भी", "तथा"}
+_MULTI_PUNCT = re.compile(r"[A-Za-z\u0900-\u097f]\s*[,;]\s*[A-Za-z\u0900-\u097f]")
+
+
+def multi_request(text: str) -> bool:
+    """The caller's words look like more than one request: a conjunction word or a comma/semicolon between words."""
+    return bool(set(_tokens(text)) & _MULTI_WORDS or _MULTI_PUNCT.search(text))
+
+
+def parse_field(content_type: str, body: bytes, name: str) -> str | None:
+    msg = email.message_from_bytes(b"Content-Type: " + content_type.encode() + b"\r\n\r\n" + body)
+    for part in msg.walk():
+        if part.get_param("name", header="content-disposition") == name:
+            return (part.get_payload(decode=True) or b"").decode("utf-8", "ignore")
+    return None
+
+
 def parse_audio(content_type: str, body: bytes) -> bytes | None:
     """Minimal multipart reader (python-multipart is not a dependency): returns the `audio` part."""
     msg = email.message_from_bytes(b"Content-Type: " + content_type.encode() + b"\r\n\r\n" + body)
@@ -836,7 +854,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
                 res = await exec_call(c, name, args, st)
                 c["messages"].append({"role": "tool", "tool_name": name if isinstance(name, str) else "unknown",
                                       "content": json.dumps(res, ensure_ascii=False)})
-            if (c["set"]["shortcut_actions"] and len(tcs) == 1 and name in SHORTCUT and res.get("ok") and isinstance(res.get("speak"), str) and res["speak"]
+            if (c["set"]["shortcut_actions"] and not multi_request(c.get("user_text", "")) and len(tcs) == 1 and name in SHORTCUT and res.get("ok") and isinstance(res.get("speak"), str) and res["speak"]
                     and not (st.get("ask") or st.get("need_appr") or st["rb"] or c.get("rb_new"))):
                 c["messages"].append({"role": "assistant", "content": res["speak"]})  # the gateway sentence is the answer
                 return res["speak"], st["done"]
@@ -912,9 +930,10 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         c["messages"].append({"role": "user", "content": user_text})
         calls_ = [("confirm_readback", {"field": f, "value": str(v), "language": c["language"]}) for f, v in conf.items()]
         calls_.append((name, dict(args)))
-        c["messages"].append({"role": "assistant", "content": "", "tool_calls": [
-            {"function": {"name": n, "arguments": a}} for n, a in calls_]})
+        asst = {"role": "assistant", "content": "", "tool_calls": []}  # only calls actually executed: hosted APIs 400 on unanswered ones
+        c["messages"].append(asst)
         for n, a in calls_:
+            asst["tool_calls"].append({"function": {"name": n, "arguments": a}})
             res = await exec_call(c, n, a, st, internal=True)
             c["messages"].append({"role": "tool", "tool_name": n, "content": json.dumps(res, ensure_ascii=False)})
             if n == "confirm_readback" and not res.get("ok"):
@@ -986,7 +1005,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
 
     @app.get("/health")
     async def health():
-        return {"ok": True, "model": cfg.ollama_model, "default": cfg.llm_provider,
+        return {"ok": True, "model": cfg.ollama_model, "default": cfg.llm_provider, "dev": cfg.dev,
                 "providers": {p: {"model": cfg.llm_model(p), "ready": p == "ollama" or bool(cfg.llm_key(p))} for p in PROVIDERS}}
 
     async def ollama_models() -> list[str]:
@@ -1005,6 +1024,8 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         if not cfg.dev and (body.get("settings") or body.get("model")):
             raise HTTPException(403, "settings and model need developer mode (VOICE_DEV=1)")
         provider = body.get("llm", cfg.llm_provider)
+        if not cfg.dev and provider != cfg.llm_provider:
+            raise HTTPException(403, "hosted LLM selection is dev-only")
         if provider not in PROVIDERS:
             raise HTTPException(422, f"llm must be one of {', '.join(PROVIDERS)}")
         if provider != "ollama" and not cfg.llm_key(provider):
@@ -1135,6 +1156,8 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             wav = parse_audio(ctype, raw)
             if not wav:
                 raise HTTPException(422, "missing audio")
+            field = parse_field(ctype, raw, "tts")
+            want_tts = tts_q and (field is None or field.strip().lower() not in ("false", "0"))
         else:
             body = json_body(request, raw)
             if not isinstance(body.get("text"), str):

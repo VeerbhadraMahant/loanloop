@@ -52,7 +52,7 @@ $svc = @(
 $pids = @{}
 foreach ($s in $svc) {
   $wd = Join-Path $root $s.dir
-  $devEnv = if ($Dev -and $s.name -eq 'voice') { "`$env:VOICE_DEV='1'; " } else { '' }
+  $devEnv = if ($Dev -and $s.name -eq 'voice') { "`$env:VOICE_DEV='1'; " } elseif ($Dev -and $s.name -eq 'web') { "`$env:NEXT_PUBLIC_DEV='1'; " } else { '' }
   $p = Start-Process powershell -WorkingDirectory $wd -PassThru -ArgumentList '-NoExit', '-Command', "`$Host.UI.RawUI.WindowTitle='loanloop-$($s.name)'; $devEnv$($s.cmd)"
   $pids[$s.name] = $p.Id
 }

@@ -175,5 +175,6 @@ What to send the owner:
 - Hosted LLMs are for comparison only (CLAUDE.md section 1). The default stays local qwen3:8b; speech is always Gnani.
 - `VOICE_DEV` must stay off outside local testing. The `/dev` routes have no auth. With it off they return 404.
 - Voice tests (V1, bench with TTS on) spend Gnani credits. Keep them short.
+- Bench runs share Ollama with any live call (do not use the app while benching) and write sms_outbox and audit rows for Priya (reseed after big runs).
 - Bench jobs run one turn at a time, at most 2 jobs at once, kept in memory for 1 hour (lost on voice restart). Max 4 configs, 12 script lines, repeat 1 to 3.
 - Latency depends on laptop GPU, network and the hosted providers' load. Gemini had an intermittent upstream error once.
