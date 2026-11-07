@@ -109,3 +109,31 @@ def test_temperature_max_tokens_reasoning_overrides():
     assert seen["body"]["reasoning_effort"] is None
     _, seen = run(reply(msg))  # None keeps the defaults
     assert seen["body"]["temperature"] == 0.2 and seen["body"]["max_tokens"] == 300 and seen["body"]["reasoning_effort"] == "minimal"
+
+
+def seq(*steps):
+    it = iter(steps)
+
+    def h(req):
+        s = next(it)
+        if isinstance(s, Exception):
+            raise s
+        return s
+
+    return h
+
+
+def test_retry_once_then_success(monkeypatch):
+    async def nosleep(_):
+        pass
+
+    monkeypatch.setattr("voice.providers.asyncio.sleep", nosleep)
+    ok = httpx.Response(200, json={"choices": [{"message": {"content": "ok"}}]})
+    assert run(seq(httpx.Response(503), ok))[0]["content"] == "ok"
+    assert run(seq(httpx.ReadTimeout("t"), ok))[0]["content"] == "ok"
+    with pytest.raises(ProviderError) as e:
+        run(seq(httpx.Response(429), httpx.Response(429)))
+    assert e.value.status == 429
+    with pytest.raises(ProviderError) as e:  # 400 is not retried
+        run(seq(httpx.Response(400), ok))
+    assert e.value.status == 400

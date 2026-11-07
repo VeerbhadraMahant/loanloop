@@ -2,15 +2,21 @@
 
 Takes and returns Ollama-shaped messages so voice/app.py's loop stays provider-agnostic.
 """
+import asyncio
 import json
 
 import httpx
 
 MAX_TOKENS = 300
+RETRY_STATUS = {429, 500, 502, 503, 504}
 
 
 class ProviderError(Exception):
-    """Short, key-free and prompt-free message; safe to log."""
+    """Short, key-free and prompt-free message; safe to log. .status is the HTTP status, None for timeout/connect/parse."""
+
+    def __init__(self, msg: str, status: int | None = None):
+        super().__init__(msg)
+        self.status = status
 
 
 def _to_openai(messages: list[dict], provider: str = "") -> list[dict]:
@@ -73,19 +79,32 @@ async def openai_chat(http: httpx.AsyncClient, *, base_url: str, api_key: str, m
         body["reasoning_effort"] = "none" if model.startswith("gemini-2.5") else "minimal"
     if reasoning:
         body["reasoning_effort"] = None if reasoning == "off" else reasoning
-    try:
-        r = await http.post(base_url.rstrip("/") + "/chat/completions", json=body,
-                            headers=_headers(api_key, provider), timeout=timeout)
-    except httpx.TimeoutException:
-        raise ProviderError(f"{provider}: timeout after {timeout}s") from None
-    except httpx.HTTPError as e:
-        raise ProviderError(f"{provider}: {type(e).__name__}") from None
+    r = None
+    for attempt in (0, 1):  # no side effects, so one retry on transient failures is safe
+        wait = 0.3
+        try:
+            r = await http.post(base_url.rstrip("/") + "/chat/completions", json=body,
+                                headers=_headers(api_key, provider), timeout=timeout)
+            if r.status_code not in RETRY_STATUS:
+                break
+            try:
+                wait = min(float(r.headers.get("retry-after", wait)), 2.0)
+            except ValueError:
+                pass
+            err = ProviderError(f"{provider}: HTTP {r.status_code}", r.status_code)
+        except httpx.TimeoutException:
+            err = ProviderError(f"{provider}: timeout after {timeout}s")
+        except httpx.HTTPError as e:
+            err = ProviderError(f"{provider}: {type(e).__name__}")
+        if attempt:
+            raise err from None
+        await asyncio.sleep(wait)
     if r.status_code >= 400:
-        raise ProviderError(f"{provider}: HTTP {r.status_code}")
+        raise ProviderError(f"{provider}: HTTP {r.status_code}", r.status_code)
     try:
         msg = r.json()["choices"][0]["message"]
         calls = [{"function": {"name": tc["function"]["name"], "arguments": _args(tc["function"].get("arguments"))}}
                  for tc in (msg.get("tool_calls") or [])]
         return {"role": "assistant", "content": msg.get("content") or "", "tool_calls": calls}
     except (ValueError, KeyError, IndexError, TypeError, AttributeError):
-        raise ProviderError(f"{provider}: malformed response (HTTP {r.status_code})") from None
+        raise ProviderError(f"{provider}: malformed response (HTTP {r.status_code})", r.status_code) from None

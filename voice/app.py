@@ -599,8 +599,8 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             return JSONResponse({"detail": "bad host"}, status_code=400)
         return await call_next(request)
 
-    def bad_gateway(what: str, cid: str = "-"):
-        log.warning("call=%s upstream_error=%s", cid, what)
+    def bad_gateway(what: str, cid: str = "-", status: int | None = None):
+        log.warning("call=%s upstream_error=%s status=%s", cid, what, status)
         return HTTPException(502, "upstream service error")
 
     async def gateway(cid: str, name: str, args: dict) -> dict:
@@ -648,7 +648,9 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             if not isinstance(msg, dict):
                 raise ValueError
             return msg
-        except (httpx.HTTPError, KeyError, ValueError, providers.ProviderError):
+        except providers.ProviderError as e:
+            raise bad_gateway(p, c["id"], e.status) from None
+        except (httpx.HTTPError, KeyError, ValueError):
             raise bad_gateway(p, c["id"]) from None
         finally:
             tick("llm", t0)
