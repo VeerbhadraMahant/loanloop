@@ -47,7 +47,7 @@ export function LiveCall({ cfg, customer }: { cfg: Cfg; customer: string }) {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ customer, tts, llm: cfg.llm, ...(cfg.model ? { model: cfg.model } : {}), settings: cfg.settings }),
   }, "start");
-  const turn = (init: RequestInit, input: Stat["input"]) => { if (callId.current) request(`/calls/${callId.current}/turn`, init, input); };
+  const turn = (init: RequestInit, input: Stat["input"], query = "") => { if (callId.current) request(`/calls/${callId.current}/turn${query}`, init, input); };
   const sendText = () => {
     const t = text.trim(); if (!t || status !== "live") return;
     setText("");
@@ -56,7 +56,7 @@ export function LiveCall({ cfg, customer }: { cfg: Cfg; customer: string }) {
   const { talking, props } = useHoldToTalk(status === "live", (wav) => {
     const form = new FormData();
     form.append("audio", wav, "turn.wav"); form.append("tts", String(tts));
-    turn({ method: "POST", body: form }, "voice");
+    turn({ method: "POST", body: form }, "voice", `?tts=${tts}`);
   }, setError);
   const end = () => { gen.current++; callId.current = null; setStatus("ended"); };
   const inCall = status === "live" || status === "thinking";

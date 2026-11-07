@@ -18,8 +18,8 @@ export const postJson = <T,>(path: string, body: unknown) =>
 
 export type Settings = Record<string, unknown>;
 export type Knob = {
-  key: string; label: string; type: string; default?: unknown; options?: string[];
-  min?: number; max?: number; step?: number; group?: string; help?: string;
+  key: string; label: string; type: string; default?: unknown; options?: (string | number)[];
+  options_by_provider?: Record<string, (string | number)[]>; min?: number; max?: number; step?: number; group?: string; help?: string;
 };
 export type Preset = { name: string; llm: string; model?: string; settings?: Settings };
 export type DevConfig = {

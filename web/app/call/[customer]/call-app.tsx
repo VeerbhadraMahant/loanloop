@@ -42,6 +42,8 @@ export default function CallApp({ customer }: { customer: string }) {
   const [llmPick, setLlmPick] = useState<LlmId>("ollama");
   const [health, setHealth] = useState<Health | null>(null); // null = /health has no providers field (or failed): Local only
   const [turns, setTurns] = useState<Turn[]>([]);
+  const [devMode, setDevMode] = useState(false); // LLM switch only when /health says dev
+  const turnN = useRef(0);
   const callLlm = useRef<LlmId>("ollama"); // fallback provider tag when the server sends no timings
   const callId = useRef<string | null>(null);
   const audio = useRef<HTMLAudioElement | null>(null);
@@ -59,7 +61,7 @@ export default function CallApp({ customer }: { customer: string }) {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time restore from storage after mount
     try { const v = localStorage.getItem("loanloop.llm"); if (LLMS.some((l) => l.id === v)) setLlmPick(v as LlmId); } catch { /* storage blocked */ }
-    fetch(`${VOICE}/health`).then((r) => r.json()).then((j) => setHealth(j?.providers ?? null)).catch(() => setHealth(null));
+    fetch(`${VOICE}/health`).then((r) => r.json()).then((j) => { setHealth(j?.providers ?? null); setDevMode(j?.dev === true); }).catch(() => setHealth(null));
   }, []);
   const ready = (id: string) => (id === "ollama" ? health?.ollama?.ready !== false : health?.[id]?.ready === true);
   const llm: LlmId = ready(llmPick) ? llmPick : "ollama";
@@ -80,15 +82,13 @@ export default function CallApp({ customer }: { customer: string }) {
   const finish = useCallback(() => { callId.current = null; setStatus("ended"); }, []);
 
   const apply = useCallback((r: Reply, clientMs: number, input: Stat["input"]) => {
-    setTurns((t) => {
-      const stat: Stat = { n: t.length + 1, clientMs, input, timings: r.timings };
-      setMsgs((m) => [
-        ...m,
-        ...(r.user_text ? [{ who: "caller" as const, text: r.user_text }] : []),
-        { who: "agent", text: r.agent_text, actions: r.actions, stat },
-      ]);
-      return [...t, { ...stat, provider: r.timings?.provider ?? callLlm.current, model: r.timings?.model ?? "", actions: (r.actions ?? []).map((a) => a.name) }];
-    });
+    const stat: Stat = { n: ++turnN.current, clientMs, input, timings: r.timings };
+    setMsgs((m) => [
+      ...m,
+      ...(r.user_text ? [{ who: "caller" as const, text: r.user_text }] : []),
+      { who: "agent", text: r.agent_text, actions: r.actions, stat },
+    ]);
+    setTurns((t) => [...t, { ...stat, provider: r.timings?.provider ?? callLlm.current, model: r.timings?.model ?? "", actions: (r.actions ?? []).map((a) => a.name) }]);
     if (r.language) setLang(r.language);
     const after = () => (r.ended ? finish() : setStatus((s) => (s === "speaking" ? "listening" : s)));
     if (r.audio_b64) {
@@ -117,7 +117,7 @@ export default function CallApp({ customer }: { customer: string }) {
 
   const start = () => {
     setError(null); setStatus("connecting"); callLlm.current = llm;
-    run("/calls", jsonPost({ customer, tts: voiceReplies, llm }), (r, ms) => { callId.current = r.call_id; setMsgs([]); setTurns([]); apply(r, ms, "start"); }, "idle");
+    run("/calls", jsonPost({ customer, tts: voiceReplies, ...(devMode ? { llm } : {}) }), (r, ms) => { callId.current = r.call_id; setMsgs([]); setTurns([]); turnN.current = 0; apply(r, ms, "start"); }, "idle");
   };
 
   const send = (init: RequestInit, input: Stat["input"]) => {
@@ -278,7 +278,7 @@ export default function CallApp({ customer }: { customer: string }) {
           <SessionSummary turns={turns} />
           {(status === "idle" || status === "connecting" || ended) ? (
             <>
-              {llmSelect}
+              {devMode && llmSelect}
               {voiceSwitch}
               <Button className="w-full" onClick={start} disabled={status === "connecting"}>{ended ? "Start a new call" : "Start call"}</Button>
             </>
