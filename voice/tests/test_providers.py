@@ -98,3 +98,14 @@ def test_http_500_and_timeout_and_malformed_hide_key():
 
     with pytest.raises(ProviderError):
         run(lambda req: httpx.Response(200, json={"choices": []}))
+
+
+def test_temperature_max_tokens_reasoning_overrides():
+    msg = {"role": "assistant", "content": "hi"}
+    _, seen = run(reply(msg), temperature=0.9, max_tokens=77, reasoning="low")
+    b = seen["body"]
+    assert b["temperature"] == 0.9 and b["max_tokens"] == 77 and b["reasoning_effort"] == "low"
+    _, seen = run(reply(msg), provider="sarvam", reasoning="off")
+    assert seen["body"]["reasoning_effort"] is None
+    _, seen = run(reply(msg))  # None keeps the defaults
+    assert seen["body"]["temperature"] == 0.2 and seen["body"]["max_tokens"] == 300 and seen["body"]["reasoning_effort"] == "minimal"

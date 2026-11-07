@@ -1111,7 +1111,7 @@ def test_gemini_dispatches_to_provider_adapter(monkeypatch):
     c, fake = gem_env()
     seen = []
 
-    async def fake_chat(http, *, base_url, api_key, model, messages, tools, provider, timeout=30.0):
+    async def fake_chat(http, *, base_url, api_key, model, messages, tools, provider, timeout=30.0, **kw):
         seen.append((base_url, api_key, model, provider, messages[0]["role"], bool(tools)))
         return {"role": "assistant", "content": "hello from gemini", "tool_calls": []}
 
@@ -1146,5 +1146,212 @@ def test_health_lists_providers(env):
     h = c.get("/health").json()
     assert h["default"] == "ollama"
     assert h["providers"]["ollama"] == {"model": "qwen3:8b", "ready": True}
-    assert h["providers"]["gemini"]["model"] == "gemini-3.5-flash-lite" and h["providers"]["sarvam"]["model"] == "sarvam-m"
+    assert h["providers"]["gemini"]["model"] == "gemini-3.5-flash-lite" and h["providers"]["sarvam"]["model"] == "sarvam-105b-conversations"
     assert set(h["providers"]) == {"ollama", "gemini", "sarvam"}
+
+
+# ---- fixes: .env.local isolation, schema-checked gateway args ----
+def test_env_local_fallback_is_injectable(tmp_path, monkeypatch):
+    import voice.app as app_mod
+
+    f = tmp_path / "x.env.local"
+    f.write_text("Gemini_Api_Key = \"LOCAL-G\"\nsarvam_api_key=LOCAL-S\n", encoding="utf-8")
+    monkeypatch.setattr(app_mod, "ENV_LOCAL", f)
+    cfg = Settings()
+    assert cfg.llm_key("gemini") == "LOCAL-G" and cfg.llm_key("sarvam") == "LOCAL-S"
+    assert Settings(gemini_api_key="E").llm_key("gemini") == "E"
+
+
+def test_unknown_argument_keys_dropped_before_gateway(env, caplog):
+    c, fake = env
+    d = new_call(c)
+    fake.llm_script = [tc("branch_lookup", language="hi", query="Kothrud", branch_name="Kothrud"), {"role": "assistant", "content": "x"}]
+    with caplog.at_level(logging.INFO, logger="voice"):
+        turn(c, d, "ifsc")
+    body = fake.of("gw")[-1][2]
+    assert set(body) == {"query", "language", "call_id"}
+    assert "dropped_arg_keys=1" in caplog.text and "Kothrud" not in caplog.text
+
+
+# ---- developer lab ----
+def dev_env(**kw):
+    fake = Fake()
+    cfg = Settings(gnani_speech_api_key=KEY, dev=True, **kw)
+    return TestClient(create_app(cfg, httpx.AsyncClient(transport=httpx.MockTransport(fake.handler))), base_url=BASE), fake
+
+
+def test_dev_off_hides_routes_and_forbids_settings(env):
+    c, _ = env
+    assert c.get("/dev/config").status_code == 404
+    assert c.post("/dev/bench", json={}).status_code == 404
+    assert c.post("/dev/warmup", json={}).status_code == 404
+    assert c.post("/calls", json={"settings": {"temperature": 0.5}}).status_code == 403
+    assert c.post("/calls", json={"model": "qwen3:8b"}).status_code == 403
+    r = c.post("/calls?tts=false", json={"settings": {}})  # empty settings: demo behaviour unchanged
+    assert r.status_code == 200 and "settings" not in r.json()
+
+
+def test_dev_config_shape():
+    c, fake = dev_env(gemini_api_key="G")
+    with c:
+        j = c.get("/dev/config").json()
+    assert j["dev"] is True and {k["key"] for k in j["knobs"]} >= {"temperature", "cache_prompt", "tts_voice", "tool_hints"}
+    assert all({"key", "label", "type", "default", "group", "help"} <= set(k) for k in j["knobs"])
+    assert j["providers"]["ollama"]["models"] == ["qwen3:8b"] or "qwen3:8b" in j["providers"]["ollama"]["models"]
+    assert j["providers"]["gemini"]["ready"] is True and j["providers"]["sarvam"]["ready"] is False
+    assert [p["name"] for p in j["presets"]][0].startswith("Baseline local") and len(j["scripts"]) == 3
+    assert all(1 <= len(sc["lines"]) <= 12 for sc in j["scripts"])
+
+
+@pytest.mark.parametrize("settings", [{"temperature": 2}, {"temperature": "hot"}, {"num_ctx": 123}, {"cache_prompt": "yes"},
+                                      {"max_rounds": 2.5}, {"nope": 1}, {"tts_voice": "Nobody"}, {"reasoning": "off", "x": 1}])
+def test_dev_bad_knob_is_422(settings):
+    c, _ = dev_env()
+    with c:
+        r = c.post("/calls?tts=false", json={"settings": settings})
+        assert r.status_code == 422
+        key = next(iter(settings))
+        assert key in r.json()["detail"] or "nope" in r.json()["detail"] or "x" in r.json()["detail"]
+
+
+def test_dev_model_validation(monkeypatch):
+    c, fake = dev_env(gemini_api_key="G")
+    with c:
+        assert c.post("/calls?tts=false", json={"model": "not-installed"}).status_code == 422
+        assert c.post("/calls?tts=false", json={"llm": "gemini", "model": "http://evil/x"}).status_code == 422
+        assert c.post("/calls?tts=false", json={"llm": "gemini", "model": "gemini-3.5-flash"}).json()["timings"]["model"] == "gemini-3.5-flash"
+        assert c.post("/calls?tts=false", json={"llm": "gemini", "settings": {"reasoning": "off"}}).status_code == 422
+
+
+def test_settings_reach_ollama_and_hosted_requests(monkeypatch):
+    c, fake = dev_env(gemini_api_key="G")
+    seen = []
+
+    async def fake_chat(http, **kw):
+        seen.append(kw)
+        return {"role": "assistant", "content": "hi", "tool_calls": []}
+
+    monkeypatch.setattr(providers, "openai_chat", fake_chat)
+    with c:
+        d = c.post("/calls?tts=false", json={"settings": {"temperature": 0.7, "num_ctx": 16384, "max_tokens": 120,
+                                                          "tool_hints": False, "keep_msgs": 12}}).json()
+        assert d["settings"]["num_ctx"] == 16384
+        fake.llm_script = [{"role": "assistant", "content": "ok"}]
+        turn(c, d, "hello")
+        body = fake.of("llm")[-1][2]
+        assert body["options"] == {"num_ctx": 16384, "temperature": 0.7, "num_predict": 120}
+        assert "ALWAYS use this when" not in json.dumps(body["tools"])  # hints off
+        g = c.post("/calls?tts=false", json={"llm": "gemini", "settings": {"temperature": 0.3, "max_tokens": 80, "reasoning": "low"}}).json()
+        turn(c, g, "hello")
+    assert seen[-1]["temperature"] == 0.3 and seen[-1]["max_tokens"] == 80 and seen[-1]["reasoning"] == "low"
+
+
+def test_cache_prompt_false_restores_call_id_in_system_prompt():
+    c, fake = dev_env()
+    with c:
+        d = c.post("/calls?tts=false", json={"settings": {"cache_prompt": False}}).json()
+        fake.llm_script = [{"role": "assistant", "content": "ok"}]
+        turn(c, d, "hello")
+    msgs = fake.of("llm")[-1][2]["messages"]
+    assert d["call_id"] in msgs[0]["content"] and msgs[1]["content"] == "(call connected)"
+
+
+def test_shortcut_actions_false_forces_two_rounds():
+    c, fake = dev_env()
+    with c:
+        d = c.post("/calls?tts=false", json={"settings": {"shortcut_actions": False}}).json()
+        fake.llm_script = [tc("branch_lookup", branch="K"), {"role": "assistant", "content": "wrapped"}]
+        r = turn(c, d, "ifsc").json()
+    assert len(fake.of("llm")) == 2 and r["agent_text"] == "wrapped"
+
+
+def test_stt_and_tts_settings_reach_gnani():
+    c, fake = dev_env()
+    with c:
+        d = c.post("/calls", json={"settings": {"tts_voice": "Avinash", "tts_speed": 1.2, "stt_keyterms": False,
+                                                "stt_language": "mr-IN"}}).json()
+        assert fake.of("tts")[-1][2]["voice"] == "Avinash" and fake.of("tts")[-1][2]["speed"] == 1.2
+        c.post(f"/calls/{d['call_id']}/turn?tts=false", files={"audio": ("a.wav", b"RIFF", "audio/wav")})
+    stt_body = fake.of("stt")[-1][2]
+    assert b"mr-IN" in stt_body and b"keyterms" not in stt_body
+
+
+def test_summarize_math():
+    from voice.app import summarize
+
+    def t(total, llm, calls=1):
+        return {"timings": {"total_ms": total, "stt_ms": 0, "llm_ms": llm, "llm_calls": calls, "gateway_ms": 10, "tts_ms": 0, "other_ms": 5}}
+
+    s = summarize([t(100, 50), t(300, 150, 2), t(200, 100), {"error": "boom"}])
+    assert s["turns"] == 4 and s["errors"] == 1
+    assert s["median_total_ms"] == 200 and s["max_total_ms"] == 300 and s["p95_total_ms"] == 300
+    assert s["avg"]["llm_ms"] == 100 and s["avg"]["llm_calls"] == 1.33 and s["avg"]["gateway_ms"] == 10
+    assert summarize([])["median_total_ms"] == 0
+
+
+def wait_job(c, jid):
+    for _ in range(200):
+        j = c.get(f"/dev/bench/{jid}").json()
+        if j["status"] != "running":
+            return j
+        time.sleep(0.05)
+    raise AssertionError("bench did not finish")
+
+
+def test_bench_job_runs_to_done_without_caller_text():
+    c, fake = dev_env()
+    with c:
+        fake.llm_script = [tc("branch_lookup", branch="K"), tc("request_document"), {"role": "assistant", "content": "ok"}]
+        r = c.post("/dev/bench", json={"configs": [{"name": "A", "llm": "ollama"},
+                                                   {"name": "B", "llm": "ollama", "settings": {"shortcut_actions": False}}],
+                                       "script": ["SECRET-CALLER-LINE one", "line two"], "repeat": 2})
+        assert r.status_code == 200
+        j = wait_job(c, r.json()["job_id"])
+    assert j["status"] == "done" and j["done_turns"] == j["total_turns"] == 8
+    assert [run["name"] for run in j["runs"]] == ["A", "B"]
+    run = j["runs"][0]
+    assert len(run["turns"]) == 4 and run["turns"][0]["actions"] == ["branch_lookup"] and run["summary"]["turns"] == 4
+    assert run["summary"]["errors"] == 0 and run["summary"]["max_total_ms"] >= run["summary"]["median_total_ms"]
+    assert "SECRET-CALLER-LINE" not in json.dumps(j)
+    assert len(fake.of("tts")) == 0 and any(u.endswith("/actions/end_call") for _, u, _, _ in fake.of("gw"))
+
+
+def test_bench_records_turn_errors_and_enforces_limits():
+    c, fake = dev_env()
+    with c:
+        fake.fail = "llm"
+        jid = c.post("/dev/bench", json={"configs": [{"llm": "ollama"}], "script": ["hello"]}).json()["job_id"]
+        j = wait_job(c, jid)
+        assert j["status"] == "done" and j["runs"][0]["turns"][0]["error"] and j["runs"][0]["summary"]["errors"] == 1
+        fake.fail = None
+        bad = [{"configs": [], "script": ["a"]}, {"configs": [{"llm": "ollama"}] * 5, "script": ["a"]},
+               {"configs": [{"llm": "ollama"}], "script": []}, {"configs": [{"llm": "ollama"}], "script": ["x" * 301]},
+               {"configs": [{"llm": "ollama"}], "script": ["a"], "repeat": 4}, {"configs": [{"llm": "sarvam"}], "script": ["a"]}]
+        assert [c.post("/dev/bench", json=b).status_code for b in bad] == [422] * 6
+        assert c.get("/dev/bench/nope").status_code == 404
+
+
+def test_bench_job_limit_two_running():
+    import asyncio
+
+    fake = Fake()
+
+    async def slow(req):  # keeps jobs "running" long enough to hit the limit
+        if "/api/chat" in str(req.url):
+            await asyncio.sleep(0.3)
+        return fake.handler(req)
+
+    cfg = Settings(gnani_speech_api_key=KEY, dev=True)
+    with TestClient(create_app(cfg, httpx.AsyncClient(transport=httpx.MockTransport(slow))), base_url=BASE) as c:
+        body = {"configs": [{"llm": "ollama"}], "script": ["a"]}
+        r1, r2, r3 = (c.post("/dev/bench", json=body) for _ in range(3))
+        assert (r1.status_code, r2.status_code, r3.status_code) == (200, 200, 429)
+        wait_job(c, r1.json()["job_id"])
+        wait_job(c, r2.json()["job_id"])
+
+
+def test_dev_warmup_endpoint():
+    c, fake = dev_env()
+    with c:
+        r = c.post("/dev/warmup", json={"llm": "ollama"})
+    assert r.status_code == 200 and r.json()["ok"] and fake.of("llm")[-1][2]["messages"][1]["content"] == "(warm-up)"

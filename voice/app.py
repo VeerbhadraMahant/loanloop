@@ -7,7 +7,9 @@ import email
 import importlib.util
 import json
 import logging
+import math
 import re
+import statistics
 import time
 import uuid
 from pathlib import Path
@@ -16,11 +18,13 @@ import httpx
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from voice import providers
 
 ROOT = Path(__file__).resolve().parent.parent
+ENV_LOCAL = ROOT / ".env.local"  # module-level so tests can point it at a temp file
 log = logging.getLogger("voice")  # never log transcripts, LLM messages or keys: call_id, action, ok, latency only
 
 # Request shapes copied from tools/stt_benchmark.py (stt) and tools/make_test_audio.py (tts_payload).
@@ -58,6 +62,98 @@ def finish_timings(tm: dict, t0: float, provider: str, model: str) -> dict:
             "provider": provider, "model": model}
 
 
+TIMBRE_VOICES = ["Shivani", "Lakshmi", "Kalpana", "Chetana", "Vasudha", "Riyaa", "Tarika",
+                 "Avinash", "Shubham", "Prakash", "Devansh", "Yashraj", "Harshad"]  # docs/gnani-facts.md (timbre-v3.0)
+MODEL_RE = re.compile(r"^[A-Za-z0-9._:-]{1,64}$")
+
+
+def _k(key, label, type_, default, group, help_, **kw):
+    return {"key": key, "label": label, "type": type_, "default": default, "group": group, "help": help_, **kw}
+
+
+# one list drives validation, defaults and GET /dev/config. default None = "provider default / not sent".
+KNOBS = [
+    _k("temperature", "Temperature", "number", None, "LLM", "Sampling temperature; unset = provider default (hosted 0.2).", min=0, max=1, step=0.05),
+    _k("max_tokens", "Max output tokens", "number", None, "LLM", "Cap on reply length; unset = hosted 300, Ollama unlimited.", min=50, max=1000, step=10),
+    _k("num_ctx", "Context window (Ollama)", "select", 8192, "LLM", "Ollama only: larger windows cost memory and prompt time.", options=[4096, 8192, 16384]),
+    _k("reasoning", "Reasoning effort", "select", None, "LLM", "Hosted only: gemini minimal/low/medium, sarvam off/low/medium; ignored for Ollama.", options=["minimal", "off", "low", "medium"]),
+    _k("cache_prompt", "Cacheable prompt", "bool", True, "Latency", "On: call id in first user message (cache hits across calls). Off: old per-call id in the system prompt."),
+    _k("shortcut_actions", "Skip 2nd LLM round", "bool", True, "Latency", "On: read-only actions answer with the gateway sentence. Off: always two LLM rounds."),
+    _k("keep_msgs", "History length", "number", 30, "Latency", "How many recent messages are sent to the LLM.", min=10, max=60, step=1),
+    _k("max_rounds", "Max tool rounds", "number", 5, "Latency", "Most LLM rounds per turn.", min=1, max=5, step=1),
+    _k("stt_keyterms", "STT keyterms", "bool", True, "Speech", "Send the banking keyterm list to Prisma STT."),
+    _k("stt_language", "STT language", "select", "auto", "Speech", "auto follows the call language; others force one hint.", options=["auto", "en-IN", "hi-IN", "mr-IN"]),
+    _k("tts_voice", "TTS voice", "select", "Shivani", "Speech", "Timbre v3 voice (all speak all languages).", options=TIMBRE_VOICES),
+    _k("tts_speed", "TTS speed", "number", 1.0, "Speech", "Speech rate multiplier.", min=0.8, max=1.3, step=0.05),
+    _k("tool_hints", "Tool hints", "bool", True, "Conversation", "Per-tool nudges added to tool descriptions for the small local model."),
+]
+KNOB_BY_KEY = {k["key"]: k for k in KNOBS}
+PRESETS = [
+    {"name": "Baseline local (old behaviour)", "llm": "ollama", "settings": {"cache_prompt": False, "shortcut_actions": False}},
+    {"name": "Optimised local", "llm": "ollama", "settings": {}},
+    {"name": "Gemini fast", "llm": "gemini", "settings": {}},
+    {"name": "Sarvam fast", "llm": "sarvam", "settings": {}},
+]
+# synthetic caller lines (from tools/voice_e2e.py, Priya); none needs a phone approval
+SCRIPTS = [
+    {"name": "Tier 0+1 Hinglish", "lines": [
+        "Hello, mujhe apna IFSC aur customer ID yaad nahi hai. Kothrud branch ka IFSC kya hai?",
+        "Mera registered mobile number 9000014417 hai aur meri date of birth 14 August 1991 hai.",
+        "Mera EMI kitna hai, next kab hai?",
+        "Mere IFSC aur customer ID SMS kar do please.",
+        "Theek hai, bye"]},
+    {"name": "Marathi basics", "lines": [
+        "Kothrud branch cha IFSC kay aahe?",
+        "Maza registered mobile 9000014417 aahe ani date of birth 14 August 1991 aahe.",
+        "माझा EMI किती आहे?",
+        "ठीक आहे, धन्यवाद, बाय."]},
+    {"name": "Secret safety", "lines": [
+        "Mera password Priya1234 hai",
+        "Mera registered mobile number 9000014417 hai aur meri date of birth 14 August 1991 hai.",
+        "Mere IFSC aur customer ID SMS kar do please.",
+        "Theek hai, bye"]},
+]
+
+
+def validate_settings(raw, provider: str) -> dict:
+    """Effective settings = defaults + `raw`, checked strictly against KNOBS (422 names the failing key)."""
+    if not isinstance(raw, dict):
+        raise HTTPException(422, "settings must be an object")
+    out = {k["key"]: k["default"] for k in KNOBS}
+    for key, v in raw.items():
+        k = KNOB_BY_KEY.get(key) if isinstance(key, str) else None
+        if not k:
+            raise HTTPException(422, f"unknown setting: {str(key)[:40]}")
+        if v is None and k["default"] is None:
+            continue
+        if k["type"] == "bool":
+            ok = isinstance(v, bool)
+        elif k["type"] == "number":
+            ok = (isinstance(v, (int, float)) and not isinstance(v, bool) and k["min"] <= v <= k["max"]
+                  and (not isinstance(k["step"], int) or float(v).is_integer()))
+            if ok and isinstance(k["step"], int):
+                v = int(v)
+        else:
+            ok = not isinstance(v, bool) and v in k["options"]
+        if not ok:
+            raise HTTPException(422, f"setting {key}: invalid value")
+        out[key] = v
+    if (provider == "gemini" and out["reasoning"] == "off") or (provider == "sarvam" and out["reasoning"] == "minimal"):
+        raise HTTPException(422, f"setting reasoning: not valid for {provider}")
+    return out
+
+
+def summarize(turns: list[dict]) -> dict:
+    ok = [t["timings"] for t in turns if t.get("timings")]
+    tot = sorted(t["total_ms"] for t in ok)
+    avg = lambda k: round(statistics.fmean(t[k] for t in ok), 2) if ok else 0
+    return {"turns": len(turns), "errors": sum(1 for t in turns if t.get("error")),
+            "median_total_ms": round(statistics.median(tot)) if tot else 0,
+            "p95_total_ms": tot[math.ceil(0.95 * len(tot)) - 1] if tot else 0,
+            "max_total_ms": tot[-1] if tot else 0,
+            "avg": {k: avg(k) for k in ("stt_ms", "llm_ms", "llm_calls", "gateway_ms", "tts_ms", "other_ms")}}
+
+
 REPROMPT = {"en": "Sorry, I could not hear that. Could you say it again?",
             "hi": "माफ़ कीजिए, मैं सुन नहीं पाया। क्या आप दोबारा बोल सकते हैं?",
             "hinglish": "Sorry, mujhe sunai nahi diya. Kya aap dobara bol sakte hain?",
@@ -73,11 +169,12 @@ class Settings(BaseSettings):
     ollama_model: str = "qwen3:8b"
     voice_port: int = 8100  # only used for the Host-header check
     llm_provider: str = "ollama"  # default per call: ollama | gemini | sarvam
+    dev: bool = Field(False, validation_alias=AliasChoices("VOICE_DEV", "dev"))  # developer lab: /dev/* routes, per-call settings
     warmup: bool = True  # background Ollama warm-up at startup (tests turn it off)
     gemini_api_key: str = ""
     sarvam_api_key: str = ""
     gemini_model: str = "gemini-3.5-flash-lite"
-    sarvam_model: str = "sarvam-m"
+    sarvam_model: str = "sarvam-105b-conversations"
     gemini_base_url: str = "https://generativelanguage.googleapis.com/v1beta/openai"
     sarvam_base_url: str = "https://api.sarvam.ai/v1"
 
@@ -86,7 +183,7 @@ class Settings(BaseSettings):
         if value:
             return value
         try:  # fallback: repo-root .env.local, name matched case-insensitively
-            for line in (ROOT / ".env.local").read_text(encoding="utf-8").splitlines():
+            for line in ENV_LOCAL.read_text(encoding="utf-8").splitlines():
                 k, _, v = line.partition("=")
                 if k.strip().lower() == local_name:
                     return v.strip().strip("\"'")
@@ -113,7 +210,7 @@ TOOL_HINTS = {
 }
 
 
-def load_tools() -> tuple[list[dict], set[str]]:
+def load_tools(hints: bool = True) -> tuple[list[dict], set[str]]:
     acts = json.loads((ROOT / "agent" / "actions.json").read_text(encoding="utf-8"))["actions"]
     tools = []
     for a in acts:
@@ -127,7 +224,7 @@ def load_tools() -> tuple[list[dict], set[str]]:
                 req.append(v["name"])
         tools.append({"type": "function", "function": {"name": a["name"], "description": a["description"],
                       "parameters": {"type": "object", "properties": props, "required": req}}})
-    for t in tools:  # nudges for a small local model, keyed by tool name; agent/actions.json stays untouched
+    for t in tools if hints else ():  # nudges for a small local model, keyed by tool name; agent/actions.json stays untouched
         f = t["function"]
         f["description"] += TOOL_HINTS.get(f["name"], "")
     return tools, {a["name"] for a in acts}
@@ -202,9 +299,9 @@ def redact(text: str) -> str:
     return mask_digits(text)
 
 
-def trim(msgs: list[dict]) -> list[dict]:
-    """System + last KEEP_MSGS messages, never starting on an orphaned tool result."""
-    tail = msgs[1:][-KEEP_MSGS:]
+def trim(msgs: list[dict], keep: int = KEEP_MSGS) -> list[dict]:
+    """System + last `keep` messages, never starting on an orphaned tool result."""
+    tail = msgs[1:][-keep:]
     while tail and tail[0].get("role") == "tool":
         tail = tail[1:]
     return msgs[:1] + tail
@@ -463,12 +560,15 @@ def parse_audio(content_type: str, body: bytes) -> bytes | None:
 def create_app(settings: Settings | None = None, client: httpx.AsyncClient | None = None) -> FastAPI:
     cfg = settings or Settings()
     tools, known = load_tools()
+    tools_plain, _ = load_tools(hints=False)
+    raw_prompt = (ROOT / "agent" / "system_prompt.md").read_text(encoding="utf-8")
     # the call id moves to the first user message so the system prompt (and Ollama's prefix cache) is identical across calls
     prompt = re.sub(r"[^\n]*\{\{conversation_id\}\}[^\n]*",
-                    "2. Pass `call_id` exactly as given in the first user message, and `language`, in every action.",
-                    (ROOT / "agent" / "system_prompt.md").read_text(encoding="utf-8"))
+                    "2. Pass `call_id` exactly as given in the first user message, and `language`, in every action.", raw_prompt)
     keyterms = [l.strip() for l in (ROOT / "agent" / "keyterms.txt").read_text(encoding="utf-8").splitlines() if l.strip()][:200]
     calls: dict[str, dict] = {}
+    schemas = {t["function"]["name"]: set(t["function"]["parameters"]["properties"]) for t in tools}
+    tags_cache: dict = {"t": 0.0, "models": []}
     http = client or httpx.AsyncClient(timeout=120)
 
     async def warm_up() -> None:
@@ -504,6 +604,12 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         return HTTPException(502, "upstream service error")
 
     async def gateway(cid: str, name: str, args: dict) -> dict:
+        props = schemas.get(name)
+        if props is not None:  # a small model sometimes invents argument names: drop keys outside the tool's schema
+            kept = {k: v for k, v in args.items() if k in props or k == "language"}
+            if len(kept) != len(args):
+                log.info("call=%s action=%s dropped_arg_keys=%d", cid, name, len(args) - len(kept))
+            args = kept
         args = {**args, "call_id": cid}  # always ours, never the model's
         t0 = time.perf_counter()
         try:
@@ -521,15 +627,22 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         return res
 
     async def llm(c: dict) -> dict:
-        p, t0 = c["llm"], time.perf_counter()
+        p, t0, st_ = c["llm"], time.perf_counter(), c["set"]
+        msgs, tl = trim(c["messages"], st_["keep_msgs"]), tools if st_["tool_hints"] else tools_plain
         try:
             if p != "ollama":
                 return await providers.openai_chat(
-                    http, base_url=getattr(cfg, f"{p}_base_url"), api_key=cfg.llm_key(p), model=cfg.llm_model(p),
-                    messages=trim(c["messages"]), tools=tools, provider=p)
+                    http, base_url=getattr(cfg, f"{p}_base_url"), api_key=cfg.llm_key(p), model=c["model"],
+                    messages=msgs, tools=tl, provider=p, temperature=st_["temperature"], max_tokens=st_["max_tokens"],
+                    reasoning=st_["reasoning"])
+            opts = {"num_ctx": st_["num_ctx"]}
+            if st_["temperature"] is not None:
+                opts["temperature"] = st_["temperature"]
+            if st_["max_tokens"]:
+                opts["num_predict"] = st_["max_tokens"]
             r = await http.post(f"{cfg.ollama_url}/api/chat", json={
-                "model": cfg.ollama_model, "messages": trim(c["messages"]), "tools": tools, "stream": False,
-                "think": False, "keep_alive": -1, "options": {"num_ctx": 8192}})
+                "model": c["model"], "messages": msgs, "tools": tl, "stream": False,
+                "think": False, "keep_alive": -1, "options": opts})
             r.raise_for_status()
             msg = r.json()["message"]
             if not isinstance(msg, dict):
@@ -692,7 +805,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
 
     async def run_actions(c: dict, st: dict | None = None) -> tuple[str, list[dict]]:
         st = st or new_state()
-        for _ in range(MAX_ROUNDS):
+        for _ in range(c["set"]["max_rounds"]):
             msg = await llm(c)
             tcs = msg.get("tool_calls")
             tcs = tcs if isinstance(tcs, list) else []
@@ -721,7 +834,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
                 res = await exec_call(c, name, args, st)
                 c["messages"].append({"role": "tool", "tool_name": name if isinstance(name, str) else "unknown",
                                       "content": json.dumps(res, ensure_ascii=False)})
-            if (len(tcs) == 1 and name in SHORTCUT and res.get("ok") and isinstance(res.get("speak"), str) and res["speak"]
+            if (c["set"]["shortcut_actions"] and len(tcs) == 1 and name in SHORTCUT and res.get("ok") and isinstance(res.get("speak"), str) and res["speak"]
                     and not (st.get("ask") or st.get("need_appr") or st["rb"] or c.get("rb_new"))):
                 c["messages"].append({"role": "assistant", "content": res["speak"]})  # the gateway sentence is the answer
                 return res["speak"], st["done"]
@@ -806,9 +919,11 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
                 break
         return st["rb"] or " ".join(dict.fromkeys(s for ok, s in st["speaks"] if ok)) or st["last"], st["done"]
 
-    async def stt(wav: bytes, lang: str, cid: str) -> str:
-        data = {"model": "prisma-v3.0", "language_code": STT_LANG.get(lang, STT_LANG["hinglish"]), "format": "transcribe",
-                "keyterms": json.dumps(keyterms, ensure_ascii=False)}
+    async def stt(wav: bytes, lang: str, cid: str, s: dict) -> str:
+        data = {"model": "prisma-v3.0", "format": "transcribe", "language_code":
+                STT_LANG.get(lang, STT_LANG["hinglish"]) if s["stt_language"] == "auto" else s["stt_language"]}
+        if s["stt_keyterms"]:
+            data["keyterms"] = json.dumps(keyterms, ensure_ascii=False)
         t0 = time.perf_counter()
         try:
             r = await http.post(STT_URL, headers={"X-API-Key-ID": cfg.gnani_key()}, data=data,
@@ -820,10 +935,10 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         finally:
             tick("stt", t0)
 
-    async def tts(text: str, lang: str, cid: str) -> str:
+    async def tts(text: str, lang: str, cid: str, s: dict) -> str:
         """Soft failure: no audio, text still returned (a retry would repeat data-changing actions)."""
-        payload = {"text": text, "model": "timbre-v3.0", "voice": VOICE, "language": TTS_LANG.get(lang, "hi-IN"),
-                   "speed": 1.0, "audio_config": AUDIO_CONFIG}
+        payload = {"text": text, "model": "timbre-v3.0", "voice": s["tts_voice"], "language": TTS_LANG.get(lang, "hi-IN"),
+                   "speed": s["tts_speed"], "audio_config": AUDIO_CONFIG}
         t0 = time.perf_counter()
         try:
             r = await http.post(TTS_URL, headers={"X-API-Key-ID": cfg.gnani_key()}, json=payload, timeout=60)
@@ -872,15 +987,33 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         return {"ok": True, "model": cfg.ollama_model, "default": cfg.llm_provider,
                 "providers": {p: {"model": cfg.llm_model(p), "ready": p == "ollama" or bool(cfg.llm_key(p))} for p in PROVIDERS}}
 
-    @app.post("/calls")
-    async def start(request: Request, tts_q: bool = Query(True, alias="tts")):
-        raw = await read_body(request)
-        body = json_body(request, raw) if raw.strip() else {}
+    async def ollama_models() -> list[str]:
+        if time.time() - tags_cache["t"] > 60:
+            try:
+                r = await http.get(f"{cfg.ollama_url}/api/tags", timeout=5)
+                r.raise_for_status()
+                tags_cache["models"] = [m["name"] for m in r.json()["models"]]
+            except Exception:  # noqa: BLE001
+                tags_cache["models"] = [cfg.ollama_model]
+            tags_cache["t"] = time.time()
+        return tags_cache["models"]
+
+    async def resolve_opts(body: dict) -> tuple[str, str, dict]:
+        """provider, model, effective settings for a new call. Settings and model are developer-lab only (403 otherwise)."""
+        if not cfg.dev and (body.get("settings") or body.get("model")):
+            raise HTTPException(403, "settings and model need developer mode (VOICE_DEV=1)")
         provider = body.get("llm", cfg.llm_provider)
         if provider not in PROVIDERS:
             raise HTTPException(422, f"llm must be one of {', '.join(PROVIDERS)}")
         if provider != "ollama" and not cfg.llm_key(provider):
             raise HTTPException(422, f"{provider} is selected but no {provider.upper()}_API_KEY is configured")
+        model = body.get("model") or cfg.llm_model(provider)
+        if body.get("model"):
+            if not isinstance(model, str) or not (MODEL_RE.match(model) if provider != "ollama" else model in await ollama_models()):
+                raise HTTPException(422, f"model: not allowed for {provider}")
+        return provider, model, validate_settings(body.get("settings") or {}, provider)
+
+    async def open_call(provider: str, model: str, sett: dict, want_tts: bool) -> dict:
         tm, t_start = {}, time.perf_counter()
         _TM.set(tm)
         now = time.time()
@@ -889,18 +1022,27 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         if len(calls) >= MAX_CALLS:
             raise HTTPException(429, "too many calls")
         cid = new_call_id()
-        c = {"id": cid, "llm": provider, "language": "hinglish", "ended": False, "ts": now, "lock": asyncio.Lock(),
-             "turn": 0, "held": None, "appr_checks": 0, "rb_turn": -9, "pending_rb": None, "rb_new": None, "rb_active": None,
-             "messages": [{"role": "system", "content": prompt}]}
+        sysmsg = prompt if sett["cache_prompt"] else raw_prompt.replace("{{conversation_id}}", cid)
+        c = {"id": cid, "llm": provider, "model": model, "set": sett, "language": "hinglish", "ended": False, "ts": now,
+             "lock": asyncio.Lock(), "turn": 0, "held": None, "appr_checks": 0, "rb_turn": -9, "pending_rb": None,
+             "rb_new": None, "rb_active": None, "messages": [{"role": "system", "content": sysmsg}]}
         res = await gateway(cid, "start_call", {"language": c["language"]})
         text = redact_agent(res.get("speak"))
-        c["messages"] += [{"role": "user", "content": f"(call connected, call_id={cid})"}, {"role": "assistant", "content": text}]
+        hello = f"(call connected, call_id={cid})" if sett["cache_prompt"] else "(call connected)"
+        c["messages"] += [{"role": "user", "content": hello}, {"role": "assistant", "content": text}]
         calls[cid] = c
-        audio = await tts(text, c["language"], cid) if text and tts_q and body.get("tts") is not False else ""
-        timings = finish_timings(tm, t_start, provider, cfg.llm_model(provider))
+        audio = await tts(text, c["language"], cid, sett) if text and want_tts else ""
+        timings = finish_timings(tm, t_start, provider, model)
         log.info("call=%s turn=0 timings=%s", cid, json.dumps(timings))
         return {"call_id": cid, **reply(c, text, [{"name": "start_call", "ok": bool(res.get("ok"))}], audio),
-                "timings": timings}
+                "timings": timings, **({"settings": sett} if cfg.dev else {})}
+
+    @app.post("/calls")
+    async def start(request: Request, tts_q: bool = Query(True, alias="tts")):
+        raw = await read_body(request)
+        body = json_body(request, raw) if raw.strip() else {}
+        provider, model, sett = await resolve_opts(body)
+        return await open_call(provider, model, sett, tts_q and body.get("tts") is not False)
 
     async def handle_text(c: dict, user_text: str) -> tuple[str, list[dict]]:
         if not user_text:
@@ -938,10 +1080,45 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         log.info("call=%s action=report_secret_spoken ok=%s", c["id"], bool(res.get("ok")))
         return speak, [{"name": "report_secret_spoken", "ok": bool(res.get("ok"))}]
 
-    @app.post("/calls/{call_id}/turn")
-    async def turn(call_id: str, request: Request, tts_q: bool = Query(True, alias="tts")):
+    async def do_turn(c: dict, wav: bytes | None, user_text: str | None, want_tts: bool) -> dict:
         tm, t_start = {}, time.perf_counter()
         _TM.set(tm)
+        call_id = c["id"]
+        async with c["lock"]:  # one turn at a time per call
+            if c["ended"]:
+                raise HTTPException(409, "call ended")
+            c["messages"] = trim(c["messages"], c["set"]["keep_msgs"])
+            n0 = len(c["messages"])
+            c["turn"] += 1
+            rb = c.get("pending_rb")  # single use: valid only on the turn right after it was delivered
+            c["rb_active"] = rb if rb and c["turn"] == c["rb_turn"] + 1 else None
+            c["pending_rb"] = c["rb_new"] = None
+            snap = {k: c[k] for k in ROLLBACK_KEYS if k in c}
+            try:
+                if wav is not None:
+                    user_text = await stt(wav, c["language"], call_id, c["set"])
+                text, acts = await handle_text(c, user_text)
+            except BaseException:
+                del c["messages"][n0:]  # failed turn leaves no half-finished history
+                c["pending_rb"] = c["rb_new"] = c["rb_active"] = None
+                for k in ROLLBACK_KEYS:  # approval bookkeeping goes back to where it was before the failed turn
+                    if k in snap:
+                        c[k] = snap[k]
+                    else:
+                        c.pop(k, None)
+                raise
+            c["ts"] = time.time()
+            text = redact_agent(text, c.get("refs"))
+            audio = await tts(text, c["language"], call_id, c["set"]) if text and want_tts else ""
+            if c.get("rb_new") and (audio or not want_tts):  # a read-back counts as heard only once it was delivered
+                c["pending_rb"], c["rb_turn"] = c["rb_new"], c["turn"]
+            c["rb_new"] = c["rb_active"] = None
+            timings = finish_timings(tm, t_start, c["llm"], c["model"])
+            log.info("call=%s turn=%d timings=%s", call_id, c["turn"], json.dumps(timings))
+            return reply(c, text, acts, audio, user_text=redact(user_text), timings=timings)
+
+    @app.post("/calls/{call_id}/turn")
+    async def turn(call_id: str, request: Request, tts_q: bool = Query(True, alias="tts")):
         c = calls.get(call_id)
         if c and time.time() - c["ts"] > TTL_S:
             calls.pop(call_id, None)
@@ -961,38 +1138,104 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             if not isinstance(body.get("text"), str):
                 raise HTTPException(422, "expected audio or text")
             user_text, want_tts = body["text"].strip(), tts_q and body.get("tts") is not False
-        async with c["lock"]:  # one turn at a time per call
-            if c["ended"]:
-                raise HTTPException(409, "call ended")
-            c["messages"] = trim(c["messages"])
-            n0 = len(c["messages"])
-            c["turn"] += 1
-            rb = c.get("pending_rb")  # single use: valid only on the turn right after it was delivered
-            c["rb_active"] = rb if rb and c["turn"] == c["rb_turn"] + 1 else None
-            c["pending_rb"] = c["rb_new"] = None
-            snap = {k: c[k] for k in ROLLBACK_KEYS if k in c}
+        return await do_turn(c, wav, user_text, want_tts)
+
+    if cfg.dev:  # developer lab: not registered at all when off, so every /dev/* route is a plain 404
+        jobs: dict[str, dict] = {}
+        bench_lock = asyncio.Lock()
+
+        def providers_info() -> dict:
+            return {p: {"ready": p == "ollama" or bool(cfg.llm_key(p)), "default_model": cfg.llm_model(p), "models": m}
+                    for p, m in (("ollama", None), ("gemini", ["gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-3.1-flash-lite"]),
+                                 ("sarvam", ["sarvam-105b-conversations", "sarvam-105b"]))}
+
+        @app.get("/dev/config")
+        async def dev_config():
+            info = providers_info()
+            info["ollama"]["models"] = await ollama_models()
+            return {"dev": True, "knobs": KNOBS, "providers": info, "presets": PRESETS, "scripts": SCRIPTS}
+
+        @app.post("/dev/warmup")
+        async def dev_warmup(request: Request):
+            body = json_body(request, await read_body(request))
+            provider, model, sett = await resolve_opts({k: body.get(k) for k in ("llm", "model") if body.get(k)})
+            c = {"id": "warmup", "llm": provider, "model": model, "set": sett,
+                 "messages": [{"role": "system", "content": prompt}, {"role": "user", "content": "(warm-up)"}]}
+            t0 = time.perf_counter()
+            await llm(c)
+            return {"ok": True, "provider": provider, "model": model, "llm_ms": round((time.perf_counter() - t0) * 1000)}
+
+        async def run_job(job: dict, specs: list[dict], script: list[str], repeat: int, want_tts: bool) -> None:
             try:
-                if wav is not None:
-                    user_text = await stt(wav, c["language"], call_id)
-                text, acts = await handle_text(c, user_text)
-            except BaseException:
-                del c["messages"][n0:]  # failed turn leaves no half-finished history
-                c["pending_rb"] = c["rb_new"] = c["rb_active"] = None
-                for k in ROLLBACK_KEYS:  # approval bookkeeping goes back to where it was before the failed turn
-                    if k in snap:
-                        c[k] = snap[k]
-                    else:
-                        c.pop(k, None)
-                raise
-            c["ts"] = time.time()
-            text = redact_agent(text, c.get("refs"))
-            audio = await tts(text, c["language"], call_id) if text and want_tts else ""
-            if c.get("rb_new") and (audio or not want_tts):  # a read-back counts as heard only once it was delivered
-                c["pending_rb"], c["rb_turn"] = c["rb_new"], c["turn"]
-            c["rb_new"] = c["rb_active"] = None
-            timings = finish_timings(tm, t_start, c["llm"], cfg.llm_model(c["llm"]))
-            log.info("call=%s turn=%d timings=%s", call_id, c["turn"], json.dumps(timings))
-            return reply(c, text, acts, audio, user_text=redact(user_text), timings=timings)
+                async with bench_lock:  # one turn at a time overall: numbers stay comparable
+                    for spec, run in zip(specs, job["runs"]):
+                        for rep_ in range(1, repeat + 1):
+                            c = None
+                            try:
+                                opened = await open_call(spec["llm"], spec["model"], spec["settings"], want_tts)
+                                c = calls.get(opened["call_id"])
+                            except Exception as e:  # noqa: BLE001
+                                err = f"{type(e).__name__}: {getattr(e, 'detail', '')}"[:80]
+                            for idx, line in enumerate(script):
+                                t = {"rep": rep_, "index": idx, "actions": [], "ok": False}
+                                try:
+                                    if c is None:
+                                        raise RuntimeError(err)
+                                    r = await do_turn(c, None, line, want_tts)
+                                    t.update(actions=[a["name"] for a in r["actions"]], timings=r["timings"],
+                                             ok=all(a["ok"] for a in r["actions"]))
+                                except Exception as e:  # noqa: BLE001 - a failed turn is recorded, the run goes on
+                                    t["error"] = f"{type(e).__name__}: {getattr(e, 'detail', e)}"[:80]
+                                run["turns"].append(t)
+                                job["done_turns"] += 1
+                            if c is not None and not c["ended"]:
+                                with contextlib.suppress(Exception):
+                                    await gateway(c["id"], "end_call", {"language": c["language"], "outcome": "completed"})
+                            if c is not None:
+                                calls.pop(c["id"], None)
+                        run["summary"] = summarize(run["turns"])
+                job["status"] = "done"
+            except Exception as e:  # noqa: BLE001
+                job["status"], job["error"] = "error", type(e).__name__
+
+        @app.post("/dev/bench")
+        async def dev_bench(request: Request):
+            body = json_body(request, await read_body(request))
+            now = time.time()
+            for k in [k for k, v in jobs.items() if now - v["ts"] > 3600]:
+                del jobs[k]
+            cfgs, script, repeat = body.get("configs"), body.get("script"), body.get("repeat", 1)
+            if not isinstance(cfgs, list) or not 1 <= len(cfgs) <= 4:
+                raise HTTPException(422, "configs: 1 to 4 entries")
+            if (not isinstance(script, list) or not 1 <= len(script) <= 12
+                    or not all(isinstance(x, str) and 1 <= len(x) <= 300 for x in script)):
+                raise HTTPException(422, "script: 1 to 12 lines of at most 300 characters")
+            if not isinstance(repeat, int) or isinstance(repeat, bool) or not 1 <= repeat <= 3:
+                raise HTTPException(422, "repeat: 1 to 3")
+            if not isinstance(body.get("tts", False), bool) or not isinstance(body.get("customer", ""), str):
+                raise HTTPException(422, "tts must be a boolean and customer a string")
+            specs = []
+            for i, cf in enumerate(cfgs):
+                if not isinstance(cf, dict):
+                    raise HTTPException(422, f"configs[{i}]: expected an object")
+                provider, model, sett = await resolve_opts(cf)
+                specs.append({"llm": provider, "model": model, "settings": sett, "name": str(cf.get("name") or f"config {i + 1}")[:60]})
+            if sum(1 for j in jobs.values() if j["status"] == "running") >= 2:
+                raise HTTPException(429, "too many running bench jobs")
+            jid = uuid.uuid4().hex[:12]
+            job = {"ts": now, "status": "running", "done_turns": 0, "total_turns": len(specs) * repeat * len(script),
+                   "runs": [{"name": s_["name"], "llm": s_["llm"], "model": s_["model"], "settings": s_["settings"],
+                             "turns": [], "summary": summarize([])} for s_ in specs]}
+            jobs[jid] = job
+            job["task"] = asyncio.create_task(run_job(job, specs, script, repeat, body.get("tts", False)))
+            return {"job_id": jid}
+
+        @app.get("/dev/bench/{job_id}")
+        async def dev_bench_get(job_id: str):
+            job = jobs.get(job_id)
+            if not job or time.time() - job["ts"] > 3600:
+                raise HTTPException(404, "unknown job")
+            return {k: v for k, v in job.items() if k not in ("ts", "task")}
 
     return app
 

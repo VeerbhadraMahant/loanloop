@@ -60,14 +60,19 @@ def _args(raw) -> dict:
 
 
 async def openai_chat(http: httpx.AsyncClient, *, base_url: str, api_key: str, model: str,
-                      messages: list[dict], tools: list[dict], provider: str, timeout: float = 30.0) -> dict:
+                      messages: list[dict], tools: list[dict], provider: str, timeout: float = 30.0,
+                      temperature: float | None = None, max_tokens: int | None = None, reasoning: str | None = None) -> dict:
+    """temperature / max_tokens / reasoning: None keeps the defaults below; reasoning is the effort ("off" = thinking off)."""
     body = {"model": model, "messages": _to_openai(messages, provider), "tools": tools, "tool_choice": "auto",
-            "temperature": 0.2, "max_tokens": MAX_TOKENS, "stream": False}
+            "temperature": 0.2 if temperature is None else temperature,
+            "max_tokens": max_tokens or MAX_TOKENS, "stream": False}
     # latency: thinking off. Gemini 3.x rejects "none" (lowest is "minimal"), 2.5 flash accepts "none"; Sarvam thinking is on by default, null disables it.
     if provider == "sarvam":
         body["reasoning_effort"] = None
     else:
         body["reasoning_effort"] = "none" if model.startswith("gemini-2.5") else "minimal"
+    if reasoning:
+        body["reasoning_effort"] = None if reasoning == "off" else reasoning
     try:
         r = await http.post(base_url.rstrip("/") + "/chat/completions", json=body,
                             headers=_headers(api_key, provider), timeout=timeout)

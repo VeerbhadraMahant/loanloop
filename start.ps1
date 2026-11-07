@@ -1,5 +1,5 @@
 # LoanLoop launcher (Windows PowerShell 5.1). Usage: .\start.ps1 [-Seed]
-param([switch]$Seed)
+param([switch]$Seed, [switch]$Dev)
 $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
 $ollama = 'http://127.0.0.1:11434'
@@ -52,7 +52,8 @@ $svc = @(
 $pids = @{}
 foreach ($s in $svc) {
   $wd = Join-Path $root $s.dir
-  $p = Start-Process powershell -WorkingDirectory $wd -PassThru -ArgumentList '-NoExit', '-Command', "`$Host.UI.RawUI.WindowTitle='loanloop-$($s.name)'; $($s.cmd)"
+  $devEnv = if ($Dev -and $s.name -eq 'voice') { "`$env:VOICE_DEV='1'; " } else { '' }
+  $p = Start-Process powershell -WorkingDirectory $wd -PassThru -ArgumentList '-NoExit', '-Command', "`$Host.UI.RawUI.WindowTitle='loanloop-$($s.name)'; $devEnv$($s.cmd)"
   $pids[$s.name] = $p.Id
 }
 New-Item -ItemType Directory -Force (Join-Path $root '.run') | Out-Null
