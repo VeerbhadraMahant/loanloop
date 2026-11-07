@@ -17,7 +17,7 @@ Env (process env, then `gateway/.env`): `GNANI_SPEECH_API_KEY` (fallback: `gnani
 
 LLM provider per call (hosted ones exist only for latency comparison; default stays local qwen3:8b, speech stays Gnani):
 `LLM_PROVIDER` (ollama | gemini | sarvam, default ollama), `GEMINI_API_KEY`, `SARVAM_API_KEY` (both also read, case-insensitive,
-from repo-root `.env.local`), `GEMINI_MODEL` (gemini-3.5-flash-lite), `SARVAM_MODEL` (sarvam-m),
+from repo-root `.env.local`), `GEMINI_MODEL` (gemini-3.5-flash-lite), `SARVAM_MODEL` (sarvam-105b-conversations),
 `GEMINI_BASE_URL` (https://generativelanguage.googleapis.com/v1beta/openai), `SARVAM_BASE_URL` (https://api.sarvam.ai/v1),
 `WARMUP` (true: one background Ollama warm-up request at startup; `keep_alive` is -1 on every Ollama request).
 Keys are never logged or returned.
