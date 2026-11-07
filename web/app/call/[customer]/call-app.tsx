@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button, Pill } from "@/components/ui";
 import { downsample, encodeWav } from "@/lib/wav";
-import { LLMS, SessionSummary, TurnStat, type LlmId, type Stat, type Timings, type Turn } from "./turn-stats";
+import { LLMS, SessionSummary, TurnStat, type LlmId, type Stat, type Timings, type Turn } from "@/components/turn-stats";
 
 const VOICE = process.env.NEXT_PUBLIC_VOICE_URL ?? "http://127.0.0.1:8100";
 const MIN_SECONDS = 0.3;

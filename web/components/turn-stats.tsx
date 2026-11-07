@@ -16,17 +16,24 @@ export const LLMS = [
 ] as const;
 export type LlmId = (typeof LLMS)[number]["id"];
 
+/** Segment colours shared by the per-turn bar and the lab's comparison bars. */
+export const SEG = {
+  stt: { k: "STT", c: "bg-sky-500" }, llm: { k: "LLM", c: "bg-violet-500" }, gateway: { k: "Gateway", c: "bg-emerald-500" },
+  tts: { k: "TTS", c: "bg-amber-500" }, other: { k: "Server other", c: "bg-slate-400" }, net: { k: "Network/browser", c: "bg-rose-400" },
+} as const;
+
 const sec = (ms: number) => (ms / 1000).toFixed(2);
+const n = (c: number) => `${c} call${c === 1 ? "" : "s"}`;
 
 function parts(s: Stat) {
   const t = s.timings; if (!t) return [];
   return [
-    { k: "STT", ms: t.stt_ms, c: "bg-sky-500" },
-    { k: `LLM (${t.llm_calls} call${t.llm_calls === 1 ? "" : "s"})`, ms: t.llm_ms, c: "bg-violet-500" },
-    { k: `Gateway (${t.gateway_calls} call${t.gateway_calls === 1 ? "" : "s"})`, ms: t.gateway_ms, c: "bg-emerald-500" },
-    { k: "TTS", ms: t.tts_ms, c: "bg-amber-500" },
-    { k: "Server other", ms: t.other_ms, c: "bg-slate-400" },
-    { k: "Network/browser", ms: Math.max(0, s.clientMs - t.total_ms), c: "bg-rose-400" },
+    { k: SEG.stt.k, ms: t.stt_ms, c: SEG.stt.c },
+    { k: `LLM (${n(t.llm_calls)})`, ms: t.llm_ms, c: SEG.llm.c },
+    { k: `Gateway (${n(t.gateway_calls)})`, ms: t.gateway_ms, c: SEG.gateway.c },
+    { k: SEG.tts.k, ms: t.tts_ms, c: SEG.tts.c },
+    { k: SEG.other.k, ms: t.other_ms, c: SEG.other.c },
+    { k: SEG.net.k, ms: Math.max(0, s.clientMs - t.total_ms), c: SEG.net.c },
   ];
 }
 
