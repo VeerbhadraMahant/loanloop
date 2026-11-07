@@ -674,7 +674,8 @@ def test_model_pushed_to_act_after_refused_duplicate_approval():
         turn(c, d, "approve")
         r = turn(c, d, "approve kar diya, why did my EMI go up").json()
     assert any(n == "explain_emi_change" for n, _ in seen)  # the nudge made the model call the real action
-    assert r["agent_text"] in ("done", "ok")  # the text has a comma (multi-request): no shortcut, the wrap-up round runs
+    # single request (a comma is not a conjunction): the shortcut speaks the gateway sentence, no wrap-up round
+    assert r["agent_text"] == "EMI went up because of the reset"
 
 
 LONG = "please tell me something about my loan account details today"  # long, no approval keyword
@@ -1397,8 +1398,8 @@ def test_shortcut_skipped_for_multi_request_text(env):
     r = turn(c, d, "EMI kab hai aur SMS bhej do").json()
     assert len(fake.of("llm")) == 2 and r["agent_text"] == "wrapped"
     from voice.app import multi_request
-    assert all(multi_request(t) for t in ["emi and sms", "EMI, SMS", "माझा EMI आणि SMS", "ifsc ; emi"])
-    assert not any(multi_request(t) for t in ["EMI kab hai", "amount 32,055", "kothrud ka ifsc"])
+    assert all(multi_request(t) for t in ["emi and sms", "EMI aur SMS", "माझा EMI आणि SMS"])
+    assert not any(multi_request(t) for t in ["EMI kab hai", "amount 32,055", "kothrud ka ifsc", "EMI kitna hai, next kab hai?"])
 
 
 def test_tts_speed_range_and_reasoning_options_by_provider():

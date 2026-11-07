@@ -117,16 +117,27 @@ Automated check for the same flows (default local provider, typed, no Gnani): `p
 
 ## 5. Baseline numbers (owner's laptop, RTX 4060)
 
-Measured today: typed, TTS off, script "Tier 0+1 Hinglish", 2 repeats, total per turn.
+Measured 2026-11-08 on the final code: typed, TTS off, script "Tier 0+1 Hinglish", 2 repeats, total per turn (server side).
 
-| Config | Median | p95 | Note |
-|--------|--------|-----|------|
-| Baseline local (old behaviour) | 2.36 s | 5.86 s | |
-| Optimised local | 1.19 s | 2.32 s | |
-| Gemini (gemini-3.5-flash-lite) | 1.15 s | 3.42 s | 1 of 10 turns hit an intermittent upstream error; a retry was added. |
-| Sarvam (sarvam-105b-conversations) | 0.27 s | 0.52 s | |
+| Config | Median | p95 | Avg LLM calls/turn | Note |
+|--------|--------|-----|--------------------|------|
+| Baseline local (old behaviour) | 2.93 s | 6.75 s | 2.0 | |
+| Optimised local | 2.32 s | 3.95 s | 1.8 | |
+| Gemini (gemini-3.5-flash-lite) | 2.17 s | 3.65 s | 1.9 | 1 of 10 turns failed with HTTP 429 (free-tier rate limit) |
+| Sarvam (sarvam-105b-conversations) | 0.40 s | 0.52 s | 1.8 | |
 
-Earlier, before the fixes, real voice turns (Gnani STT + LLM + gateway + Gnani TTS) took 4.8 to 9.0 s, median 5.8 s.
+Why "Optimised local" is not lower: the one-LLM-call shortcut is skipped when the caller's words contain a conjunction (aur, and, ani, आणि, और...), so that a second request in the same sentence is never dropped. 3 of the 5 script lines contain "aur". An earlier build without that guard measured 1.19 s median for Optimised local. Compare `shortcut_actions` on vs off yourself (test K2).
+
+Numbers move 10-25% between runs on the same laptop. Run each config at least twice.
+
+Real voice turns (Gnani STT + LLM + gateway + Gnani TTS, TTS on), measured on the final code:
+
+| Config | Total per turn | STT | LLM | TTS |
+|--------|----------------|-----|-----|-----|
+| Optimised local | 4.0-6.6 s | ~0.2 s | 2.7-4.8 s | 1.1-2.2 s |
+| Sarvam | 2.9-3.3 s | ~0.2 s | 0.2-0.5 s | 2.3-2.9 s |
+
+With a fast LLM, Gnani TTS is the largest part of the wait (the service waits for the whole WAV). Before the fixes, voice turns took 4.8 to 9.0 s, median 5.8 s.
 
 Your numbers will differ with your hardware. Compare the ordering and the ratios, not the absolute values.
 
@@ -177,4 +188,5 @@ What to send the owner:
 - Voice tests (V1, bench with TTS on) spend Gnani credits. Keep them short.
 - Bench runs share Ollama with any live call (do not use the app while benching) and write sms_outbox and audit rows for Priya (reseed after big runs).
 - Bench jobs run one turn at a time, at most 2 jobs at once, kept in memory for 1 hour (lost on voice restart). Max 4 configs, 12 script lines, repeat 1 to 3.
-- Latency depends on laptop GPU, network and the hosted providers' load. Gemini had an intermittent upstream error once.
+- Latency depends on laptop GPU, network and the hosted providers' load.
+- Gemini errors that show as `upstream_error=gemini status=429` in the voice log are the free-tier rate limit (requests per minute), not a bug. A bench with 4 configs can hit it: bench Gemini on its own, use repeat 1, or wait a minute between runs. Record 429s separately from real errors.

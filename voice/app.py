@@ -550,12 +550,12 @@ def final_text(model_text: str, speaks: list[tuple[bool, str]]) -> str:
 
 
 _MULTI_WORDS = {"and", "also", "plus", "aur", "bhi", "tatha", "ani", "aani", "आणि", "और", "भी", "तथा"}
-_MULTI_PUNCT = re.compile(r"[A-Za-z\u0900-\u097f]\s*[,;]\s*[A-Za-z\u0900-\u097f]")
 
 
 def multi_request(text: str) -> bool:
-    """The caller's words look like more than one request: a conjunction word or a comma/semicolon between words."""
-    return bool(set(_tokens(text)) & _MULTI_WORDS or _MULTI_PUNCT.search(text))
+    """The caller's words look like more than one request: a conjunction word. Commas alone do not count
+    ("EMI kitna hai, next kab hai?" is one request); measured: a comma rule disabled the shortcut on most turns."""
+    return bool(set(_tokens(text)) & _MULTI_WORDS)
 
 
 def parse_field(content_type: str, body: bytes, name: str) -> str | None:

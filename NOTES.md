@@ -84,3 +84,9 @@ uv run python ../tools/seed_data.py     # 200 customers; drops/recreates dev DB
 uv run uvicorn app.main:app --port 8000
 uv run pytest -q                        # uses DB loanloop_test + Redis db 15
 ```
+
+### 2026-11-08 latency measurements (final dev-lab code, RTX 4060)
+- Typed, TTS off, "Tier 0+1 Hinglish" x2, median / p95 per turn: Baseline local 2.93 / 6.75 s; Optimised local 2.32 / 3.95 s; Gemini gemini-3.5-flash-lite 2.17 / 3.65 s (1/10 HTTP 429 free-tier limit); Sarvam sarvam-105b-conversations 0.40 / 0.52 s.
+- The one-call shortcut is skipped when the caller text has a conjunction (multi-request safety); without that guard Optimised local measured 1.19 s median.
+- Voice turns (Gnani STT + LLM + gateway + Gnani TTS): local 4.0-6.6 s (LLM 2.7-4.8 s, TTS 1.1-2.2 s); Sarvam 2.9-3.3 s (LLM 0.2-0.5 s, TTS 2.3-2.9 s). STT ~0.2 s. Next lever: streaming TTS (play the first chunk instead of waiting for the full WAV).
+- Before the fixes: voice turns 4.8-9.0 s, median 5.8 s; cold start 8.6 s model load + 2.8 s prompt read.
