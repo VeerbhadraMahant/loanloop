@@ -80,3 +80,18 @@ async def test_tier2_not_kept_when_switching_customer(client, make_session):
     r = await call(client, "verify_caller", registered_mobile="9000023158", dob="1984-03-22")
     s = await sessions.get("call1")
     assert r["ok"] and s.customer_id == 2 and s.tier == 1
+
+
+async def test_verify_flexible_date_and_mobile_formats(client):
+    # Test DD-MM-YYYY, DD/MM/YYYY, spoken month names, and leading zero mobile
+    await _start(client, cid="flex1")
+    r1 = await call(client, "verify_caller", call_id="flex1", registered_mobile="09000014417", dob="14-08-1991")
+    assert r1["ok"] and "Priya" in r1["speak"]
+
+    await _start(client, cid="flex2")
+    r2 = await call(client, "verify_caller", call_id="flex2", registered_mobile="+91 90000 14417", dob="14/08/1991")
+    assert r2["ok"] and "Priya" in r2["speak"]
+
+    await _start(client, cid="flex3")
+    r3 = await call(client, "verify_caller", call_id="flex3", registered_mobile="9000014417", dob="14 August 1991")
+    assert r3["ok"] and "Priya" in r3["speak"]
