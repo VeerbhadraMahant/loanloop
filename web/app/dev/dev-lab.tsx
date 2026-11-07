@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Button, Card, Pill, Shell } from "@/components/ui";
-import { api, ApiError, type BenchRun, type Cfg, type DevConfig } from "./api";
+import { api, ApiError, postJson, type BenchRun, type Cfg, type DevConfig } from "./api";
 import { Bench } from "./bench";
 import { Compare } from "./compare";
 import { ConfigBuilder } from "./config-builder";
@@ -9,7 +9,7 @@ import { LiveCall } from "./live-call";
 
 const KEY = "loanloop.dev.configs";
 const MAX = 4;
-const CUSTOMERS = ["priya", "ramesh", "sunita"];
+const CUSTOMER = "priya"; // the voice service ignores it; identity comes from the script/verify line
 const OFF = "Dev mode is off: start the voice service with VOICE_DEV=1 (start.ps1 -Dev).";
 
 export default function DevLab() {
@@ -19,7 +19,7 @@ export default function DevLab() {
   const [saved, setSaved] = useState<Cfg[]>([]);
   const [editing, setEditing] = useState<number | null>(null);
   const [runs, setRuns] = useState<BenchRun[]>([]);
-  const [customer, setCustomer] = useState("priya");
+  const [warm, setWarm] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
 
   useEffect(() => {
@@ -62,15 +62,21 @@ export default function DevLab() {
           <Card className="space-y-1 p-4 text-sm text-muted">
             <h2 className="font-medium text-fg">How to read this</h2>
             <p>Total is what the caller waits for. Check which component dominates (STT, LLM, gateway, TTS or server other) to know what to tune. A typed benchmark has no STT or TTS time, so it compares the LLM and gateway only. A star marks the best value per column.</p>
+            <p>There is no customer selector: the voice service ignores it, and caller identity comes from the script or the verify line you type.</p>
           </Card>
-          <label className="flex max-w-xs items-center gap-3 text-sm font-medium">Customer
-            <select value={customer} onChange={(e) => setCustomer(e.target.value)} className="min-h-11 flex-1 rounded-lg border border-line bg-bg px-2 text-sm font-normal">
-              {CUSTOMERS.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </label>
 
           <ConfigBuilder dev={dev} cfg={cfg} setCfg={setCfg} editing={editing !== null} onSave={save} />
           {note && <p role="alert" className="text-sm text-danger-fg">{note}</p>}
+          <div className="flex flex-wrap items-center gap-3">
+            <Button small variant="secondary" onClick={async () => {
+              setWarm("Warming up…");
+              try {
+                const w = await postJson<{ llm_ms?: number }>("/dev/warmup", { llm: cfg.llm, ...(cfg.model ? { model: cfg.model } : {}) });
+                setWarm(`Warm-up done: LLM ${w.llm_ms ?? "?"} ms`);
+              } catch (e) { setWarm(`Warm-up failed (${e instanceof Error ? e.message : "error"})`); }
+            }}>Warm up</Button>
+            <span role="status" className="text-sm text-muted">{warm ?? "Loads the selected model so the first measured turn is not a cold start."}</span>
+          </div>
 
           <section aria-label="Configs to compare" className="space-y-2">
             <h2 className="serif text-2xl">Configs to compare ({saved.length}/{MAX})</h2>
@@ -91,8 +97,8 @@ export default function DevLab() {
             </ul>
           </section>
 
-          <LiveCall cfg={cfg} customer={customer} />
-          <Bench dev={dev} configs={saved} customer={customer} onRuns={setRuns} />
+          <LiveCall cfg={cfg} customer={CUSTOMER} />
+          <Bench dev={dev} configs={saved} customer={CUSTOMER} onRuns={setRuns} />
           <Compare runs={runs} />
         </div>
       )}
