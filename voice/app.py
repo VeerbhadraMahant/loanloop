@@ -712,6 +712,18 @@ def faq_args(text: str) -> dict | None:
     return None
 
 
+_ACTION_STEMS = ("update", "change", "close", "send", "raise", "cancel", "block", "apply", "badal", "badla", "band", "bhej", "bhejo",
+                 "बदल", "बंद", "भेज", "अपडेट", "पाठव", "रद्द")
+_QUESTION_WORDS = {"how", "what", "when", "why", "where", "which", "can", "kaise", "kya", "kab", "kyun", "kahan", "kaun",
+                   "कैसे", "क्या", "कब", "क्यों", "कहाँ", "कसे", "काय", "केव्हा", "कधी", "कुठे"}
+
+
+def is_action_request(text: str) -> bool:
+    """An imperative/desire to DO something (no question word): skip the FAQ pre-route and let the model call the action."""
+    t = _tokens(text.lower())
+    return not set(t) & _QUESTION_WORDS and any(w.startswith(_ACTION_STEMS) for w in t)
+
+
 _HUMAN_TARGET = {"someone", "somebody", "human", "agent", "person", "manager", "executive", "representative", "officer", "staff",
                  "insaan", "insan", "इंसान", "आदमी", "व्यक्ति", "मैनेजर", "एजेंट", "अधिकारी", "माणूस", "माणसाशी", "मॅनेजर", "एजंट",
                  "कोणाशी", "कोणाला", "kisi", "किसी"}
@@ -719,9 +731,21 @@ _HUMAN_VERB = {"speak", "talk", "connect", "transfer", "baat", "bat", "bolna", "
                "जोड़ो", "जोडा", "बोलने", "bolne", "milao", "मिलाओ"}
 
 
+_EN_HUMAN_REQ = re.compile(r"\b(?:speak|talk|connect|transfer)\b(?:\W+\w+){0,3}?\W+(?:to|with)\b(?:\W+\w+){0,3}?\W+(?:"
+                           + "|".join(w for w in _HUMAN_TARGET if w.isascii()) + r")\b")
+_EN_VERBS = {"speak", "talk", "connect", "transfer"}
+_NEG_HUMAN = {"not", "no", "never", "dont", "don't", "don’t", "nahi", "nahin", "nako", "naka", "नहीं", "नको", "नका", "नाही"}
+_SELF_CLAIM = re.compile(r"\bi(?:'|’)?m\s+(?:the|a|an)\b|\bi\s+am\s+(?:the|a|an)\b")
+
+
 def wants_human(text: str) -> bool:
-    t = set(_tokens(text.lower()))
-    return bool(t & _HUMAN_TARGET and t & _HUMAN_VERB)
+    """A request (verb + human noun in that order for English; Indic word order is free) with no negation and
+    no 'I am the manager' self-claim."""
+    low = text.lower()
+    t = set(_tokens(low))
+    if t & _NEG_HUMAN or _SELF_CLAIM.search(low):
+        return False
+    return bool(_EN_HUMAN_REQ.search(low) or (t & _HUMAN_TARGET and t & (_HUMAN_VERB - _EN_VERBS)))
 
 
 _LEAK = re.compile(r"system\s*prompt|tool\s*list|\b(?:my|the|these|those|above|previous|original)\s+instructions\b|"
@@ -1071,7 +1095,9 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         return bool(c.get("pending") or c.get("held") or c.get("approval_id") or c.get("rb_active") or c.get("pending_rb")
                     or c.get("rb_new") or c.get("ask_verify_turn", -9) >= c["turn"] - 1)
 
-    def faq_ok(c: dict, text: str) -> bool:
+    def faq_ok(c: dict, text: str, pre: bool = False) -> bool:
+        if pre and is_action_request(text):
+            return False  # "update nominee" is an action for the model, not an FAQ
         return bool(len(_tokens(text)) >= 2 and c["direction"] == "inbound" and not c["ended"] and not in_flow(c) and not is_bare_affirmative(text)
                     and not account_specific(text) and not (not c.get("verified") and _extract_verify(text, c.get("said"))))
 
@@ -1097,7 +1123,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         return await faq_call(c, text, st) if faq_ok(c, text) else None
 
     async def faq_direct(c: dict, text: str) -> tuple[str, list[dict]] | None:
-        if not faq_ok(c, text):
+        if not faq_ok(c, text, pre=True):
             return None
         st = new_state()
         speak = await faq_call(c, text, st)
