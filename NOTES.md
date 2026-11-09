@@ -90,3 +90,13 @@ uv run pytest -q                        # uses DB loanloop_test + Redis db 15
 - The one-call shortcut is skipped when the caller text has a conjunction (multi-request safety); without that guard Optimised local measured 1.19 s median.
 - Voice turns (Gnani STT + LLM + gateway + Gnani TTS): local 4.0-6.6 s (LLM 2.7-4.8 s, TTS 1.1-2.2 s); Sarvam 2.9-3.3 s (LLM 0.2-0.5 s, TTS 2.3-2.9 s). STT ~0.2 s. Next lever: streaming TTS (play the first chunk instead of waiting for the full WAV).
 - Before the fixes: voice turns 4.8-9.0 s, median 5.8 s; cold start 8.6 s model load + 2.8 s prompt read.
+
+### 2026-11-10 v2 (branch v2, contract in docs/V2-CONTRACT.md)
+- Input: live tests on 9 Nov (tools: test-data-raw*.md, local qwen3:8b on Mac): median 6.8 s/turn, LLM 5.4 s, Timbre TTS 2.0 s (whole-WAV wait), worst 17 s (branch_lookup with "address आणि timing" took 2 LLM rounds).
+- Streaming TTS: Timbre SSE (`/api/v1/tts/sse`, raw 16 kHz PCM) played chunk by chunk in the browser. First chunk 120-226 ms vs 1.1-1.4 s for the full REST WAV (tools/out/tts_stream.json). Gnani allows one active TTS request per account, so no parallel per-sentence synthesis.
+- Bank DB: savings balances + transactions, collection_cases (dpd buckets), promises_to_pay (amount, date, full/partial tag, open/kept/broken/cancelled), refusals_to_pay (reason codes), job_runs. Jobs every JOBS_INTERVAL_S: mark_overdue, settle_ptps, build_queue (08:00-19:00 IST window). /collections page; outbound demo call /call/outbound/201 (Vikram Sawant, DOB 17 Jun 1988).
+- Agent: language asked first; service owns the call language; deterministic paths for language choice, "am I a customer", FAQ grounding (47 intents, en/hi/hinglish/mr), outbound DOB verify, human handover, prompt-leak guard. Outbound is firm, inbound soft; no waivers or threats.
+- Security decisions: outbound starts need the ops token; the model can no longer call start_call; the gateway refuses to reset a live session; secret detection blocks when unsure. Recorded exceptions: dues_info tier 1 on outbound only (tier 2 inbound); record_ptp tier 1 with read-back; /dashboard/jobs/run behind the dashboard token (demo only).
+- Known limitation: /ops, /collections, /gw and /voice-out have no login (localhost demo). Production needs an ops login.
+- Eval (tools/eval_agent.py, 88 typed cases, TTS off, local qwen3:8b, RTX 4060): run 1 53/88; run 2 76/88 (faq 26/33, language 6/6, verification 6/8, follow-up 8/8, safety 20/20, outbound 9/12). Median 0.96 s/turn, p95 5.98 s, 0.89 LLM calls/turn. Sarvam on 20 cases: median 0.21 s.
+- Upgrade: startup adds missing v2 columns; reseed (start.ps1 -Seed) recommended.
