@@ -41,7 +41,8 @@ SECRET_KINDS = {"password", "pin", "otp", "cvv", "card"}
 PROVIDERS = ("ollama", "gemini", "sarvam")
 # one tool call in a round whose gateway `speak` is already the final answer: no second LLM round needed
 SHORTCUT = {"branch_lookup", "emi_info", "explain_emi_change", "send_details_sms", "get_masked_profile", "validate_ifsc",
-            "password_reset_help", "foreclosure_quote"}
+            "password_reset_help", "foreclosure_quote", "faq_lookup", "account_balance", "last_transactions", "dues_info",
+            "record_ptp", "record_rtp"}
 _TM: contextvars.ContextVar = contextvars.ContextVar("timings", default=None)  # per-request stage timings
 
 
@@ -207,6 +208,12 @@ TOOL_HINTS = {
     "send_details_sms": " ALWAYS use this when the caller says send / SMS / bhej / pathva for their account number, IFSC, customer ID or branch address.",
     "get_masked_profile": " ONLY for questions about what is on file (linked mobile or email). Never for 'send me my details': use send_details_sms.",
     "request_app_approval": " Only after a Tier 2 action was refused and nothing is approved yet. Never for 'why did my EMI change' etc.: call explain_emi_change.",
+    "faq_lookup": " USE THIS for every general banking question (opening an account -> topic open_account, minimum balance, KYC, UPI, cards, NEFT/RTGS/IMPS, fraud, cheques, charges). Never answer those from your own knowledge.",
+    "account_balance": " Only after verification; the caller asks for their account balance.",
+    "last_transactions": " Only after verification; pass count (1 to 5) only if the caller said a number.",
+    "dues_info": " Only after verification; the overdue amount, missed EMIs and days past due.",
+    "record_ptp": " Only after the caller SAID the amount and the date they will pay. amount in plain rupees, promised_date as YYYY-MM-DD.",
+    "record_rtp": " When the caller will not or cannot pay now: pass the closest reason_code. Never argue.",
     "end_call": " Call it as soon as the caller says goodbye / bye / that is all, in any language.",
 }
 
@@ -386,6 +393,11 @@ def untraceable(name: str, args: dict, said: list[str]) -> list[str]:
         if not has_number(args.get("amount")):
             bad.append("amount")
         # date: only checked implicitly; if utr and amount trace, the date is accepted
+    elif name == "record_ptp":
+        if not has_number(args.get("amount")):
+            bad.append("amount")
+        if not parse_spoken_date(t):
+            bad.append("promised_date")
     elif name == "emi_date_change":
         if not has_number(args.get("new_day")):
             bad.append("new_day")
@@ -411,13 +423,17 @@ PURPOSE = {"check_payment": "Payment check", "explain_emi_change": "EMI change e
            "update_nominee": "Nominee update", "update_address": "Address update"}
 FIELD_LABEL = {
     "en": {"utr": "UTR number", "amount": "amount", "new_day": "day of the month", "pincode": "pincode",
-           "line1": "first line of the address", "city": "city", "name": "nominee's name"},
+           "line1": "first line of the address", "city": "city", "name": "nominee's name",
+           "promised_date": "date you will pay"},
     "hinglish": {"utr": "UTR number", "amount": "amount", "new_day": "mahine ka din", "pincode": "pincode",
-                 "line1": "address ki pehli line", "city": "sheher", "name": "nominee ka naam"},
+                 "line1": "address ki pehli line", "city": "sheher", "name": "nominee ka naam",
+                 "promised_date": "payment ki date"},
     "hi": {"utr": "यूटीआर नंबर", "amount": "रकम", "new_day": "महीने का दिन", "pincode": "पिनकोड",
-           "line1": "पते की पहली लाइन", "city": "शहर", "name": "नामांकित व्यक्ति का नाम"},
+           "line1": "पते की पहली लाइन", "city": "शहर", "name": "नामांकित व्यक्ति का नाम",
+           "promised_date": "भुगतान की तारीख"},
     "mr": {"utr": "यूटीआर क्रमांक", "amount": "रक्कम", "new_day": "महिन्याचा दिवस", "pincode": "पिनकोड",
-           "line1": "पत्त्याची पहिली ओळ", "city": "शहर", "name": "नामनिर्देशित व्यक्तीचे नाव"},
+           "line1": "पत्त्याची पहिली ओळ", "city": "शहर", "name": "नामनिर्देशित व्यक्तीचे नाव",
+           "promised_date": "पैसे भरण्याची तारीख"},
 }
 ASK = {"en": ("Please tell me the {x}.", " and the "), "hinglish": ("Kripya {x} bataiye.", " aur "),
        "hi": ("कृपया {x} बताइए।", " और "), "mr": ("कृपया {x} सांगा.", " आणि ")}
@@ -552,10 +568,134 @@ def final_text(model_text: str, speaks: list[tuple[bool, str]]) -> str:
 _MULTI_WORDS = {"and", "also", "plus", "aur", "bhi", "tatha", "ani", "aani", "आणि", "और", "भी", "तथा"}
 
 
-def multi_request(text: str) -> bool:
+_TOPICS = {  # request topics; a tool "covers" some of them (its speak already answers all of those)
+    "branch": r"branch|ifsc|micr|address|timing|hours|शाखा|पत्ता|पता|वेळ|समय|ब्रांच",
+    "emi": r"\bemi\b|instal?lment|due date|ईएमआय|एमआय|किस्त|हप्ता",
+    "dues": r"overdue|dues|pending amount|outstanding|बकाया|थकबाकी",
+    "balance": r"(?<!minimum )(?<!min )\bbalance|बैलेंस|शिल्लक",
+    "txn": r"transaction|ट्रांजैक्शन|व्यवहार",
+    "sms": r"\bsms\b|\bmessage\b|bhej|pathva|भेज|पाठव",
+    "f_open": r"\bopen(?:ing)?\b.*\baccount|account.*\bopen|खाता खोल|खाते उघड|account khol",
+    "f_minbal": r"minimum|\bmin\b|maintain|न्यूनतम|किमान",
+    "f_kyc": r"\bkyc\b|केवायसी",
+    "f_upi": r"\bupi\b|यूपीआई",
+    "f_card": r"\bcard\b|कार्ड",
+    "f_neft": r"neft|rtgs|imps",
+    "f_fraud": r"fraud|scam|phishing|धोखा|फसवणूक",
+    "f_cheque": r"cheque|check book|चेक",
+}
+_FAQ = {k for k in _TOPICS if k.startswith("f_")}
+_COVERS = {"branch_lookup": {"branch"}, "validate_ifsc": {"branch"}, "emi_info": {"emi"}, "explain_emi_change": {"emi"},
+           "dues_info": {"dues", "emi"}, "account_balance": {"balance"}, "last_transactions": {"txn", "balance"},
+           "send_details_sms": {"sms", "branch"}, "foreclosure_quote": {"dues"}, "record_ptp": {"dues", "emi"},
+           "record_rtp": {"dues", "emi"}, "faq_lookup": _FAQ}
+
+
+def multi_request(text: str, tool: str | None = None) -> bool:
     """The caller's words look like more than one request: a conjunction word. Commas alone do not count
-    ("EMI kitna hai, next kab hai?" is one request); measured: a comma rule disabled the shortcut on most turns."""
-    return bool(set(_tokens(text)) & _MULTI_WORDS)
+    ("EMI kitna hai, next kab hai?" is one request); measured: a comma rule disabled the shortcut on most turns.
+    With the tool that ran: a conjunction inside ONE topic that the tool's speak already covers
+    ("Kothrud branch address and timing") is still one request; one FAQ answer covers one FAQ topic only."""
+    if not set(_tokens(text)) & _MULTI_WORDS:
+        return False
+    if tool not in _COVERS:
+        return True
+    low = text.lower()
+    hit = {k for k, rx in _TOPICS.items() if re.search(rx, low)}
+    if not hit or not hit <= _COVERS[tool]:
+        return True
+    return tool == "faq_lookup" and len(hit & _FAQ) > 1
+
+
+# ---- language owned by the service ----
+_LANG_WORDS = {"en": {"english", "inglish", "इंग्लिश", "अंग्रेजी", "अंग्रेज़ी", "इंग्रजी", "अँग्रेजी"},
+               "hinglish": {"hinglish", "हिंग्लिश"},
+               "hi": {"hindi", "हिंदी", "हिन्दी", "हिंदीत"},
+               "mr": {"marathi", "मराठी", "मराठीत", "मराठीमध्ये"}}
+_UNSUPPORTED = {"tamil", "kannada", "kannad", "bengali", "bangla", "gujarati", "telugu", "punjabi", "malayalam", "odia", "oriya",
+                "urdu", "assamese", "तमिल", "तमिळ", "कन्नड", "बंगाली", "गुजराती", "तेलुगु", "तेलुगू", "पंजाबी", "मलयालम", "ओडिया", "उर्दू"}
+_SWITCH_CUES = {"talk", "speak", "switch", "change", "in", "mein", "me", "madhe", "bolo", "bol", "bolna", "bolu", "kar", "karo", "kara",
+                "sang", "sanga", "बोल", "बोलो", "बोला", "बोलिए", "बोलें", "बोलू", "बोलना", "बात", "मध्ये", "मराठीत", "हिंदीत", "में", "मैं",
+                "कर", "करो", "करा", "बदल", "बदला", "सांग", "सांगा"}
+_FIRST_TURN_HINGLISH = {"hai", "kya", "mera", "meri", "mujhe", "kitna", "ka", "ki", "ko", "nahi", "kab", "bata", "batao", "aap", "mere"}
+LANG_OK = {"en": "Sure, I will continue in English. How can I help you?",
+           "hinglish": "Theek hai, hum Hinglish mein baat karenge. Main aapki kaise madad kar sakta hoon?",
+           "hi": "ठीक है, मैं हिंदी में बात करूँगा। मैं आपकी कैसे मदद कर सकता हूँ?",
+           "mr": "ठीक आहे, मी मराठीत बोलेन. मी तुमची कशी मदत करू शकतो?"}
+LANG_SORRY = ("Sorry, I can speak English, Hindi, Marathi or Hinglish. Which would you like? "
+              "माफ़ कीजिए, मैं अंग्रेज़ी, हिंदी, मराठी या हिंग्लिश में बात कर सकता हूँ। आप कौन सी भाषा चाहेंगे?")
+CUSTOMER_Q = {"en": "To check that, I need to verify a few details: your registered mobile number and date of birth.",
+              "hinglish": "Ye check karne ke liye mujhe kuch details verify karni hongi: aapka registered mobile number aur date of birth.",
+              "hi": "यह जाँचने के लिए मुझे कुछ विवरण सत्यापित करने होंगे: आपका रजिस्टर्ड मोबाइल नंबर और जन्मतिथि।",
+              "mr": "ते तपासण्यासाठी मला काही तपशील पडताळावे लागतील: तुमचा नोंदणीकृत मोबाइल नंबर आणि जन्मतारीख."}
+
+
+def detect_language(text: str, first: bool) -> tuple[str | None, bool, bool]:
+    """(language | 'unsupported' | None, whole reply is just the language choice, caller named one at all)."""
+    toks = _tokens(text.lower())
+    named = next((k for k, w in _LANG_WORDS.items() if set(toks) & w), None)
+    bad = bool(set(toks) & _UNSUPPORTED)
+    cue = bool(set(toks) & _SWITCH_CUES)
+    if not (named or bad) or not (first or cue or len(toks) <= 2):
+        return None, False, False
+    if bad and not named:
+        return "unsupported", True, True
+    return named, len(toks) <= 5, True
+
+
+def first_turn_language(text: str, current: str) -> str:
+    """No language named: Devanagari picks Hindi/Marathi, Roman text with Hindi words is Hinglish, otherwise English."""
+    if _DEVANAGARI.search(text):
+        return infer_language(text, current)
+    return "hinglish" if set(_tokens(text.lower())) & _FIRST_TURN_HINGLISH else "en"
+
+
+def is_customer_question(text: str) -> bool:
+    t = set(_tokens(text.lower()))
+    if not t & {"customer", "customers", "ग्राहक", "कस्टमर"}:
+        return False
+    return bool({"am", "i"} <= t or t & {"main", "mai", "mein", "मैं"} and t & {"hun", "hoon", "hu", "हूँ", "हूं"}
+                or t & {"mi", "मी"} and t & {"ahe", "aahe", "आहे"} or "क्या" in t and t & {"मैं", "मी"})
+
+
+_WEEKDAYS = {"monday": 0, "tuesday": 1, "wednesday": 2, "thursday": 3, "friday": 4, "saturday": 5, "sunday": 6,
+             "सोमवार": 0, "मंगलवार": 1, "बुधवार": 2, "गुरुवार": 3, "शुक्रवार": 4, "शनिवार": 5, "रविवार": 6,
+             "सोमवारी": 0, "मंगळवार": 1, "गुरुवारी": 3}
+
+
+def parse_spoken_date(text: str, today=None) -> str | None:
+    """'15 tarikh', '15 November', 'next Monday', 'kal', 'tomorrow', '2026-11-15' -> YYYY-MM-DD; None if not clear
+    (number words like 'pandrah' are not parsed: the caller is asked again)."""
+    import datetime as dt
+    today = today or dt.date.today()
+    t = text.translate(_DEVA_DIGITS).lower()
+    try:
+        m = re.search(r"\b(\d{4})-(\d{2})-(\d{2})\b", t)
+        if m:
+            return dt.date(int(m[1]), int(m[2]), int(m[3])).isoformat()
+        toks = set(_tokens(t))
+        if toks & {"today", "aaj", "आज"}:
+            return today.isoformat()
+        if toks & {"tomorrow", "kal", "कल", "उद्या"}:
+            return (today + dt.timedelta(days=1)).isoformat()
+        for w, wd in _WEEKDAYS.items():
+            if w in toks:
+                return (today + dt.timedelta(days=(wd - today.weekday()) % 7 or 7)).isoformat()
+        m = re.search(r"(?<!\d)(\d{1,2})(?:st|nd|rd|th)?\s+([a-zऀ-ॿ]+)", t)
+        mon = _MONTHS_MAP.get(m[2]) if m else None
+        if m and mon:
+            d = dt.date(today.year, mon, int(m[1]))
+            return (d if d >= today else d.replace(year=today.year + 1)).isoformat()
+        m = re.search(r"(?<!\d)(\d{1,2})(?:st|nd|rd|th)?\s*(?:tarikh|tareekh|date|तारीख|तारिख)|(?:on|by|को|ला)\s+(\d{1,2})(?!\d)", t)
+        if m:
+            day = int(m[1] or m[2])
+            d = dt.date(today.year, today.month, day)
+            if d < today:
+                d = dt.date(today.year + (today.month == 12), today.month % 12 + 1, day)
+            return d.isoformat()
+    except ValueError:
+        return None
+    return None
 
 
 def parse_field(content_type: str, body: bytes, name: str) -> str | None:
@@ -581,8 +721,11 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
     tools_plain, _ = load_tools(hints=False)
     raw_prompt = (ROOT / "agent" / "system_prompt.md").read_text(encoding="utf-8")
     # the call id moves to the first user message so the system prompt (and Ollama's prefix cache) is identical across calls
+    out_m = re.search(r"<!-- OUTBOUND -->(.*?)<!-- /OUTBOUND -->", raw_prompt, re.S)
+    outbound_block = out_m.group(1).strip() if out_m else ""
+    base_prompt = re.sub(r"<!-- OUTBOUND -->.*?<!-- /OUTBOUND -->", "", raw_prompt, flags=re.S).rstrip() + "\n"
     prompt = re.sub(r"[^\n]*\{\{conversation_id\}\}[^\n]*",
-                    "2. Pass `call_id` exactly as given in the first user message, and `language`, in every action.", raw_prompt)
+                    "2. Pass `call_id` exactly as given in the first user message, and `language`, in every action.", base_prompt)
     keyterms = [l.strip() for l in (ROOT / "agent" / "keyterms.txt").read_text(encoding="utf-8").splitlines() if l.strip()][:200]
     calls: dict[str, dict] = {}
     schemas = {t["function"]["name"]: set(t["function"]["parameters"]["properties"]) for t in tools}
@@ -624,7 +767,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
     async def gateway(cid: str, name: str, args: dict) -> dict:
         props = schemas.get(name)
         if props is not None:  # a small model sometimes invents argument names: drop keys outside the tool's schema
-            kept = {k: v for k, v in args.items() if k in props or k == "language"}
+            kept = {k: v for k, v in args.items() if k in props or k == "language" or (name == "start_call" and k in ("direction", "case_id"))}
             if len(kept) != len(args):
                 log.info("call=%s action=%s dropped_arg_keys=%d", cid, name, len(args) - len(kept))
             args = kept
@@ -792,14 +935,14 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             utr = args.get("utr")
             if isinstance(utr, str) and len(re.sub(r"\D", "", utr)) >= 6:
                 c.setdefault("refs", set()).add(re.sub(r"\D", "", utr))  # the caller's own UTR may be read back
-            if args.get("language") == "hi" and not c.get("deva"):
-                args["language"] = "hinglish"  # Roman-script input is Hinglish, not Devanagari Hindi
+            args["language"] = c["language"]  # the service owns the call language, never the model's argument
+            if name == "record_ptp":  # spoken dates are parsed by us, not trusted from the model
+                args["promised_date"] = parse_spoken_date(" ".join(c.get("said", [])[-3:])) or args.get("promised_date")
             if name == "check_approval" and c.get("approval_id"):
                 args["approval_id"] = str(c["approval_id"])  # the model often mangles the id
             res = await gateway(c["id"], name, args)
-            lang = args.get("language")
-            if res.get("ok") and isinstance(lang, str) and lang in TTS_LANG:
-                c["language"] = lang
+            if name == "verify_caller" and res.get("ok"):
+                c["verified"] = True
             if isinstance(res.get("speak"), str) and res["speak"]:
                 st["speaks"].append((bool(res.get("ok")), res["speak"]))
             st["last"] = res.get("speak") or st["last"]
@@ -854,7 +997,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
                 res = await exec_call(c, name, args, st)
                 c["messages"].append({"role": "tool", "tool_name": name if isinstance(name, str) else "unknown",
                                       "content": json.dumps(res, ensure_ascii=False)})
-            if (c["set"]["shortcut_actions"] and not multi_request(c.get("user_text", "")) and len(tcs) == 1 and name in SHORTCUT and res.get("ok") and isinstance(res.get("speak"), str) and res["speak"]
+            if (c["set"]["shortcut_actions"] and not multi_request(c.get("user_text", ""), name) and len(tcs) == 1 and name in SHORTCUT and res.get("ok") and isinstance(res.get("speak"), str) and res["speak"]
                     and not (st.get("ask") or st.get("need_appr") or st["rb"] or c.get("rb_new"))):
                 c["messages"].append({"role": "assistant", "content": res["speak"]})  # the gateway sentence is the answer
                 return res["speak"], st["done"]
@@ -1036,7 +1179,8 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
                 raise HTTPException(422, f"model: not allowed for {provider}")
         return provider, model, validate_settings(body.get("settings") or {}, provider)
 
-    async def open_call(provider: str, model: str, sett: dict, want_tts: bool) -> dict:
+    async def open_call(provider: str, model: str, sett: dict, want_tts: bool, direction: str = "inbound",
+                        case_id: int | None = None) -> dict:
         tm, t_start = {}, time.perf_counter()
         _TM.set(tm)
         now = time.time()
@@ -1045,11 +1189,14 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         if len(calls) >= MAX_CALLS:
             raise HTTPException(429, "too many calls")
         cid = new_call_id()
-        sysmsg = prompt if sett["cache_prompt"] else raw_prompt.replace("{{conversation_id}}", cid)
-        c = {"id": cid, "llm": provider, "model": model, "set": sett, "language": "hinglish", "ended": False, "ts": now,
+        sysmsg = prompt if sett["cache_prompt"] else base_prompt.replace("{{conversation_id}}", cid)
+        if direction == "outbound":
+            sysmsg += "\n\n" + outbound_block
+        c = {"id": cid, "llm": provider, "model": model, "set": sett, "language": "hinglish", "ended": False, "ts": now, "direction": direction, "lang_set": direction == "outbound",
              "lock": asyncio.Lock(), "turn": 0, "held": None, "appr_checks": 0, "rb_turn": -9, "pending_rb": None,
              "rb_new": None, "rb_active": None, "messages": [{"role": "system", "content": sysmsg}]}
-        res = await gateway(cid, "start_call", {"language": c["language"]})
+        start_args = {"language": c["language"], "direction": direction, **({"case_id": case_id} if direction == "outbound" else {})}
+        res = await gateway(cid, "start_call", start_args)
         text = redact_agent(res.get("speak"))
         hello = f"(call connected, call_id={cid})" if sett["cache_prompt"] else "(call connected)"
         c["messages"] += [{"role": "user", "content": hello}, {"role": "assistant", "content": text}]
@@ -1061,11 +1208,39 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
                 "timings": timings, **({"settings": sett} if cfg.dev else {})}
 
     @app.post("/calls")
+    @app.post("/start")
     async def start(request: Request, tts_q: bool = Query(True, alias="tts")):
         raw = await read_body(request)
         body = json_body(request, raw) if raw.strip() else {}
         provider, model, sett = await resolve_opts(body)
-        return await open_call(provider, model, sett, tts_q and body.get("tts") is not False)
+        direction, case_id = body.get("direction", "inbound"), body.get("case_id")
+        if direction not in ("inbound", "outbound") or (case_id is not None and (not isinstance(case_id, int) or isinstance(case_id, bool))):
+            raise HTTPException(422, "direction must be inbound or outbound; case_id an integer")
+        return await open_call(provider, model, sett, tts_q and body.get("tts") is not False, direction, case_id)
+
+    def canned(c: dict, user_text: str, text: str) -> tuple[str, list[dict]]:
+        c["messages"] += [{"role": "user", "content": user_text}, {"role": "assistant", "content": text}]
+        return text, []
+
+    def language_turn(c: dict, user_text: str) -> tuple[str, list[dict]] | None:
+        """Language choice and 'am I a customer' are answered here, no LLM round. Sets c['language'] (service-owned)."""
+        first = not c.get("lang_set") and c["direction"] == "inbound"
+        lang, pure, named = detect_language(user_text, first)
+        c["lang_set"] = True
+        if lang == "unsupported":
+            c["lang_set"] = not first
+            return canned(c, user_text, LANG_SORRY)
+        if lang:
+            # Roman-script Hindi is Hinglish, not Devanagari Hindi
+            c["language"] = "hinglish" if lang == "hi" and not _DEVANAGARI.search(user_text) else lang
+            if pure:
+                return canned(c, user_text, LANG_OK[c["language"]])
+            c["note"] = f"the caller chose {c['language']}; answer in that language"
+        elif first and not named:
+            c["language"] = first_turn_language(user_text, c["language"])
+        if is_customer_question(user_text) and not c.get("verified") and c["direction"] == "inbound":
+            return canned(c, user_text, CUSTOMER_Q[c["language"]])
+        return None
 
     async def handle_text(c: dict, user_text: str) -> tuple[str, list[dict]]:
         if not user_text:
@@ -1074,15 +1249,14 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         c["deva"], c["user_text"] = bool(_DEVANAGARI.search(user_text)), "" if stype else user_text
         if not stype:
             c.setdefault("said", []).append(user_text)
-            lang0 = c["language"]
+            if (early := language_turn(c, user_text)):
+                return early
             auto = await approval_precheck(c, user_text) or await auto_confirm(c, user_text)
             if not auto:
                 note = c.pop("note", None)
                 c["messages"].append({"role": "user", "content": f"{user_text}\n[service note: {note}]" if note else user_text})
             text, acts = auto if auto else await run_actions(c)
             acts = (c.pop("pre_acts", None) or []) + acts
-            if c["language"] == lang0:  # no action carried a language: infer it from the reply script
-                c["language"] = infer_language(text, lang0)
             if is_goodbye(user_text) and not c["ended"]:  # safety net: a small model often just says bye
                 outcome = "handover" if any(a["name"] == "handover" and a["ok"] for a in c.get("done", [])) else "completed"
                 res = await gateway(c["id"], "end_call", {"language": c["language"], "outcome": outcome})
