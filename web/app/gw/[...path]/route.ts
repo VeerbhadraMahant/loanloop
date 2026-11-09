@@ -24,7 +24,7 @@ async function proxy(req: Request, ctx: { params: Promise<{ path: string[] }> })
   const allowed =
     req.method === "GET"
       ? joined === "events/stream" || /^(dashboard|phone)(\/|$)/.test(joined)
-      : req.method === "POST" && /^phone\/[^/]+\/approvals\/[^/]+\/(approve|deny)$/.test(joined);
+      : req.method === "POST" && (joined === "dashboard/jobs/run" || /^phone\/[^/]+\/approvals\/[^/]+\/(approve|deny)$/.test(joined));
   if (!allowed) return new Response("Not found", { status: 404 });
   if (req.method === "POST" && !originOk(req)) {
     return new Response("Forbidden", { status: 403 });

@@ -102,3 +102,18 @@ export function useGet<T>(path: string | null, pollMs = 0) {
   }, [path, pollMs, reload]);
   return { data, error, loading, reload };
 }
+
+export interface CollCase {
+  id: number; customer: string; loan: string; overdue_amount: number; missed_emis: number; dpd: number; bucket: string;
+  status: string; priority: number; attempts: number; last_call_at: string | null; next_action_at: string | null;
+}
+export interface CollPtp {
+  id: number; case_id: number; customer: string; loan: string; direction: string; amount: number; promised_date: string;
+  amount_tag: "full" | "partial"; status: "open" | "kept" | "broken" | "cancelled"; paid_amount: number | null; created_at: string;
+}
+export interface CollRtp {
+  id: number; case_id: number; customer: string; loan: string; reason_code: string; note: string | null;
+  overdue_amount: number; created_at: string; follow_up_at: string | null;
+}
+export interface JobRunRow { id: number; job: string; started_at: string; finished_at: string | null; stats: Record<string, unknown> | null }
+export interface Collections { cases: CollCase[]; ptps: CollPtp[]; rtps: CollRtp[]; queue: CollCase[]; last_runs: JobRunRow[] }

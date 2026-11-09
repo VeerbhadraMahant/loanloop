@@ -18,7 +18,7 @@ type Reply = { user_text?: string; agent_text: string; audio_b64?: string; audio
 class HttpError extends Error { constructor(msg: string, readonly status: number) { super(msg); } }
 
 async function call<T>(path: string, init: RequestInit): Promise<T> {
-  const r = await fetch(`${VOICE}${path}`, init);
+  const r = await fetch(path.startsWith("/voice-out") ? path : `${VOICE}${path}`, init); // /voice-out: same-origin route that adds the ops token
   if (!r.ok) {
     let d = `HTTP ${r.status}`;
     try { const j = await r.json(); if (j?.detail) d = typeof j.detail === "string" ? j.detail : JSON.stringify(j.detail); } catch { /* keep status */ }
@@ -32,7 +32,7 @@ const statusTone = { idle: "neutral", connecting: "warn", listening: "accent", t
 
 type Rec = { stop: () => Float32Array; rate: number; timer: ReturnType<typeof setTimeout> };
 
-export default function CallApp({ customer }: { customer: string }) {
+export default function CallApp({ customer, caseId }: { customer: string; caseId?: number }) {
   const [status, setStatus] = useState<Status>("idle");
   const [lang, setLang] = useState<string | null>(null);
   const [msgs, setMsgs] = useState<Msg[]>([]);
@@ -125,7 +125,7 @@ export default function CallApp({ customer }: { customer: string }) {
 
   const start = () => {
     setError(null); setStatus("connecting"); callLlm.current = llm;
-    run("/calls?stream=1", jsonPost({ customer, tts: voiceReplies, ...(devMode ? { llm } : {}) }), (r, ms) => { callId.current = r.call_id; setMsgs([]); setTurns([]); turnN.current = 0; apply(r, ms, "start"); }, "idle");
+    run(caseId ? "/voice-out" : "/calls?stream=1", jsonPost(caseId ? { case_id: caseId, tts: voiceReplies } : { customer, tts: voiceReplies, ...(devMode ? { llm } : {}) }), (r, ms) => { callId.current = r.call_id; setMsgs([]); setTurns([]); turnN.current = 0; apply(r, ms, "start"); }, "idle");
   };
 
   const send = (init: RequestInit, input: Stat["input"]) => {
@@ -256,7 +256,7 @@ export default function CallApp({ customer }: { customer: string }) {
             {!!turns.length && <Pill>LLM: {turns[0].provider}</Pill>}
           </div>
         </header>
-        <p className="border-b border-line bg-warn-bg px-5 py-1.5 text-xs text-warn-fg">Demo call · synthetic data</p>
+        <p className="border-b border-line bg-warn-bg px-5 py-1.5 text-xs text-warn-fg">{caseId ? "Outbound collections call · confirm date of birth · " : "Demo call · "}synthetic data</p>
 
         <div role="log" aria-live="polite" aria-label="Call transcript" className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
           {msgs.length === 0 && <p className="text-sm text-muted">{status === "idle" ? "Press Start call to begin." : "Connecting…"}</p>}

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Wordmark } from "@/components/ui";
 
-const links = [["/", "Home"], ["/ops", "Ops"], ["/metrics", "Metrics"], ...(process.env.NEXT_PUBLIC_DEV === "1" ? [["/dev", "Dev lab"] as const] : [])];
+const links = [["/", "Home"], ["/ops", "Ops"], ["/collections", "Collections"],["/metrics", "Metrics"], ...(process.env.NEXT_PUBLIC_DEV === "1" ? [["/dev", "Dev lab"] as const] : [])];
 
 export function TopNav({ status }: { status?: React.ReactNode }) {
   const path = usePathname();
