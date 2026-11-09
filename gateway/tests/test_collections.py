@@ -18,6 +18,13 @@ NEW = ["account_balance", "last_transactions", "dues_info", "record_ptp", "recor
 BODY = {"record_ptp": dict(amount=1000, promised_date=(today_ist() + timedelta(days=3)).isoformat()), "record_rtp": dict(reason_code="other")}
 
 
+async def ptp(client, amount, when, call_id="call1", **kw):
+    """record_ptp as the agent does it: read back amount and date, caller confirms, then record."""
+    await call(client, "confirm_readback", call_id=call_id, field="amount", value=str(amount))
+    await call(client, "confirm_readback", call_id=call_id, field="promised_date", value=when)
+    return await call(client, "record_ptp", call_id=call_id, amount=amount, promised_date=when, **kw)
+
+
 async def dues(loan_id=OUT):
     async with SessionLocal() as db:
         return await compute_dues(db, loan_id, today_ist())
@@ -33,7 +40,7 @@ async def test_tier_enforced(client, mk_session, action):
 
 
 async def test_dues_info_matches_seed(client, fresh, mk_session):
-    await mk_session(OUT)
+    await mk_session(OUT, tier=2)
     d = await dues()
     async with SessionLocal() as db:
         rows = (await db.execute(select(EmiSchedule).where(EmiSchedule.loan_id == OUT, EmiSchedule.status == "bounced"))).scalars().all()
@@ -45,7 +52,7 @@ async def test_dues_info_matches_seed(client, fresh, mk_session):
 
 
 async def test_dues_info_none_for_regular_customer(client, mk_session):
-    await mk_session(1)
+    await mk_session(1, tier=2)
     r = await call(client, "dues_info")
     assert r["ok"] and r["data"]["dues"] is False and "no overdue" in r["speak"]
 
@@ -76,17 +83,17 @@ async def test_ptp_validation_and_tag(client, fresh, mk_session):
         r = await call(client, "record_ptp", amount=1000, promised_date=when)
         assert not r["ok"] and r["error_code"] == "INVALID_INPUT" and "date" in r["speak"]
     assert (await call(client, "record_ptp", amount=1000, promised_date="tomorrow"))["error_code"] == "INVALID_INPUT"
-    r = await call(client, "record_ptp", amount=total - 1, promised_date=today.isoformat())  # today is allowed
+    r = await ptp(client, total - 1, today.isoformat())  # today is allowed
     assert r["ok"] and r["data"]["tag"] == "partial" and "1 rupee" not in r["speak"] and rupees(total) in r["speak"]
-    r = await call(client, "record_ptp", amount=total, promised_date=(today + timedelta(days=30)).isoformat())  # day 30 allowed
+    r = await ptp(client, total, (today + timedelta(days=30)).isoformat())  # day 30 allowed
     assert r["ok"] and r["data"]["tag"] == "full"
 
 
 async def test_ptp_replaces_open_one(client, fresh, mk_session):
     await mk_session(OUT, direction="outbound", case_id=OUT)
     when = (today_ist() + timedelta(days=4)).isoformat()
-    await call(client, "record_ptp", amount=5000, promised_date=when)
-    await call(client, "record_ptp", amount=7000, promised_date=when)
+    await ptp(client, 5000, when)
+    await ptp(client, 7000, when)
     async with SessionLocal() as db:
         rows = (await db.execute(select(PromiseToPay).where(PromiseToPay.case_id == OUT).order_by(PromiseToPay.id))).scalars().all()
         assert [(p.amount, p.status) for p in rows] == [(5000, "cancelled"), (7000, "open")]
@@ -98,7 +105,7 @@ async def test_ptp_replaces_open_one(client, fresh, mk_session):
                                       ("already_paid", "check_payment"), ("dispute", "handover"), ("unwilling", None), ("other", None)])
 async def test_rtp_reason_codes(client, fresh, mk_session, code, key):
     await mk_session(OUT, direction="outbound", case_id=OUT)
-    await call(client, "record_ptp", amount=2000, promised_date=today_ist().isoformat())
+    await ptp(client, 2000, today_ist().isoformat())
     r = await call(client, "record_rtp", reason_code=code, note="cannot pay now")
     assert r["ok"] and r["data"]["suggest"] == key
     assert (r["next"] == "handover") == (code == "dispute")
@@ -222,7 +229,7 @@ async def test_outbound_ptp_end_to_end(client, fresh):
     await call(client, "start_call", call_id="o1", direction="outbound", case_id=OUT)
     await call(client, "verify_caller", call_id="o1", dob="1988-06-17")
     when = (today_ist() + timedelta(days=6)).isoformat()
-    r = await call(client, "record_ptp", call_id="o1", amount=20000, promised_date=when)
+    r = await ptp(client, 20000, when, call_id="o1")
     assert r["ok"] and r["data"]["tag"] == "partial"
     for w in ("waive", "settle", "discount", "legal"):
         assert w not in r["speak"].lower()
@@ -238,3 +245,56 @@ async def test_start_call_cannot_reset_live_session(client, fresh):
     assert not r["ok"] and r["error_code"] == "INVALID_INPUT"
     s = await sessions.get("rs1")
     assert s.direction == "inbound" and s.case_id is None
+
+
+async def test_dues_info_tier_by_direction(client, fresh, mk_session):
+    await mk_session(OUT, tier=1)  # inbound tier 1: amounts need tier 2
+    r = await call(client, "dues_info")
+    assert not r["ok"] and r["error_code"] == "TIER_TOO_LOW" and r["next"] == "need_tier_2"
+    assert not re.search(r"\d{3}", r["speak"])
+    await mk_session(OUT, call_id="call2", tier=1, direction="outbound", case_id=OUT)  # outbound tier 1: allowed
+    r = await call(client, "dues_info", call_id="call2")
+    assert r["ok"] and r["data"]["overdue_amount"] > 0
+    await mk_session(OUT, call_id="call3", tier=2)  # inbound tier 2: allowed
+    assert (await call(client, "dues_info", call_id="call3"))["ok"]
+
+
+async def test_record_ptp_needs_readback(client, fresh, mk_session):
+    await mk_session(OUT, direction="outbound", case_id=OUT)
+    when = (today_ist() + timedelta(days=3)).isoformat()
+    r = await call(client, "record_ptp", amount=5000, promised_date=when)
+    assert not r["ok"] and r["next"] == "confirm_readback" and r["error_code"] is None
+    assert r["data"]["fields"] == ["amount", "promised_date"] and r["data"]["confirm"] == {"amount": "5000", "promised_date": when}
+    await call(client, "confirm_readback", field="amount", value="5000")  # date still unconfirmed
+    r = await call(client, "record_ptp", amount=5000, promised_date=when)
+    assert r["next"] == "confirm_readback" and r["data"]["fields"] == ["promised_date"]
+    await call(client, "confirm_readback", field="promised_date", value=when)
+    r = await call(client, "record_ptp", amount=6000, promised_date=when)  # different amount than confirmed
+    assert r["next"] == "confirm_readback" and r["data"]["fields"] == ["amount"]
+    assert (await call(client, "record_ptp", amount=5000, promised_date=when))["ok"]
+    r = await call(client, "record_ptp", amount=5000, promised_date=when)  # one-shot: needs a fresh confirmation
+    assert r["next"] == "confirm_readback"
+
+
+async def test_ctx_case_creation_race(fresh, mk_session, monkeypatch):
+    """Another writer inserts the case between our SELECT and INSERT: _ctx re-selects instead of failing."""
+    from app.db.models import CollectionCase as CC
+    from app.routes.actions import collections as col
+    async with SessionLocal() as db:
+        await db.delete(await db.get(CC, OUT))
+        await db.commit()
+    s = await mk_session(OUT, tier=2)
+    async with SessionLocal() as db:
+        orig, n = db.scalar, {"n": 0}
+
+        async def scalar(q, *a, **k):
+            r = await orig(q, *a, **k)
+            if n["n"] == 0:  # the job wins the race right after our SELECT found nothing
+                n["n"] = 1
+                async with SessionLocal() as db2:
+                    db2.add(CC(loan_id=OUT, customer_id=OUT, status="open"))
+                    await db2.commit()
+            return r
+        monkeypatch.setattr(db, "scalar", scalar)
+        _, _, case = await col._ctx(db, s)
+        assert case.loan_id == OUT and case.id is not None

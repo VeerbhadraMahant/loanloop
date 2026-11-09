@@ -128,6 +128,9 @@ We had no Agent Builder access, so LoanLoop runs its own voice agent in `voice/`
 - `tools/` seeding, simulator, STT corpus and benchmark, transcript fetch, `loadtest/`, `out/` results
 - `docs/` Gnani facts, personas, dashboard API, Agent Builder setup; `NOTES.md` decisions and numbers
 
+## v2 upgrade
+Reseed is recommended: `start.ps1 -Seed` (v2 adds savings, collections and outbound-call data). Gateway startup also adds the missing v2 columns to an existing Postgres database (`accounts.balance`, `accounts.hold_amount`, `calls.direction`), so an old DB boots without a reseed, but it will have no v2 demo data. `POST /dashboard/jobs/run` mutates state behind the read-only dashboard token: a demo-only shortcut, use a separate ops token in production.
+
 ## Limitations
 
 - A spoken secret reaches Gnani's STT/LLM pipeline before our gateway can scrub it. The gateway only guarantees it is never stored or logged by us and that the agent warns the caller.

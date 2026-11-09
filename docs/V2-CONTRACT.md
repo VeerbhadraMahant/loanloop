@@ -38,8 +38,8 @@ All are `POST /actions/<name>` via `@action` in `gateway/app/routes/actions/`, r
 | `faq_lookup` | 0 | `topic` (intent id from faq.json, enum in actions.json) or `query` (free text, keyword match) | the FAQ answer in the call language. If the session is verified and the intent has `sms: true`, also queue the full answer to `sms_outbox` and end the speak with "I have also sent this to your number ending NNNN". If unverified and `sms: true`, end with an offer: "Once you verify, I can send this by SMS." Unknown topic: `ok=false`, `error_code="FAQ_NOT_FOUND"`. |
 | `account_balance` | 1 | none | savings balance, available balance, amount on hold (rupees, spoken) |
 | `last_transactions` | 1 | `count` 1-5 (default 3) | date, debit/credit, amount, short narration; no counterparty account numbers |
-| `dues_info` | 1 | none | overdue amount, number of missed EMIs, days past due, charges; "no dues" if none |
-| `record_ptp` | 1 | `amount` (int rupees), `promised_date` (YYYY-MM-DD) | read back amount and date, tag full/partial. Rules: amount > 0 and <= outstanding; date today..today+30 days, else `ok=false` with a speak asking for a valid one. One open PTP per case: a new one replaces (status `cancelled`) the old. |
+| `dues_info` | 1 (see note) | none | overdue amount, number of missed EMIs, days past due, charges; "no dues" if none |
+| `record_ptp` | 1 | `amount` (int rupees), `promised_date` (YYYY-MM-DD) | requires read-back of `amount` and `promised_date` (see note), then tag full/partial. Rules: amount > 0 and <= outstanding; date today..today+30 days, else `ok=false` with a speak asking for a valid one. One open PTP per case: a new one replaces (status `cancelled`) the old. |
 | `record_rtp` | 1 | `reason_code` (job_loss, medical, income_reduced, dispute, already_paid, unwilling, other), `note` (optional, <=120 chars, secret-scanned) | neutral acknowledgement; for job_loss/medical/income_reduced also offer `report_hardship`; for already_paid point to `check_payment`; for dispute offer `handover` |
 
 `start_call` gains optional `direction` (`inbound` default | `outbound`) and `case_id` (int, outbound only).
@@ -54,10 +54,15 @@ All are `POST /actions/<name>` via `@action` in `gateway/app/routes/actions/`, r
 - `account_transactions(id, account_id, date, direction dr|cr, amount, narration, ref, balance_after)`; `accounts` gains `balance`, `hold_amount`.
 - `job_runs(id, job, started_at, finished_at, stats JSON)`.
 
+Notes on tiers and read-back:
+- `dues_info` speaks overdue amounts, which CLAUDE.md 3.2 puts at tier 2. `TIER_FOR_ACTION` stays 1; the handler requires tier 2 on inbound sessions and allows tier 1 only on outbound sessions (bank-initiated collections call bound to a case, DOB verified). Inbound tier 1 gets `ok=false, error_code=TIER_TOO_LOW, next=need_tier_2`.
+- `record_ptp` is data-changing, so rule 7 applies: until both `amount` and `promised_date` were confirmed via `confirm_readback` the response is `ok=false, next=confirm_readback, data={fields, confirm}` (no `error_code`), same shape as `check_payment`. Confirmations are one-shot. Recorded exception: it stays tier 1, because a promise record does not change customer data or move money.
+- `record_rtp` has no read-back: it records only the caller's stated reason and changes nothing the customer owns.
+
 ## Cron jobs (B, `gateway/app/jobs.py`)
 Started from the FastAPI lifespan as an asyncio loop, interval `JOBS_INTERVAL_S` (default 3600, `0` = off, tests use 0).
-Each run writes a `job_runs` row. Also `POST /dashboard/jobs/run` (dashboard auth) to run all now for the demo.
-1. `mark_overdue`: unpaid EMIs past due -> status `overdue`; upsert `collection_cases` (amount, missed count, dpd, bucket); close cases with nothing overdue (`resolved`).
+Each run writes a `job_runs` row. Also `POST /dashboard/jobs/run` (dashboard auth) to run all now for the demo. Recorded exception: this is a mutating endpoint behind the read-only dashboard token. Demo only; in production use a separate ops token.
+1. `mark_overdue`: `due` EMIs past due -> status `overdue` (`bounced` rows stay `bounced`; `compute_dues` counts both as unpaid); upsert `collection_cases` (amount, missed count, dpd, bucket); close cases with nothing overdue (`resolved`).
 2. `settle_ptps`: open PTPs whose date has passed: matched payments since `created_at` >= amount -> `kept`, some -> `broken` with `paid_amount`, none -> `broken`. Broken -> case back to `open`, priority up.
 3. `build_queue`: open cases, not called in the last 24 h, no open PTP still in date, ordered by priority then dpd; sets `next_action_at` inside the 08:00-19:00 IST window.
 Dashboard reads: `GET /dashboard/collections` -> `{cases, ptps, rtps, queue, last_runs}` (masked: loan last 4, first name + last initial).

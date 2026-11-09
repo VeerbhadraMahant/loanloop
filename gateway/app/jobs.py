@@ -70,8 +70,8 @@ async def mark_overdue(db: AsyncSession) -> dict:
                 case.updated_at = now()
                 resolved += 1
             continue
-        rows = (await db.execute(select(EmiSchedule).where(
-            EmiSchedule.loan_id == ln.id, EmiSchedule.status.in_(("due", "bounced")), EmiSchedule.due_date < today))).scalars().all()
+        rows = (await db.execute(select(EmiSchedule).where(  # bounced rows stay bounced (compute_dues counts them as unpaid)
+            EmiSchedule.loan_id == ln.id, EmiSchedule.status == "due", EmiSchedule.due_date < today))).scalars().all()
         for r in rows:
             r.status = "overdue"
         marked += len(rows)
@@ -88,7 +88,7 @@ async def settle_ptps(db: AsyncSession) -> dict:
     kept = broken = partial = 0
     for p in ptps:
         paid = sum((await db.execute(select(Payment.amount).where(
-            Payment.loan_id == p.loan_id, Payment.status == "matched", Payment.date >= p.created_at.date()))).scalars().all())
+            Payment.loan_id == p.loan_id, Payment.status == "matched", Payment.date >= p.created_at.astimezone(clock.IST).date()))).scalars().all())
         p.paid_amount, p.resolved_at = paid, now()
         case = await db.get(CollectionCase, p.case_id)
         if paid >= p.amount:
