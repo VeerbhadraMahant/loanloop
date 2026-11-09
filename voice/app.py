@@ -661,6 +661,89 @@ def is_customer_question(text: str) -> bool:
                 or t & {"mi", "मी"} and t & {"ahe", "aahe", "आहे"} or "क्या" in t and t & {"मैं", "मी"})
 
 
+# ---- deterministic safety nets (the small model ignores prompt text) ----
+_NUM_VAL = re.compile(r"\d{3,}")
+_KW_IS_VALUE = re.compile(r"(?:pass\s*word|pass\s*code|pin|otp|cvv|पासवर्ड|ओटीपी|पिन|पासकोड)\s*(?:is|was|:|=|hai|है|आहे)\s*(\S+)", re.I)
+_NOT_VALUE = {"the", "a", "an", "not", "required", "needed", "safe", "secret", "kya", "what", "why", "important", "correct", "right",
+              "valid", "sahi", "ok", "okay", "that", "this", "it", "क्या"}
+
+
+def secret_spoken(text: str) -> str | None:
+    """A secret was actually SAID: a card number, digits next to a secret word, or 'password is X'. Merely naming one
+    ('does the bank ask for OTP?', 'UPI PIN reset kaise') is a question, not a leak, and goes to the FAQ."""
+    st = _find_secret("user_text", text)
+    if not st or st == "card_number":
+        return st
+    t = text.translate(_DEVA_DIGITS)
+    if _NUM_VAL.search(t):
+        return st
+    if "?" not in t and any(m.group(1).lower().strip(".,") not in _NOT_VALUE for m in _KW_IS_VALUE.finditer(t)):
+        return st
+    return None
+
+
+_POSSESSIVE = {"my", "mera", "meri", "mere", "mujhe", "mujhko", "मेरा", "मेरी", "मेरे", "मुझे", "माझा", "माझी", "माझे", "मला"}
+_ACCT_NOUNS = {"emi", "balance", "loan", "payment", "paid", "transaction", "transactions", "dues", "due", "overdue", "outstanding",
+               "ईएमआई", "ईएमआय", "बैलेंस", "बॅलन्स", "लोन", "कर्ज", "खाता", "खाते", "अकाउंट", "account", "ifsc", "number", "नंबर"}
+
+
+def account_specific(text: str) -> bool:
+    t = set(_tokens(text.lower()))
+    return bool(t & _POSSESSIVE and t & _ACCT_NOUNS)
+
+
+def faq_args(text: str) -> dict | None:
+    """Arguments for faq_lookup. The gateway rejects any input that names a secret ('PIN', 'OTP'), so those questions
+    map to their FAQ topic here instead of going as a query (contract change request: exempt faq_lookup.query)."""
+    if not _find_secret("user_text", text):
+        return {"query": text[:200]}
+    t = set(_tokens(text.lower()))
+    asks = t & {"ask", "asks", "asked", "maang", "maangta", "maangti", "mangta", "मांग", "मांगता", "मांगते", "मागते", "मागतो", "विचारते", "विचारतो", "पूछता"}
+    if t & {"bank", "बैंक", "बँक"} and asks:
+        return {"topic": "bank_never_asks"}
+    if t & {"upi", "यूपीआई", "युपीआय", "यूपीआय"}:
+        collect = {"receive", "collect", "someone", "koi", "कोई", "कोणी", "money", "paisa", "paise", "पैसे", "पैसा", "prapt"}
+        return {"topic": "upi_fraud_collect" if t & collect else "upi_pin_reset"}
+    if t & {"card", "atm", "debit", "कार्ड", "एटीएम", "डेबिट"}:
+        return {"topic": "card_pin"}
+    return None
+
+
+_HUMAN_TARGET = {"someone", "somebody", "human", "agent", "person", "manager", "executive", "representative", "officer", "staff",
+                 "insaan", "insan", "इंसान", "आदमी", "व्यक्ति", "मैनेजर", "एजेंट", "अधिकारी", "माणूस", "माणसाशी", "मॅनेजर", "एजंट",
+                 "कोणाशी", "कोणाला", "kisi", "किसी"}
+_HUMAN_VERB = {"speak", "talk", "connect", "transfer", "baat", "bat", "bolna", "बात", "बोलना", "बोलायचे", "बोलायचं", "बोलू", "बोलवा",
+               "जोड़ो", "जोडा", "बोलने", "bolne", "milao", "मिलाओ"}
+
+
+def wants_human(text: str) -> bool:
+    t = set(_tokens(text.lower()))
+    return bool(t & _HUMAN_TARGET and t & _HUMAN_VERB)
+
+
+_LEAK = re.compile(r"system\s*prompt|tool\s*list|\b(?:my|the|these|those|above|previous|original)\s+instructions\b|"
+                   r"\bmy\s+prompt\b|सिस्टम\s*प्रॉम्प्ट", re.I)
+SAFE = {"en": "I can only help with banking requests. How can I help you?",
+        "hinglish": "Main sirf banking requests mein madad kar sakta hoon. Main aapki kaise madad karun?",
+        "hi": "मैं केवल बैंकिंग से जुड़े अनुरोधों में मदद कर सकता हूँ। मैं आपकी कैसे मदद करूँ?",
+        "mr": "मी फक्त बँकिंग विनंत्यांमध्ये मदत करू शकतो. मी तुमची कशी मदत करू?"}
+_VERIFY_WORDS = {"mobile", "number", "dob", "birth", "date", "janam", "tithi", "tarikh", "born", "registered", "and", "my", "is", "mera",
+                 "meri", "aur", "hai", "the", "of", "i", "am", "जन्म", "तारीख", "जन्मतारीख", "मोबाईल", "मोबाइल", "नंबर", "आणि", "आहे", "है",
+                 "और", "मेरा", "माझा", "माझी", "जन्मतिथि", "मेरी", "का", "ka", "ki", "तिथि"}
+_FILL = {"was", "on", "in", "at", "for", "ko", "को", "रोजी"}
+ARGLESS = {"account_balance", "last_transactions", "emi_info", "dues_info", "get_masked_profile"}
+
+
+def earlier_request(said: list[str]) -> str:
+    """The caller's most recent substantive request (not a bare language choice or verification details)."""
+    for t in reversed(said):
+        if detect_language(t, False)[1]:
+            continue
+        if len([w for w in _tokens(t) if w not in _VERIFY_WORDS and w not in _MONTHS_MAP and w not in _FILL and not w.isdigit()]) >= 2:
+            return t
+    return ""
+
+
 _WEEKDAYS = {"monday": 0, "tuesday": 1, "wednesday": 2, "thursday": 3, "friday": 4, "saturday": 5, "sunday": 6,
              "सोमवार": 0, "मंगलवार": 1, "बुधवार": 2, "गुरुवार": 3, "शुक्रवार": 4, "शनिवार": 5, "रविवार": 6,
              "सोमवारी": 0, "मंगळवार": 1, "गुरुवारी": 3}
@@ -887,6 +970,9 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         t0 = time.monotonic()
         if not isinstance(name, str) or name not in known:
             res, name = {"ok": False, "error_code": "INVALID_INPUT", "speak": ""}, "unknown"
+        elif name == "report_secret_spoken" and not internal:
+            res = {"ok": False, "error_code": "INVALID_INPUT", "speak": "",
+                   "instruction": "no secret was spoken; answer the question"}
         elif name == "confirm_readback" and not internal:
             res = {"ok": False, "error_code": "INVALID_INPUT", "speak": "",
                    "instruction": "You may not confirm read-backs. Read the values back to the caller and wait for their "
@@ -911,6 +997,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
                    "कृपया तुमची जन्मतारीख किंवा कर्ज क्रमांकाचे शेवटचे चार अंक सांगा.")
             st["speaks"].append((False, ask))
             st["last"] = ask
+            c["ask_verify_turn"] = c["turn"]
             res = {"ok": False, "error_code": "INVALID_INPUT", "speak": ask,
                    "instruction": "Verification requires BOTH mobile and date of birth (or loan last 4). Ask the caller for their date of birth; do not call verify_caller again until they state it."}
         elif not internal and (missing := untraceable(name, args, c.get("said", []))):
@@ -918,8 +1005,14 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             res = {"ok": False, "error_code": "INVALID_INPUT", "speak": "",
                    "instruction": f"Ask the caller for {', '.join(missing)}; never invent values. Do not call {name} until they say them."}
         else:
+            if name == "verify_caller" and c["direction"] == "outbound":
+                # DOB-only: the gateway looks the customer up by a given mobile, and a model-invented one never verifies
+                args.pop("registered_mobile", None)
+                args.pop("loan_last4", None)
             if name == "verify_caller":
-                if not args.get("registered_mobile"):
+                if c["direction"] == "outbound":
+                    pass
+                elif not args.get("registered_mobile"):
                     m_prev = re.search(r"(?:(?:\+?91|0)?[ -]?)?([6-9]\d{9})\b", " ".join(c.get("said", [])))
                     if m_prev:
                         args["registered_mobile"] = m_prev.group(1)
@@ -950,6 +1043,8 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
                 st["speaks"].append((bool(res.get("ok")), res["speak"]))
             st["last"] = res.get("speak") or st["last"]
             note_pending(c, name, args, res)
+            if name == "verify_caller" and res.get("ok"):
+                st["verified_now"], st["pend"] = True, res.get("pending_request")
             t2 = not res.get("ok") and (res.get("next") == "need_tier_2" or res.get("error_code") == "TIER_TOO_LOW")
             if t2:
                 c["approved"], c["approved_for"] = False, None  # the approval window expired: allow a fresh request
@@ -968,6 +1063,78 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
 
     def new_state() -> dict:
         return {"done": [], "speaks": [], "last": "", "rb": ""}
+
+    def in_flow(c: dict) -> bool:
+        return bool(c.get("pending") or c.get("held") or c.get("approval_id") or c.get("rb_active") or c.get("pending_rb")
+                    or c.get("rb_new") or c.get("ask_verify_turn", -9) >= c["turn"] - 1)
+
+    def faq_ok(c: dict, text: str) -> bool:
+        return bool(len(_tokens(text)) >= 2 and c["direction"] == "inbound" and not c["ended"] and not in_flow(c) and not is_bare_affirmative(text)
+                    and not account_specific(text) and not (not c.get("verified") and _extract_verify(text, c.get("said"))))
+
+    async def faq_call(c: dict, text: str, st: dict) -> str | None:
+        """faq_lookup run by the service. Failures leave no trace in the turn state. The gateway has no match strength,
+        so only a reply carrying a matched `topic` counts."""
+        args = faq_args(text)
+        if not args:
+            return None
+        saved = (list(st["speaks"]), st["last"], len(st["done"]))
+        res = await exec_call(c, "faq_lookup", args, st, internal=True)
+        data = res.get("data") if isinstance(res.get("data"), dict) else {}
+        if res.get("ok") and isinstance(res.get("speak"), str) and res["speak"] and data.get("topic"):
+            return res["speak"]
+        st["speaks"], st["last"] = saved[0], saved[1]
+        del st["done"][saved[2]:]
+        return None
+
+    async def faq_fallback(c: dict, st: dict) -> str | None:
+        """The model answered a general question in prose with no action: ground it in the FAQ instead."""
+        st["faq_tried"] = True
+        text = c.get("user_text", "")
+        return await faq_call(c, text, st) if faq_ok(c, text) else None
+
+    async def faq_direct(c: dict, text: str) -> tuple[str, list[dict]] | None:
+        if not faq_ok(c, text):
+            return None
+        st = new_state()
+        speak = await faq_call(c, text, st)
+        if not speak:
+            return None
+        c.pop("note", None)
+        c["messages"] += [{"role": "user", "content": text}, {"role": "assistant", "content": speak}]
+        return speak, st["done"]
+
+    async def human_turn(c: dict, text: str) -> tuple[str, list[dict]] | None:
+        if not wants_human(text):
+            return None
+        st = new_state()
+        res = await exec_call(c, "handover", {"reason": "caller asked for a human", "summary": "Caller asked to speak to a person."},
+                              st, internal=True)
+        speak = res.get("speak") if isinstance(res.get("speak"), str) else ""
+        c["messages"] += [{"role": "user", "content": text}, {"role": "assistant", "content": speak}]
+        return speak, st["done"]
+
+    async def pre_verify(c: dict, text: str) -> dict | None:
+        """The caller gave the details verify_caller needs: run it before the LLM (outbound: date of birth only)."""
+        if c.get("verified") or c["ended"]:
+            return None
+        if c["direction"] == "outbound":
+            dob = _parse_dob(text)
+            args = {"dob": dob} if dob else None
+        else:
+            fb = _extract_verify(text, c.get("said"))
+            args = fb[1] if fb else None
+        key = tuple(sorted((args or {}).items()))
+        if not args or key in c.setdefault("vtried", set()):
+            return None
+        c["vtried"].add(key)
+        st = new_state()
+        res = await exec_call(c, "verify_caller", dict(args), st, internal=True)
+        if res.get("ok") and c["direction"] == "outbound":
+            res["instruction"] = "Verified. Now call dues_info and say its speak as is."
+        c["messages"] += [{"role": "assistant", "content": "", "tool_calls": [{"function": {"name": "verify_caller", "arguments": args}}]},
+                          {"role": "tool", "tool_name": "verify_caller", "content": json.dumps(res, ensure_ascii=False)}]
+        return st
 
     async def run_actions(c: dict, st: dict | None = None) -> tuple[str, list[dict]]:
         st = st or new_state()
@@ -990,7 +1157,26 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
                                       "explain_emi_change. Change the EMI date to day N: emi_date_change with new_day N. Close the loan: "
                                       "foreclosure_quote / raise_closure. Statement or certificate: request_document.]"})
                 continue
+            if not tcs and st.get("verified_now") and not st.get("av_done") and not any(
+                    a["ok"] and a["name"] not in FLOW for a in st["done"]):
+                st["av_done"] = True  # verified this turn but the model stopped: do the caller's earlier request
+                if st.get("pend") in ARGLESS:
+                    res = await exec_call(c, st["pend"], {}, st, internal=True)
+                    if res.get("ok") and isinstance(res.get("speak"), str) and res["speak"]:
+                        c["messages"][-1] = {"role": "assistant", "content": res["speak"]}
+                        return res["speak"], st["done"]
+                if req := earlier_request(c.get("said", [])):
+                    c["messages"].append({"role": "user", "content": "[service note: the caller is now verified. Do their request now "
+                                          f"by calling the matching action; do not ask again. Their request: {mask_digits(req)}]"})
+                    continue
+            if not tcs and not st["done"] and not st.get("faq_tried") and (faq := await faq_fallback(c, st)):
+                c["messages"][-1] = {"role": "assistant", "content": faq}
+                return faq, st["done"]
             if not tcs:
+                raw = (msg.get("content") or "").strip()
+                if _LEAK.search(raw):  # never discuss the prompt, instructions or tools
+                    c["messages"][-1] = {"role": "assistant", "content": SAFE[c["language"]]}
+                    return SAFE[c["language"]], st["done"]
                 # gateway sentences are trusted as-is; only the model's own words are scrubbed of tool names
                 text = final_text(clean_spoken((msg.get("content") or "").strip(), known), st["speaks"]) or st["last"]
                 return st["rb"] or text, st["done"]
@@ -1230,7 +1416,8 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         now = time.time()
         for k in [k for k, v in calls.items() if now - v["ts"] > TTL_S]:
             del calls[k]
-        if len(calls) >= MAX_CALLS:
+        live = [k for k, v in calls.items() if not v["ended"]]
+        if len(live) >= MAX_CALLS:
             raise HTTPException(429, "too many calls")
         cid = new_call_id()
         sysmsg = prompt if sett["cache_prompt"] else base_prompt.replace("{{conversation_id}}", cid)
@@ -1283,8 +1470,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             c["lang_set"] = not first
             return canned(c, user_text, LANG_SORRY)
         if lang:
-            # Roman-script Hindi is Hinglish, not Devanagari Hindi
-            c["language"] = "hinglish" if lang == "hi" and not _DEVANAGARI.search(user_text) else lang
+            c["language"] = lang  # an explicit choice is honoured: "Hindi" -> hi, only "Hinglish" -> hinglish
             if pure:
                 return canned(c, user_text, LANG_OK[c["language"]])
             c["note"] = f"the caller chose {c['language']}; answer in that language"
@@ -1297,17 +1483,20 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
     async def handle_text(c: dict, user_text: str) -> tuple[str, list[dict]]:
         if not user_text:
             return REPROMPT.get(c["language"], REPROMPT["hinglish"]), []
-        stype = _find_secret("user_text", user_text)
+        stype = secret_spoken(user_text)
         c["deva"], c["user_text"] = bool(_DEVANAGARI.search(user_text)), "" if stype else user_text
         if not stype:
             c.setdefault("said", []).append(user_text)
             if (early := language_turn(c, user_text)):
                 return early
-            auto = await approval_precheck(c, user_text) or await auto_confirm(c, user_text)
+            auto = (await human_turn(c, user_text) or await approval_precheck(c, user_text) or await auto_confirm(c, user_text)
+                    or await faq_direct(c, user_text))
+            pst = None
             if not auto:
                 note = c.pop("note", None)
                 c["messages"].append({"role": "user", "content": f"{user_text}\n[service note: {note}]" if note else user_text})
-            text, acts = auto if auto else await run_actions(c)
+                pst = await pre_verify(c, user_text)
+            text, acts = auto if auto else await run_actions(c, pst)
             acts = (c.pop("pre_acts", None) or []) + acts
             if is_goodbye(user_text) and not c["ended"]:  # safety net: a small model often just says bye
                 outcome = "handover" if any(a["name"] == "handover" and a["ok"] for a in c.get("done", [])) else "completed"
@@ -1322,6 +1511,10 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         # secret: the value never enters history, logs or the LLM; the gateway is told, we answer directly
         stype = "card" if stype == "card_number" else stype
         stype = stype if stype in SECRET_KINDS else "password"
+        lang, _, _ = detect_language(user_text, not c.get("lang_set") and c["direction"] == "inbound")
+        c["lang_set"] = True
+        if lang and lang != "unsupported":
+            c["language"] = lang  # naming a language alongside a secret still switches it
         res = await gateway(c["id"], "report_secret_spoken", {"language": c["language"], "secret_type": stype})
         speak = res.get("speak") if isinstance(res.get("speak"), str) else ""
         c["messages"] += [{"role": "user", "content": f"[caller started to say a secret ({stype}); it was removed]"},

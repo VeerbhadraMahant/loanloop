@@ -18,6 +18,7 @@ class Fake:
         self.llm_script = []  # list of ollama messages, popped per /api/chat call
         self.sent = []  # (kind, url, json/data)
         self.fail = None  # kind to fail with 500
+        self.gw = {}  # action name -> json or callable(body) -> json, overrides the default "<name> done" reply
 
     def handler(self, req: httpx.Request) -> httpx.Response:
         url = str(req.url)
@@ -38,6 +39,9 @@ class Fake:
             return httpx.Response(200, json={"message": msg})
         if kind == "gw":
             name = url.rsplit("/", 1)[1]
+            if name in self.gw:
+                v = self.gw[name]
+                return httpx.Response(200, json=v(body) if callable(v) else v)
             return httpx.Response(200, json={"ok": True, "speak": f"{name} done", "data": {}})
         if kind == "stt":
             return httpx.Response(200, json={"success": True, "transcript": "my pin is 4321 mobile 9876543210"})
