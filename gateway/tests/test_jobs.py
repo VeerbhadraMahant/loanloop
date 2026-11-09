@@ -28,9 +28,9 @@ async def test_mark_overdue_states_and_resolve(fresh):
     async with SessionLocal() as db:
         assert (await db.execute(select(EmiSchedule.id).where(EmiSchedule.status == "overdue"))).first() is None
     stats = await run("mark_overdue")
-    assert stats["marked_emis"] >= 32 and stats["cases_upserted"] >= 33
+    assert stats["cases_upserted"] >= 33  # bounced rows are left bounced, so marked_emis may be 0
     async with SessionLocal() as db:
-        assert (await db.execute(select(EmiSchedule.id).where(EmiSchedule.status == "bounced"))).first() is None
+        assert (await db.execute(select(EmiSchedule.id).where(EmiSchedule.loan_id == OUT, EmiSchedule.status == "bounced"))).first()  # stay bounced
         assert (await db.execute(select(EmiSchedule.id).where(EmiSchedule.status == "overdue", EmiSchedule.due_date >= today_ist()))).first() is None
         c = await db.get(CollectionCase, OUT)
         assert (c.status, c.bucket, c.missed_emis) == ("open", "31-60", 2)
@@ -199,3 +199,14 @@ async def test_dashboard_jobs_and_collections_masked(client, fresh):
     assert not re.search(r"\d{9,}", text) and "SFB" not in text and "@example.com" not in text
     for c in d["cases"]:
         assert re.fullmatch(r"[A-Za-z]+( [A-Z]\.)?", c["customer"]) and re.fullmatch(r"ending \d{4}", c["loan"])
+
+
+async def test_settle_ptps_uses_ist_date(fresh):
+    """A PTP created 00:30 IST is 19:00 UTC of the previous day: payment that IST day must count."""
+    created = datetime.combine(today_ist() - timedelta(days=3), datetime.min.time(), tzinfo=IST).replace(minute=30)
+    async with SessionLocal() as db:
+        db.add(PromiseToPay(case_id=OUT, loan_id=OUT, customer_id=OUT, amount=1000, promised_date=today_ist() - timedelta(days=1),
+                            amount_tag="partial", status="open", created_at=created.astimezone(timezone.utc)))
+        db.add(Payment(loan_id=OUT, date=created.date(), amount=1000, utr="UTRIST0030X", channel="upi", status="matched"))
+        await db.commit()
+    assert (await run("settle_ptps"))["kept"] == 1

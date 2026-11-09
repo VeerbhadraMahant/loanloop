@@ -69,6 +69,12 @@ T: dict[str, dict[str, str]] = {
         "hinglish": "Ye date chal nahi sakti. Please aaj se tees din ke andar ki payment date bataiye.",
         "mr": "ही तारीख चालणार नाही. कृपया आजपासून तीस दिवसांच्या आतील भरणा तारीख सांगा.",
     },
+    "readback_ptp": {
+        "en": "Just to confirm: you will pay {amount} on {date}. Is that correct? Please say yes.",
+        "hi": "पुष्टि के लिए: आप {date} को {amount} का भुगतान करेंगे। क्या यह सही है? कृपया हाँ कहें।",
+        "hinglish": "Confirm karne ke liye: aap {date} ko {amount} ka payment karenge. Kya ye sahi hai? Please haan boliye.",
+        "mr": "खात्रीसाठी: तुम्ही {date} रोजी {amount} भराल. हे बरोबर आहे का? कृपया हो म्हणा.",
+    },
     "ptp_ok_full": {
         "en": "Noted. You will pay {amount} on {date}. That covers your full dues of {total}. Please make sure the payment is done by that date.",
         "hi": "दर्ज कर लिया। आप {date} को {amount} का भुगतान करेंगे। इससे आपकी पूरी बकाया राशि {total} चुक जाएगी। कृपया उस तारीख तक भुगतान सुनिश्चित करें।",

@@ -5,6 +5,7 @@ from typing import Literal
 from fastapi import APIRouter, BackgroundTasks
 from pydantic import Field
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import clock
@@ -12,6 +13,7 @@ from app.contract import ActionIn, ActionResponse
 from app.db.models import Account, AccountTransaction, CollectionCase, Loan, PromiseToPay, RefusalToPay, now
 from app.jobs import apply_dues, compute_dues
 from app.routes.actions._runner import action
+from app.routes.actions.loans import missing_readback, readback_needed
 from app.speak import fmt_date, rupees, t
 from app.speak.templates.details import ending
 
@@ -81,14 +83,20 @@ async def _ctx(db: AsyncSession, session):
         return None
     ln, dues = best
     case = await db.scalar(select(CollectionCase).where(CollectionCase.loan_id == ln.id))
-    if case is None:  # job not run yet: create the case now
-        case = apply_dues(db, ln, None, dues)
-        await db.flush()
+    if case is None:  # job not run yet: create the case now (loan_id is unique: a concurrent job may win the race)
+        try:
+            async with db.begin_nested():
+                case = apply_dues(db, ln, None, dues)
+                await db.flush()
+        except IntegrityError:
+            case = await db.scalar(select(CollectionCase).where(CollectionCase.loan_id == ln.id))
     return ln, dues, case
 
 
 @action("dues_info", In=NoIn, router=router)
 async def dues_info(inp: NoIn, session, db: AsyncSession, bg: BackgroundTasks) -> ActionResponse:
+    if session.direction != "outbound" and session.tier < 2:  # amounts are tier 2 (CLAUDE.md 3.2); a bank-initiated call bound to a case is tier 1
+        return ActionResponse(ok=False, speak=t("tier_too_low", inp.language), error_code="TIER_TOO_LOW", next="need_tier_2")
     ctx = await _ctx(db, session)
     if ctx is None:
         return ActionResponse(ok=True, speak=t("dues_none", inp.language), data={"dues": False})
@@ -124,6 +132,12 @@ async def record_ptp(inp: PtpIn, session, db: AsyncSession, bg: BackgroundTasks)
         when = None
     if when is None or not today <= when <= today + timedelta(days=30):
         return ActionResponse(ok=False, speak=t("ptp_bad_date", lang), error_code="INVALID_INPUT")
+    rb = {"amount": str(inp.amount), "promised_date": when.isoformat()}
+    miss = missing_readback(session, rb)
+    if miss:
+        return readback_needed(lang, "readback_ptp", miss, rb, amount=rupees(inp.amount), date=fmt_date(when, lang))
+    session.consume_readback("amount")
+    session.consume_readback("promised_date")
     total = d["amount"] + d["charges"]
     tag = "full" if inp.amount >= total else "partial"
     for old in (await db.execute(select(PromiseToPay).where(PromiseToPay.case_id == case.id, PromiseToPay.status == "open"))).scalars():
