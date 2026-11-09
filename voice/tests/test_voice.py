@@ -18,6 +18,7 @@ class Fake:
         self.llm_script = []  # list of ollama messages, popped per /api/chat call
         self.sent = []  # (kind, url, json/data)
         self.fail = None  # kind to fail with 500
+        self.gw = {}  # action name -> json or callable(body) -> json, overrides the default "<name> done" reply
 
     def handler(self, req: httpx.Request) -> httpx.Response:
         url = str(req.url)
@@ -38,6 +39,9 @@ class Fake:
             return httpx.Response(200, json={"message": msg})
         if kind == "gw":
             name = url.rsplit("/", 1)[1]
+            if name in self.gw:
+                v = self.gw[name]
+                return httpx.Response(200, json=v(body) if callable(v) else v)
             return httpx.Response(200, json={"ok": True, "speak": f"{name} done", "data": {}})
         if kind == "stt":
             return httpx.Response(200, json={"success": True, "transcript": "my pin is 4321 mobile 9876543210"})
@@ -68,7 +72,7 @@ def new_call(c):
 
 def test_tools_from_actions_json():
     tools, known = load_tools()
-    assert len(tools) == 23 and len(known) == 23
+    assert len(tools) >= 23 and len(known) == len(tools)
     for t in tools:
         f = t["function"]
         assert "call_id" not in f["parameters"]["properties"] and "call_id" not in f["parameters"]["required"]
@@ -103,13 +107,13 @@ def test_text_turn_injects_call_id_and_tracks_language(env):
     fake.llm_script = [tc("emi_info", call_id="ATTACKER", language="mr"), {"role": "assistant", "content": "Your EMI is X"}]
     r = c.post(f"/calls/{d['call_id']}/turn", json={"text": "emi?"}).json()
     # emi_info is a shortcut action: the gateway sentence is the answer, no second LLM round (behaviour changed on purpose)
-    assert r["agent_text"] == "emi_info done" and r["language"] == "mr" and len(fake.of("llm")) == 1
+    assert r["agent_text"] == "emi_info done" and r["language"] == "en" and len(fake.of("llm")) == 1  # service-owned: model's "mr" ignored
     assert r["actions"] == [{"name": "emi_info", "ok": True}]
     kind, url, body, headers = fake.of("gw")[-1]
     assert body["call_id"] == d["call_id"] and url.endswith("/actions/emi_info")
     assert headers["x-gateway-secret"] == SECRET
     assert fake.of("stt") == []
-    assert fake.of("tts")[-1][2]["language"] == "mr-IN"
+    assert fake.of("tts")[-1][2]["language"] == "en-IN" and body["language"] == "en"
     # the call id is in the first user message, never in the (cacheable) system prompt
     msgs = fake.of("llm")[-1][2]["messages"]
     assert d["call_id"] not in msgs[0]["content"] and "{{conversation_id}}" not in msgs[0]["content"]
@@ -226,7 +230,8 @@ def test_non_string_language_ignored(env):
     c, fake = env
     d = new_call(c)
     fake.llm_script = [tc("emi_info", language=["mr"]), {"role": "assistant", "content": "ok"}]
-    assert turn(c, d, "emi").json()["language"] == "hinglish"
+    assert turn(c, d, "emi").json()["language"] == "en"  # the model's value never sets the call language
+    assert fake.of("gw")[-1][2]["language"] == "en"
 
 
 def test_ended_call_409_and_expired_404(env):
@@ -315,11 +320,12 @@ def test_ifsc_and_amounts_survive_agent_text_but_mobiles_do_not(env):
 def test_roman_script_hi_becomes_hinglish_and_devanagari_keeps_hi(env):
     c, fake = env
     d = new_call(c)
-    fake.llm_script = [tc("emi_info", language="hi"), {"role": "assistant", "content": "ok"}]
-    assert turn(c, d, "mera emi kitna hai").json()["language"] == "hinglish"
+    fake.llm_script = [tc("emi_info", language="mr"), {"role": "assistant", "content": "ok"}]
+    assert turn(c, d, "mera emi kitna hai").json()["language"] == "hinglish"  # first turn: Hindi words, Roman script
     assert fake.of("gw")[-1][2]["language"] == "hinglish"
-    fake.llm_script = [tc("emi_info", language="hi"), {"role": "assistant", "content": "ok"}]
-    assert turn(c, d, "मेरी ईएमआई कितनी है").json()["language"] == "hi"
+    assert turn(c, d, "हिंदी में बोलो").json()["language"] == "hi"  # explicit switch in Devanagari keeps hi
+    fake.llm_script = [tc("emi_info", language="mr"), {"role": "assistant", "content": "ok"}]
+    turn(c, d, "मेरी ईएमआई कितनी है")
     assert fake.of("gw")[-1][2]["language"] == "hi"
 
 
@@ -642,7 +648,7 @@ def test_approved_with_missing_values_asks_for_them():
         turn(c, d, "payment 100 rupees UTR SAHYR1234")
         c.app.state.calls[d["call_id"]]["said"] = []
         r = turn(c, d, "approve kar diya").json()
-    assert r["agent_text"] == "Approved. Kripya payment ka UTR number aur amount bataiye."
+    assert r["agent_text"] == "Approved. Please tell me the UTR number and the amount."
     assert not any(n == "check_payment" and False for n, _ in seen)
 
 

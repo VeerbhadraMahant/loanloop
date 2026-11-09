@@ -22,7 +22,9 @@
       "body": {
         "call_id": "{{conversation_id}}",
         "language": "{{language}}",
-        "caller_number": "{{caller_number}}"
+        "caller_number": "{{caller_number}}",
+        "direction": "{{direction}}",
+        "case_id": "{{case_id}}"
       },
       "variables": [
         {
@@ -47,6 +49,22 @@
           "name": "caller_number",
           "type": "string",
           "description": "Caller's phone number if the platform provides it; omit otherwise. Never treat as proof of identity.",
+          "required": false
+        },
+        {
+          "name": "direction",
+          "type": "string",
+          "description": "inbound (default) or outbound; set by the calling system, never by the caller",
+          "required": false,
+          "enum": [
+            "inbound",
+            "outbound"
+          ]
+        },
+        {
+          "name": "case_id",
+          "type": "number",
+          "description": "Collection case id; outbound calls only",
           "required": false
         }
       ],
@@ -1195,6 +1213,365 @@
         "hi": "",
         "hinglish": "",
         "mr": ""
+      },
+      "timeout_s": 5,
+      "trigger": "On-Call"
+    },
+    {
+      "name": "faq_lookup",
+      "description": "Trigger for general bank questions (opening an account, branch hours, fraud, charges...). Pass topic when it matches a known intent, else pass the caller's words as query. Speak the answer exactly. No verification needed.",
+      "method": "POST",
+      "url": "${PUBLIC_GATEWAY_URL}/actions/faq_lookup",
+      "headers": {
+        "X-Gateway-Secret": "${GATEWAY_SHARED_SECRET}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "call_id": "{{conversation_id}}",
+        "language": "{{language}}",
+        "topic": "{{topic}}",
+        "query": "{{query}}"
+      },
+      "variables": [
+        {
+          "name": "call_id",
+          "type": "string",
+          "description": "Always {{conversation_id}}",
+          "required": true
+        },
+        {
+          "name": "language",
+          "type": "string",
+          "description": "Caller's CURRENT language",
+          "required": true,
+          "enum": [
+            "en",
+            "hi",
+            "hinglish",
+            "mr"
+          ]
+        },
+        {
+          "name": "topic",
+          "type": "string",
+          "description": "FAQ intent id; omit if unsure and use query",
+          "required": false,
+          "enum": [
+            "open_account",
+            "account_types",
+            "min_balance",
+            "dormant_account",
+            "account_closure",
+            "balance_hold",
+            "statement_request",
+            "interest_certificate",
+            "statement_codes",
+            "atm_limits",
+            "failed_atm_withdrawal",
+            "cash_deposit",
+            "upi_setup",
+            "upi_pin_reset",
+            "upi_failed",
+            "upi_wrong_transfer",
+            "upi_limits",
+            "upi_fraud_collect",
+            "neft_rtgs_imps",
+            "add_beneficiary",
+            "debit_card_block",
+            "debit_card_replace",
+            "card_pin",
+            "card_controls",
+            "credit_card_basics",
+            "personal_loan_apply",
+            "home_loan_apply",
+            "loan_prepayment",
+            "emi_missed",
+            "loan_restructure",
+            "fd_open",
+            "fd_premature",
+            "rd_basics",
+            "kyc_update",
+            "update_mobile",
+            "fraud_report",
+            "bank_never_asks",
+            "complaint_escalation",
+            "branch_hours",
+            "cheque_book",
+            "cheque_stop_payment",
+            "cheque_clearing",
+            "nominee_info",
+            "deceased_claim",
+            "nri_accounts",
+            "tds_15g_15h",
+            "positive_pay"
+          ]
+        },
+        {
+          "name": "query",
+          "type": "string",
+          "description": "The caller's question in a few words, no secrets; used when topic is not known",
+          "required": false
+        }
+      ],
+      "speak_during_action": {
+        "en": "One moment, checking that for you.",
+        "hi": "एक क्षण, जाँच हो रही है।",
+        "hinglish": "Ek minute, check ho raha hai.",
+        "mr": "एक क्षण, तपासणी सुरू आहे."
+      },
+      "timeout_s": 5,
+      "trigger": "On-Call"
+    },
+    {
+      "name": "account_balance",
+      "description": "Trigger when a verified (Tier 1) caller asks their savings account balance or available amount.",
+      "method": "POST",
+      "url": "${PUBLIC_GATEWAY_URL}/actions/account_balance",
+      "headers": {
+        "X-Gateway-Secret": "${GATEWAY_SHARED_SECRET}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "call_id": "{{conversation_id}}",
+        "language": "{{language}}"
+      },
+      "variables": [
+        {
+          "name": "call_id",
+          "type": "string",
+          "description": "Always {{conversation_id}}",
+          "required": true
+        },
+        {
+          "name": "language",
+          "type": "string",
+          "description": "Caller's CURRENT language",
+          "required": true,
+          "enum": [
+            "en",
+            "hi",
+            "hinglish",
+            "mr"
+          ]
+        }
+      ],
+      "speak_during_action": {
+        "en": "One moment, checking that for you.",
+        "hi": "एक क्षण, जाँच हो रही है।",
+        "hinglish": "Ek minute, check ho raha hai.",
+        "mr": "एक क्षण, तपासणी सुरू आहे."
+      },
+      "timeout_s": 5,
+      "trigger": "On-Call"
+    },
+    {
+      "name": "last_transactions",
+      "description": "Trigger when a verified (Tier 1) caller asks for recent savings account transactions or a mini statement.",
+      "method": "POST",
+      "url": "${PUBLIC_GATEWAY_URL}/actions/last_transactions",
+      "headers": {
+        "X-Gateway-Secret": "${GATEWAY_SHARED_SECRET}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "call_id": "{{conversation_id}}",
+        "language": "{{language}}",
+        "count": "{{count}}"
+      },
+      "variables": [
+        {
+          "name": "call_id",
+          "type": "string",
+          "description": "Always {{conversation_id}}",
+          "required": true
+        },
+        {
+          "name": "language",
+          "type": "string",
+          "description": "Caller's CURRENT language",
+          "required": true,
+          "enum": [
+            "en",
+            "hi",
+            "hinglish",
+            "mr"
+          ]
+        },
+        {
+          "name": "count",
+          "type": "number",
+          "description": "How many recent transactions, 1 to 5; default 3",
+          "required": false
+        }
+      ],
+      "speak_during_action": {
+        "en": "One moment, checking that for you.",
+        "hi": "एक क्षण, जाँच हो रही है।",
+        "hinglish": "Ek minute, check ho raha hai.",
+        "mr": "एक क्षण, तपासणी सुरू आहे."
+      },
+      "timeout_s": 5,
+      "trigger": "On-Call"
+    },
+    {
+      "name": "dues_info",
+      "description": "Trigger when a verified (Tier 1) caller asks about overdue or pending EMIs, missed payments or charges, or on an outbound collections call after verification.",
+      "method": "POST",
+      "url": "${PUBLIC_GATEWAY_URL}/actions/dues_info",
+      "headers": {
+        "X-Gateway-Secret": "${GATEWAY_SHARED_SECRET}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "call_id": "{{conversation_id}}",
+        "language": "{{language}}"
+      },
+      "variables": [
+        {
+          "name": "call_id",
+          "type": "string",
+          "description": "Always {{conversation_id}}",
+          "required": true
+        },
+        {
+          "name": "language",
+          "type": "string",
+          "description": "Caller's CURRENT language",
+          "required": true,
+          "enum": [
+            "en",
+            "hi",
+            "hinglish",
+            "mr"
+          ]
+        }
+      ],
+      "speak_during_action": {
+        "en": "One moment, checking that for you.",
+        "hi": "एक क्षण, जाँच हो रही है।",
+        "hinglish": "Ek minute, check ho raha hai.",
+        "mr": "एक क्षण, तपासणी सुरू आहे."
+      },
+      "timeout_s": 5,
+      "trigger": "On-Call"
+    },
+    {
+      "name": "record_ptp",
+      "description": "Trigger when a verified caller commits to pay overdue dues: records a promise to pay. Ask amount and date first; date must be within 30 days from today.",
+      "method": "POST",
+      "url": "${PUBLIC_GATEWAY_URL}/actions/record_ptp",
+      "headers": {
+        "X-Gateway-Secret": "${GATEWAY_SHARED_SECRET}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "call_id": "{{conversation_id}}",
+        "language": "{{language}}",
+        "amount": "{{amount}}",
+        "promised_date": "{{promised_date}}"
+      },
+      "variables": [
+        {
+          "name": "call_id",
+          "type": "string",
+          "description": "Always {{conversation_id}}",
+          "required": true
+        },
+        {
+          "name": "language",
+          "type": "string",
+          "description": "Caller's CURRENT language",
+          "required": true,
+          "enum": [
+            "en",
+            "hi",
+            "hinglish",
+            "mr"
+          ]
+        },
+        {
+          "name": "amount",
+          "type": "number",
+          "description": "Promised amount in rupees, digits only",
+          "required": true
+        },
+        {
+          "name": "promised_date",
+          "type": "string",
+          "description": "Promised payment date as YYYY-MM-DD",
+          "required": true
+        }
+      ],
+      "speak_during_action": {
+        "en": "One moment, checking that for you.",
+        "hi": "एक क्षण, जाँच हो रही है।",
+        "hinglish": "Ek minute, check ho raha hai.",
+        "mr": "एक क्षण, तपासणी सुरू आहे."
+      },
+      "timeout_s": 5,
+      "trigger": "On-Call"
+    },
+    {
+      "name": "record_rtp",
+      "description": "Trigger when a verified caller says they cannot or will not pay the overdue amount: records the reason. Never argue, threaten or offer waivers or settlements.",
+      "method": "POST",
+      "url": "${PUBLIC_GATEWAY_URL}/actions/record_rtp",
+      "headers": {
+        "X-Gateway-Secret": "${GATEWAY_SHARED_SECRET}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "call_id": "{{conversation_id}}",
+        "language": "{{language}}",
+        "reason_code": "{{reason_code}}",
+        "note": "{{note}}"
+      },
+      "variables": [
+        {
+          "name": "call_id",
+          "type": "string",
+          "description": "Always {{conversation_id}}",
+          "required": true
+        },
+        {
+          "name": "language",
+          "type": "string",
+          "description": "Caller's CURRENT language",
+          "required": true,
+          "enum": [
+            "en",
+            "hi",
+            "hinglish",
+            "mr"
+          ]
+        },
+        {
+          "name": "reason_code",
+          "type": "string",
+          "description": "Why the caller will not pay now",
+          "required": true,
+          "enum": [
+            "job_loss",
+            "medical",
+            "income_reduced",
+            "dispute",
+            "already_paid",
+            "unwilling",
+            "other"
+          ]
+        },
+        {
+          "name": "note",
+          "type": "string",
+          "description": "Optional short neutral note, 120 characters at most, no secrets",
+          "required": false
+        }
+      ],
+      "speak_during_action": {
+        "en": "One moment, checking that for you.",
+        "hi": "एक क्षण, जाँच हो रही है।",
+        "hinglish": "Ek minute, check ho raha hai.",
+        "mr": "एक क्षण, तपासणी सुरू आहे."
       },
       "timeout_s": 5,
       "trigger": "On-Call"

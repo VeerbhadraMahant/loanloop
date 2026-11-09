@@ -47,6 +47,8 @@ class Account(Base):
     branch_ifsc: Mapped[str] = mapped_column(ForeignKey("branches.ifsc"))
     type: Mapped[str] = mapped_column(String(20))
     status: Mapped[str] = mapped_column(String(20), default="active")
+    balance: Mapped[int] = mapped_column(Integer, default=0)  # rupees
+    hold_amount: Mapped[int] = mapped_column(Integer, default=0)
 
 
 class Loan(Base):
@@ -182,3 +184,74 @@ class Call(Base):
     started_at: Mapped[datetime] = mapped_column(TS, default=now)
     ended_at: Mapped[datetime | None] = mapped_column(TS, nullable=True)
     outcome: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    direction: Mapped[str] = mapped_column(String(10), default="inbound")  # inbound|outbound
+
+
+class AccountTransaction(Base):
+    __tablename__ = "account_transactions"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    account_id: Mapped[int] = mapped_column(ForeignKey("accounts.id"), index=True)
+    date: Mapped[date] = mapped_column(Date)
+    direction: Mapped[str] = mapped_column(String(2))  # dr|cr
+    amount: Mapped[int] = mapped_column(Integer)
+    narration: Mapped[str] = mapped_column(String(80))  # short, no counterparty account numbers
+    ref: Mapped[str] = mapped_column(String(30))  # synthetic; never spoken
+    balance_after: Mapped[int] = mapped_column(Integer)
+
+
+class CollectionCase(Base):
+    __tablename__ = "collection_cases"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    loan_id: Mapped[int] = mapped_column(ForeignKey("loans.id"), unique=True)
+    customer_id: Mapped[int] = mapped_column(ForeignKey("customers.id"), index=True)
+    overdue_amount: Mapped[int] = mapped_column(Integer, default=0)
+    missed_emis: Mapped[int] = mapped_column(Integer, default=0)
+    dpd: Mapped[int] = mapped_column(Integer, default=0)
+    bucket: Mapped[str] = mapped_column(String(6), default="0")  # 0|1-30|31-60|61-90|90+
+    status: Mapped[str] = mapped_column(String(10), default="open")  # open|ptp|rtp|resolved
+    priority: Mapped[int] = mapped_column(Integer, default=0)
+    attempts: Mapped[int] = mapped_column(Integer, default=0)
+    last_call_at: Mapped[datetime | None] = mapped_column(TS, nullable=True)
+    next_action_at: Mapped[datetime | None] = mapped_column(TS, nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(TS, default=now)
+
+
+class PromiseToPay(Base):
+    __tablename__ = "promises_to_pay"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    case_id: Mapped[int] = mapped_column(ForeignKey("collection_cases.id"), index=True)
+    loan_id: Mapped[int] = mapped_column(ForeignKey("loans.id"), index=True)
+    customer_id: Mapped[int] = mapped_column(ForeignKey("customers.id"), index=True)
+    call_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    direction: Mapped[str] = mapped_column(String(10), default="inbound")
+    amount: Mapped[int] = mapped_column(Integer)
+    promised_date: Mapped[date] = mapped_column(Date)
+    amount_tag: Mapped[str] = mapped_column(String(8))  # full|partial
+    status: Mapped[str] = mapped_column(String(10), default="open")  # open|kept|broken|cancelled
+    paid_amount: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(TS, default=now)
+    resolved_at: Mapped[datetime | None] = mapped_column(TS, nullable=True)
+
+
+class RefusalToPay(Base):
+    __tablename__ = "refusals_to_pay"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    case_id: Mapped[int] = mapped_column(ForeignKey("collection_cases.id"), index=True)
+    loan_id: Mapped[int] = mapped_column(ForeignKey("loans.id"), index=True)
+    customer_id: Mapped[int] = mapped_column(ForeignKey("customers.id"), index=True)
+    call_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    direction: Mapped[str] = mapped_column(String(10), default="inbound")
+    reason_code: Mapped[str] = mapped_column(String(20))
+    note: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    overdue_amount: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(TS, default=now)
+    follow_up_at: Mapped[datetime | None] = mapped_column(TS, nullable=True)
+
+
+class JobRun(Base):
+    __tablename__ = "job_runs"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    job: Mapped[str] = mapped_column(String(30))
+    started_at: Mapped[datetime] = mapped_column(TS, default=now)
+    finished_at: Mapped[datetime | None] = mapped_column(TS, nullable=True)
+    stats: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)

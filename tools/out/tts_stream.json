@@ -1,0 +1,38 @@
+{
+  "rate": 16000,
+  "rows": [
+    {
+      "lang": "en",
+      "chars": 84,
+      "rest_total_ms": 1203,
+      "rest_bytes": 166444,
+      "sse_first_ms": 226,
+      "sse_total_ms": 1461,
+      "sse_chunks": 65,
+      "sse_bytes": 181760,
+      "audio_seconds": 5.68
+    },
+    {
+      "lang": "hi",
+      "chars": 72,
+      "rest_total_ms": 1091,
+      "rest_bytes": 186924,
+      "sse_first_ms": 120,
+      "sse_total_ms": 942,
+      "sse_chunks": 56,
+      "sse_bytes": 168960,
+      "audio_seconds": 5.28
+    },
+    {
+      "lang": "mr",
+      "chars": 73,
+      "rest_total_ms": 1407,
+      "rest_bytes": 156204,
+      "sse_first_ms": 226,
+      "sse_total_ms": 1361,
+      "sse_chunks": 55,
+      "sse_bytes": 174080,
+      "audio_seconds": 5.44
+    }
+  ]
+}

@@ -2,11 +2,13 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from app import events, logging as ll_logging
-from app.config import check_settings
+import asyncio
+
+from app import events, jobs, logging as ll_logging
+from app.config import check_settings, settings
 from app.db.session import create_all
 from app.routes import dashboard, phone
-from app.routes.actions import approvals, calls, details, handover, loans, requests, verify
+from app.routes.actions import approvals, calls, collections, details, faq, handover, loans, requests, verify
 
 
 @asynccontextmanager
@@ -14,12 +16,15 @@ async def lifespan(app: FastAPI):
     ll_logging.install()
     check_settings()
     await create_all()
+    task = asyncio.create_task(jobs.loop(settings.jobs_interval_s)) if settings.jobs_interval_s > 0 else None
     yield
+    if task:
+        task.cancel()
 
 
 app = FastAPI(title="LoanLoop gateway", lifespan=lifespan)  # CORS deliberately not enabled
 
-for m in (calls, verify, details, approvals, loans, requests, handover, phone, dashboard, events):
+for m in (calls, verify, details, approvals, loans, requests, handover, collections, faq, phone, dashboard, events):
     app.include_router(m.router)
 
 

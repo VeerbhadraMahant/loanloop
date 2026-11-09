@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import events, sessions
 from app.contract import ActionIn, ActionResponse
-from app.db.models import Customer, Loan
+from app.db.models import CollectionCase, Customer, Loan
 from app.routes.actions._runner import action
 from app.speak import t
 
@@ -56,7 +56,7 @@ def parse_dob(v: str) -> str | None:
 
 
 class VerifyIn(ActionIn):
-    registered_mobile: str = Field(pattern=r"^[+\d][\d \-]{5,19}$")
+    registered_mobile: str | None = Field(default=None, pattern=r"^[+\d][\d \-]{5,19}$")  # optional only on outbound calls (DOB-only)
     dob: str | None = Field(default=None, pattern=r"^\d{4}-\d{2}-\d{2}$")
     loan_last4: str | None = Field(default=None, pattern=r"^\d{4}$")
 
@@ -82,6 +82,8 @@ class VerifyIn(ActionIn):
     def _one_of(self):
         if not (self.dob or self.loan_last4):
             raise ValueError("dob or loan_last4 required")
+        if self.registered_mobile is None and not self.dob:
+            raise ValueError("dob required without a mobile number")
         return self
 
 
@@ -98,8 +100,17 @@ async def verify_caller(inp: VerifyIn, session, db: AsyncSession, bg: Background
     if session.failed_attempts >= MAX_FAILS:
         return limited()
 
-    mobile = _norm(inp.registered_mobile)
-    cust = (await db.execute(select(Customer).where(Customer.registered_mobile == mobile))).scalar_one_or_none()
+    case = await db.get(CollectionCase, session.case_id) if session.direction == "outbound" and session.case_id else None
+    if inp.registered_mobile is None:  # DOB-only: the customer is known from the outbound case
+        if case is None:
+            return ActionResponse(ok=False, speak=t("invalid_input", inp.language), error_code="INVALID_INPUT")
+        cust = await db.get(Customer, case.customer_id)
+        mobile = cust.registered_mobile
+    else:
+        mobile = _norm(inp.registered_mobile)
+        cust = (await db.execute(select(Customer).where(Customer.registered_mobile == mobile))).scalar_one_or_none()
+        if cust and case and cust.id != case.customer_id:
+            cust = None  # outbound call to someone else's case: never verifies
     key = f"verify:c{cust.id}" if cust else "verify:m" + hashlib.sha256(mobile.encode()).hexdigest()[:16]
     if await sessions.incr(key, HOUR) > MAX_FAILS:  # atomic: INCR first, then compare
         return limited()
@@ -111,7 +122,7 @@ async def verify_caller(inp: VerifyIn, session, db: AsyncSession, bg: Background
                 ok = date.fromisoformat(inp.dob) == cust.dob
             except ValueError:
                 ok = False
-        if not ok and inp.loan_last4:
+        if not ok and inp.loan_last4 and inp.registered_mobile is not None:
             ok = (await db.execute(select(Loan.id).where(Loan.customer_id == cust.id, Loan.loan_last4 == inp.loan_last4))).first() is not None
 
     if not ok:  # generic: never reveals which part was wrong

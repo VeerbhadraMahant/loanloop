@@ -232,3 +232,17 @@ async def test_audit_written_for_actions(client):
 async def test_digit_only_call_id_is_not_a_secret(client):
     cid = "4111111111111111"  # Luhn-valid 16 digits: a platform call id, not a card
     assert (await call(client, "start_call", call_id=cid))["ok"]
+
+
+async def test_create_all_adds_missing_v2_columns():
+    from sqlalchemy import text
+
+    from app.db.session import create_all, engine
+    async with engine.begin() as c:
+        await c.execute(text("ALTER TABLE accounts DROP COLUMN hold_amount"))
+        await c.execute(text("ALTER TABLE calls DROP COLUMN direction"))
+    await create_all()
+    async with engine.connect() as c:
+        cols = {r[0] for r in await c.execute(text(
+            "select column_name from information_schema.columns where table_name in ('accounts','calls')"))}
+    assert {"hold_amount", "direction", "balance"} <= cols
