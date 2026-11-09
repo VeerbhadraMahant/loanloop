@@ -23,4 +23,10 @@ TIER_FOR_ACTION: dict[str, int] = {
     "report_hardship": 1,
     "handover": 0,
     "end_call": 0,
+    "faq_lookup": 0,
+    "account_balance": 1,
+    "last_transactions": 1,
+    "dues_info": 1,
+    "record_ptp": 1,
+    "record_rtp": 1,
 }

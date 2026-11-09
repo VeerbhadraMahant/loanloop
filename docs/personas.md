@@ -19,3 +19,9 @@ All seed dates are relative to today (IST) at seed time; amounts, UTRs and rates
 - Vehicle loan Rs 8,00,000, 60 months, fixed 10.5%, EMI Rs 17,195, EMI day 15, outstanding Rs 6,12,300, loan status `hardship`
 
 Seed: `cd gateway && uv run python ../tools/seed_data.py` (drops and recreates all tables in DATABASE_URL; 200 customers, 25 branches, 35 rate resets, 40 loans with charges, 25 unmatched payments, 5 hardship loans).
+
+## Vikram Sawant (id 201, v2) - Hinglish, OUTBOUND collections demo persona
+- Mobile `9000200201`, DOB `1988-06-17`, Hinjewadi branch, personal loan loan_last4 `9172`, Rs 4,00,000, 48 months, fixed 13%, outstanding Rs 3,31,500
+- Two bounced EMIs, about 38-41 days past due (bucket 31-60); bounce charges Rs 590 each plus one penal charge. Low savings balance, no salary credit
+- Collection case id = 201 (case id equals loan id for every seeded case). Start the outbound call: `POST /actions/start_call` body `{"call_id": "...", "language": "hinglish", "direction": "outbound", "case_id": 201}`; the agent asks for DOB only (`verify_caller` with `dob`, no mobile)
+- v2 seed adds: balance and ~10 transactions per savings account (every 7th account has a hold), 32 more overdue loans (16 in 1-30, 8 in 31-60, 5 in 61-90, 3 in 90+) with bounced EMIs and charges, plus a few PTPs (open, kept, broken) and RTPs. Customers now total 201.

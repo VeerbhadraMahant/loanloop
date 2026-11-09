@@ -15,7 +15,7 @@ async def test_seed_dates_relative_to_today():
         nxt = (await db.execute(select(EmiSchedule.due_date).where(EmiSchedule.loan_id == 1, EmiSchedule.status != "paid")
                                 .order_by(EmiSchedule.due_date))).scalars().all()
         assert nxt and all(d > today for d in nxt)
-        overdue = (await db.execute(select(EmiSchedule.id).where(EmiSchedule.due_date < today, EmiSchedule.status != "paid"))).first()
+        overdue = (await db.execute(select(EmiSchedule.id).where(EmiSchedule.due_date < today, EmiSchedule.status == "due"))).first()
         assert overdue is None
         rr = (await db.execute(select(RateReset.effective_date).where(RateReset.loan_id == 1))).scalar_one()
         assert rr == today - timedelta(days=41)

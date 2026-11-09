@@ -1,0 +1,126 @@
+"""Speak templates for savings (balance, transactions), collections (dues, PTP, RTP) and FAQ.
+Collections tone: firm, direct, respectful; never threats, waivers or settlements."""
+T: dict[str, dict[str, str]] = {
+    "balance": {
+        "en": "Your savings account {acct} has a balance of {balance}.",
+        "hi": "आपके बचत खाते {acct} में {balance} की शेष राशि है।",
+        "hinglish": "Aapke savings account {acct} mein {balance} balance hai.",
+        "mr": "तुमच्या बचत खात्यात {acct} {balance} शिल्लक आहे.",
+    },
+    "balance_hold": {
+        "en": "Your savings account {acct} has a balance of {balance}. {hold} is on hold, so the available balance is {avail}.",
+        "hi": "आपके बचत खाते {acct} में {balance} की शेष राशि है। {hold} होल्ड पर है, इसलिए उपलब्ध राशि {avail} है।",
+        "hinglish": "Aapke savings account {acct} mein {balance} balance hai. {hold} hold par hai, isliye available balance {avail} hai.",
+        "mr": "तुमच्या बचत खात्यात {acct} {balance} शिल्लक आहे. {hold} होल्डवर आहे, त्यामुळे उपलब्ध रक्कम {avail} आहे.",
+    },
+    "account_not_found": {
+        "en": "I could not find a savings account on your profile. Let me connect you to a colleague.",
+        "hi": "आपकी प्रोफ़ाइल में मुझे कोई बचत खाता नहीं मिला। मैं आपको सहकर्मी से जोड़ती हूँ।",
+        "hinglish": "Aapki profile mein mujhe koi savings account nahi mila. Main aapko colleague se connect karti hoon.",
+        "mr": "तुमच्या प्रोफाइलवर मला बचत खाते सापडले नाही. मी तुम्हाला सहकाऱ्याशी जोडते.",
+    },
+    "txn_none": {
+        "en": "I do not see any recent transactions on your account.",
+        "hi": "आपके खाते में मुझे कोई हाल का लेन-देन नहीं दिख रहा।",
+        "hinglish": "Aapke account mein mujhe koi recent transaction nahi dikh raha.",
+        "mr": "तुमच्या खात्यात मला अलीकडील व्यवहार दिसत नाहीत.",
+    },
+    "txn_list": {
+        "en": "Your last {n} transactions: {items}.",
+        "hi": "आपके पिछले {n} लेन-देन: {items}।",
+        "hinglish": "Aapke last {n} transactions: {items}.",
+        "mr": "तुमचे शेवटचे {n} व्यवहार: {items}.",
+    },
+    "txn_dr": {"en": "debit", "hi": "डेबिट", "hinglish": "debit", "mr": "डेबिट"},
+    "txn_cr": {"en": "credit", "hi": "क्रेडिट", "hinglish": "credit", "mr": "क्रेडिट"},
+    "txn_item": {
+        "en": "{date}, {dir} of {amount}, {narr}",
+        "hi": "{date}, {amount} का {dir}, {narr}",
+        "hinglish": "{date}, {amount} ka {dir}, {narr}",
+        "mr": "{date}, {amount} चे {dir}, {narr}",
+    },
+    "dues_none": {
+        "en": "You have no overdue amount on your loan. Thank you for staying regular.",
+        "hi": "आपके लोन पर कोई बकाया राशि नहीं है। नियमित रहने के लिए धन्यवाद।",
+        "hinglish": "Aapke loan par koi overdue amount nahi hai. Regular rehne ke liye thank you.",
+        "mr": "तुमच्या कर्जावर कोणतीही थकबाकी नाही. नियमित राहिल्याबद्दल धन्यवाद.",
+    },
+    "dues_info": {
+        "en": "Your loan {loan} has {amount} overdue across {missed} missed EMIs, {dpd} days past due. Charges added so far are {charges}.",
+        "hi": "आपके लोन {loan} पर {missed} छूटी हुई ईएमआई के {amount} बकाया हैं, जो {dpd} दिन से लंबित हैं। अब तक जुड़े शुल्क {charges} हैं।",
+        "hinglish": "Aapke loan {loan} par {missed} missed EMI ke {amount} overdue hain, {dpd} din se pending. Ab tak ke charges {charges} hain.",
+        "mr": "तुमच्या कर्ज {loan} वर {missed} चुकलेल्या ईएमआयचे {amount} थकले आहेत, {dpd} दिवसांपासून प्रलंबित. आतापर्यंतचे शुल्क {charges} आहे.",
+    },
+    "dues_ask": {
+        "en": "Please tell me how much you can pay and on which date.",
+        "hi": "कृपया बताएं कि आप कितना और किस तारीख को भुगतान कर सकते हैं।",
+        "hinglish": "Please bataiye aap kitna aur kis date ko payment kar sakte hain.",
+        "mr": "कृपया सांगा तुम्ही किती आणि कोणत्या तारखेला भरू शकता.",
+    },
+    "ptp_bad_amount": {
+        "en": "That amount does not look right. Please tell me an amount above zero and not more than your loan outstanding.",
+        "hi": "यह राशि सही नहीं लग रही। कृपया शून्य से अधिक और लोन की बकाया राशि से अधिक नहीं, ऐसी राशि बताएं।",
+        "hinglish": "Ye amount sahi nahi lag raha. Please zero se zyada aur loan outstanding se zyada nahi, aisa amount bataiye.",
+        "mr": "ही रक्कम बरोबर वाटत नाही. कृपया शून्यापेक्षा जास्त आणि कर्जाच्या थकबाकीपेक्षा जास्त नाही अशी रक्कम सांगा.",
+    },
+    "ptp_bad_date": {
+        "en": "That date does not work. Please give me a payment date from today up to thirty days from now.",
+        "hi": "यह तारीख मान्य नहीं है। कृपया आज से तीस दिन के भीतर की भुगतान तारीख बताएं।",
+        "hinglish": "Ye date chal nahi sakti. Please aaj se tees din ke andar ki payment date bataiye.",
+        "mr": "ही तारीख चालणार नाही. कृपया आजपासून तीस दिवसांच्या आतील भरणा तारीख सांगा.",
+    },
+    "ptp_ok_full": {
+        "en": "Noted. You will pay {amount} on {date}. That covers your full dues of {total}. Please make sure the payment is done by that date.",
+        "hi": "दर्ज कर लिया। आप {date} को {amount} का भुगतान करेंगे। इससे आपकी पूरी बकाया राशि {total} चुक जाएगी। कृपया उस तारीख तक भुगतान सुनिश्चित करें।",
+        "hinglish": "Note kar liya. Aap {date} ko {amount} ka payment karenge. Isse aapke poore dues {total} cover ho jayenge. Please us date tak payment kar dijiye.",
+        "mr": "नोंद केली. तुम्ही {date} रोजी {amount} भराल. यामुळे तुमची पूर्ण थकबाकी {total} भरली जाईल. कृपया त्या तारखेपर्यंत भरणा करा.",
+    },
+    "ptp_ok_partial": {
+        "en": "Noted. You will pay {amount} on {date}. Your total dues are {total}, so {rest} will still be pending after that. Please make sure the payment is done by that date.",
+        "hi": "दर्ज कर लिया। आप {date} को {amount} का भुगतान करेंगे। आपकी कुल बकाया राशि {total} है, इसलिए उसके बाद {rest} बाकी रहेंगे। कृपया उस तारीख तक भुगतान सुनिश्चित करें।",
+        "hinglish": "Note kar liya. Aap {date} ko {amount} ka payment karenge. Aapke total dues {total} hain, isliye uske baad {rest} baaki rahenge. Please us date tak payment kar dijiye.",
+        "mr": "नोंद केली. तुम्ही {date} रोजी {amount} भराल. तुमची एकूण थकबाकी {total} आहे, त्यामुळे त्यानंतर {rest} बाकी राहतील. कृपया त्या तारखेपर्यंत भरणा करा.",
+    },
+    "rtp_ack": {
+        "en": "I have noted that. The payment is still due, and a colleague will follow up with you.",
+        "hi": "मैंने यह दर्ज कर लिया है। भुगतान अभी भी देय है, और हमारे सहकर्मी आपसे संपर्क करेंगे।",
+        "hinglish": "Maine ye note kar liya hai. Payment abhi bhi due hai, aur hamare colleague aapse follow up karenge.",
+        "mr": "मी ही नोंद केली आहे. भरणा अजूनही देय आहे, आणि आमचे सहकारी तुमच्याशी संपर्क साधतील.",
+    },
+    "rtp_hardship": {
+        "en": "I have noted that, and I am sorry to hear it. I can record this as a hardship for a colleague to review. Would you like me to do that?",
+        "hi": "मैंने यह दर्ज कर लिया है, और यह सुनकर मुझे दुख हुआ। मैं इसे कठिनाई के रूप में दर्ज कर सकती हूँ ताकि सहकर्मी इसे देखें। क्या मैं ऐसा करूँ?",
+        "hinglish": "Maine ye note kar liya hai, aur ye sunkar mujhe afsos hua. Main ise hardship ke roop mein record kar sakti hoon taaki colleague review karein. Kya main aisa karoon?",
+        "mr": "मी ही नोंद केली आहे, आणि हे ऐकून वाईट वाटले. मी ही अडचण म्हणून नोंदवू शकते जेणेकरून सहकारी ती तपासतील. मी तसे करू का?",
+    },
+    "rtp_paid": {
+        "en": "I have noted that you say you already paid. Please give me the payment date, amount and UTR so I can check it.",
+        "hi": "मैंने दर्ज किया कि आप भुगतान कर चुके हैं। कृपया भुगतान की तारीख, राशि और यूटीआर बताएं ताकि मैं जाँच सकूँ।",
+        "hinglish": "Maine note kiya ki aap payment kar chuke hain. Please payment ki date, amount aur UTR bataiye taaki main check kar sakoon.",
+        "mr": "तुम्ही आधीच भरणा केल्याची नोंद केली. कृपया भरण्याची तारीख, रक्कम आणि यूटीआर सांगा म्हणजे मी तपासू शकेन.",
+    },
+    "rtp_dispute": {
+        "en": "I have noted your concern. I will connect you to a colleague who can look into it.",
+        "hi": "मैंने आपकी शिकायत दर्ज कर ली है। मैं आपको ऐसे सहकर्मी से जोड़ती हूँ जो इसे देख सकें।",
+        "hinglish": "Maine aapki concern note kar li hai. Main aapko aise colleague se connect karti hoon jo ise dekh sakein.",
+        "mr": "मी तुमची तक्रार नोंदवली आहे. मी तुम्हाला ती तपासू शकणाऱ्या सहकाऱ्याशी जोडते.",
+    },
+    "faq_not_found": {
+        "en": "I do not have an answer for that. I can connect you to a colleague.",
+        "hi": "इसका उत्तर मेरे पास नहीं है। मैं आपको सहकर्मी से जोड़ सकती हूँ।",
+        "hinglish": "Iska answer mere paas nahi hai. Main aapko colleague se connect kar sakti hoon.",
+        "mr": "याचे उत्तर माझ्याकडे नाही. मी तुम्हाला सहकाऱ्याशी जोडू शकते.",
+    },
+    "faq_sms_sent": {
+        "en": "I have also sent this to your number {v}.",
+        "hi": "मैंने यह आपके नंबर {v} पर भी भेज दिया है।",
+        "hinglish": "Maine ye aapke number {v} par bhi bhej diya hai.",
+        "mr": "मी हे तुमच्या नंबर {v} वरही पाठवले आहे.",
+    },
+    "faq_sms_offer": {
+        "en": "Once you verify, I can send this by SMS.",
+        "hi": "आपके सत्यापन के बाद मैं यह एसएमएस से भेज सकती हूँ।",
+        "hinglish": "Aapke verify karne ke baad main ye SMS se bhej sakti hoon.",
+        "mr": "तुमची पडताळणी झाल्यावर मी हे एसएमएसने पाठवू शकते.",
+    },
+}
