@@ -39,7 +39,14 @@ export class PcmPlayer {
       }
       if (!last) return false;
       const l = last;
-      await new Promise<void>((r) => { this.done = r; l.addEventListener("ended", () => r()); });
+      // the last source may already have ended before the listener attaches: also resolve on the clock and a safety timeout
+      await new Promise<void>((r) => {
+        const fin = () => { clearTimeout(tm); r(); };
+        const tm = setTimeout(fin, Math.max(0, next - ctx.currentTime) * 1000 + 1000);
+        this.done = fin;
+        l.addEventListener("ended", fin);
+        if (ctx.currentTime >= next) fin();
+      });
       return !ac.signal.aborted;
     } catch {
       return false;
