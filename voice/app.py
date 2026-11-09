@@ -16,12 +16,12 @@ from pathlib import Path
 
 import httpx
 from fastapi import FastAPI, HTTPException, Query, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from voice import providers
+from voice import providers, tts as tts_mod
 
 ROOT = Path(__file__).resolve().parent.parent
 ENV_LOCAL = ROOT / ".env.local"  # module-level so tests can point it at a temp file
@@ -971,6 +971,47 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         finally:
             tick("tts", t0)
 
+    pcm_cache, tokens = tts_mod.PcmCache(), tts_mod.Tokens()
+
+    def tts_defer(c: dict, text: str, fixed: bool) -> dict:
+        """Streaming mode: synthesis happens when the browser GETs audio_url (after the turn JSON is out)."""
+        s = c["set"]
+        payload = {"text": text, "model": "timbre-v3.0", "voice": s["tts_voice"], "language": TTS_LANG.get(c["language"], "hi-IN"),
+                   "speed": s["tts_speed"], "audio_config": tts_mod.RAW_CONFIG}
+        key = (text, s["tts_voice"], payload["language"], s["tts_speed"]) if fixed else None
+        t = tokens.issue(c["id"], {"payload": payload, "key": key})
+        return {"audio_url": f"/calls/{c['id']}/audio/{t}", "audio_rate": tts_mod.RATE}
+
+    @app.get("/calls/{call_id}/audio/{token}")
+    async def audio_stream(call_id: str, token: str):
+        job = tokens.take(call_id, token)
+        c = calls.get(call_id)
+        if not job or not c:
+            raise HTTPException(404, "unknown audio")
+        key, payload = job["key"], job["payload"]
+
+        async def body():
+            t0, first, got, hit = time.perf_counter(), None, bytearray(), pcm_cache.get(key) if key else None
+            try:
+                if hit is not None:
+                    first = 0.0
+                    yield hit
+                else:
+                    async for pcm in tts_mod.stream_pcm(http, cfg.gnani_key(), payload):
+                        first = first if first is not None else (time.perf_counter() - t0) * 1000
+                        got += pcm
+                        yield pcm
+                    if key and got:
+                        pcm_cache.put(key, bytes(got))
+            except (httpx.HTTPError, tts_mod.TTSError):
+                log.warning("call=%s tts_failed", call_id)  # soft failure: the text is already shown
+            finally:  # synthesis runs after the turn JSON, so its timings are logged and kept on the call record
+                c["last_tts"] = {"tts_first_ms": round(first or 0), "tts_ms": round((time.perf_counter() - t0) * 1000), "cached": hit is not None}
+                log.info("call=%s tts_stream %s", call_id, json.dumps(c["last_tts"]))
+
+        return StreamingResponse(body(), media_type="application/octet-stream",
+                                 headers={"X-Sample-Rate": str(tts_mod.RATE), "Access-Control-Expose-Headers": "X-Sample-Rate", "Cache-Control": "no-store"})
+
     def reply(c: dict, text: str, acts: list[dict], audio: str, **extra) -> dict:
         return {**extra, "agent_text": text, "audio_b64": audio, "mime": "audio/wav", "language": c["language"],
                 "actions": acts, "ended": c["ended"]}
@@ -1036,7 +1077,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
                 raise HTTPException(422, f"model: not allowed for {provider}")
         return provider, model, validate_settings(body.get("settings") or {}, provider)
 
-    async def open_call(provider: str, model: str, sett: dict, want_tts: bool) -> dict:
+    async def open_call(provider: str, model: str, sett: dict, want_tts: bool, stream: bool = False) -> dict:
         tm, t_start = {}, time.perf_counter()
         _TM.set(tm)
         now = time.time()
@@ -1054,18 +1095,19 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         hello = f"(call connected, call_id={cid})" if sett["cache_prompt"] else "(call connected)"
         c["messages"] += [{"role": "user", "content": hello}, {"role": "assistant", "content": text}]
         calls[cid] = c
-        audio = await tts(text, c["language"], cid, sett) if text and want_tts else ""
+        aud = tts_defer(c, text, True) if text and want_tts and stream else {}
+        audio = await tts(text, c["language"], cid, sett) if text and want_tts and not stream else ""
         timings = finish_timings(tm, t_start, provider, model)
         log.info("call=%s turn=0 timings=%s", cid, json.dumps(timings))
-        return {"call_id": cid, **reply(c, text, [{"name": "start_call", "ok": bool(res.get("ok"))}], audio),
+        return {"call_id": cid, **reply(c, text, [{"name": "start_call", "ok": bool(res.get("ok"))}], audio, **aud),
                 "timings": timings, **({"settings": sett} if cfg.dev else {})}
 
     @app.post("/calls")
-    async def start(request: Request, tts_q: bool = Query(True, alias="tts")):
+    async def start(request: Request, tts_q: bool = Query(True, alias="tts"), stream_q: bool = Query(False, alias="stream")):
         raw = await read_body(request)
         body = json_body(request, raw) if raw.strip() else {}
         provider, model, sett = await resolve_opts(body)
-        return await open_call(provider, model, sett, tts_q and body.get("tts") is not False)
+        return await open_call(provider, model, sett, tts_q and body.get("tts") is not False, stream_q or body.get("stream") is True)
 
     async def handle_text(c: dict, user_text: str) -> tuple[str, list[dict]]:
         if not user_text:
@@ -1103,7 +1145,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         log.info("call=%s action=report_secret_spoken ok=%s", c["id"], bool(res.get("ok")))
         return speak, [{"name": "report_secret_spoken", "ok": bool(res.get("ok"))}]
 
-    async def do_turn(c: dict, wav: bytes | None, user_text: str | None, want_tts: bool) -> dict:
+    async def do_turn(c: dict, wav: bytes | None, user_text: str | None, want_tts: bool, stream: bool = False) -> dict:
         tm, t_start = {}, time.perf_counter()
         _TM.set(tm)
         call_id = c["id"]
@@ -1132,16 +1174,17 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
                 raise
             c["ts"] = time.time()
             text = redact_agent(text, c.get("refs"))
-            audio = await tts(text, c["language"], call_id, c["set"]) if text and want_tts else ""
-            if c.get("rb_new") and (audio or not want_tts):  # a read-back counts as heard only once it was delivered
+            aud = tts_defer(c, text, text in REPROMPT.values()) if text and want_tts and stream else {}
+            audio = await tts(text, c["language"], call_id, c["set"]) if text and want_tts and not stream else ""
+            if c.get("rb_new") and (audio or aud or not want_tts):  # a read-back counts as heard only once it was delivered
                 c["pending_rb"], c["rb_turn"] = c["rb_new"], c["turn"]
             c["rb_new"] = c["rb_active"] = None
             timings = finish_timings(tm, t_start, c["llm"], c["model"])
             log.info("call=%s turn=%d timings=%s", call_id, c["turn"], json.dumps(timings))
-            return reply(c, text, acts, audio, user_text=redact(user_text), timings=timings)
+            return reply(c, text, acts, audio, user_text=redact(user_text), timings=timings, **aud)
 
     @app.post("/calls/{call_id}/turn")
-    async def turn(call_id: str, request: Request, tts_q: bool = Query(True, alias="tts")):
+    async def turn(call_id: str, request: Request, tts_q: bool = Query(True, alias="tts"), stream_q: bool = Query(False, alias="stream")):
         c = calls.get(call_id)
         if c and time.time() - c["ts"] > TTL_S:
             calls.pop(call_id, None)
@@ -1150,7 +1193,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             raise HTTPException(404, "unknown call")
         raw = await read_body(request)
         ctype = request.headers.get("content-type", "")
-        want_tts = tts_q
+        want_tts, stream = tts_q, stream_q
         wav = user_text = None
         if ctype.startswith("multipart/"):
             wav = parse_audio(ctype, raw)
@@ -1163,7 +1206,8 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             if not isinstance(body.get("text"), str):
                 raise HTTPException(422, "expected audio or text")
             user_text, want_tts = body["text"].strip(), tts_q and body.get("tts") is not False
-        return await do_turn(c, wav, user_text, want_tts)
+            stream = stream or body.get("stream") is True
+        return await do_turn(c, wav, user_text, want_tts, stream)
 
     if cfg.dev:  # developer lab: not registered at all when off, so every /dev/* route is a plain 404
         jobs: dict[str, dict] = {}

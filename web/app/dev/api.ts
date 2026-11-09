@@ -31,7 +31,7 @@ export type DevConfig = {
 export type Cfg = { name: string; llm: string; model: string; settings: Settings };
 
 export type Reply = {
-  call_id: string; user_text?: string; agent_text: string; audio_b64?: string; mime?: string;
+  call_id: string; user_text?: string; agent_text: string; audio_b64?: string; audio_url?: string; mime?: string;
   actions?: { name: string; ok: boolean }[]; ended?: boolean; timings?: Timings; settings?: Settings;
 };
 
