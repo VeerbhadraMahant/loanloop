@@ -3,7 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { Button, Card, Pill } from "@/components/ui";
 import { SessionSummary, TurnStat, type Stat, type Turn } from "@/components/turn-stats";
 import { useHoldToTalk } from "@/lib/use-hold-to-talk";
-import { api, type Cfg, type Reply, type Settings } from "./api";
+import { PcmPlayer } from "@/lib/pcm-player";
+import { api, VOICE, type Cfg, type Reply, type Settings } from "./api";
 
 type Msg = { who: "caller" | "agent"; text: string; stat?: Stat };
 type Status = "idle" | "connecting" | "live" | "thinking" | "ended";
@@ -18,15 +19,16 @@ export function LiveCall({ cfg, customer }: { cfg: Cfg; customer: string }) {
   const [eff, setEff] = useState<Settings | null>(null);
   const callId = useRef<string | null>(null);
   const gen = useRef(0);
+  const pcm = useRef<PcmPlayer | null>(null);
   const count = useRef(0);
-  useEffect(() => () => { gen.current++; }, []);
+  useEffect(() => () => { gen.current++; pcm.current?.stop(); }, []);
 
   const request = async (path: string, init: RequestInit, input: Stat["input"]) => {
     const g = gen.current;
     setError(null); setStatus(path === "/calls" ? "connecting" : "thinking");
     try {
       const t0 = performance.now();
-      const r = await api<Reply>(path, init);
+      const r = await api<Reply>(path + (path.includes("?") ? "&" : "?") + "stream=1", init);
       const ms = performance.now() - t0;
       if (g !== gen.current) return;
       if (path === "/calls") { callId.current = r.call_id; count.current = 0; setMsgs([]); setTurns([]); }
@@ -34,7 +36,9 @@ export function LiveCall({ cfg, customer }: { cfg: Cfg; customer: string }) {
       setMsgs((m) => [...m, ...(r.user_text ? [{ who: "caller" as const, text: r.user_text }] : []), { who: "agent", text: r.agent_text, stat }]);
       setTurns((t) => [...t, { ...stat, provider: r.timings?.provider ?? cfg.llm, model: r.timings?.model ?? cfg.model, actions: (r.actions ?? []).map((a) => a.name) }]);
       if (r.settings) setEff(r.settings);
-      if (r.audio_b64) new Audio(`data:${r.mime ?? "audio/wav"};base64,${r.audio_b64}`).play().catch(() => {});
+      pcm.current?.stop();
+      if (r.audio_url) (pcm.current ??= new PcmPlayer()).play(`${VOICE}${r.audio_url}`);
+      else if (r.audio_b64) new Audio(`data:${r.mime ?? "audio/wav"};base64,${r.audio_b64}`).play().catch(() => {});
       if (r.ended) { callId.current = null; setStatus("ended"); } else setStatus("live");
     } catch (e) {
       if (g !== gen.current) return;

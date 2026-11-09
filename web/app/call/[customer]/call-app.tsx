@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button, Pill } from "@/components/ui";
 import { downsample, encodeWav } from "@/lib/wav";
+import { PcmPlayer } from "@/lib/pcm-player";
 import { LLMS, SessionSummary, TurnStat, type LlmId, type Stat, type Timings, type Turn } from "@/components/turn-stats";
 
 const VOICE = process.env.NEXT_PUBLIC_VOICE_URL ?? "http://127.0.0.1:8100";
@@ -12,7 +13,7 @@ type Status = "idle" | "connecting" | "listening" | "thinking" | "speaking" | "e
 type Action = { name: string; ok: boolean };
 type Msg = { who: "caller" | "agent"; text: string; actions?: Action[]; stat?: Stat };
 type Health = Record<string, { model?: string; ready?: boolean }>;
-type Reply = { user_text?: string; agent_text: string; audio_b64?: string; mime?: string; language?: string; actions?: Action[]; ended?: boolean; timings?: Timings };
+type Reply = { user_text?: string; agent_text: string; audio_b64?: string; audio_url?: string; mime?: string; language?: string; actions?: Action[]; ended?: boolean; timings?: Timings };
 
 class HttpError extends Error { constructor(msg: string, readonly status: number) { super(msg); } }
 
@@ -47,6 +48,8 @@ export default function CallApp({ customer }: { customer: string }) {
   const callLlm = useRef<LlmId>("ollama"); // fallback provider tag when the server sends no timings
   const callId = useRef<string | null>(null);
   const audio = useRef<HTMLAudioElement | null>(null);
+  const pcm = useRef<PcmPlayer | null>(null);
+  const playId = useRef(0);
   const rec = useRef<Rec | null>(null);
   const holding = useRef(false);   // talk control is currently pressed
   const opening = useRef(false);   // getUserMedia in flight
@@ -77,7 +80,7 @@ export default function CallApp({ customer }: { customer: string }) {
   const inCall = status !== "idle" && status !== "connecting" && !ended;
   const busy = status === "thinking" || status === "connecting";
 
-  const stopAudio = useCallback(() => { const a = audio.current; if (a) { a.onended = a.onerror = null; a.pause(); a.removeAttribute("src"); } }, []);
+  const stopAudio = useCallback(() => { playId.current++; pcm.current?.stop(); const a = audio.current; if (a) { a.onended = a.onerror = null; a.pause(); a.removeAttribute("src"); } }, []);
 
   const finish = useCallback(() => { callId.current = null; setStatus("ended"); }, []);
 
@@ -91,7 +94,12 @@ export default function CallApp({ customer }: { customer: string }) {
     setTurns((t) => [...t, { ...stat, provider: r.timings?.provider ?? callLlm.current, model: r.timings?.model ?? "", actions: (r.actions ?? []).map((a) => a.name) }]);
     if (r.language) setLang(r.language);
     const after = () => (r.ended ? finish() : setStatus((s) => (s === "speaking" ? "listening" : s)));
-    if (r.audio_b64) {
+    if (r.audio_url) {
+      stopAudio();
+      const id = playId.current;
+      setStatus("speaking");
+      (pcm.current ??= new PcmPlayer()).play(`${VOICE}${r.audio_url}`).then(() => { if (id === playId.current) after(); });
+    } else if (r.audio_b64) {
       const a = (audio.current ??= new Audio());
       a.onended = a.onerror = after;
       a.src = `data:${r.mime ?? "audio/wav"};base64,${r.audio_b64}`;
@@ -99,7 +107,7 @@ export default function CallApp({ customer }: { customer: string }) {
       a.play().catch(after); // autoplay blocked: text is still shown
     } else if (r.ended) finish();
     else setStatus("listening");
-  }, [finish]);
+  }, [finish, stopAudio]);
 
   // Runs a request; drops the result if the call was ended meanwhile.
   const run = async (path: string, init: RequestInit, onOk: (r: Reply & { call_id: string }, ms: number) => void, onFail: Status) => {
@@ -117,13 +125,13 @@ export default function CallApp({ customer }: { customer: string }) {
 
   const start = () => {
     setError(null); setStatus("connecting"); callLlm.current = llm;
-    run("/calls", jsonPost({ customer, tts: voiceReplies, ...(devMode ? { llm } : {}) }), (r, ms) => { callId.current = r.call_id; setMsgs([]); setTurns([]); turnN.current = 0; apply(r, ms, "start"); }, "idle");
+    run("/calls?stream=1", jsonPost({ customer, tts: voiceReplies, ...(devMode ? { llm } : {}) }), (r, ms) => { callId.current = r.call_id; setMsgs([]); setTurns([]); turnN.current = 0; apply(r, ms, "start"); }, "idle");
   };
 
   const send = (init: RequestInit, input: Stat["input"]) => {
     if (!callId.current) return;
     setError(null); setStatus("thinking");
-    run(`/calls/${callId.current}/turn`, init, (r, ms) => apply(r, ms, input), "listening");
+    run(`/calls/${callId.current}/turn?stream=1`, init, (r, ms) => apply(r, ms, input), "listening");
   };
 
   const sendText = () => {
@@ -181,7 +189,7 @@ export default function CallApp({ customer }: { customer: string }) {
   };
 
   const end = () => {
-    gen.current++; abort.current?.abort();
+    gen.current++; abort.current?.abort(); pcm.current?.stop();
     if (rec.current) { clearTimeout(rec.current.timer); rec.current.stop(); rec.current = null; setTalking(false); }
     holding.current = false;
     finish();
