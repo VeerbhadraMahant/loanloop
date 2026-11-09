@@ -1,6 +1,13 @@
 """Behaviour eval for the voice agent: replays tools/eval_cases.jsonl as typed turns against a running voice service.
 
-    python tools/eval_agent.py [--voice http://127.0.0.1:8100] [--gateway http://127.0.0.1:8000] [--case-id N] [--only substr] [--dry]
+    cd gateway && uv run python ../tools/eval_agent.py --reset-limits --outbound-dob "<dob of the case customer>" [--only faq_] [--resume] [--dry]
+    (other flags: --voice URL --gateway URL --case-id N --dashboard-token T (env DASHBOARD_TOKEN) --only PREFIX)
+
+Voice service caps live calls at 50 and an ended call still counts until its 30 min TTL, so one full run (~90 cases) needs a voice restart
+half way: the harness ends every call with a "bye" turn, stops cleanly on HTTP 429 (remaining cases are reported "not run"), and
+--resume skips the ids that passed in the previous results file. Restart the voice service, then re-run with --resume.
+--reset-limits (needs redis-py, hence `uv run` from gateway/) deletes ll:rl:verify:* in the gateway's Redis (REDIS_URL) before the run and
+before each outbound case, because all outbound cases share one customer whose verify counter locks after 3 fails per hour.
 
 --dry only validates the cases file (no network). A real run starts a call per case (tts off), sends each turn, checks the
 `expect` block and writes tools/out/eval_results.json (pass rate, median/p95 turn latency, avg LLM calls per turn).
@@ -105,6 +112,25 @@ def find_case(gw: str, token: str) -> dict | None:
     return None
 
 
+def reset_limits(url: str) -> int:
+    import redis  # gateway dependency; only needed with --reset-limits
+
+    r = redis.Redis.from_url(url)
+    keys = list(r.scan_iter("ll:rl:verify:*"))
+    return r.delete(*keys) if keys else 0
+
+
+def post(v: httpx.Client, path: str, **kw) -> httpx.Response:
+    r = v.post(path, **kw)
+    if r.status_code == 502:  # upstream hiccup: one retry
+        r = v.post(path, **kw)
+    return r
+
+
+class CallCap(Exception):
+    """voice service refused a new call (429): restart it, then --resume."""
+
+
 def fill(s: str, vals: dict) -> str:
     for k, v in vals.items():
         s = s.replace("{" + k + "}", str(v))
@@ -115,7 +141,9 @@ def run_case(v: httpx.Client, c: dict, vals: dict, case_id: int | None, start_pa
     body: dict = {"customer": c["persona"], "direction": c["direction"]}
     if c["direction"] == "outbound":
         body["case_id"] = case_id
-    d = v.post(f"{start_path}?tts=false", json=body)
+    d = post(v, f"{start_path}?tts=false", json=body)
+    if d.status_code == 429:
+        raise CallCap()
     d.raise_for_status()
     d = d.json()
     cid, x = d["call_id"], c["expect"]
@@ -123,7 +151,7 @@ def run_case(v: httpx.Client, c: dict, vals: dict, case_id: int | None, start_pa
     for t in c["turns"]:
         say = fill(t, vals)
         t0 = time.perf_counter()
-        r = v.post(f"/calls/{cid}/turn?tts=false", json={"text": say})
+        r = post(v, f"/calls/{cid}/turn?tts=false", json={"text": say})
         ms = (time.perf_counter() - t0) * 1000
         if r.status_code != 200:
             log.append(f"turn failed HTTP {r.status_code}")
@@ -137,6 +165,11 @@ def run_case(v: httpx.Client, c: dict, vals: dict, case_id: int | None, start_pa
         log.append(f"USER: {say}\nAGENT: {texts[-1]}  [{langs[-1]}] {sorted({a['name'] for a in j.get('actions', [])})} {ms:.0f}ms")
         if j.get("ended"):
             break
+    if not (lat and j.get("ended")):  # close the call so the gateway session is cleared; the reply is not evaluated
+        try:
+            v.post(f"/calls/{cid}/turn?tts=false", json={"text": "bye"})
+        except httpx.HTTPError:
+            pass
     why = []
     low = " || ".join(texts).lower()
     if x.get("actions_any") and not set(x["actions_any"]) & set(oks):
@@ -172,7 +205,10 @@ def main(argv=None) -> int:
     ap.add_argument("--cases", type=Path, default=CASES)
     ap.add_argument("--case-id", type=int, help="collection case id for outbound cases (default: first open one from /dashboard/collections)")
     ap.add_argument("--outbound-dob", default=os.environ.get("OUTBOUND_DOB", ""), help='DOB of the outbound case customer, e.g. "14 August 1991" (else outbound cases are skipped)')
-    ap.add_argument("--only", help="run only case ids containing this text")
+    ap.add_argument("--only", help="run only case ids starting with this prefix, e.g. faq_ or out_")
+    ap.add_argument("--dashboard-token", default=env("DASHBOARD_TOKEN") or "dev-dashboard-token-change-me", help="bearer for outbound starts and the dashboard (never printed)")
+    ap.add_argument("--reset-limits", action="store_true", help="delete ll:rl:verify:* in Redis before the run and before each outbound case")
+    ap.add_argument("--resume", action="store_true", help="skip case ids that passed in the previous --out file")
     ap.add_argument("--start-path", default="/calls", help="voice endpoint that opens a call (contract names /start; the service today exposes /calls)")
     ap.add_argument("--out", type=Path, default=OUT)
     ap.add_argument("--dry", action="store_true", help="validate the cases file only")
@@ -187,12 +223,19 @@ def main(argv=None) -> int:
     if a.dry:
         return 0
     if a.only:
-        cases = [c for c in cases if a.only in c["id"]]
+        cases = [c for c in cases if c["id"].startswith(a.only)]
+    if a.resume and a.out.exists():
+        done = {r["id"] for r in json.loads(a.out.read_text(encoding="utf-8"))["results"] if r["pass"]}
+        cases = [c for c in cases if c["id"] not in done]
+        print(f"--resume: {len(done)} previously passed ids skipped")
+    redis_url = env("REDIS_URL") or "redis://localhost:56379/0"
+    if a.reset_limits:
+        print(f"reset-limits: removed {reset_limits(redis_url)} verify counter(s)")
 
     case_id, row = a.case_id, None
     if case_id is None and any(c["direction"] == "outbound" for c in cases):
         try:
-            row = find_case(a.gateway, env("DASHBOARD_TOKEN") or "dev-dashboard-token-change-me")
+            row = find_case(a.gateway, a.dashboard_token)
             case_id = row and row.get("id")
         except Exception as ex:  # outbound cases are skipped, inbound ones still run
             print(f"WARN no open collection case ({ex}); outbound cases will be skipped")
@@ -202,7 +245,7 @@ def main(argv=None) -> int:
     PERSONAS["outbound_demo"]["dob"] = a.outbound_dob
     amount = int((row or {}).get("overdue_amount") or 1000)
     when = (dt.date.today() + dt.timedelta(days=7)).strftime("%d %B %Y")
-    v = httpx.Client(base_url=a.voice, timeout=180)
+    v = httpx.Client(base_url=a.voice, timeout=180, headers={"Authorization": "Bearer " + a.dashboard_token})
     results, skipped = [], []
     for c in cases:
         if c["direction"] == "outbound" and case_id is None:
@@ -210,8 +253,14 @@ def main(argv=None) -> int:
             print(f"SKIP {c['id']} (no collection case)")
             continue
         vals = {**PERSONAS[c["persona"]], "ptp_date": when, "ptp_amount": amount}
+        if a.reset_limits and c["direction"] == "outbound":
+            reset_limits(redis_url)
         try:
             r = run_case(v, c, vals, case_id, a.start_path)
+        except CallCap:
+            print(f"STOP {c['id']}: voice service returned 429 (50-call cap). Restart it and re-run with --resume.")
+            skipped += [x["id"] for x in cases[cases.index(c):]]
+            break
         except Exception as ex:
             r = {"id": c["id"], "pass": False, "why": [f"error: {ex}"], "latency_ms": [], "llm_calls": [], "log": []}
         results.append(r)

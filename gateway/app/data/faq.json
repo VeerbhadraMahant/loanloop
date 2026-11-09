@@ -10,7 +10,10 @@
      "new account",
      "open savings account",
      "account opening",
-     "video kyc"
+     "video kyc",
+     "new savings account",
+     "open a new account",
+     "open a savings account"
     ],
     "hi": [
      "खाता खोल",
@@ -150,7 +153,10 @@
      "inactive account",
      "account reactivate",
      "account band ho gaya",
-     "account use nahi kiya"
+     "account use nahi kiya",
+     "account dormant",
+     "dormant ho gaya",
+     "dobara chalu"
     ],
     "mr": [
      "निष्क्रिय खाते",
@@ -443,7 +449,11 @@
      "money deducted atm",
      "cash not dispensed",
      "atm transaction failed",
-     "atm refund"
+     "atm refund",
+     "atm did not give cash",
+     "atm did not dispense",
+     "atm debited",
+     "account was debited"
     ],
     "hi": [
      "एटीएम फेल",
@@ -663,28 +673,45 @@
      "sent money to wrong person",
      "wrong number upi",
      "reverse upi payment",
-     "paid wrong account"
+     "paid wrong account",
+     "wrong upi id",
+     "reverse a completed upi payment",
+     "reverse completed upi",
+     "undo upi payment",
+     "cancel upi payment"
     ],
     "hi": [
      "गलत यूपीआई",
      "गलत नंबर पर पैसे",
      "गलत खाते में पैसे",
      "यूपीआई वापस",
-     "गलती से पैसे भेज"
+     "गलती से पैसे भेज",
+     "गलत यूपीआई आईडी",
+     "यूपीआई पेमेंट रिवर्स",
+     "यूपीआई पेमेंट वापस",
+     "यूपीआई पेमेंट रद्द"
     ],
     "hinglish": [
      "galat upi",
      "galat number par paisa",
      "galat account mein paisa",
      "upi reverse",
-     "galti se paisa bhej diya"
+     "galti se paisa bhej diya",
+     "upi payment reverse",
+     "upi payment wapas",
+     "upi payment cancel",
+     "completed upi payment reverse"
     ],
     "mr": [
      "चुकीचे यूपीआय",
      "चुकीच्या नंबरवर पैसे",
      "चुकीच्या खात्यात पैसे",
      "यूपीआय परत",
-     "चुकून पैसे पाठवले"
+     "चुकून पैसे पाठवले",
+     "यूपीआय पेमेंट रिव्हर्स",
+     "यूपीआय पेमेंट परत",
+     "यूपीआय पेमेंट रद्द",
+     "चुकीचा यूपीआय आयडी"
     ]
    },
    "answer": {
@@ -795,7 +822,10 @@
      "neft timing",
      "rtgs limit",
      "imps limit",
-     "fund transfer"
+     "fund transfer",
+     "neft, rtgs and imps",
+     "neft and rtgs",
+     "difference between neft"
     ],
     "hi": [
      "एनईएफटी आरटीजीएस आईएमपीएस",
@@ -885,7 +915,10 @@
      "card lost",
      "card stolen",
      "hotlist card",
-     "lost card"
+     "lost card",
+     "lost my debit card",
+     "lost my card",
+     "lost debit card"
     ],
     "hi": [
      "कार्ड ब्लॉक",
@@ -1045,7 +1078,9 @@
      "इंटरनॅशनल व्यवहार",
      "ऑनलाइन व्यवहार",
      "कॉन्टॅक्टलेस",
-     "परदेशात कार्ड"
+     "परदेशात कार्ड",
+     "कार्डचा ऑनलाइन",
+     "आंतरराष्ट्रीय वापर"
     ]
    },
    "answer": {
@@ -1201,7 +1236,9 @@
      "foreclose loan",
      "prepay loan",
      "close loan early",
-     "prepayment charges"
+     "prepayment charges",
+     "prepay my loan",
+     "if i prepay"
     ],
     "hi": [
      "लोन प्रीपेमेंट",
@@ -1400,7 +1437,9 @@
      "समय से पहले एफडी",
      "एफडी बंद",
      "एफडी पेनल्टी",
-     "एफडी पर लोन"
+     "एफडी पर लोन",
+     "एफडी समय से पहले",
+     "से पहले तोड़"
     ],
     "hinglish": [
      "fd todna",
@@ -1408,7 +1447,10 @@
      "fd jaldi band",
      "fd penalty",
      "fd par loan",
-     "fd break"
+     "fd break",
+     "fd maturity se pehle",
+     "maturity se pehle tod",
+     "fd tod"
     ],
     "mr": [
      "एफडी मोडणे",
@@ -1431,7 +1473,6 @@
    "keywords": {
     "en": [
      "recurring deposit",
-     "rd",
      "open rd",
      "rd instalment",
      "rd missed",
@@ -1446,7 +1487,6 @@
     ],
     "hinglish": [
      "recurring deposit",
-     "rd",
      "rd kholna",
      "rd ki kist",
      "rd miss",
@@ -1636,7 +1676,9 @@
      "bank kabhi nahi maangta",
      "caller ne otp manga",
      "call asli hai kya",
-     "otp share"
+     "otp share",
+     "bank kabhi otp",
+     "otp maangta"
     ],
     "mr": [
      "बँक ओटीपी मागते",
