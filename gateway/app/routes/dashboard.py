@@ -143,3 +143,49 @@ async def metrics(db: AsyncSession = Depends(get_db)):
         "loadtest": _read("loadtest.json"), "stt_benchmark": _read("stt_benchmark.json"),
         "e2e_latency": _read("e2e_latency.json"),
     })
+
+
+def _who(c) -> str:
+    parts = c.name.split()
+    return parts[0] + (f" {parts[-1][0]}." if len(parts) > 1 else "")
+
+
+@router.post("/jobs/run")
+async def run_jobs():
+    from app import jobs
+    return {"runs": await jobs.run_all()}
+
+
+@router.get("/collections")
+async def collections(db: AsyncSession = Depends(get_db)):
+    from app import jobs
+    from app.db.models import CollectionCase, Customer, JobRun, Loan, PromiseToPay, RefusalToPay
+
+    cust = {c.id: _who(c) for c in (await db.execute(select(Customer))).scalars()}
+    last4 = dict((await db.execute(select(Loan.id, Loan.loan_last4))).all())
+
+    def head(x):
+        return {"customer": cust.get(x.customer_id), "loan": f"ending {last4.get(x.loan_id)}"}
+
+    def case(c):
+        return {"id": c.id, **head(c), "overdue_amount": c.overdue_amount, "missed_emis": c.missed_emis, "dpd": c.dpd,
+                "bucket": c.bucket, "status": c.status, "priority": c.priority, "attempts": c.attempts,
+                "last_call_at": _iso(c.last_call_at), "next_action_at": _iso(c.next_action_at)}
+
+    cases = (await db.execute(select(CollectionCase).where(CollectionCase.status != "resolved")
+                              .order_by(CollectionCase.priority.desc(), CollectionCase.id))).scalars().all()
+    ptps = (await db.execute(select(PromiseToPay).order_by(PromiseToPay.id.desc()).limit(100))).scalars().all()
+    rtps = (await db.execute(select(RefusalToPay).order_by(RefusalToPay.id.desc()).limit(100))).scalars().all()
+    runs = (await db.execute(select(JobRun).order_by(JobRun.id.desc()).limit(10))).scalars().all()
+    return _clean({
+        "cases": [case(c) for c in cases],
+        "ptps": [{"id": p.id, "case_id": p.case_id, **head(p), "direction": p.direction, "amount": p.amount,
+                  "promised_date": _iso(p.promised_date), "amount_tag": p.amount_tag, "status": p.status,
+                  "paid_amount": p.paid_amount, "created_at": _iso(p.created_at), "resolved_at": _iso(p.resolved_at)} for p in ptps],
+        "rtps": [{"id": r.id, "case_id": r.case_id, **head(r), "direction": r.direction, "reason_code": r.reason_code,
+                  "note": r.note, "overdue_amount": r.overdue_amount, "created_at": _iso(r.created_at),
+                  "follow_up_at": _iso(r.follow_up_at)} for r in rtps],
+        "queue": [case(c) for c in await jobs.queue(db)],
+        "last_runs": [{"id": r.id, "job": r.job, "started_at": _iso(r.started_at), "finished_at": _iso(r.finished_at),
+                       "stats": r.stats} for r in runs],
+    })

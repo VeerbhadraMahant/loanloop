@@ -34,6 +34,8 @@ class Session(BaseModel):
     failed_attempts: int = 0
     approval_id: int | None = None
     prefetched_customer_id: int | None = None  # caller-ID claim only; tier stays 0
+    direction: str = "inbound"  # inbound|outbound
+    case_id: int | None = None  # outbound only
 
     def confirm_readback(self, field: str, value: str) -> None:
         self.readbacks[field] = norm_readback(field, value)
@@ -50,8 +52,10 @@ def _key(call_id: str) -> str:
     return f"ll:sess:{call_id}"
 
 
-async def create(call_id: str, language: str = "en", prefetched_customer_id: int | None = None) -> Session:
-    s = Session(call_id=call_id, language=language, prefetched_customer_id=prefetched_customer_id)
+async def create(call_id: str, language: str = "en", prefetched_customer_id: int | None = None,
+                 direction: str = "inbound", case_id: int | None = None) -> Session:
+    s = Session(call_id=call_id, language=language, prefetched_customer_id=prefetched_customer_id,
+                direction=direction, case_id=case_id)
     await save(s)
     return s
 

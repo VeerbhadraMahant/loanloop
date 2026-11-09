@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     encryption_key: str = ""
     public_gateway_url: str = "http://localhost:8000"
     session_ttl_s: int = 1800
+    jobs_interval_s: int = 3600  # cron-style jobs loop; 0 disables (tests)
 
 
 DEV_DEFAULTS = {"gateway_shared_secret": "dev-shared-secret-change-me", "dashboard_token": "dev-dashboard-token-change-me",

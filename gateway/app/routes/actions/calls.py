@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import events, sessions
 from app.contract import ActionIn, ActionResponse
-from app.db.models import Call, Customer, now
+from app.db.models import Call, CollectionCase, Customer, now
 from app.routes.actions._runner import action
 from app.speak import t
 
@@ -17,21 +17,31 @@ router = APIRouter(prefix="/actions")
 
 class StartCallIn(ActionIn):
     caller_number: str | None = Field(default=None, max_length=20, pattern=r"^[+\d][\d \-]{5,19}$")
+    direction: Literal["inbound", "outbound"] = "inbound"
+    case_id: int | None = Field(default=None, ge=1, le=2_000_000_000)  # outbound only
 
 
 @action("start_call", In=StartCallIn, router=router, needs_session=False)
 async def start_call(inp: StartCallIn, session, db: AsyncSession, bg: BackgroundTasks) -> ActionResponse:
-    cust_id = None
+    cust_id, case_id = None, None
+    if await sessions.get(inp.call_id) is not None:  # never reset a live session (tier, direction, case)
+        return ActionResponse(ok=False, speak=t("generic_error", inp.language), error_code="INVALID_INPUT")
+    if inp.direction == "outbound" and inp.case_id:
+        case = await db.get(CollectionCase, inp.case_id)
+        if case is None or case.status == "resolved":
+            return ActionResponse(ok=False, speak=t("not_found", inp.language), error_code="NOT_FOUND")
+        case_id, case.attempts, case.last_call_at = case.id, case.attempts + 1, now()
     if inp.caller_number:
         mobile = "".join(c for c in inp.caller_number if c.isdigit())[-10:]
         cust_id = (await db.execute(select(Customer.id).where(Customer.registered_mobile == mobile))).scalar()
     # caller-ID is only a claim: tier stays 0, customer_id stays unset until verify_caller
-    await sessions.create(inp.call_id, inp.language, prefetched_customer_id=cust_id)
+    await sessions.create(inp.call_id, inp.language, prefetched_customer_id=cust_id, direction=inp.direction, case_id=case_id)
     existing = await db.get(Call, inp.call_id)
     if existing is None:
-        db.add(Call(call_id=inp.call_id, language=inp.language))
+        db.add(Call(call_id=inp.call_id, language=inp.language, direction=inp.direction))
     bg.add_task(events.publish, {"type": "call_start", "call_id": inp.call_id, "language": inp.language, "tier": 0})
-    return ActionResponse(ok=True, speak=t("call_started", inp.language), data={"matched_caller": cust_id is not None})
+    key = "call_started_out" if inp.direction == "outbound" else "call_started"
+    return ActionResponse(ok=True, speak=t(key, inp.language), data={"matched_caller": cust_id is not None, "direction": inp.direction})
 
 
 class ReadbackIn(ActionIn):

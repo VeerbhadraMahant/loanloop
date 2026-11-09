@@ -223,6 +223,7 @@ TOOL_HINTS = {
 def load_tools(hints: bool = True) -> tuple[list[dict], set[str]]:
     acts = json.loads((ROOT / "agent" / "actions.json").read_text(encoding="utf-8"))["actions"]
     tools = []
+    acts = [a for a in acts if a["name"] != "start_call"]  # service-only: a model call could reset the session (e.g. to outbound)
     for a in acts:
         props, req = {}, []
         for v in a["variables"]:
@@ -769,7 +770,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
     async def gateway(cid: str, name: str, args: dict) -> dict:
         props = schemas.get(name)
         if props is not None:  # a small model sometimes invents argument names: drop keys outside the tool's schema
-            kept = {k: v for k, v in args.items() if k in props or k == "language" or (name == "start_call" and k in ("direction", "case_id"))}
+            kept = {k: v for k, v in args.items() if k in props or k == "language"}
             if len(kept) != len(args):
                 log.info("call=%s action=%s dropped_arg_keys=%d", cid, name, len(args) - len(kept))
             args = kept

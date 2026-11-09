@@ -68,3 +68,21 @@ def make_session(priya):
         await sessions.save(s)
         return s
     return _make
+
+
+@pytest_asyncio.fixture
+async def fresh():
+    """Reseed (drops and recreates all tables) for tests that change collections state."""
+    await seed(engine)
+    await sessions.redis.flushdb()
+
+
+@pytest_asyncio.fixture
+def mk_session():
+    """await mk_session(customer_id, call_id=..., tier=1, direction='inbound', case_id=None, language='en')."""
+    async def _make(customer_id, call_id="call1", tier=1, direction="inbound", case_id=None, language="en"):
+        s = await sessions.create(call_id, language, direction=direction, case_id=case_id)
+        s.customer_id, s.tier = customer_id, tier
+        await sessions.save(s)
+        return s
+    return _make

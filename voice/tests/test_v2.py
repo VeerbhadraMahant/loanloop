@@ -128,3 +128,9 @@ def test_spoken_dates_and_ptp_traceability():
     assert untraceable("record_ptp", {"amount": 5000}, ["I will pay 5000 on 15 tarikh"]) == []
     assert untraceable("record_ptp", {"amount": 9999}, ["I will pay 5000 on 15 tarikh"]) == ["amount"]
     assert untraceable("record_ptp", {"amount": 5000}, ["I will pay 5000"]) == ["promised_date"]
+
+
+def test_start_call_not_offered_to_model():
+    from voice.app import load_tools
+    tools, names = load_tools()
+    assert "start_call" not in {t["function"]["name"] for t in tools}

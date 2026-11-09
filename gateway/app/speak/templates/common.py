@@ -54,10 +54,16 @@ T = {
         "mr": "क्षमस्व, आमच्याकडून काहीतरी चूक झाली. मी तुम्हाला सहकाऱ्याशी जोडते.",
     },
     "call_started": {
-        "en": "Welcome to Sahyadri Finance Bank. How can I help you today?",
-        "hi": "सह्याद्रि फ़ाइनेंस बैंक में आपका स्वागत है। मैं आपकी क्या मदद कर सकती हूँ?",
-        "hinglish": "Sahyadri Finance Bank mein aapka swagat hai. Main aapki kya madad kar sakti hoon?",
-        "mr": "सह्याद्री फायनान्स बँकेत आपले स्वागत आहे. मी तुमची काय मदत करू?",
+        "en": "Welcome to Sahyadri Finance Bank. Which language would you like: English, Hindi, Marathi or Hinglish?",
+        "hi": "सह्याद्रि फ़ाइनेंस बैंक में आपका स्वागत है। आप कौन सी भाषा चाहेंगे: अंग्रेज़ी, हिंदी, मराठी या हिंग्लिश?",
+        "hinglish": "Sahyadri Finance Bank mein aapka swagat hai. Aap kaun si language chahenge: English, Hindi, Marathi ya Hinglish?",
+        "mr": "सह्याद्री फायनान्स बँकेत आपले स्वागत आहे. तुम्हाला कोणती भाषा हवी: इंग्रजी, हिंदी, मराठी की हिंग्लिश?",
+    },
+    "call_started_out": {
+        "en": "This is LoanLoop calling from Sahyadri Bank about your loan. To continue, please confirm your date of birth.",
+        "hi": "मैं सह्याद्रि बैंक की ओर से लोनलूप बोल रही हूँ, आपके लोन के बारे में। आगे बढ़ने के लिए कृपया अपनी जन्मतिथि बताएं।",
+        "hinglish": "Main Sahyadri Bank ki taraf se LoanLoop bol rahi hoon, aapke loan ke baare mein. Aage badhne ke liye please apni date of birth bataiye.",
+        "mr": "मी सह्याद्री बँकेकडून लोनलूप बोलत आहे, तुमच्या कर्जाबद्दल. पुढे जाण्यासाठी कृपया तुमची जन्मतारीख सांगा.",
     },
     "readback_ok": {
         "en": "Noted, thank you.",
