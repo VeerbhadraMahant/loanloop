@@ -265,3 +265,19 @@ def test_ended_calls_do_not_count_against_the_cap(env):
         c.app.state.calls[i]["ended"] = True
     r = c.post("/calls?tts=false", json={})
     assert r.status_code == 200 and all(i in c.app.state.calls for i in ids)  # records stay for late audio fetches
+
+
+import pytest as _pt
+
+
+@_pt.mark.parametrize("text", ["mera password tiger hai", "my PIN 4 3 2 1", "OTP 482913", "password is tiger", "maza pin 4321 aahe"])
+def test_secret_spoken_blocks_disclosures(text):
+    from voice.app import secret_spoken
+    assert secret_spoken(text)
+
+
+@_pt.mark.parametrize("text", ["Does the bank ask for OTP?", "UPI PIN reset kaise karu", "someone is asking my UPI PIN to receive money",
+                               "I forgot my internet banking password"])
+def test_secret_spoken_allows_questions(text):
+    from voice.app import secret_spoken
+    assert secret_spoken(text) is None

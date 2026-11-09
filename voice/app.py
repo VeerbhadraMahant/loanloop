@@ -662,24 +662,27 @@ def is_customer_question(text: str) -> bool:
 
 
 # ---- deterministic safety nets (the small model ignores prompt text) ----
-_NUM_VAL = re.compile(r"\d{3,}")
-_KW_IS_VALUE = re.compile(r"(?:pass\s*word|pass\s*code|pin|otp|cvv|पासवर्ड|ओटीपी|पिन|पासकोड)\s*(?:is|was|:|=|hai|है|आहे)\s*(\S+)", re.I)
-_NOT_VALUE = {"the", "a", "an", "not", "required", "needed", "safe", "secret", "kya", "what", "why", "important", "correct", "right",
-              "valid", "sahi", "ok", "okay", "that", "this", "it", "क्या"}
+_NUM_VAL = re.compile(r"\d(?:[\s-]?\d){2,}")  # 3+ digits, also spoken with gaps ("4 3 2 1")
+# Words that make a sentence ABOUT a secret (a question or a help request), not a disclosure of one.
+_ABOUT_SECRET = {"how", "what", "why", "does", "do", "can", "should", "ask", "asks", "asked", "asking",
+                 "reset", "forgot", "forget", "change", "create", "generate", "set", "share", "never", "safe", "someone",
+                 "kaise", "kya", "kyu", "kyon", "kab", "kaun", "bhool", "bhul", "badal", "maang", "maangta", "maang", "poochh",
+                 "कैसे", "क्या", "क्यों", "भूल", "बदल", "मांग", "पूछ", "कसा", "कसे", "काय", "का", "विसर", "बदल", "मागत", "विचार"}
 
 
 def secret_spoken(text: str) -> str | None:
-    """A secret was actually SAID: a card number, digits next to a secret word, or 'password is X'. Merely naming one
-    ('does the bank ask for OTP?', 'UPI PIN reset kaise') is a question, not a leak, and goes to the FAQ."""
+    """A secret was SAID. Any digits near a secret word, a card number, or a secret word in a sentence that is not a
+    question or help request ('mera password tiger hai') counts. 'Does the bank ask for OTP?' or 'UPI PIN reset
+    kaise' is about a secret and goes to the FAQ. When unsure we block: rule 1 beats a missed FAQ answer."""
     st = _find_secret("user_text", text)
     if not st or st == "card_number":
         return st
     t = text.translate(_DEVA_DIGITS)
     if _NUM_VAL.search(t):
         return st
-    if "?" not in t and any(m.group(1).lower().strip(".,") not in _NOT_VALUE for m in _KW_IS_VALUE.finditer(t)):
-        return st
-    return None
+    if "?" in t or set(_tokens(t.lower())) & _ABOUT_SECRET:
+        return None
+    return st
 
 
 _POSSESSIVE = {"my", "mera", "meri", "mere", "mujhe", "mujhko", "मेरा", "मेरी", "मेरे", "मुझे", "माझा", "माझी", "माझे", "मला"}
