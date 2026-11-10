@@ -172,7 +172,7 @@ async def test_all_languages(client, fresh, mk_session, lang):
 
 async def test_start_call_directions(client, fresh):
     r = await call(client, "start_call", call_id="in1")
-    assert "Which language" in r["speak"] and "Hinglish" in r["speak"] and r["data"]["direction"] == "inbound"
+    assert "Which language" in r["speak"] and "another Indian language" in r["speak"] and r["data"]["direction"] == "inbound"
     s = await sessions.get("in1")
     assert s.direction == "inbound" and s.case_id is None
     r = await call(client, "start_call", call_id="in2", case_id=OUT)  # case_id ignored on inbound

@@ -23,7 +23,7 @@ class Customer(Base):
     dob: Mapped[date] = mapped_column(Date)
     registered_mobile: Mapped[str] = mapped_column(String(10), unique=True, index=True)
     email: Mapped[str] = mapped_column(String(120))
-    preferred_language: Mapped[str] = mapped_column(String(10))  # en|hi|hinglish|mr
+    preferred_language: Mapped[str] = mapped_column(String(10))  # a code from i18n/languages.json
     customer_id: Mapped[str] = mapped_column(String(12), unique=True)  # CIF, never spoken in full
     app_device_id: Mapped[str] = mapped_column(String(40))
 

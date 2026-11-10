@@ -105,8 +105,8 @@ def test_verified_last_transactions_in_marathi(env):
     assert gw_calls(fake, "last_transactions") and r["agent_text"] == "last_transactions done"
 
 
-def test_bengali_script_is_unsupported_language():
-    assert detect_language("আপনি কি বাংলায় কথা বলতে পারেন?", True)[0] == "unsupported"
+def test_odia_script_is_unsupported_language():
+    assert detect_language("ଆପଣ ଓଡ଼ିଆରେ କଥା ହୋଇପାରିବେ କି?", True)[0] == "unsupported"
     assert detect_language("मराठीत बोला", True)[0] == "mr"
 
 

@@ -30,13 +30,13 @@ from app import events, sessions
 from app.audit import write_audit
 from app.contract import ActionIn, ActionResponse
 from app.db.session import get_db
+from app.i18n import LANGS
 from app.security.auth import require_agent
 from app.security.scrub import find_secret, redact_secret
 from app.security.tiers import TIER_FOR_ACTION
 from app.speak import t
 
 log = logging.getLogger("actions")
-LANGS = {"en", "hi", "hinglish", "mr"}
 
 Handler = Callable[[Any, "sessions.Session | None", AsyncSession, BackgroundTasks], Awaitable[ActionResponse]]
 

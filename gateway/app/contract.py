@@ -2,7 +2,9 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-Lang = Literal["en", "hi", "hinglish", "mr"]
+from app.i18n import codes
+
+Lang = Literal[tuple(codes())]  # type: ignore[valid-type]  # every mode in i18n/languages.json
 ErrorCode = Literal["NOT_VERIFIED", "TIER_TOO_LOW", "NOT_FOUND", "INVALID_INPUT", "SECRET_DETECTED", "RATE_LIMITED", "FAQ_NOT_FOUND"]
 
 

@@ -7,6 +7,7 @@ from fastapi import APIRouter, BackgroundTasks
 from pydantic import Field, model_validator
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app import i18n
 from app.contract import ActionIn, ActionResponse
 from app.db.models import Customer
 from app.routes.actions._runner import action
@@ -19,11 +20,26 @@ FAQ_PATH = Path(__file__).resolve().parents[2] / "data" / "faq.json"
 _cache: dict = {"mtime": None, "intents": {}}
 
 
+def _merge_lang_files(intents: dict[str, dict]) -> None:
+    """Add each present i18n/<code>.json `faq` section: keywords, answer, sms_text per intent."""
+    for code, d in i18n.load_lang_files().items():
+        for iid, f in (d.get("faq") or {}).items():
+            it = intents.get(iid)
+            if it is None or not isinstance(f, dict) or not isinstance(f.get("answer"), str) or not f["answer"].strip():
+                continue
+            it.setdefault("keywords", {})[code] = [k for k in f.get("keywords", []) if isinstance(k, str) and k.strip()]
+            it.setdefault("answer", {})[code] = f["answer"]
+            if isinstance(f.get("sms_text"), str) and f["sms_text"].strip():
+                it.setdefault("sms_text", {})[code] = f["sms_text"]
+
+
 def load_faq() -> dict[str, dict]:
-    m = FAQ_PATH.stat().st_mtime
-    if _cache["mtime"] != m:
+    sig = (FAQ_PATH.stat().st_mtime, tuple((c, p.stat().st_mtime) for c, p in i18n.present().items()), str(i18n.I18N_DIR))
+    if _cache["mtime"] != sig:
         data = json.loads(FAQ_PATH.read_text(encoding="utf-8"))
-        _cache.update(mtime=m, intents={i["id"]: i for i in data["intents"]})
+        intents = {i["id"]: i for i in data["intents"]}
+        _merge_lang_files(intents)
+        _cache.update(mtime=sig, intents=intents)
     return _cache["intents"]
 
 

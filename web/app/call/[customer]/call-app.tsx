@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Button, Pill } from "@/components/ui";
 import { downsample, encodeWav } from "@/lib/wav";
 import { PcmPlayer } from "@/lib/pcm-player";
+import { langLabel } from "@/lib/languages";
 import { LLMS, SessionSummary, TurnStat, type LlmId, type Stat, type Timings, type Turn } from "@/components/turn-stats";
 
 const VOICE = process.env.NEXT_PUBLIC_VOICE_URL ?? "http://127.0.0.1:8100";
@@ -252,7 +253,7 @@ export default function CallApp({ customer, caseId }: { customer: string; caseId
           <p className="serif text-[26px] leading-tight">Call: {customer}</p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <Pill tone={statusTone[status]}><span role="status" aria-live="polite">{status}</span></Pill>
-            {lang && <Pill>{lang}</Pill>}
+            {lang && <Pill>{langLabel(lang)}</Pill>}
             {!!turns.length && <Pill>LLM: {turns[0].provider}</Pill>}
           </div>
         </header>

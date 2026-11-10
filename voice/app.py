@@ -31,8 +31,24 @@ log = logging.getLogger("voice")  # never log transcripts, LLM messages or keys:
 # Request shapes copied from tools/stt_benchmark.py (stt) and tools/make_test_audio.py (tts_payload).
 STT_URL = "https://api.vachana.ai/stt/v3"
 TTS_URL = "https://api.vachana.ai/api/v1/tts/inference"
-TTS_LANG = {"en": "en-IN", "hi": "hi-IN", "hinglish": "hi-IN", "mr": "mr-IN"}
-STT_LANG = {"en": "en-IN", "hinglish": "hi-IN,en-IN", "hi": "hi-IN,en-IN", "mr": "mr-IN,en-IN"}
+I18N_DIR = ROOT / "i18n"  # language registry + per-language files (i18n/README.md); tests point load_languages() elsewhere
+BUILTIN_LANGS = ("en", "hi", "hinglish", "mr")
+
+
+def _registry(base: Path) -> list[dict]:
+    try:
+        return json.loads((base / "languages.json").read_text(encoding="utf-8"))["modes"]
+    except Exception:  # noqa: BLE001 - registry missing/broken: the 4 built-in modes still work
+        log.warning("i18n/languages.json unreadable; using built-in languages only")
+        return [{"code": "en", "name": "English", "tts": "en-IN", "stt": "en-IN"},
+                {"code": "hi", "name": "Hindi", "tts": "hi-IN", "stt": "hi-IN,en-IN"},
+                {"code": "hinglish", "name": "Hinglish", "tts": "hi-IN", "stt": "hi-IN,en-IN"},
+                {"code": "mr", "name": "Marathi", "tts": "mr-IN", "stt": "mr-IN,en-IN"}]
+
+
+MODES = _registry(I18N_DIR)  # all 11 modes; a beta one is only offered to callers once its file is loaded
+TTS_LANG = {m["code"]: m["tts"] for m in MODES}
+STT_LANG = {m["code"]: m["stt"] for m in MODES}
 VOICE = "Shivani"
 AUDIO_CONFIG = {"sample_rate": 16000, "num_channels": 1, "sample_width": 2, "encoding": "linear_pcm", "container": "wav"}
 TTL_S, MAX_ROUNDS, MAX_CALLS, MAX_UPLOAD, KEEP_MSGS = 1800, 5, 50, 2_000_000, 30
@@ -85,7 +101,7 @@ KNOBS = [
     _k("keep_msgs", "History length", "number", 30, "Latency", "How many recent messages are sent to the LLM.", min=10, max=60, step=1),
     _k("max_rounds", "Max tool rounds", "number", 5, "Latency", "Most LLM rounds per turn.", min=1, max=5, step=1),
     _k("stt_keyterms", "STT keyterms", "bool", True, "Speech", "Send the banking keyterm list to Prisma STT."),
-    _k("stt_language", "STT language", "select", "auto", "Speech", "auto follows the call language; others force one hint.", options=["auto", "en-IN", "hi-IN", "mr-IN"]),
+    _k("stt_language", "STT language", "select", "auto", "Speech", "auto follows the call language; others force one hint.", options=["auto", "en-IN", "hi-IN", "mr-IN"] + sorted({m["stt"].split(",")[0] for m in MODES} - {"en-IN", "hi-IN", "mr-IN"})),
     _k("tts_voice", "TTS voice", "select", "Shivani", "Speech", "Timbre v3 voice (all speak all languages).", options=TIMBRE_VOICES),
     _k("tts_speed", "TTS speed", "number", 1.0, "Speech", "Speech rate multiplier.", min=0.85, max=1.15, step=0.05),
     _k("tool_hints", "Tool hints", "bool", True, "Conversation", "Per-tool nudges added to tool descriptions for the small local model."),
@@ -318,7 +334,7 @@ def trim(msgs: list[dict], keep: int = KEEP_MSGS) -> list[dict]:
     return msgs[:1] + tail
 
 
-_TOKEN = re.compile(r"[A-Za-z0-9'’]+|[ऀ-ॿ]+")  # explicit Devanagari range: matras are not \w, so no \b for it
+_TOKEN = re.compile(r"[A-Za-z0-9'’]+|[\u0900-\u0d7f]+")  # explicit Indic range (Devanagari..Malayalam): matras are not \w, so no \b
 AFFIRM_WORDS = {"yes", "yeah", "yep", "yup", "correct", "right", "haan", "han", "haa", "ji", "jee", "sahi", "theek", "thik",
                 "hai", "hain", "ok", "okay", "confirm", "confirmed", "ho", "hoy", "that", "that's", "thats", "is", "it", "its",
                 "हाँ", "हां", "सही", "ठीक", "है", "हैं", "हो", "होय", "बरोबर", "आहे", "हा", "जी"}
@@ -356,7 +372,8 @@ def infer_language(text: str, current: str) -> str:
     return "hinglish" if current in ("hi", "mr") else current
 
 
-_DEVA_DIGITS = str.maketrans("०१२३४५६७८९", "0123456789")
+# Devanagari, Bengali, Gurmukhi, Gujarati, Odia, Tamil, Telugu, Kannada, Malayalam digits -> ASCII (secret_spoken uses this table)
+_DEVA_DIGITS = {z + i: 48 + i for z in (0x966, 0x9E6, 0xA66, 0xAE6, 0xB66, 0xBE6, 0xC66, 0xCE6, 0xD66) for i in range(10)}
 _IDENT = re.compile(r"\b[A-Za-z]+(?:_[A-Za-z0-9]+)+\b")
 
 
@@ -615,8 +632,24 @@ _LANG_WORDS = {"en": {"english", "inglish", "इंग्लिश", "अंग�
                "hinglish": {"hinglish", "हिंग्लिश"},
                "hi": {"hindi", "हिंदी", "हिन्दी", "हिंदीत"},
                "mr": {"marathi", "मराठी", "मराठीत", "मराठीमध्ये"}}
-_UNSUPPORTED = {"tamil", "kannada", "kannad", "bengali", "bangla", "gujarati", "telugu", "punjabi", "malayalam", "odia", "oriya",
-                "urdu", "assamese", "तमिल", "तमिळ", "कन्नड", "बंगाली", "गुजराती", "तेलुगु", "तेलुगू", "पंजाबी", "मलयालम", "ओडिया", "उर्दू"}
+# How a caller may name each beta language (Roman and Devanagari, as Hindi/Marathi speakers say it); each file adds its own lang_names.
+_BETA_NAMES = {"bn": {"bengali", "bangla", "bangali", "बंगाली", "बांग्ला", "बंगला"},
+               "gu": {"gujarati", "gujrati", "गुजराती", "गुजरातीत"},
+               "kn": {"kannada", "kannad", "कन्नड", "कन्नड़"},
+               "ml": {"malayalam", "malayali", "मलयालम"},
+               "pa": {"punjabi", "panjabi", "पंजाबी"},
+               "ta": {"tamil", "tamizh", "तमिल", "तमिळ"},
+               "te": {"telugu", "तेलुगु", "तेलुगू", "तेलगू"}}
+# Languages Gnani does not support (or that have no file loaded): named or written, the caller gets the sorry line.
+_UNSUPPORTED = {"odia", "oriya", "urdu", "assamese", "asomiya", "kashmiri", "konkani", "sindhi", "nepali", "maithili", "dogri",
+                "bodo", "santali", "manipuri", "meitei", "ओडिया", "उर्दू", "असमिया", "कश्मीरी", "कोंकणी", "सिंधी", "नेपाली", "मैथिली"}
+_UNSUP_SCRIPT = re.compile("[\u0600-\u06ff\u0b00-\u0b7f]")  # Arabic/Urdu, Odia
+_SCRIPT_BLOCK = {"Bengali": (0x980, 0x9FF), "Gurmukhi": (0xA00, 0xA7F), "Gujarati": (0xA80, 0xAFF), "Tamil": (0xB80, 0xBFF),
+                 "Telugu": (0xC00, 0xC7F), "Kannada": (0xC80, 0xCFF), "Malayalam": (0xD00, 0xD7F)}
+_SCRIPT_LANG = {m["code"]: m["script"] for m in MODES if m.get("script") in _SCRIPT_BLOCK}  # code -> script, from the registry
+_ANY_INDIC_NON_DEVA = re.compile("[\u0980-\u0d7f]")
+ACTIVE_LANGS: list[str] = list(BUILTIN_LANGS)  # built-in 4 + every language whose file loaded
+_INACTIVE_NAMES: set[str] = set()  # names of registry languages with no (valid) file: the caller gets the sorry line
 _SWITCH_CUES = {"talk", "speak", "switch", "change", "in", "mein", "me", "madhe", "bolo", "bol", "bolna", "bolu", "kar", "karo", "kara",
                 "sang", "sanga", "बोल", "बोलो", "बोला", "बोलिए", "बोलें", "बोलू", "बोलना", "बात", "मध्ये", "मराठीत", "हिंदीत", "में", "मैं",
                 "कर", "करो", "करा", "बदल", "बदला", "सांग", "सांगा"}
@@ -628,8 +661,17 @@ LANG_OK = {"en": "Sure, I will continue in English. How can I help you?",
            "hinglish": "Theek hai, hum Hinglish mein baat karenge. Main aapki kaise madad kar sakta hoon?",
            "hi": "ठीक है, मैं हिंदी में बात करूँगा। मैं आपकी कैसे मदद कर सकता हूँ?",
            "mr": "ठीक आहे, मी मराठीत बोलेन. मी तुमची कशी मदत करू शकतो?"}
-LANG_SORRY = ("Sorry, I can speak English, Hindi, Marathi or Hinglish. Which would you like? "
-              "माफ़ कीजिए, मैं अंग्रेज़ी, हिंदी, मराठी या हिंग्लिश में बात कर सकता हूँ। आप कौन सी भाषा चाहेंगे?")
+LANG_SORRY = ""  # set by _sorry_line(): lists the languages that are active
+
+
+def _sorry_line() -> str:
+    names = [m["name"] for m in sorted(MODES, key=lambda m: m["code"] == "hinglish") if m["code"] in ACTIVE_LANGS]
+    return (f"Sorry, I can speak {', '.join(names[:-1])} or {names[-1]}. Which would you like? "
+            "माफ़ कीजिए, मैं अंग्रेज़ी, हिंदी, मराठी या हिंग्लिश में बात कर सकता हूँ। आप कौन सी भाषा चाहेंगे?"
+            if len(names) > 1 else "Sorry, I could not follow that language.")
+
+
+LANG_SORRY = _sorry_line()
 CUSTOMER_Q = {"en": "To check that, I need to verify a few details: your registered mobile number and date of birth.",
               "hinglish": "Ye check karne ke liye mujhe kuch details verify karni hongi: aapka registered mobile number aur date of birth.",
               "hi": "यह जाँचने के लिए मुझे कुछ विवरण सत्यापित करने होंगे: आपका रजिस्टर्ड मोबाइल नंबर और जन्मतिथि।",
@@ -640,13 +682,29 @@ def first_named(toks: list[str]) -> bool:
     return any(set(toks) & w for w in _LANG_WORDS.values())
 
 
+def script_language(text: str) -> str | None:
+    """The language whose script dominates the text (Tamil, Telugu, Kannada, Malayalam, Bengali, Gujarati, Gurmukhi): a registry
+    code, or 'unsupported' when that language is not loaded, or Odia/Urdu script. None for Latin/Devanagari text."""
+    if _UNSUP_SCRIPT.search(text):
+        return "unsupported"
+    best, n = None, 0
+    for script, (lo, hi) in _SCRIPT_BLOCK.items():
+        k = sum(lo <= ord(ch) <= hi for ch in text)
+        if k > n:
+            best, n = script, k
+    if not best:
+        return None
+    code = next((c for c, sc in _SCRIPT_LANG.items() if sc == best), None)
+    return code if code in ACTIVE_LANGS else "unsupported"
+
+
 def detect_language(text: str, first: bool) -> tuple[str | None, bool, bool]:
     """(language | 'unsupported' | None, whole reply is just the language choice, caller named one at all)."""
     toks = _tokens(text.lower())
-    if re.search("[ঀ-෿]", text) and not first_named(toks):  # Bengali, Tamil, Telugu... script: not a language we speak
-        return "unsupported", True, True
     named = next((k for k, w in _LANG_WORDS.items() if set(toks) & w), None)
-    bad = bool(set(toks) & _UNSUPPORTED)
+    if not named and (sl := script_language(text)):  # written in another Indic script: that is the language
+        return sl, False, True
+    bad = bool(set(toks) & (_UNSUPPORTED | _INACTIVE_NAMES))
     cue = bool(set(toks) & _SWITCH_CUES)
     if not (named or bad) or not (first or cue or len(toks) <= 2):
         return None, False, False
@@ -780,6 +838,11 @@ _VERIFY_WORDS = {"mobile", "number", "dob", "birth", "date", "janam", "tithi", "
                  "meri", "aur", "hai", "the", "of", "i", "am", "जन्म", "तारीख", "जन्मतारीख", "मोबाईल", "मोबाइल", "नंबर", "आणि", "आहे", "है",
                  "और", "मेरा", "माझा", "माझी", "जन्मतिथि", "मेरी", "का", "ka", "ki", "तिथि"}
 _FILL = {"was", "on", "in", "at", "for", "ko", "को", "रोजी"}
+_VERIFY_ASK = {
+    "en": "Please also tell me your date of birth or the last four digits of your loan number.",
+    "hinglish": "Kripya apni date of birth ya loan number ke last 4 digits bhi bataiye.",
+    "hi": "कृपया अपनी जन्मतिथि या लोन नंबर के आखिरी चार अंक भी बताइए।",
+    "mr": "कृपया तुमची जन्मतारीख किंवा कर्ज क्रमांकाचे शेवटचे चार अंक सांगा."}
 ARGLESS = {"account_balance", "last_transactions", "emi_info", "dues_info", "get_masked_profile"}
 
 
@@ -816,11 +879,11 @@ def parse_spoken_date(text: str, today=None) -> str | None:
         for w, wd in _WEEKDAYS.items():
             if w in toks:
                 return (today + dt.timedelta(days=(wd - today.weekday()) % 7 or 7)).isoformat()
-        for m in re.finditer(r"(?<!\d)(\d{1,2})(?:st|nd|rd|th)?\s+([a-zऀ-ॿ]+)(?:\s+(20\d\d)(?!\d))?", t):
+        for m in re.finditer(r"(?<!\d)(\d{1,2})(?:st|nd|rd|th)?\s+([a-z" + _INDIC + r"]+)(?:\s+(20\d\d)(?!\d))?", t):
             if mon := _MONTHS_MAP.get(m[2]):  # "5 rupees on 17 November": skip the non-month pair
                 d = dt.date(int(m[3] or today.year), mon, int(m[1]))
                 return (d if d >= today or m[3] else d.replace(year=today.year + 1)).isoformat()
-        m = re.search(r"(?<!\d)(\d{1,2})(?:st|nd|rd|th)?\s*(?:tarikh|tareekh|date|तारीख|तारिख)|(?:on|by|को|ला)\s+(\d{1,2})(?!\d)", t)
+        m = _DATE_DAY.search(t)
         if m:
             day = int(m[1] or m[2])
             d = dt.date(today.year, today.month, day)
@@ -832,14 +895,28 @@ def parse_spoken_date(text: str, today=None) -> str | None:
     return None
 
 
-_DATE_SPANS = re.compile(
-    r"\d{4}-\d{2}-\d{2}|(?<!\d)\d{1,2}(?:st|nd|rd|th)?\s+(?:" + "|".join(map(re.escape, _MONTHS_MAP)) + r")(?:\s+20\d\d)?(?![a-zऀ-ॿ])"
-    r"|(?<!\d)\d{1,2}\s*(?:tarikh|tareekh|date|तारीख|तारिख)")  # a bare "on 15" is left in: two figures -> not auto-routed
+_INDIC = "\u0900-\u0d7f"
+_PAID_BASE = (r"already paid|paid already|\bi(?:'ve| have)? paid\b|\bpaid (?:last|yesterday|earlier|before)|"
+              r"pay(?:ment)?\s+(?:kar\s+)?(?:diya|kar diya|kar di)\b|bhar diya|jama kar|भर दिया|भुगतान कर दिया|दे दिया|भरले|भरलेत|भरल्या")
+
+
+def _alt(words) -> str:
+    return "|".join(map(re.escape, sorted(set(words), key=lambda w: (-len(w), w))))
+
+
+def _build_regexes() -> None:
+    """(Re)compile the patterns that embed word lists; called at import and after language files are merged."""
+    global _DATE_SPANS, _DATE_DAY, _PAID
+    _DATE_SPANS = re.compile(  # a bare "on 15" is left in: two figures -> not auto-routed
+        r"\d{4}-\d{2}-\d{2}|(?<!\d)\d{1,2}(?:st|nd|rd|th)?\s+(?:" + _alt(_MONTHS_MAP) + r")(?:\s+20\d\d)?(?![a-z" + _INDIC + r"])"
+        r"|(?<!\d)\d{1,2}\s*(?:" + _alt(_DATE_WORDS) + ")")
+    _DATE_DAY = re.compile(r"(?<!\d)(\d{1,2})(?:st|nd|rd|th)?\s*(?:" + _alt(_DATE_WORDS) + r")|(?:on|by|को|ला)\s+(\d{1,2})(?!\d)")
+    _PAID = re.compile(_PAID_BASE + "".join("|" + re.escape(x) for x in _PAID_EXTRA))
+
+
+_PAID_EXTRA: list[str] = []
 _BIG_NUMBER_WORDS = {"k", "thousand", "hazaar", "hajar", "lakh", "lac", "हजार", "हज़ार", "लाख", "हजारांचे"}
 _FULL_WORDS = {"full", "pura", "poora", "puri", "poori", "whole", "entire", "saara", "saari", "पूरा", "पूरी", "सारी", "सारा", "संपूर्ण", "पूर्ण"}
-_PAID = re.compile(r"already paid|paid already|\bi(?:'ve| have)? paid\b|\bpaid (?:last|yesterday|earlier|before)|"
-                   r"pay(?:ment)?\s+(?:kar\s+)?(?:diya|kar diya|kar di)\b|bhar diya|jama kar|भर दिया|भुगतान कर दिया|दे दिया|भरले|भरलेत|भरल्या")
-
 
 def parse_amount(text: str, dues: dict | None = None) -> int | None:
     """The one rupee figure in a promise ('1000 rupees on 17 November'), or the whole due ('pura') from the last dues_info.
@@ -885,6 +962,96 @@ def parse_audio(content_type: str, body: bytes) -> bytes | None:
         if part.get_param("name", header="content-disposition") == "audio":
             return part.get_payload(decode=True)
     return None
+
+
+_BYE_FILLER_BASE = set(FILLER_WORDS)
+_WORDSETS = {"affirm": AFFIRM_WORDS, "negate": NEGATE_WORDS, "bye": BYE_WORDS, "approval": APPROVAL_WORDS, "switch_cues": _SWITCH_CUES,
+             "question": _QUESTION_WORDS, "possessive": _POSSESSIVE, "acct_nouns": _ACCT_NOUNS, "human_target": _HUMAN_TARGET,
+             "human_verb": _HUMAN_VERB, "neg_human": _NEG_HUMAN, "full": _FULL_WORDS, "multi": _MULTI_WORDS, "date": _DATE_WORDS,
+             "verify": _VERIFY_WORDS}
+_SNAP = ({k: set(v) for k, v in _WORDSETS.items()}, dict(_MONTHS_MAP), dict(_WEEKDAYS))  # the built-in words, to reload from
+
+
+def load_languages(base: Path | None = None) -> list[str]:
+    """Merge every present <base>/<code>.json (registry languages beyond the built-in 4) into the fixed lines and word sets.
+    A missing or invalid file is skipped with a warning. Returns the active language codes. Safe to call again."""
+    global ACTIVE_LANGS, LANG_SORRY, _ACTION_STEMS, MODES
+    base = base or I18N_DIR
+    MODES = _registry(base)
+    TTS_LANG.update({m["code"]: m["tts"] for m in MODES})
+    STT_LANG.update({m["code"]: m["stt"] for m in MODES})
+    _SCRIPT_LANG.clear()
+    _SCRIPT_LANG.update({m["code"]: m["script"] for m in MODES if m.get("script") in _SCRIPT_BLOCK})
+    for c in [c for c in ACTIVE_LANGS if c not in BUILTIN_LANGS]:  # drop a previous load
+        for d in (REPROMPT, LANG_OK, CUSTOMER_Q, SAFE, ASK, FIELD_LABEL, _LANG_WORDS):
+            d.pop(c, None)
+    ACTIVE_LANGS = list(BUILTIN_LANGS)
+    for k, v in _WORDSETS.items():
+        v.clear()
+        v.update(_SNAP[0][k])
+    for tbl, snap in ((_MONTHS_MAP, _SNAP[1]), (_WEEKDAYS, _SNAP[2])):
+        tbl.clear()
+        tbl.update(snap)
+    _PAID_EXTRA.clear()
+    extra_stems: list[str] = []
+    for m in MODES:
+        code = m["code"]
+        p = base / f"{code}.json"
+        if code in BUILTIN_LANGS or not p.is_file():
+            continue
+        try:
+            d = json.loads(p.read_text(encoding="utf-8"))
+            v, w = d["voice"], d["words"]
+            if d.get("lang") != code:
+                raise ValueError("'lang' does not match the file name")
+            for k in ("REPROMPT", "LANG_OK", "CUSTOMER_Q", "SAFE"):
+                if not (isinstance(v[k], str) and v[k].strip()):
+                    raise ValueError(f"voice.{k} empty")
+            ask = v["ASK"]
+            if not (isinstance(ask, list) and len(ask) == 2 and "{x}" in ask[0]):
+                raise ValueError("voice.ASK malformed")
+            if not isinstance(v["FIELD_LABEL"], dict):
+                raise ValueError("voice.FIELD_LABEL malformed")
+        except Exception as e:  # noqa: BLE001
+            log.warning("skipping i18n/%s.json: %s", code, e)
+            continue
+        REPROMPT[code], LANG_OK[code], CUSTOMER_Q[code], SAFE[code] = v["REPROMPT"], v["LANG_OK"], v["CUSTOMER_Q"], v["SAFE"]
+        ASK[code] = (ask[0], ask[1])
+        FIELD_LABEL[code] = {k: x for k, x in v["FIELD_LABEL"].items() if isinstance(x, str) and x.strip()}
+
+        def words(key: str) -> list[str]:
+            x = w.get(key)
+            return [i.lower() for i in x if isinstance(i, str) and i.strip()] if isinstance(x, list) else []
+
+        def table(key: str, ok) -> dict[str, int]:
+            x = w.get(key)
+            return {k.lower(): n for k, n in x.items() if isinstance(k, str) and k.strip() and isinstance(n, int) and ok(n)} if isinstance(x, dict) else {}
+
+        _LANG_WORDS[code] = {code, m["name"].lower(), m.get("native", "").lower(), *_BETA_NAMES.get(code, ()), *words("lang_names")}
+        _LANG_WORDS[code].discard("")
+        for name, target in _WORDSETS.items():
+            target.update(words(name))
+        _MONTHS_MAP.update(table("month_words", lambda n: 1 <= n <= 12))
+        _WEEKDAYS.update(table("weekdays", lambda n: 0 <= n <= 6))
+        _PAID_EXTRA.extend(words("already_paid"))
+        extra_stems += words("action_verbs")
+        ACTIVE_LANGS.append(code)
+    _INACTIVE_NAMES.clear()
+    for m in MODES:
+        if m["code"] not in ACTIVE_LANGS:
+            _INACTIVE_NAMES.update({m["name"].lower(), m.get("native", "").lower(), *_BETA_NAMES.get(m["code"], ())})
+    _INACTIVE_NAMES.discard("")
+    _ACTION_STEMS = tuple(dict.fromkeys(_ACTION_STEMS_BASE + tuple(extra_stems)))
+    FILLER_WORDS.clear()
+    FILLER_WORDS.update(_BYE_FILLER_BASE | AFFIRM_WORDS)
+    _build_regexes()
+    LANG_SORRY = _sorry_line()
+    return ACTIVE_LANGS
+
+
+_ACTION_STEMS_BASE = _ACTION_STEMS
+_build_regexes()
+load_languages()
 
 
 def create_app(settings: Settings | None = None, client: httpx.AsyncClient | None = None) -> FastAPI:
@@ -1074,13 +1241,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             res = {"ok": False, "error_code": "INVALID_INPUT", "speak": "",
                    "instruction": "The approval is already confirmed. Carry on with the caller's request; do not check again."}
         elif not internal and name == "verify_caller" and not args.get("dob") and not args.get("loan_last4") and not _parse_dob(" ".join(c.get("said", []))):
-            ask = ("Please also tell me your date of birth or the last four digits of your loan number."
-                   if c.get("language") == "en" else
-                   "Kripya apni date of birth ya loan number ke last 4 digits bhi bataiye."
-                   if c.get("language") == "hinglish" else
-                   "कृपया अपनी जन्मतिथि या लोन नंबर के आखिरी चार अंक भी बताइए।"
-                   if c.get("language") == "hi" else
-                   "कृपया तुमची जन्मतारीख किंवा कर्ज क्रमांकाचे शेवटचे चार अंक सांगा.")
+            ask = _VERIFY_ASK.get(c.get("language"), _VERIFY_ASK["en"])
             st["speaks"].append((False, ask))
             st["last"] = ask
             c["ask_verify_turn"] = c["turn"]

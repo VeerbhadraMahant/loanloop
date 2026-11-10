@@ -6,7 +6,7 @@ const stats = [
   { value: "33 ms", caption: "p95 gateway latency at 1,000 concurrent calls", accent: true },
   { value: "170", caption: "tests passing" },
   { value: "23", caption: "gateway actions" },
-  { value: "4", caption: "languages" },
+  { value: "11", caption: "languages (7 in beta)" },
 ];
 const safety: { icon: IconName; title: string; body: string }[] = [
   { icon: "lock", title: "Never takes secrets", body: "PINs, OTPs and card numbers are refused on the call and never reach the agent or its logs." },
