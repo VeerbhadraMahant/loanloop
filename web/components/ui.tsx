@@ -183,7 +183,7 @@ const paths = {
 
 export type IconName = keyof typeof paths;
 
-export function Icon({ name, size = 16 }: { name: IconName; size?: number }) {
+export function Icon({ name, size = 16, className = "" }: { name: IconName; size?: number; className?: string }) {
   const p = paths[name] || paths.shield;
   return (
     <svg
@@ -196,7 +196,7 @@ export function Icon({ name, size = 16 }: { name: IconName; size?: number }) {
       strokeWidth={1.75}
       strokeLinecap="round"
       strokeLinejoin="round"
-      className="shrink-0"
+      className={`shrink-0 ${className}`}
     >
       <path d={p} />
     </svg>
