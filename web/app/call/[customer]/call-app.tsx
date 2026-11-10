@@ -587,35 +587,33 @@ export default function CallApp({ customer, caseId }: { customer: string; caseId
 
             {/* Mode Switcher, Telemetry, and High-Visibility Primary CTA */}
             <div className="flex flex-wrap items-center gap-2.5">
-              {/* View Mode Toggle: Calling Desk vs Call Simulation */}
-              <div className="inline-flex items-center p-1 rounded-xl bg-sunken border border-line">
-                <button
-                  type="button"
-                  onClick={() => setViewMode("desk")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
-                    viewMode === "desk"
-                      ? "bg-card text-primary shadow-xs"
-                      : "text-muted hover:text-fg"
-                  }`}
-                  title="Developer Desk with timing telemetry & diagnostics"
-                >
-                  <Icon name="speed" size={13} />
-                  <span>Calling Desk</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewMode("simulation")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
-                    viewMode === "simulation"
-                      ? "bg-primary text-primary-fg shadow-xs"
-                      : "text-muted hover:text-fg"
-                  }`}
-                  title="End-user phone simulation (no debug timings)"
-                >
-                  <Icon name="phone" size={13} />
-                  <span>Call Simulation</span>
-                </button>
-              </div>
+              {/* Standalone Call Simulation Button (Out of container & distinctly highlighted) */}
+              <button
+                type="button"
+                onClick={() => setViewMode(viewMode === "simulation" ? "desk" : "simulation")}
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border shadow-xs ${
+                  viewMode === "simulation"
+                    ? "bg-primary text-primary-fg border-primary shadow-md ring-2 ring-primary/30"
+                    : "bg-secondary-container hover:bg-[#c9ddd3] text-primary border-primary/30 hover:border-primary"
+                }`}
+                title={
+                  viewMode === "simulation"
+                    ? "Phone simulation is active. Click to return to Calling Desk."
+                    : "Open phone simulator with pure customer experience (zero debug latency)."
+                }
+              >
+                <Icon name="phone" size={15} />
+                <span>Call Simulation</span>
+                {viewMode === "simulation" ? (
+                  <span className="px-1.5 py-0.5 rounded-full bg-emerald-300 text-primary font-mono text-[10px] font-bold animate-pulse">
+                    ACTIVE
+                  </span>
+                ) : (
+                  <span className="px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-mono text-[10px] font-semibold">
+                    Phone View
+                  </span>
+                )}
+              </button>
 
               {/* Status Ribbon */}
               <div
@@ -709,7 +707,21 @@ export default function CallApp({ customer, caseId }: { customer: string; caseId
 
         {viewMode === "simulation" ? (
           /* FULL AREA CALL SIMULATION: END-USER PHONE INTERACTION WITHOUT TELEMETRY */
-          <div className="w-full max-w-[420px] mx-auto py-2">
+          <div className="w-full max-w-[420px] mx-auto py-2 flex flex-col items-center gap-2.5">
+            <div className="w-full flex items-center justify-between px-2 text-xs">
+              <span className="font-mono text-muted text-[11px] flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-ok-fg animate-pulse"></span>
+                <span className="text-fg font-medium">Customer Phone Simulation</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setViewMode("desk")}
+                className="font-mono text-xs text-primary hover:text-accent-hover font-semibold inline-flex items-center gap-1 cursor-pointer underline"
+              >
+                <Icon name="speed" size={13} />
+                <span>Exit Simulation (Desk View)</span>
+              </button>
+            </div>
             <PhoneHandset
               customer={customer}
               simulationProps={{
