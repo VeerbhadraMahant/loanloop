@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app import i18n
 from app.contract import ActionIn, ActionResponse
 from app.db.models import Customer
+from app.routes.actions import faq_score
 from app.routes.actions._runner import action
 from app.sms import send_sms
 from app.speak import t
@@ -48,15 +49,9 @@ def _norm(s: str) -> str:
 
 
 def match(intents: dict[str, dict], query: str, lang: str) -> str | None:
-    """Best intent by total length of matched keywords (call language counts double, then every language)."""
-    q, best, best_score = _norm(query), None, 0
-    for iid, it in intents.items():
-        kws = it.get("keywords", {})
-        score = sum(len(_norm(k)) for k in kws.get(lang, []) if _norm(k) in q) * 2
-        score += sum(len(_norm(k)) for lg, ks in kws.items() if lg != lang for k in ks if _norm(k) in q)
-        if score > best_score:
-            best, best_score = iid, score
-    return best
+    """Best intent by the weighted scorer (faq_score), any match counts: the caller (the model) already decided to look up."""
+    ranked = faq_score.table_for(intents).rank(query, lang)
+    return ranked[0][0] if ranked else None
 
 
 class FaqIn(ActionIn):
