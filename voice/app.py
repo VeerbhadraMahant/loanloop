@@ -111,8 +111,10 @@ KNOBS = [
 ]
 KNOB_BY_KEY = {k["key"]: k for k in KNOBS}
 PRESETS = [
-    {"name": "Baseline local (old behaviour)", "llm": "ollama", "settings": {"cache_prompt": False, "shortcut_actions": False}},
+    {"name": "Baseline local (old behaviour)", "llm": "ollama",
+     "settings": {"cache_prompt": False, "shortcut_actions": False, "tool_sets": False, "faq_context": False}},
     {"name": "Optimised local", "llm": "ollama", "settings": {}},
+    {"name": "Local + thinking (slow)", "llm": "ollama", "settings": {"think_hard": True}},
     {"name": "Gemini fast", "llm": "gemini", "settings": {}},
     {"name": "Sarvam fast", "llm": "sarvam", "settings": {}},
 ]
@@ -129,6 +131,22 @@ SCRIPTS = [
         "Maza registered mobile 9000014417 aahe ani date of birth 14 August 1991 aahe.",
         "माझा EMI किती आहे?",
         "ठीक आहे, धन्यवाद, बाय."]},
+    {"name": "General banking questions", "lines": [
+        "English. I am not getting the OTP on my phone, what should I do?",
+        "My account got frozen, how do I get it working again?",
+        "Galti se paise galat account mein chale gaye, ab kya karu?",
+        "Gold loan ke liye kya kya lagta hai?",
+        "What happens to my fixed deposit when it matures?",
+        "Okay, bye"]},
+    {"name": "Hard question (try thinking)", "lines": [
+        "English. If I pay some extra amount this month on top of my regular EMI, will that reduce my tenure or my EMI, are there any charges for it, and how is the interest calculated after that?",
+        "I changed my job and my salary account moved to another bank, so how do I change the account my EMI is deducted from, and do I need to visit the branch?",
+        "Okay, bye"]},
+    {"name": "Tamil (beta)", "lines": [
+        "Tamil",
+        "கோத்ரூட் கிளையின் IFSC என்ன?",
+        "புதிய கணக்கு எப்படி திறப்பது?",
+        "நன்றி, bye"]},
     {"name": "Secret safety", "lines": [
         "Mera password Priya1234 hai",
         "Mera registered mobile number 9000014417 hai aur meri date of birth 14 August 1991 hai.",

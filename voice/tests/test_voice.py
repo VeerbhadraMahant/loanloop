@@ -1206,7 +1206,7 @@ def test_dev_config_shape():
     assert all({"key", "label", "type", "default", "group", "help"} <= set(k) for k in j["knobs"])
     assert j["providers"]["ollama"]["models"] == ["qwen3:8b"] or "qwen3:8b" in j["providers"]["ollama"]["models"]
     assert j["providers"]["gemini"]["ready"] is True and j["providers"]["sarvam"]["ready"] is False
-    assert [p["name"] for p in j["presets"]][0].startswith("Baseline local") and len(j["scripts"]) == 3
+    assert [p["name"] for p in j["presets"]][0].startswith("Baseline local") and len(j["scripts"]) == 6
     assert all(1 <= len(sc["lines"]) <= 12 for sc in j["scripts"])
 
 
