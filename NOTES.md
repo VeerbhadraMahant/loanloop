@@ -127,3 +127,21 @@ uv run python ../tools/eval_agent.py --reset-limits --outbound-dob "17 June 1988
 - Bake-off (2026-11-10, old code): qwen3:8b 77/88, safety 20/20, median turn 1.5 s, 100% GPU. ornith-1.5:9b 76/88, safety 19/20, 2.6 s, 12% CPU spill, Cyrillic leaking into Hindi: rejected. mimo-v2.6:9b needs a newer Ollama than 0.31.2: not tested. Six of the 11 baseline failures were the outbound cases run without `--outbound-dob/--case-id`.
 - Decision: think_hard stays off (p95 19-29 s is too slow for a call). tool_sets and faq_context stay on but showed no measurable effect on the eval (within run-to-run noise). Review fix: bare "ifsc" keyword removed from account_number_ifsc (it took branch IFSC questions away from branch_lookup).
 - Open: paraphrased general questions with no FAQ keyword are answered from the model's memory instead of faq_lookup; needs meaning-based retrieval.
+
+## FAQ routing by confidence (branch faq-route)
+
+Scorer: `gateway/app/routes/actions/faq_score.py` (pure stdlib, shared by the gateway `faq_lookup.query` and the voice pre-route). Keyword weight = IDF of its words over the 80 intents (generic words ~0), multi-word phrase bonus, call-language keywords full weight, other languages x0.6, all-words-present (not adjacent) x0.7, question coverage check. Outcomes in `voice/app.py` `faq_route`: HIGH -> `faq_lookup` by topic, no LLM; MEDIUM -> LLM turn with the top-3 FAQ block; LOW -> plain LLM turn. "My ... account" questions only go to the FAQ when HIGH. Tool-owned guard list (`_TOOL_OWNED`: balance, last transactions, next EMI, my/branch IFSC, validate IFSC, EMI went up, already paid, close loan, EMI date change, branch-name questions, "send me my statement", request status) is checked in `faq_ok` and `faq_route`.
+Defaults (dev-console settings `faq_direct_min`, `faq_direct_margin`, `faq_direct_cover`, `faq_ref_min`): 4.0, 2.0, 0.5, 1.2. Scores scale with the number of intents (IDF), so re-tune if faq.json grows a lot.
+Measured with `cd gateway && uv run python ../tools/faq_route_eval.py` on `tools/faq_route_set.jsonl` (268 labelled questions, 46 hijack negatives, labels are my own judgement; no live LLM used):
+
+| | old | new |
+|---|---|---|
+| answered without the LLM | 126 | 130 |
+| of which correct | 117 | 129 |
+| HIGH precision | 92.9% | 99.2% |
+| hijack negatives answered directly | 1 | 0 |
+| HIGH recall | 58.2% | 64.2% |
+| MEDIUM / LOW | - | 10.4% / 41.0% |
+| mean match time (incl. guards) | 11.2 ms | 8.1 ms |
+
+The one wrong direct answer left is a two-topic question (standing instructions after account closure). Thresholds were tuned on this same set (grid over min/margin/cover), so expect a little less on unseen questions.

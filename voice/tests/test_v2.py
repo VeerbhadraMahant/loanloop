@@ -150,7 +150,7 @@ def test_faq_direct_before_llm_and_account_questions_skip_it(env):
     fake.gw["faq_lookup"] = FAQ
     d = new_call(c)
     r = turn(c, d, "English. How do I open a savings account?").json()
-    assert r["agent_text"] == "faq answer" and fake.of("llm") == [] and gw_calls(fake, "faq_lookup")[-1]["query"].endswith("savings account?")
+    assert r["agent_text"] == "faq answer" and fake.of("llm") == [] and gw_calls(fake, "faq_lookup")[-1]["topic"] == "open_account"
     fake.llm_script = [AFTER]
     turn(c, d, "What is my EMI balance")  # possessive + account noun: the model handles it
     assert len(fake.of("llm")) == 1

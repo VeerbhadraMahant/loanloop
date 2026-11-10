@@ -26,6 +26,15 @@ from voice import providers, tts as tts_mod
 
 ROOT = Path(__file__).resolve().parent.parent
 ENV_LOCAL = ROOT / ".env.local"  # module-level so tests can point it at a temp file
+
+def _load_faq_score():
+    spec = importlib.util.spec_from_file_location("ll_faq_score", ROOT / "gateway" / "app" / "routes" / "actions" / "faq_score.py")
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+
+
+faq_score = _load_faq_score()  # the gateway's weighted FAQ scorer (pure module), same numbers for the pre-route and faq_lookup.query
 log = logging.getLogger("voice")  # never log transcripts, LLM messages or keys: call_id, action, ok, latency only
 
 # Request shapes copied from tools/stt_benchmark.py (stt) and tools/make_test_audio.py (tts_payload).
@@ -107,6 +116,10 @@ KNOBS = [
     _k("tool_hints", "Tool hints", "bool", True, "Conversation", "Per-tool nudges added to tool descriptions for the small local model."),
     _k("tool_sets", "Tool sets by call state", "bool", True, "Conversation", "On: the model sees only the tools of the call state (inbound unverified / inbound verified / outbound). Off: all tools every turn."),
     _k("think_hard", "Think on hard turns", "bool", False, "LLM", "Ollama only: qwen3 thinking mode on LLM turns that look hard (18+ words, several requests, or after a tool error). The thinking text is never spoken or stored."),
+    _k("faq_direct_min", "FAQ direct: min score", "number", faq_score.HIGH_MIN, "Conversation", "A general question is answered from the FAQ without the LLM only when the best FAQ topic scores at least this (and leads by the margin). Higher = safer, more LLM turns.", min=1, max=30, step=0.5),
+    _k("faq_direct_margin", "FAQ direct: lead over 2nd", "number", faq_score.HIGH_MARGIN, "Conversation", "Required score lead of the best FAQ topic over the second best for a direct answer.", min=0, max=20, step=0.5),
+    _k("faq_direct_cover", "FAQ direct: coverage", "number", faq_score.COVER_MIN, "Conversation", "Share of the question's content words the matched FAQ keywords must account for (0-1); stops a long mixed question being answered by one keyword.", min=0, max=1, step=0.05),
+    _k("faq_ref_min", "FAQ grounding: min score", "number", faq_score.MED_MIN, "Conversation", "Below this score no FAQ block is added to the LLM turn.", min=0, max=20, step=0.1),
     _k("faq_context", "FAQ grounding", "bool", True, "Conversation", "On: the top 3 bank FAQ answers are appended to the current general-question turn (never stored in history)."),
 ]
 KNOB_BY_KEY = {k["key"]: k for k in KNOBS}
@@ -309,6 +322,7 @@ def _load_scrub():
 
 
 _find_secret, _redact_secret = _load_scrub()
+
 _DIGITS = re.compile(r"(?P<ifsc>\b[A-Z]{4}0[A-Z0-9]{6}\b)|(?P<d>\d(?:[ -]?\d){5,})")  # IFSC codes are public: exempt
 _ISO_DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
 _DEVANAGARI = re.compile("[ऀ-ॿ]")
@@ -817,6 +831,35 @@ def account_specific(text: str) -> bool:
     return bool(t & _POSSESSIVE and t & _ACCT_NOUNS and not _GENERAL_TOPIC.search(low))
 
 
+# Questions a TOOL answers (account data, branch/IFSC lookups, requests): never routed to the FAQ even if a FAQ keyword matches.
+_TOOL_OWNED = re.compile(
+    r"\b(?:my|mera|meri|mere)\s+(?:branch\s+)?ifsc\b|\bifsc\b.{0,25}\b(?:of|for|ka)\b.{0,20}\bbranch\b|\bbranch\b.{0,20}\bifsc\b|"
+    r"\b(?:validate|verify|check)\b.{0,12}\bifsc\b|\bifsc\b.{0,15}\b(?:correct|valid|sahi|right)\b|\b[a-z]{4}0[a-z0-9]{6}\b|"
+    r"\b(?:last|recent|latest|mini)\b.{0,12}\b(?:transactions?|txns?|statement)\b|"
+    r"\bnext\s+emi\b|\bemi\b.{0,20}\b(?:kitna|kab|kiti)\b|(?:ईएमआई|बैलेंस).{0,15}कितना|\b(?:what|how much)\b.{0,25}\b(?:i owe|do i owe|outstanding|my emi|my balance|dues?)\b|"
+    r"\bemi\b.{0,30}\b(?:go|went|gone|increase[d]?|hike[d]?|up|badh)\b|\b(?:why|kyun|kyu)\b.{0,25}\b(?:emi|charges?)\b.{0,25}\b(?:more|high|higher|up|badh|increase[d]?)\b|"
+    r"\balready\s+paid\b|\bpaid\s+already\b|\bpaid\s+(?:my\s+)?emi\b|pay\s+kar\s+diya|भर\s+दिया|भरले|"
+    r"\bclose\s+(?:my|the)\s+loan\b|\bforeclos\w*\b.{0,20}\b(?:my|amount|quote)\b|\bloan\s+(?:band|close)\b|\bband\s+karo\b|"
+    r"\bchange\b.{0,12}\bemi\s+date\b|\bemi\s+date\b.{0,12}\bchange\b|\b(?:sms|message)\b.{0,20}\b(?:my|mera)\b.{0,15}\b(?:ifsc|customer id|account)\b|"
+    r"\bwhich\b.{0,15}\b(?:mobile|email|phone)\b.{0,15}\b(?:linked|registered)\b|\bcustomer\s+id\b|\b(?:what|which)\s+(?:is|are)\s+my\b|"
+    r"\blost\s+(?:my\s+)?job\b|\bnaukri\b|नौकरी|नोकरी|\bwife|\bhusband|\bi\s+(?:will|promise)\s+pay\b|\bnominee\b.{0,12}\bto\b\s+my\b|"
+    r"मेरा\s+(?:बैलेंस|ईएमआई|ईएमआय)|माझा\s+(?:बॅलन्स|ईएमआय)|माझे\s+(?:शेवटचे|व्यवहार)|"
+    r"(?:check|show|tell|know|what(?:'s| is)(?:\s+my|\s+the)?|how much)\s+(?:my\s+)?(?:(?:current|savings?|available|account)\s+)*balance|"
+    r"\b(?:send|give|email|mail)\s+me\b.{0,20}\bstatement\b|\b(?:want|need)\b.{0,12}\bmy\b.{0,15}\bstatement\b|"
+    r"\bcheck\b.{0,25}\bmy\b.{0,15}\baccount\b|\brequest\b.{0,20}\b(?:status|pending)\b|\b(?:status|pending)\b.{0,20}\brequest\b|"
+    r"\b(?!(?:nearest|nearby|my|your|the|a|any|another|bank|home|this|that|same|other|closest|which|what|near|new|local|our|their|visit\w*)\b)[a-z]+\s+branch\b", re.I)
+
+
+def tool_owned(text: str) -> bool:
+    return bool(_TOOL_OWNED.search(text))
+
+
+def faq_text_ok(text: str, tool_guard: bool = True, acct_guard: bool = True) -> bool:
+    """Call-state-free part of faq_ok: an FAQ-shaped question, not an action request or account/tool question."""
+    return bool(len(_tokens(text)) >= 2 and not is_bare_affirmative(text) and not is_action_request(text) and not (acct_guard and account_specific(text))
+                and not (tool_guard and tool_owned(text)))
+
+
 def faq_args(text: str) -> dict | None:
     """Arguments for faq_lookup. The gateway rejects any input that names a secret ('PIN', 'OTP'), so those questions
     map to their FAQ topic here instead of going as a query (contract change request: exempt faq_lookup.query)."""
@@ -834,7 +877,7 @@ def faq_args(text: str) -> dict | None:
     return None
 
 
-_faq_cache: dict = {"sig": None, "intents": []}
+_faq_cache: dict = {"sig": None, "intents": [], "by_id": {}}
 _FAQ_HEAD = {"en": "Reference (bank FAQ, use only if relevant):", "hi": "संदर्भ (बैंक FAQ, केवल प्रासंगिक हो तो उपयोग करें):",
              "hinglish": "Reference (bank FAQ, sirf kaam ka ho to use karein):", "mr": "संदर्भ (बँक FAQ, फक्त संबंधित असेल तर वापरा):"}
 
@@ -861,21 +904,35 @@ def _faq_intents() -> list[dict]:
                     continue
         except (OSError, ValueError, KeyError):
             intents = {}
-        _faq_cache.update(sig=sig, intents=list(intents.values()))
+        _faq_cache.update(sig=sig, intents=list(intents.values()), by_id=intents)
     return _faq_cache["intents"]
 
 
-def faq_reference(text: str, lang: str, n: int = 3) -> str:
-    """Top-n FAQ answers by the gateway's keyword score (call language counts double), as a short block; "" if none match."""
-    norm = lambda s: re.sub(r"\s+", " ", s.lower()).strip()  # noqa: E731 - same normalisation as gateway faq.match
-    q, scored = norm(text), []
-    for it in _faq_intents():
-        kws = it.get("keywords", {})
-        sc = sum(len(norm(k)) for k in kws.get(lang, []) if norm(k) in q) * 2
-        sc += sum(len(norm(k)) for lg, ks in kws.items() if lg != lang for k in ks if norm(k) in q)
-        if sc and isinstance(it.get("answer"), dict):
-            scored.append((sc, (it["answer"].get(lang) or it["answer"].get("en") or "")[:400]))
-    top = [a for _, a in sorted(scored, key=lambda x: -x[0])[:n] if a]
+def faq_rank(text: str, lang: str) -> list[tuple[str, float, float]]:
+    _faq_intents()
+    return faq_score.table_for(_faq_cache["by_id"]).rank(text, lang)
+
+
+def faq_route(text: str, lang: str, st: dict | None = None) -> tuple[str, str | None]:
+    """('high', id) answer directly, ('medium', id) LLM turn with the FAQ block, ('low', None) plain LLM turn.
+    Pure on the text (call-state guards stay in faq_ok); thresholds from the call's settings, else the defaults."""
+    if not faq_text_ok(text, acct_guard=False):
+        return "low", None
+    st = st or {}
+    out = faq_score.classify(faq_rank(text, lang), st.get("faq_direct_min", faq_score.HIGH_MIN), st.get("faq_direct_margin", faq_score.HIGH_MARGIN),
+                              st.get("faq_ref_min", faq_score.MED_MIN), st.get("faq_direct_cover", faq_score.COVER_MIN))
+    # "my ... account" questions: only a confident general-topic match goes to the FAQ; a medium one would let the block steer the model away from the tool
+    return out if out[0] == "high" or not account_specific(text) else ("low", None)
+
+
+def faq_reference(text: str, lang: str, n: int = 3, min_score: float = faq_score.MED_MIN) -> str:
+    """Top-n FAQ answers by the weighted scorer, as a short block; "" if none score above min_score."""
+    by_id, top = _faq_cache["by_id"] if _faq_intents() else {}, []
+    for iid, sc, _ in faq_rank(text, lang)[:n]:
+        a = by_id[iid].get("answer")
+        if sc >= min_score and isinstance(a, dict):
+            top.append((a.get(lang) or a.get("en") or "")[:400])
+    top = [a for a in top if a]
     return _FAQ_HEAD.get(lang, _FAQ_HEAD["en"]) + "\n" + "\n".join(f"- {a}" for a in top) if top else ""
 
 
@@ -1450,12 +1507,12 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         if pre and is_action_request(text):
             return False  # "update nominee" is an action for the model, not an FAQ
         return bool(len(_tokens(text)) >= 2 and c["direction"] == "inbound" and not c["ended"] and not in_flow(c) and not is_bare_affirmative(text)
-                    and not account_specific(text) and not (not c.get("verified") and _extract_verify(text, c.get("said"))))
+                    and (pre or not account_specific(text)) and not tool_owned(text) and not (not c.get("verified") and _extract_verify(text, c.get("said"))))
 
-    async def faq_call(c: dict, text: str, st: dict) -> str | None:
+    async def faq_call(c: dict, text: str, st: dict, topic: str | None = None) -> str | None:
         """faq_lookup run by the service. Failures leave no trace in the turn state. The gateway has no match strength,
-        so only a reply carrying a matched `topic` counts."""
-        args = faq_args(text)
+        so only a reply carrying a matched `topic` counts. `topic` = the intent our scorer already chose with high confidence."""
+        args = {"topic": topic} if topic else faq_args(text)
         if not args:
             return None
         saved = (list(st["speaks"]), st["last"], len(st["done"]))
@@ -1476,8 +1533,12 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
     async def faq_direct(c: dict, text: str) -> tuple[str, list[dict]] | None:
         if not faq_ok(c, text, pre=True):
             return None
+        sec = faq_args(text) if _find_secret("user_text", text) else None  # secret-word questions: fixed topic map, always direct
+        level, iid = ("high", None) if sec else faq_route(text, c["language"], c["set"])
+        if level != "high":
+            return None  # medium: the LLM answers with the FAQ block; low: plain LLM turn
         st = new_state()
-        speak = await faq_call(c, text, st)
+        speak = await faq_call(c, text, st, iid)
         if not speak:
             return None
         c.pop("note", None)
@@ -1914,7 +1975,8 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             if not auto:
                 note = c.pop("note", None)
                 c["messages"].append({"role": "user", "content": f"{user_text}\n[service note: {note}]" if note else user_text})
-                c["faq_ref"] = faq_reference(user_text, c["language"]) if c["set"]["faq_context"] and faq_ok(c, user_text, pre=True) else ""
+                c["faq_ref"] = (faq_reference(user_text, c["language"], min_score=c["set"]["faq_ref_min"])
+                                if c["set"]["faq_context"] and faq_ok(c, user_text, pre=True) and faq_route(user_text, c["language"], c["set"])[0] != "low" else "")
                 c["faq_msg"] = c["messages"][-1]
                 pst = await pre_verify(c, user_text)
             if pst and pst.get("direct"):
