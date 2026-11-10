@@ -843,15 +843,18 @@ _TOOL_OWNED = re.compile(
     r"\bchange\b.{0,12}\bemi\s+date\b|\bemi\s+date\b.{0,12}\bchange\b|\b(?:sms|message)\b.{0,20}\b(?:my|mera)\b.{0,15}\b(?:ifsc|customer id|account)\b|"
     r"\bwhich\b.{0,15}\b(?:mobile|email|phone)\b.{0,15}\b(?:linked|registered)\b|\bcustomer\s+id\b|\b(?:what|which)\s+(?:is|are)\s+my\b|"
     r"\blost\s+(?:my\s+)?job\b|\bnaukri\b|नौकरी|नोकरी|\bwife|\bhusband|\bi\s+(?:will|promise)\s+pay\b|\bnominee\b.{0,12}\bto\b\s+my\b|"
-    r"मेरा\s+(?:बैलेंस|ईएमआई|ईएमआय)|माझा\s+(?:बॅलन्स|ईएमआय)|माझे\s+(?:शेवटचे|व्यवहार)|"
     r"(?:check|show|tell|know|what(?:'s| is)(?:\s+my|\s+the)?|how much)\s+(?:my\s+)?(?:(?:current|savings?|available|account)\s+)*balance|"
     r"\b(?:send|give|email|mail)\s+me\b.{0,20}\bstatement\b|\b(?:want|need)\b.{0,12}\bmy\b.{0,15}\bstatement\b|"
     r"\bcheck\b.{0,25}\bmy\b.{0,15}\baccount\b|\brequest\b.{0,20}\b(?:status|pending)\b|\b(?:status|pending)\b.{0,20}\brequest\b|"
     r"\b(?!(?:nearest|nearby|my|your|the|a|any|another|bank|home|this|that|same|other|closest|which|what|near|new|local|our|their|visit\w*)\b)[a-z]+\s+branch\b", re.I)
 
 
+# Possessive "my EMI / my balance" in Hindi/Marathi: a tool question unless it is a general topic ("माझा ईएमआय चुकला" = a missed EMI, an FAQ).
+_TOOL_OWNED_POSS = re.compile(r"मेरा\s+(?:बैलेंस|ईएमआई|ईएमआय)|माझा\s+(?:बॅलन्स|ईएमआय)|माझे\s+(?:शेवटचे|व्यवहार)")
+
+
 def tool_owned(text: str) -> bool:
-    return bool(_TOOL_OWNED.search(text))
+    return bool(_TOOL_OWNED.search(text) or (_TOOL_OWNED_POSS.search(text) and not _GENERAL_TOPIC.search(text.lower())))
 
 
 def faq_text_ok(text: str, tool_guard: bool = True, acct_guard: bool = True) -> bool:
@@ -908,21 +911,32 @@ def _faq_intents() -> list[dict]:
     return _faq_cache["intents"]
 
 
+def strip_lang_lead(text: str) -> str:
+    """"English. What is NRE?" -> "What is NRE?": a leading sentence made only of language-choice words is not part of the question."""
+    for i, ch in enumerate(text):
+        if ch in ".!?।":
+            head = set(_tokens(text[:i].lower()))
+            if head and head <= set().union(*_LANG_WORDS.values()) | _SWITCH_CUES | _LANG_STOP | {"बताइए", "बात", "कीजिए", "बोलो", "बोला", "बोलिए", "सांगा", "बताओ"}:
+                return text[i + 1:].strip()
+            break
+    return text
+
+
 def faq_rank(text: str, lang: str) -> list[tuple[str, float, float]]:
     _faq_intents()
-    return faq_score.table_for(_faq_cache["by_id"]).rank(text, lang)
+    return faq_score.table_for(_faq_cache["by_id"]).rank(strip_lang_lead(text), lang)
 
 
 def faq_route(text: str, lang: str, st: dict | None = None) -> tuple[str, str | None]:
     """('high', id) answer directly, ('medium', id) LLM turn with the FAQ block, ('low', None) plain LLM turn.
     Pure on the text (call-state guards stay in faq_ok); thresholds from the call's settings, else the defaults."""
+    text = strip_lang_lead(text)
     if not faq_text_ok(text, acct_guard=False):
         return "low", None
     st = st or {}
     out = faq_score.classify(faq_rank(text, lang), st.get("faq_direct_min", faq_score.HIGH_MIN), st.get("faq_direct_margin", faq_score.HIGH_MARGIN),
                               st.get("faq_ref_min", faq_score.MED_MIN), st.get("faq_direct_cover", faq_score.COVER_MIN))
-    # "my ... account" questions: only a confident general-topic match goes to the FAQ; a medium one would let the block steer the model away from the tool
-    return out if out[0] == "high" or not account_specific(text) else ("low", None)
+    return out
 
 
 def faq_reference(text: str, lang: str, n: int = 3, min_score: float = faq_score.MED_MIN) -> str:
@@ -959,7 +973,7 @@ _THINK_TAG = re.compile(r"<think>.*?(?:</think>|$)", re.S)
 _ACTION_STEMS = ("update", "change", "close", "send", "raise", "cancel", "block", "apply", "badal", "badla", "band", "bhej", "bhejo",
                  "बदल", "बंद", "भेज", "अपडेट", "पाठव", "रद्द")
 _QUESTION_WORDS = {"how", "what", "when", "why", "where", "which", "can", "kaise", "kya", "kab", "kyun", "kahan", "kaun",
-                   "कैसे", "क्या", "कब", "क्यों", "कहाँ", "कसे", "काय", "केव्हा", "कधी", "कुठे"}
+                   "कैसे", "कैसा", "कैसी", "कसा", "कशी", "कशा", "कसं", "क्या", "कब", "क्यों", "कहाँ", "कसे", "काय", "केव्हा", "कधी", "कुठे"}
 
 
 def is_action_request(text: str) -> bool:

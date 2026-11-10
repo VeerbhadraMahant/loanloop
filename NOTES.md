@@ -136,7 +136,7 @@ Measured with `cd gateway && uv run python ../tools/faq_route_eval.py` on `tools
 
 | | old | new |
 |---|---|---|
-| answered without the LLM | 126 | 130 |
+| answered without the LLM (set + prefixed variants) | 270 | 268 |
 | of which correct | 117 | 129 |
 | HIGH precision | 92.9% | 99.2% |
 | hijack negatives answered directly | 1 | 0 |

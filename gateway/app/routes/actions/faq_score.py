@@ -32,7 +32,7 @@ def norm(s: str) -> str:
 STOP = GENERIC | frozenset({
     "i", "me", "we", "you", "your", "it", "this", "that", "there", "does", "did", "will", "would", "should", "could", "have", "has", "had", "am",
     "are", "was", "be", "get", "got", "and", "or", "if", "when", "where", "why", "which", "who", "with", "from", "at", "as", "by", "any", "so",
-    "please", "tell", "want", "need", "about", "after", "before", "into", "than", "then", "also", "just", "still", "some", "one", "much", "many",
+    "please", "tell", "want", "need", "difference", "between", "versus", "vs", "explain", "mean", "means", "meaning", "english", "hinglish", "hindi", "marathi", "हिंदी", "मराठी", "मराठीत", "about", "after", "before", "into", "than", "then", "also", "just", "still", "some", "one", "much", "many",
     "kaun", "kaunse", "kyun", "kya", "par", "pe", "aur", "ya", "toh", "to", "bhi", "nahi", "koi", "mujhe", "hum", "aap", "ap", "kitna", "kitni",
     "मैं", "मुझे", "और", "या", "में", "से", "को", "पर", "भी", "नहीं", "कोई", "कितना", "कितनी", "कब", "कहाँ", "कौन", "मला", "आणि", "किंवा", "मध्ये", "नाही", "कोणती", "कुठे", "कधी",
 })

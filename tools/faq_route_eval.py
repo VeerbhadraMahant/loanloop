@@ -49,7 +49,7 @@ def evaluate(cases, intents, old_match, high_min=None, margin=None, med_min=None
 
 def summarize(rows, t_old, t_new):
     pos = [r for r in rows if r["c"]["expect"] != "none"]
-    neg = [r for r in rows if r["c"]["id"].startswith("neg_")]
+    neg = [r for r in rows if r["c"]["id"].startswith("neg_")]  # incl. the @p variants
     old_d = [r for r in rows if r["old"]]
     new_d = [r for r in rows if r["level"] == "high"]
     ok_old = [r for r in old_d if r["old"] == r["c"]["expect"]]
@@ -71,6 +71,9 @@ def summarize(rows, t_old, t_new):
 def main() -> int:
     sys.stdout.reconfigure(encoding="utf-8")
     cases = [json.loads(line) for line in (ROOT / "tools" / "faq_route_set.jsonl").read_text(encoding="utf-8").splitlines() if line.strip()]
+    # the live path sees what the caller says first: every row also runs behind its language-choice prefix ("English. ...")
+    pre = {"en": "English.", "hinglish": "Hinglish.", "hi": "हिंदी में बताइए.", "mr": "मराठी."}
+    cases += [{**c, "id": c["id"] + "@p", "text": f"{pre[c['lang']]} {c['text']}"} for c in cases]
     intents = new_faq.load_faq()
     old = load_old()
     rows, t_old, t_new = evaluate(cases, intents, lambda i, q, lg: old["match"](i, q, lg))
