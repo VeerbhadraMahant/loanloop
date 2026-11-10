@@ -5,9 +5,9 @@
 
 Voice service caps live calls at 50 and an ended call still counts until its 30 min TTL, so one full run (~90 cases) needs a voice restart
 half way: the harness ends every call with a "bye" turn, stops cleanly on HTTP 429 (remaining cases are reported "not run"), and
---resume skips the ids that passed in the previous results file. Restart the voice service, then re-run with --resume.
+--resume skips the ids already in the previous results file (--retry-failed re-runs the failures) and keeps their results. Restart the voice service, then re-run with --resume.
 --reset-limits (needs redis-py, hence `uv run` from gateway/) deletes ll:rl:verify:* in the gateway's Redis (REDIS_URL) before the run and
-before each outbound case, because all outbound cases share one customer whose verify counter locks after 3 fails per hour.
+before every case, because a persona's verify counter locks after 3 fails per hour.
 
 --dry only validates the cases file (no network). A real run starts a call per case (tts off), sends each turn, checks the
 `expect` block and writes tools/out/eval_results.json (pass rate, median/p95 turn latency, avg LLM calls per turn).
@@ -208,15 +208,18 @@ def main(argv=None) -> int:
     ap.add_argument("--outbound-dob", default=os.environ.get("OUTBOUND_DOB", ""), help='DOB of the outbound case customer, e.g. "14 August 1991" (else outbound cases are skipped)')
     ap.add_argument("--only", help="run only case ids starting with this prefix, e.g. faq_ or out_")
     ap.add_argument("--dashboard-token", default=env("DASHBOARD_TOKEN") or "dev-dashboard-token-change-me", help="bearer for outbound starts and the dashboard (never printed)")
-    ap.add_argument("--reset-limits", action="store_true", help="delete ll:rl:verify:* in Redis before the run and before each outbound case")
-    ap.add_argument("--resume", action="store_true", help="skip case ids that passed in the previous --out file")
+    ap.add_argument("--reset-limits", action="store_true", help="delete ll:rl:verify:* in Redis before the run and before each case")
+    ap.add_argument("--resume", action="store_true", help="skip case ids already in the previous --out file (their results are kept in the new summary)")
+    ap.add_argument("--retry-failed", action="store_true", help="with --resume: re-run the ones that failed")
     ap.add_argument("--start-path", default="/calls", help="voice endpoint that opens a call (contract names /start; the service today exposes /calls)")
+    ap.add_argument("--set", action="append", default=[], metavar="KEY=VALUE", help="per-call setting sent to /calls (dev mode only), repeatable, e.g. --set tool_sets=false --set think_hard=true")
     ap.add_argument("--llm", help="provider for /calls (ollama|gemini|sarvam...), dev mode only")
     ap.add_argument("--model", help="model name for /calls (must be in ollama list for ollama), dev mode only")
     ap.add_argument("--out", type=Path, default=OUT)
     ap.add_argument("--dry", action="store_true", help="validate the cases file only")
     a = ap.parse_args(argv)
 
+    prev: list[dict] = []
     cases = load_cases(a.cases)
     errs = validate(cases)
     if errs:
@@ -228,9 +231,10 @@ def main(argv=None) -> int:
     if a.only:
         cases = [c for c in cases if c["id"].startswith(a.only)]
     if a.resume and a.out.exists():
-        done = {r["id"] for r in json.loads(a.out.read_text(encoding="utf-8"))["results"] if r["pass"]}
+        prev = [r for r in json.loads(a.out.read_text(encoding="utf-8"))["results"] if r["pass"] or not a.retry_failed]
+        done = {r["id"] for r in prev}
         cases = [c for c in cases if c["id"] not in done]
-        print(f"--resume: {len(done)} previously passed ids skipped")
+        print(f"--resume: {len(done)} ids from the previous run kept")
     redis_url = env("REDIS_URL") or "redis://localhost:56379/0"
     if a.reset_limits:
         print(f"reset-limits: removed {reset_limits(redis_url)} verify counter(s)")
@@ -248,18 +252,27 @@ def main(argv=None) -> int:
     PERSONAS["outbound_demo"]["dob"] = a.outbound_dob
     amount = int((row or {}).get("overdue_amount") or 1000)
     when = (dt.date.today() + dt.timedelta(days=7)).strftime("%d %B %Y")
+    sett = {}
+    for kv in a.set:
+        k, _, x = kv.partition("=")
+        sett[k] = {"true": True, "false": False}.get(x.lower(), x)
+        if isinstance(sett[k], str):
+            try:
+                sett[k] = json.loads(x)
+            except ValueError:
+                pass
     v = httpx.Client(base_url=a.voice, timeout=180, headers={"Authorization": "Bearer " + a.dashboard_token})
-    results, skipped = [], []
+    results, skipped = list(prev), []
     for c in cases:
         if c["direction"] == "outbound" and case_id is None:
             skipped.append(c["id"])
             print(f"SKIP {c['id']} (no collection case)")
             continue
         vals = {**PERSONAS[c["persona"]], "ptp_date": when, "ptp_amount": amount}
-        if a.reset_limits and c["direction"] == "outbound":
+        if a.reset_limits:  # earlier wrong-DOB cases would otherwise lock verification for the persona (3 fails per hour)
             reset_limits(redis_url)
         try:
-            r = run_case(v, c, vals, case_id, a.start_path, {k: x for k, x in (("llm", a.llm), ("model", a.model)) if x})
+            r = run_case(v, c, vals, case_id, a.start_path, {k: x for k, x in (("llm", a.llm), ("model", a.model), ("settings", sett)) if x})
         except CallCap:
             print(f"STOP {c['id']}: voice service returned 429 (50-call cap). Restart it and re-run with --resume.")
             skipped += [x["id"] for x in cases[cases.index(c):]]
@@ -273,7 +286,9 @@ def main(argv=None) -> int:
     lat = [m for r in results for m in r["latency_ms"]]
     llm = [n for r in results for n in r["llm_calls"]]
     n_pass = sum(r["pass"] for r in results)
-    summary = {"cases": len(results), "passed": n_pass, "skipped": skipped,
+    lm = [m for r in results for n, m in zip(r["llm_calls"], r["llm_ms"]) if n]  # turns that called the model
+    summary = {"llm_turn_ms": {"n": len(lm), "median": round(statistics.median(lm), 1) if lm else 0.0, "p95": pct(lm, 0.95)},
+               "cases": len(results), "passed": n_pass, "skipped": skipped,
                "pass_rate": round(n_pass / len(results), 3) if results else 0.0,
                "turn_latency_ms": {"median": round(statistics.median(lat), 1) if lat else 0.0, "p95": pct(lat, 0.95)},
                "avg_llm_calls_per_turn": round(statistics.mean(llm), 2) if llm else 0.0}
@@ -281,7 +296,7 @@ def main(argv=None) -> int:
     a.out.write_text(json.dumps({"summary": summary, "results": [{k: r[k] for k in ("id", "pass", "why", "latency_ms", "llm_calls", "llm_ms", "log")} for r in results]},
                                 ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"\n{n_pass}/{len(results)} passed ({summary['pass_rate']:.0%}); median {summary['turn_latency_ms']['median']} ms, "
-          f"p95 {summary['turn_latency_ms']['p95']} ms, {summary['avg_llm_calls_per_turn']} LLM calls/turn -> {a.out}")
+          f"p95 {summary['turn_latency_ms']['p95']} ms, LLM turns (n={len(lm)}) median {summary['llm_turn_ms']['median']} / p95 {summary['llm_turn_ms']['p95']} ms, {summary['avg_llm_calls_per_turn']} LLM calls/turn -> {a.out}")
     return 0 if n_pass == len(results) else 1
 
 

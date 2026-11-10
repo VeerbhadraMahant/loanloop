@@ -108,3 +108,13 @@ uv run pytest -q                        # uses DB loanloop_test + Redis db 15
 - The 7 beta files are machine-written by agents, not reviewed by native speakers. Callers pick by name (any script) or by speaking in that script; other Indian languages (Odia, Assamese, Urdu...) get the sorry line listing supported ones.
 - Indic digits in 9 scripts normalise to ASCII before the secret scan (PIN in Tamil digits is blocked). Known gap: PIN/OTP/password keywords written in the new scripts (no digits, no Latin word) are not detected by the gateway scrub.
 - Live Timbre v3.0 check, one LANG_OK line each: first chunk bn 354, gu 178, kn 152, ml 208, pa 364, ta 306, te 146 ms; all returned audio. STT in these languages not tested live.
+
+### Running the behaviour eval (typed, local qwen3:8b)
+Needs gateway + voice up (voice in dev mode: `VOICE_DEV=1`, which `start.ps1` sets by default), seeded DB (`start.ps1 -Seed`). Outbound cases need the dashboard token (read from `gateway/.env`, never printed), the collection case id of the outbound persona and that customer's DOB. Seed values: case 201, Vikram Sawant, DOB `17 June 1988` (`gateway/app/db/seed.py`, OUT_ID 201). Without `--outbound-dob` the six `out_*` cases fail or are skipped; that was the old "failures", not a product bug (12/12 with the right flags).
+```
+cd gateway
+uv run python ../tools/eval_agent.py --reset-limits --outbound-dob "17 June 1988" --case-id 201 [--only faq_] [--set tool_sets=false --set faq_context=false] [--out ../tools/out/x.json]
+```
+- The voice service caps live calls at 50 (an ended call counts for 30 min): for a full run restart voice when the harness prints `STOP`, then add `--resume` (keeps earlier results; `--retry-failed` re-runs failures). Restarting only the voice window is safe; Ollama keeps the model loaded.
+- `--set key=value` (repeatable) sends per-call settings to `/calls` (dev mode only). The summary reports `llm_turn_ms`: median/p95 over turns that called the model.
+- Pass condition for the `broad_*` cases (general questions with no FAQ intent) is only "no forbidden tool ran"; read the log for invented figures.
