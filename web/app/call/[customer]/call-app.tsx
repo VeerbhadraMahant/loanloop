@@ -169,6 +169,7 @@ export default function CallApp({ customer, caseId }: { customer: string; caseId
   const [turns, setTurns] = useState<Turn[]>([]);
   const [devMode, setDevMode] = useState(false);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
+  const [viewMode, setViewMode] = useState<"desk" | "simulation">("desk");
   const [callDuration, setCallDuration] = useState(0);
 
   const turnN = useRef(0);
@@ -539,59 +540,86 @@ export default function CallApp({ customer, caseId }: { customer: string; caseId
       }
     >
       <main className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
-        {/* TOP UTILITY BAR: Test Case & Live Context Controls */}
+        {/* TOP UTILITY BAR: Concise Scenario Switcher & High-Visibility Controls */}
         <section className="w-full mb-4">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 rounded-xl bg-card border border-line shadow-xs">
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-primary"></span>
-                <span className="font-mono text-xs uppercase tracking-wider text-muted font-medium">
-                  Operational Test Harness
-                </span>
-                <span className="text-line">·</span>
-                <span className="text-xs text-muted">
-                  Switching scenario updates caller persona &amp; ledger state instantaneously.
-                </span>
-              </div>
-
-              {/* Scenario Switcher Pills */}
-              <div className="inline-flex flex-wrap items-center gap-1.5 p-1 rounded-lg bg-sunken" id="scenario-switcher">
+          <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 p-3.5 sm:p-4 rounded-xl bg-card border border-line shadow-xs">
+            {/* Scenario Switcher: Active Highlighted & Rest Subdued */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-mono text-[11px] uppercase tracking-wider text-muted font-semibold mr-1 hidden sm:inline">
+                Scenario:
+              </span>
+              <div className="inline-flex items-center p-1 rounded-xl bg-sunken gap-1" id="scenario-switcher">
                 {[
-                  ["priya", "Priya — Home Loan Servicing"],
-                  ["ramesh", "Ramesh — Collections & Mandate"],
-                  ["sunita", "Sunita — Hardship Restructure"],
-                  ["vikram", "Vikram — Security Probe"],
-                ].map(([key, label]) => {
+                  { key: "priya", name: "Priya", role: "Home Loan" },
+                  { key: "ramesh", name: "Ramesh", role: "Collections" },
+                  { key: "sunita", name: "Sunita", role: "Hardship" },
+                  { key: "vikram", name: "Vikram", role: "Adversary" },
+                ].map(({ key, name, role }) => {
                   const active = normKey === key;
                   return (
                     <Link
                       key={key}
                       href={`/call/${key}`}
-                      className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                      className={`px-3 py-1.5 rounded-lg text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
                         active
-                          ? "bg-card text-primary shadow-xs font-semibold"
-                          : "text-muted hover:text-fg hover:bg-card/50"
+                          ? "bg-primary text-primary-fg font-bold shadow-xs ring-1 ring-primary/40"
+                          : "text-muted hover:text-fg hover:bg-card/70 font-medium opacity-70 hover:opacity-100"
                       }`}
                     >
-                      {label}
+                      {active && <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse"></span>}
+                      <span>{name}</span>
+                      <span className={`text-[10px] hidden md:inline ${active ? "text-primary-fg/80" : "text-muted"}`}>
+                        ({role})
+                      </span>
                     </Link>
                   );
                 })}
                 <Link
                   href="/test-cases"
-                  className="px-3 py-1.5 rounded-md text-xs font-medium text-muted hover:text-fg hover:bg-card/50 inline-flex items-center gap-1"
+                  className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-muted hover:text-fg hover:bg-card/70 inline-flex items-center gap-1 opacity-70 hover:opacity-100"
+                  title="View all deterministic test scenarios"
                 >
-                  <Icon name="tune" size={13} />
-                  <span>All Scenarios</span>
+                  <Icon name="tune" size={12} />
+                  <span>All</span>
                 </Link>
               </div>
             </div>
 
-            {/* Desk Telemetry & Safety Actions */}
-            <div className="flex flex-wrap items-center gap-2 shrink-0">
-              {/* Call Timer / Status */}
+            {/* Mode Switcher, Telemetry, and High-Visibility Primary CTA */}
+            <div className="flex flex-wrap items-center gap-2.5">
+              {/* View Mode Toggle: Calling Desk vs Call Simulation */}
+              <div className="inline-flex items-center p-1 rounded-xl bg-sunken border border-line">
+                <button
+                  type="button"
+                  onClick={() => setViewMode("desk")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                    viewMode === "desk"
+                      ? "bg-card text-primary shadow-xs"
+                      : "text-muted hover:text-fg"
+                  }`}
+                  title="Developer Desk with timing telemetry & diagnostics"
+                >
+                  <Icon name="speed" size={13} />
+                  <span>Calling Desk</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode("simulation")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                    viewMode === "simulation"
+                      ? "bg-primary text-primary-fg shadow-xs"
+                      : "text-muted hover:text-fg"
+                  }`}
+                  title="End-user phone simulation (no debug timings)"
+                >
+                  <Icon name="phone" size={13} />
+                  <span>Call Simulation</span>
+                </button>
+              </div>
+
+              {/* Status Ribbon */}
               <div
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-mono font-medium ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-medium ${
                   status === "thinking" || status === "connecting"
                     ? "bg-warn-bg text-warn-fg border border-warn-border"
                     : inCall
@@ -617,24 +645,34 @@ export default function CallApp({ customer, caseId }: { customer: string; caseId
                     : status === "connecting"
                     ? "Connecting…"
                     : inCall
-                    ? `Live Call (${fmtDur(callDuration)})`
+                    ? fmtDur(callDuration)
                     : ended
-                    ? "Call Ended"
-                    : "Idle · Ready"}
+                    ? "Ended"
+                    : "Ready"}
                 </span>
               </div>
 
-              {/* Tier Badge */}
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sunken text-fg font-mono text-xs border border-line">
-                <Icon name="verified" size={14} />
-                <span>{persona.tier}</span>
-              </div>
-
-              {/* Language Badge */}
-              <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-surface-container text-fg text-xs font-sans border border-line">
-                <Icon name="phone" size={13} />
-                <span>{lang ? langLabel(lang) : "Auto-detecting"}</span>
-              </div>
+              {/* HIGH-VISIBILITY PRIMARY CTA BUTTON */}
+              {inCall ? (
+                <button
+                  type="button"
+                  onClick={end}
+                  className="px-5 py-2 rounded-xl bg-danger-fg hover:bg-red-700 text-white font-bold text-xs shadow-md hover:shadow-lg transition-all flex items-center gap-1.5 ring-2 ring-danger-line/40 cursor-pointer animate-pulse"
+                >
+                  <Icon name="x" size={14} />
+                  <span>End Call</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={start}
+                  disabled={status === "connecting"}
+                  className="px-5 py-2 rounded-xl bg-ok-fg hover:bg-emerald-700 text-white font-bold text-xs shadow-md hover:shadow-lg transition-all flex items-center gap-1.5 ring-2 ring-ok-border/50 cursor-pointer disabled:opacity-50"
+                >
+                  <Icon name="phone_in_talk" size={14} />
+                  <span>{ended ? "Start New Call" : "Start Call"}</span>
+                </button>
+              )}
 
               {/* Voice replies toggle */}
               <button
@@ -647,50 +685,58 @@ export default function CallApp({ customer, caseId }: { customer: string; caseId
                 }`}
                 title={voiceReplies ? "Voice replies ON (Edge TTS)" : "Voice replies OFF"}
               >
-                <Icon name="mic" size={16} />
+                <Icon name="mic" size={15} />
               </button>
 
-              {/* Diagnostics toggle */}
-              <button
-                type="button"
-                onClick={() => setShowDiagnostics(!showDiagnostics)}
-                className={`p-2 rounded-lg text-xs transition-colors border ${
-                  showDiagnostics
-                    ? "bg-secondary-container text-primary border-primary/20"
-                    : "bg-sunken text-muted border-line hover:text-fg"
-                }`}
-                title="Toggle Engine Diagnostics"
-              >
-                <Icon name="speed" size={16} />
-              </button>
-
-              {/* End Call / Start Call Button */}
-              {inCall ? (
+              {/* Diagnostics toggle (desk mode only) */}
+              {viewMode === "desk" && (
                 <button
                   type="button"
-                  onClick={end}
-                  className="px-3.5 py-1.5 rounded-lg bg-danger-bg hover:bg-danger-line/20 text-danger-fg text-xs font-semibold border border-danger-line transition-colors flex items-center gap-1.5 cursor-pointer"
+                  onClick={() => setShowDiagnostics(!showDiagnostics)}
+                  className={`p-2 rounded-lg text-xs transition-colors border ${
+                    showDiagnostics
+                      ? "bg-secondary-container text-primary border-primary/20"
+                      : "bg-sunken text-muted border-line hover:text-fg"
+                  }`}
+                  title="Toggle Engine Diagnostics"
                 >
-                  <Icon name="x" size={14} />
-                  <span>End Call</span>
+                  <Icon name="speed" size={15} />
                 </button>
-              ) : (
-                <Button
-                  small
-                  onClick={start}
-                  disabled={status === "connecting"}
-                  className="font-semibold text-xs"
-                >
-                  <Icon name="phone_in_talk" size={14} />
-                  <span>{ended ? "Start New Call" : "Start Call"}</span>
-                </Button>
               )}
             </div>
           </div>
         </section>
 
-        {/* 12-COLUMN CALLING DESK & PHONE SIDECAR GRID */}
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
+        {viewMode === "simulation" ? (
+          /* FULL AREA CALL SIMULATION: END-USER PHONE INTERACTION WITHOUT TELEMETRY */
+          <div className="w-full max-w-[420px] mx-auto py-2">
+            <PhoneHandset
+              customer={customer}
+              simulationProps={{
+                inCall,
+                status,
+                ended,
+                busy,
+                listening,
+                msgs,
+                callDuration,
+                talkProps,
+                start,
+                end,
+                sendTextVal,
+                quickPrompts: persona.quickPrompts,
+                personaName: persona.name,
+                personaPhone: persona.phone,
+                personaLoan: persona.loan,
+                text,
+                setText,
+                sendText,
+              }}
+            />
+          </div>
+        ) : (
+          /* 12-COLUMN CALLING DESK & PHONE SIDECAR GRID */
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
           {/* LEFT 8 COLUMNS: Live Calling Desk */}
           <div className="xl:col-span-8 flex flex-col gap-4 min-w-0">
             {/* Caller Ledger Card */}
@@ -840,87 +886,88 @@ export default function CallApp({ customer, caseId }: { customer: string; caseId
                   ))}
                 </div>
 
-                {/* Main Input Controls: Big Mic + Text bar */}
-                <div className="flex flex-col sm:flex-row items-center gap-3">
-                  {/* Primary Talk / Hold Button */}
+                {/* Centered Circular Talk Button in the Middle */}
+                <div className="flex flex-col items-center justify-center py-2 gap-2 border-b border-line/60">
                   {status === "idle" || ended ? (
-                    <Button
-                      onClick={start}
-                      className="w-full sm:w-auto px-6 h-12 text-sm font-semibold shrink-0"
-                    >
-                      <Icon name="phone_in_talk" size={16} />
-                      <span>{ended ? "Start New Call" : "Start Call"}</span>
-                    </Button>
-                  ) : (
                     <button
                       type="button"
-                      {...talkProps}
-                      disabled={!inCall || busy}
-                      aria-pressed={listening}
-                      className={`w-full sm:w-auto px-6 h-12 rounded-xl font-medium text-sm flex items-center justify-center gap-3 transition-all shrink-0 cursor-pointer ${
-                        listening
-                          ? "bg-accent text-primary-fg ring-4 ring-primary/20 scale-[1.02]"
-                          : busy
-                          ? "bg-sunken text-muted border border-line"
-                          : "bg-primary hover:bg-accent-hover text-primary-fg shadow-xs"
-                      } disabled:opacity-50`}
+                      onClick={start}
+                      className="w-18 h-18 sm:w-20 sm:h-20 rounded-full bg-ok-fg hover:bg-emerald-700 text-white shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all flex flex-col items-center justify-center gap-1 cursor-pointer ring-4 ring-ok-border/30 disabled:opacity-50"
+                      title="Start Call"
                     >
-                      {/* Soundwave bars */}
-                      <div className="flex items-center gap-1 h-4">
-                        <span className="w-1 bg-current rounded-full h-2 animate-pulse"></span>
-                        <span
-                          className="w-1 bg-current rounded-full h-4 animate-pulse"
-                          style={{ animationDelay: "150ms" }}
-                        ></span>
-                        <span
-                          className="w-1 bg-current rounded-full h-2 animate-pulse"
-                          style={{ animationDelay: "300ms" }}
-                        ></span>
-                        <span
-                          className="w-1 bg-current rounded-full h-3 animate-pulse"
-                          style={{ animationDelay: "75ms" }}
-                        ></span>
-                      </div>
-                      <span>
-                        {listening
-                          ? "Listening… Release to Send"
-                          : busy
-                          ? "Thinking…"
-                          : "Hold to Talk (or Space)"}
-                      </span>
+                      <Icon name="phone_in_talk" size={26} />
+                      <span className="text-[10px] font-bold tracking-tight uppercase">Start</span>
                     </button>
+                  ) : (
+                    <div className="relative flex flex-col items-center">
+                      {listening && (
+                        <span className="absolute -inset-2.5 rounded-full bg-primary/20 animate-ping pointer-events-none"></span>
+                      )}
+                      <button
+                        type="button"
+                        {...talkProps}
+                        disabled={!inCall || busy}
+                        aria-pressed={listening}
+                        className={`w-18 h-18 sm:w-20 sm:h-20 rounded-full flex flex-col items-center justify-center transition-all cursor-pointer shadow-md select-none ${
+                          listening
+                            ? "bg-accent text-primary-fg ring-4 ring-primary scale-110 shadow-primary/30"
+                            : busy
+                            ? "bg-sunken text-muted border-2 border-line cursor-wait"
+                            : "bg-primary hover:bg-accent-hover text-primary-fg ring-4 ring-primary/20 hover:scale-105 active:scale-95"
+                        } disabled:opacity-50`}
+                        title="Hold to Talk (or hold Spacebar)"
+                      >
+                        <Icon name={listening ? "mic" : busy ? "speed" : "mic"} size={28} />
+                      </button>
+                    </div>
                   )}
 
-                  {/* Text Input Fallback Bar */}
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      sendText();
-                    }}
-                    className="relative w-full flex items-center"
-                  >
-                    <input
-                      type="text"
-                      value={text}
-                      onChange={(e) => setText(e.target.value)}
-                      readOnly={busy}
-                      disabled={!inCall}
-                      placeholder={
-                        inCall
-                          ? "Type Hinglish / English message if audio is muted..."
-                          : "Start call to speak or type..."
-                      }
-                      className="w-full pl-3.5 pr-20 py-2.5 rounded-xl bg-sunken text-fg text-sm border border-line placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
-                    />
-                    <button
-                      type="submit"
-                      disabled={!inCall || busy || !text.trim()}
-                      className="absolute right-1 px-3 py-1.5 rounded-lg bg-card hover:bg-surface-variant text-fg text-xs font-semibold border border-line transition-colors disabled:opacity-40 cursor-pointer"
-                    >
-                      Send
-                    </button>
-                  </form>
+                  {/* Status / Instructions below circular button */}
+                  <div className="text-center">
+                    <div className="text-xs font-semibold text-fg">
+                      {status === "idle" || ended
+                        ? "Click to begin voice session"
+                        : listening
+                        ? "Listening… Release to Send"
+                        : busy
+                        ? "Agent is thinking…"
+                        : "Hold to Talk"}
+                    </div>
+                    <div className="text-[11px] text-muted font-mono mt-0.5">
+                      {inCall && !busy && "or press and hold Spacebar"}
+                    </div>
+                  </div>
                 </div>
+
+                {/* Text Input Fallback Bar (Centered below) */}
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    sendText();
+                  }}
+                  className="relative w-full max-w-xl mx-auto flex items-center pt-1"
+                >
+                  <input
+                    type="text"
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    readOnly={busy}
+                    disabled={!inCall}
+                    placeholder={
+                      inCall
+                        ? "Type Hinglish / English message if audio is muted..."
+                        : "Start call to speak or type..."
+                    }
+                    className="w-full pl-3.5 pr-20 py-2.5 rounded-xl bg-sunken text-fg text-sm border border-line placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!inCall || busy || !text.trim()}
+                    className="absolute right-1 px-3 py-1.5 rounded-lg bg-card hover:bg-surface-variant text-fg text-xs font-semibold border border-line transition-colors disabled:opacity-40 cursor-pointer"
+                  >
+                    Send
+                  </button>
+                </form>
               </div>
             </Card>
 
@@ -1012,7 +1059,8 @@ export default function CallApp({ customer, caseId }: { customer: string; caseId
             </div>
           </div>
         </div>
-      </main>
+      )}
+    </main>
     </SidebarLayout>
   );
 }
