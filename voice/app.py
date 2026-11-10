@@ -105,6 +105,8 @@ KNOBS = [
     _k("tts_voice", "TTS voice", "select", "Shivani", "Speech", "Timbre v3 voice (all speak all languages).", options=TIMBRE_VOICES),
     _k("tts_speed", "TTS speed", "number", 1.0, "Speech", "Speech rate multiplier.", min=0.85, max=1.15, step=0.05),
     _k("tool_hints", "Tool hints", "bool", True, "Conversation", "Per-tool nudges added to tool descriptions for the small local model."),
+    _k("tool_sets", "Tool sets by call state", "bool", True, "Conversation", "On: the model sees only the tools of the call state (inbound unverified / inbound verified / outbound). Off: all tools every turn."),
+    _k("faq_context", "FAQ grounding", "bool", True, "Conversation", "On: the top 3 bank FAQ answers are appended to the current general-question turn (never stored in history)."),
 ]
 KNOB_BY_KEY = {k["key"]: k for k in KNOBS}
 PRESETS = [
@@ -234,6 +236,28 @@ TOOL_HINTS = {
     "record_rtp": " When the caller will not or cannot pay now: pass the closest reason_code (\"I already paid\" on an outbound call: already_paid). Never argue.",
     "end_call": " Call it as soon as the caller says goodbye / bye / that is all, in any language.",
 }
+
+
+# Tools the model sees per call state (the gateway still enforces tiers). Three FIXED lists keep the prompt prefix cacheable.
+# confirm_readback is never offered (the service records the caller's yes); start_call is service-only (see load_tools).
+_FLOW_TOOLS = {"verify_caller", "request_app_approval", "check_approval", "report_secret_spoken", "handover", "end_call"}
+_TIER0_TOOLS = {"faq_lookup", "branch_lookup", "validate_ifsc", "password_reset_help"}
+TOOL_SETS: dict[str, set[str]] = {
+    "in_unverified": _FLOW_TOOLS | _TIER0_TOOLS,
+    "in_verified": _FLOW_TOOLS | _TIER0_TOOLS | {
+        "get_masked_profile", "send_details_sms", "emi_info", "explain_emi_change", "check_payment", "emi_date_change",
+        "foreclosure_quote", "raise_closure", "request_document", "update_nominee", "update_address", "report_hardship",
+        "account_balance", "last_transactions", "dues_info"},
+    # check_payment stays out: the prompt forbids it on outbound calls ("already paid" -> record_rtp)
+    "outbound": {"dues_info", "record_ptp", "record_rtp", "report_hardship", "handover", "verify_caller", "faq_lookup",
+                 "report_secret_spoken", "end_call"},
+}
+
+
+def tool_set_key(c: dict) -> str:
+    if c.get("direction") == "outbound":
+        return "outbound"
+    return "in_verified" if c.get("verified") else "in_unverified"
 
 
 def load_tools(hints: bool = True) -> tuple[list[dict], set[str]]:
@@ -791,6 +815,51 @@ def faq_args(text: str) -> dict | None:
     return None
 
 
+_faq_cache: dict = {"sig": None, "intents": []}
+_FAQ_HEAD = {"en": "Reference (bank FAQ, use only if relevant):", "hi": "संदर्भ (बैंक FAQ, केवल प्रासंगिक हो तो उपयोग करें):",
+             "hinglish": "Reference (bank FAQ, sirf kaam ka ho to use karein):", "mr": "संदर्भ (बँक FAQ, फक्त संबंधित असेल तर वापरा):"}
+
+
+def _faq_intents() -> list[dict]:
+    """faq.json plus every i18n/<code>.json `faq` section, merged like the gateway does; reloaded when a file changes."""
+    paths = [ROOT / "gateway" / "app" / "data" / "faq.json", *sorted(p for p in (ROOT / "i18n").glob("*.json") if p.name != "languages.json")]
+    sig = tuple((str(p), p.stat().st_mtime) for p in paths if p.exists())
+    if _faq_cache["sig"] != sig:
+        intents: dict[str, dict] = {}
+        try:
+            intents = {i["id"]: i for i in json.loads(paths[0].read_text(encoding="utf-8"))["intents"]}
+            for p in paths[1:]:
+                try:
+                    d = json.loads(p.read_text(encoding="utf-8"))
+                    if d.get("lang") != p.stem:
+                        continue
+                    for iid, f in (d.get("faq") or {}).items():
+                        it = intents.get(iid)
+                        if it is not None and isinstance(f, dict) and isinstance(f.get("answer"), str) and f["answer"].strip():
+                            it.setdefault("keywords", {})[p.stem] = [k for k in f.get("keywords", []) if isinstance(k, str) and k.strip()]
+                            it.setdefault("answer", {})[p.stem] = f["answer"]
+                except (OSError, ValueError, AttributeError):
+                    continue
+        except (OSError, ValueError, KeyError):
+            intents = {}
+        _faq_cache.update(sig=sig, intents=list(intents.values()))
+    return _faq_cache["intents"]
+
+
+def faq_reference(text: str, lang: str, n: int = 3) -> str:
+    """Top-n FAQ answers by the gateway's keyword score (call language counts double), as a short block; "" if none match."""
+    norm = lambda s: re.sub(r"\s+", " ", s.lower()).strip()  # noqa: E731 - same normalisation as gateway faq.match
+    q, scored = norm(text), []
+    for it in _faq_intents():
+        kws = it.get("keywords", {})
+        sc = sum(len(norm(k)) for k in kws.get(lang, []) if norm(k) in q) * 2
+        sc += sum(len(norm(k)) for lg, ks in kws.items() if lg != lang for k in ks if norm(k) in q)
+        if sc and isinstance(it.get("answer"), dict):
+            scored.append((sc, (it["answer"].get(lang) or it["answer"].get("en") or "")[:400]))
+    top = [a for _, a in sorted(scored, key=lambda x: -x[0])[:n] if a]
+    return _FAQ_HEAD.get(lang, _FAQ_HEAD["en"]) + "\n" + "\n".join(f"- {a}" for a in top) if top else ""
+
+
 _ACTION_STEMS = ("update", "change", "close", "send", "raise", "cancel", "block", "apply", "badal", "badla", "band", "bhej", "bhejo",
                  "बदल", "बंद", "भेज", "अपडेट", "पाठव", "रद्द")
 _QUESTION_WORDS = {"how", "what", "when", "why", "where", "which", "can", "kaise", "kya", "kab", "kyun", "kahan", "kaun",
@@ -1064,6 +1133,8 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
     cfg = settings or Settings()
     tools, known = load_tools()
     tools_plain, _ = load_tools(hints=False)
+    by_state = {h: {k: [t for t in (tools if h else tools_plain) if t["function"]["name"] in names] for k, names in TOOL_SETS.items()}
+                for h in (True, False)}
     raw_prompt = (ROOT / "agent" / "system_prompt.md").read_text(encoding="utf-8")
     # the call id moves to the first user message so the system prompt (and Ollama's prefix cache) is identical across calls
     out_m = re.search(r"<!-- OUTBOUND -->(.*?)<!-- /OUTBOUND -->", raw_prompt, re.S)
@@ -1082,7 +1153,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             await http.post(f"{cfg.ollama_url}/api/chat", json={
                 "model": cfg.ollama_model, "messages": [{"role": "system", "content": prompt},
                                                         {"role": "user", "content": "(warm-up)"}],
-                "tools": tools, "stream": False, "think": False, "keep_alive": -1,
+                "tools": by_state[True]["in_unverified"], "stream": False, "think": False, "keep_alive": -1,
                 "options": {"num_ctx": 8192, "num_predict": 1}})
         except Exception as e:  # noqa: BLE001
             log.warning("ollama warm-up failed: %s", type(e).__name__)
@@ -1135,6 +1206,10 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
     async def llm(c: dict) -> dict:
         p, t0, st_ = c["llm"], time.perf_counter(), c["set"]
         msgs, tl = trim(c["messages"], st_["keep_msgs"]), tools if st_["tool_hints"] else tools_plain
+        if st_["tool_sets"]:
+            tl = by_state[st_["tool_hints"]][tool_set_key(c)]
+        if (ref := c.get("faq_ref")) and c.get("faq_msg") is not None:  # this turn only: the stored message stays clean
+            msgs = [{**m, "content": f"{m['content']}\n\n{ref}"} if m is c["faq_msg"] else m for m in msgs]
         try:
             if p != "ollama":
                 return await providers.openai_chat(
@@ -1777,6 +1852,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
     async def handle_text(c: dict, user_text: str) -> tuple[str, list[dict]]:
         if not user_text:
             return REPROMPT.get(c["language"], REPROMPT["hinglish"]), []
+        c["faq_ref"] = c["faq_msg"] = None  # per-turn reference block; set below only for a general question
         stype = secret_spoken(user_text)
         c["deva"], c["user_text"] = bool(_DEVANAGARI.search(user_text)), "" if stype else user_text
         if not stype:
@@ -1791,6 +1867,8 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             if not auto:
                 note = c.pop("note", None)
                 c["messages"].append({"role": "user", "content": f"{user_text}\n[service note: {note}]" if note else user_text})
+                c["faq_ref"] = faq_reference(user_text, c["language"]) if c["set"]["faq_context"] and faq_ok(c, user_text, pre=True) else ""
+                c["faq_msg"] = c["messages"][-1]
                 pst = await pre_verify(c, user_text)
             if pst and pst.get("direct"):
                 auto = (pst["direct"], pst["done"])
