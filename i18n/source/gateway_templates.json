@@ -1,0 +1,346 @@
+{
+ "account_not_found": {
+  "en": "I could not find a savings account on your profile. Let me connect you to a colleague.",
+  "hi": "आपकी प्रोफ़ाइल में मुझे कोई बचत खाता नहीं मिला। मैं आपको सहकर्मी से जोड़ती हूँ।"
+ },
+ "address_raised": {
+  "en": "Request {ticket} is raised to update your address to {line1}, {city}, pincode {pincode}.",
+  "hi": "आपका पता {line1}, {city}, पिनकोड {pincode} करने का अनुरोध {ticket} बना दिया गया है।"
+ },
+ "approval_denied": {
+  "en": "The request was declined in the app, so I cannot continue with this. If this was not you, please contact the bank.",
+  "hi": "ऐप में अनुरोध अस्वीकार किया गया, इसलिए मैं आगे नहीं बढ़ सकती। अगर यह आप नहीं थे, तो कृपया बैंक से संपर्क करें।"
+ },
+ "approval_expired": {
+  "en": "That approval request has expired. I can send a new one if you like.",
+  "hi": "वह अनुरोध समाप्त हो गया है। आप चाहें तो मैं नया अनुरोध भेज सकती हूँ।"
+ },
+ "approval_ok": {
+  "en": "Thank you, your approval is confirmed.",
+  "hi": "धन्यवाद, आपकी मंज़ूरी मिल गई है।"
+ },
+ "approval_pending": {
+  "en": "I am still waiting for your approval in the app. Please tap Approve on your phone.",
+  "hi": "मैं अभी ऐप में आपकी मंज़ूरी का इंतज़ार कर रही हूँ। कृपया अपने फ़ोन पर मंज़ूर करें पर टैप करें।"
+ },
+ "approval_sent": {
+  "en": "I have sent a request to the Sahyadri app on your phone. Please open it and tap Approve, then tell me when you are done.",
+  "hi": "मैंने आपके फ़ोन पर सह्याद्रि ऐप में अनुरोध भेजा है। कृपया उसे खोलकर मंज़ूर करें पर टैप करें, फिर मुझे बताएं।"
+ },
+ "balance": {
+  "en": "Your savings account {acct} has a balance of {balance}.",
+  "hi": "आपके बचत खाते {acct} में {balance} की शेष राशि है।"
+ },
+ "balance_hold": {
+  "en": "Your savings account {acct} has a balance of {balance}. {hold} is on hold, so the available balance is {avail}.",
+  "hi": "आपके बचत खाते {acct} में {balance} की शेष राशि है। {hold} होल्ड पर है, इसलिए उपलब्ध राशि {avail} है।"
+ },
+ "branch_found": {
+  "en": "{name}, {address}. IFSC: {ifsc}. MICR: {micr}. Open {hours}.",
+  "hi": "{name}, {address}। आईएफएससी: {ifsc}। एमआईसीआर: {micr}। समय: {hours}।"
+ },
+ "call_ended": {
+  "en": "Thank you for calling Sahyadri Finance Bank. Goodbye.",
+  "hi": "सह्याद्रि फ़ाइनेंस बैंक को कॉल करने के लिए धन्यवाद। नमस्कार।"
+ },
+ "call_started": {
+  "en": "Welcome to Sahyadri Finance Bank. Which language would you like: English, Hindi, Marathi or Hinglish?",
+  "hi": "सह्याद्रि फ़ाइनेंस बैंक में आपका स्वागत है। आप कौन सी भाषा चाहेंगे: अंग्रेज़ी, हिंदी, मराठी या हिंग्लिश?"
+ },
+ "call_started_out": {
+  "en": "This is LoanLoop calling from Sahyadri Bank about your loan. To continue, please confirm your date of birth.",
+  "hi": "मैं सह्याद्रि बैंक की ओर से लोनलूप बोल रही हूँ, आपके लोन के बारे में। आगे बढ़ने के लिए कृपया अपनी जन्मतिथि बताएं।"
+ },
+ "charge_item": {
+  "en": "a {type} of {amount} on {date} ({reason})",
+  "hi": "{date} को {type} {amount} ({reason})"
+ },
+ "closure_raised": {
+  "en": "Closure request {ticket} is raised for the loan {loan}. Your documents and NOC will be returned within 30 days of closure.",
+  "hi": "लोन {loan} के लिए बंद करने का अनुरोध {ticket} बना दिया गया है। आपके दस्तावेज़ और एनओसी बंद होने के 30 दिनों के भीतर लौटा दिए जाएंगे।"
+ },
+ "ctype_bounce": {
+  "en": "bounce charge",
+  "hi": "बाउंस शुल्क"
+ },
+ "ctype_penal": {
+  "en": "penal charge",
+  "hi": "पेनल शुल्क"
+ },
+ "ctype_processing": {
+  "en": "processing fee",
+  "hi": "प्रोसेसिंग शुल्क"
+ },
+ "doc_interest_cert": {
+  "en": "interest certificate",
+  "hi": "ब्याज प्रमाणपत्र"
+ },
+ "doc_statement": {
+  "en": "loan statement",
+  "hi": "लोन स्टेटमेंट"
+ },
+ "document_raised": {
+  "en": "Request {ticket} is raised for your {doc}. It will be emailed to your registered email. I have also sent you an SMS.",
+  "hi": "आपके {doc} के लिए अनुरोध {ticket} बना दिया गया है। यह आपके पंजीकृत ईमेल पर भेजा जाएगा। मैंने आपको एसएमएस भी भेजा है।"
+ },
+ "dues_ask": {
+  "en": "Please tell me how much you can pay and on which date.",
+  "hi": "कृपया बताएं कि आप कितना और किस तारीख को भुगतान कर सकते हैं।"
+ },
+ "dues_info": {
+  "en": "Your loan {loan} has {amount} overdue across {missed} missed EMIs, {dpd} days past due. Charges added so far are {charges}.",
+  "hi": "आपके लोन {loan} पर {missed} छूटी हुई ईएमआई के {amount} बकाया हैं, जो {dpd} दिन से लंबित हैं। अब तक जुड़े शुल्क {charges} हैं।"
+ },
+ "dues_none": {
+  "en": "You have no overdue amount on your loan. Thank you for staying regular.",
+  "hi": "आपके लोन पर कोई बकाया राशि नहीं है। नियमित रहने के लिए धन्यवाद।"
+ },
+ "emi_date_changed": {
+  "en": "Done. Request {ticket} is raised: your EMI date will move to day {day} of every month from your next cycle.",
+  "hi": "हो गया। अनुरोध {ticket} बना दिया गया है: अगले चक्र से आपकी ईएमआई की तारीख हर महीने की {day} होगी।"
+ },
+ "emi_info": {
+  "en": "Your EMI for the loan {loan} is {amount}. Your next due date is {date}.",
+  "hi": "लोन {loan} की आपकी ईएमआई {amount} है। अगली देय तारीख {date} है।"
+ },
+ "emi_no_due": {
+  "en": "Your EMI for the loan {loan} is {amount}. I do not see an upcoming due date right now.",
+  "hi": "लोन {loan} की आपकी ईएमआई {amount} है। अभी मुझे कोई अगली देय तारीख नहीं दिख रही।"
+ },
+ "explain_charges": {
+  "en": "Recent charges on your loan: {items}.",
+  "hi": "आपके लोन पर हाल के शुल्क: {items}।"
+ },
+ "explain_none": {
+  "en": "I do not see a recent rate change or extra charges on your loan.",
+  "hi": "आपके लोन पर मुझे हाल का कोई दर बदलाव या अतिरिक्त शुल्क नहीं दिख रहा।"
+ },
+ "explain_reset": {
+  "en": "Your interest rate changed from {old_rate} percent to {new_rate} percent on {date}. Reason: {reason}. Because of this your EMI changed from {old_emi} to {new_emi}.",
+  "hi": "{date} को आपकी ब्याज दर {old_rate} प्रतिशत से बदलकर {new_rate} प्रतिशत हो गई। कारण: {reason}। इसलिए आपकी ईएमआई {old_emi} से बदलकर {new_emi} हो गई।"
+ },
+ "faq_not_found": {
+  "en": "I do not have an answer for that. I can connect you to a colleague.",
+  "hi": "इसका उत्तर मेरे पास नहीं है। मैं आपको सहकर्मी से जोड़ सकती हूँ।"
+ },
+ "faq_sms_offer": {
+  "en": "Once you verify, I can send this by SMS.",
+  "hi": "आपके सत्यापन के बाद मैं यह एसएमएस से भेज सकती हूँ।"
+ },
+ "faq_sms_sent": {
+  "en": "I have also sent this to your number {v}.",
+  "hi": "मैंने यह आपके नंबर {v} पर भी भेज दिया है।"
+ },
+ "foreclosure_quote": {
+  "en": "To close the loan {loan} today you would pay {total}: outstanding {outstanding}, charges on record {charges} and a foreclosure fee of {fee}.",
+  "hi": "आज लोन {loan} बंद करने के लिए आपको {total} देने होंगे: बकाया {outstanding}, रिकॉर्ड पर शुल्क {charges} और फोरक्लोज़र शुल्क {fee}।"
+ },
+ "foreclosure_quote_nofee": {
+  "en": "To close the loan {loan} today you would pay {total}: outstanding {outstanding} and charges on record {charges}. There is no foreclosure charge on floating-rate loans.",
+  "hi": "आज लोन {loan} बंद करने के लिए आपको {total} देने होंगे: बकाया {outstanding} और रिकॉर्ड पर शुल्क {charges}। फ्लोटिंग दर वाले लोन पर कोई फोरक्लोज़र शुल्क नहीं है।"
+ },
+ "generic_error": {
+  "en": "Sorry, something went wrong on our side. Let me connect you to a colleague.",
+  "hi": "क्षमा करें, हमारी तरफ़ से कुछ गड़बड़ हुई। मैं आपको सहकर्मी से जोड़ती हूँ।"
+ },
+ "handover_ack": {
+  "en": "I am connecting you to a colleague now. They will have a summary of this call, so you will not need to repeat yourself.",
+  "hi": "मैं आपको अभी सहकर्मी से जोड़ रही हूँ। उनके पास इस कॉल का सारांश होगा, इसलिए आपको दोबारा बताने की ज़रूरत नहीं है।"
+ },
+ "hardship_ack": {
+  "en": "I am sorry to hear that. I have recorded your situation and I am connecting you to a colleague who can discuss your options. I cannot discuss payment arrangements myself.",
+  "hi": "यह सुनकर मुझे खेद है। मैंने आपकी स्थिति दर्ज कर ली है और आपको सहकर्मी से जोड़ रही हूँ जो आपके विकल्पों पर बात करेंगे। भुगतान की व्यवस्था पर मैं खुद बात नहीं कर सकती।"
+ },
+ "ifsc_bad_format": {
+  "en": "That does not look like a valid IFSC. It has four letters, then a zero, then six letters or digits. Could you say it again?",
+  "hi": "यह सही आईएफएससी नहीं लग रहा। इसमें चार अक्षर, फिर शून्य, फिर छह अक्षर या अंक होते हैं। क्या आप दोबारा बता सकते हैं?"
+ },
+ "ifsc_other": {
+  "en": "{ifsc} is in a valid format but it is not a Sahyadri branch. Please confirm it with the payee's bank.",
+  "hi": "{ifsc} का प्रारूप सही है लेकिन यह सह्याद्रि की शाखा नहीं है। कृपया पाने वाले के बैंक से पुष्टि करें।"
+ },
+ "ifsc_sahyadri": {
+  "en": "Yes, {ifsc} is valid. It is {name}, {address}.",
+  "hi": "हाँ, {ifsc} सही है। यह {name}, {address} है।"
+ },
+ "ineligible_overdue": {
+  "en": "I cannot change the EMI date while an EMI is overdue. Please clear the overdue amount first.",
+  "hi": "ईएमआई बकाया होने पर मैं तारीख नहीं बदल सकती। कृपया पहले बकाया राशि चुकाएं।"
+ },
+ "ineligible_recent": {
+  "en": "Your EMI date was already changed in the last six months, so it cannot be changed again yet.",
+  "hi": "आपकी ईएमआई की तारीख पिछले छह महीनों में पहले ही बदली जा चुकी है, इसलिए अभी दोबारा नहीं बदली जा सकती।"
+ },
+ "ineligible_same": {
+  "en": "Your EMI date is already day {day} of every month.",
+  "hi": "आपकी ईएमआई की तारीख पहले से हर महीने की {day} है।"
+ },
+ "ineligible_status": {
+  "en": "I cannot change the EMI date on this loan right now because it is not in a regular active state. Let me connect you to a colleague.",
+  "hi": "इस लोन की ईएमआई तारीख मैं अभी नहीं बदल सकती क्योंकि यह सामान्य सक्रिय स्थिति में नहीं है। मैं आपको सहकर्मी से जोड़ती हूँ।"
+ },
+ "invalid_input": {
+  "en": "I could not understand that detail. Could you say it again?",
+  "hi": "मैं वह जानकारी समझ नहीं पाई। क्या आप दोबारा बता सकते हैं?"
+ },
+ "loan_not_found": {
+  "en": "I could not find an active loan on your profile. Let me connect you to a colleague.",
+  "hi": "आपकी प्रोफ़ाइल में मुझे कोई सक्रिय लोन नहीं मिला। मैं आपको सहकर्मी से जोड़ती हूँ।"
+ },
+ "mp_line": {
+  "en": "Your {label} is {v}.",
+  "hi": "आपका {label} {v} है।"
+ },
+ "mp_none": {
+  "en": "I do not have that on record.",
+  "hi": "मेरे रिकॉर्ड में यह नहीं है।"
+ },
+ "need_approval": {
+  "en": "Please open the bank app on your phone and tap Approve.",
+  "hi": "कृपया अपने फ़ोन पर बैंक ऐप खोलें और मंज़ूर करें पर टैप करें।"
+ },
+ "nominee_raised": {
+  "en": "Request {ticket} is raised to set {name} ({relation}) as your nominee.",
+  "hi": "{name} ({relation}) को आपका नामांकित व्यक्ति बनाने का अनुरोध {ticket} बना दिया गया है।"
+ },
+ "not_found": {
+  "en": "I could not find that. Could you check and tell me again?",
+  "hi": "मुझे वह नहीं मिला। कृपया जाँचकर फिर बताएं।"
+ },
+ "not_verified": {
+  "en": "I need to verify you first. Please tell me your registered mobile number and date of birth.",
+  "hi": "पहले मुझे आपकी पहचान सत्यापित करनी होगी। कृपया अपना पंजीकृत मोबाइल नंबर और जन्मतिथि बताएं।"
+ },
+ "payment_matched": {
+  "en": "I can see your payment of {amount} on {date} in our records. Thank you, it is received.",
+  "hi": "{date} का आपका {amount} का भुगतान हमारे रिकॉर्ड में दिख रहा है। धन्यवाद, यह प्राप्त हो गया है।"
+ },
+ "payment_unmatched": {
+  "en": "I could not match that payment of {amount} on {date} yet. I have raised ticket number {ticket}. Reminders are paused until {until} while we check.",
+  "hi": "{date} का {amount} का भुगतान मैं अभी मिला नहीं पाई। मैंने टिकट नंबर {ticket} बनाया है। जाँच के दौरान {until} तक रिमाइंडर रुके रहेंगे।"
+ },
+ "ptp_bad_amount": {
+  "en": "That amount does not look right. Please tell me an amount above zero and not more than your loan outstanding.",
+  "hi": "यह राशि सही नहीं लग रही। कृपया शून्य से अधिक और लोन की बकाया राशि से अधिक नहीं, ऐसी राशि बताएं।"
+ },
+ "ptp_bad_date": {
+  "en": "That date does not work. Please give me a payment date from today up to thirty days from now.",
+  "hi": "यह तारीख मान्य नहीं है। कृपया आज से तीस दिन के भीतर की भुगतान तारीख बताएं।"
+ },
+ "ptp_ok_full": {
+  "en": "Noted. You will pay {amount} on {date}. That covers your full dues of {total}. Please make sure the payment is done by that date.",
+  "hi": "दर्ज कर लिया। आप {date} को {amount} का भुगतान करेंगे। इससे आपकी पूरी बकाया राशि {total} चुक जाएगी। कृपया उस तारीख तक भुगतान सुनिश्चित करें।"
+ },
+ "ptp_ok_partial": {
+  "en": "Noted. You will pay {amount} on {date}. Your total dues are {total}, so {rest} will still be pending after that. Please make sure the payment is done by that date.",
+  "hi": "दर्ज कर लिया। आप {date} को {amount} का भुगतान करेंगे। आपकी कुल बकाया राशि {total} है, इसलिए उसके बाद {rest} बाकी रहेंगे। कृपया उस तारीख तक भुगतान सुनिश्चित करें।"
+ },
+ "pw_app": {
+  "en": "To reset your password in the Sahyadri app: open the app, tap Forgot Password on the login screen, enter your registered mobile number, and follow the steps on screen. The bank will never ask you for your password, PIN or OTP, not even on a call.",
+  "hi": "सह्याद्रि ऐप में पासवर्ड रीसेट करने के लिए: ऐप खोलें, लॉगिन स्क्रीन पर पासवर्ड भूल गए पर टैप करें, अपना पंजीकृत मोबाइल नंबर डालें और स्क्रीन के निर्देश मानें। बैंक कभी आपसे पासवर्ड, पिन या ओटीपी नहीं माँगता, कॉल पर भी नहीं।"
+ },
+ "pw_netbanking": {
+  "en": "To reset your net banking password: open the Sahyadri net banking page, choose Forgot Password, enter your customer ID, and complete the steps shown on screen. The bank will never ask you for your password, PIN or OTP, not even on a call.",
+  "hi": "नेट बैंकिंग पासवर्ड रीसेट करने के लिए: सह्याद्रि नेट बैंकिंग पेज खोलें, पासवर्ड भूल गए चुनें, अपनी कस्टमर आईडी डालें और स्क्रीन पर दिए चरण पूरे करें। बैंक कभी आपसे पासवर्ड, पिन या ओटीपी नहीं माँगता, कॉल पर भी नहीं।"
+ },
+ "rate_limited": {
+  "en": "Too many attempts. I will connect you to a colleague who can help.",
+  "hi": "बहुत अधिक प्रयास हो गए। मैं आपको हमारे सहकर्मी से जोड़ती हूँ।"
+ },
+ "readback_address": {
+  "en": "Address: {line1}, {city}, pincode {pincode}. Is that correct? Please say yes.",
+  "hi": "पता: {line1}, {city}, पिनकोड {pincode}। क्या यह सही है? कृपया हाँ कहें।"
+ },
+ "readback_closure": {
+  "en": "You want to close the loan {loan}. Is that correct? Please say yes.",
+  "hi": "आप लोन {loan} बंद करना चाहते हैं। क्या यह सही है? कृपया हाँ कहें।"
+ },
+ "readback_document": {
+  "en": "You want your {doc} sent to your registered email. Is that correct? Please say yes.",
+  "hi": "आप अपना {doc} पंजीकृत ईमेल पर मँगवाना चाहते हैं। क्या यह सही है? कृपया हाँ कहें।"
+ },
+ "readback_new_day": {
+  "en": "You want your EMI date changed to day {day} of every month. Is that correct? Please say yes.",
+  "hi": "आप अपनी ईएमआई की तारीख हर महीने की {day} तारीख करना चाहते हैं। क्या यह सही है? कृपया हाँ कहें।"
+ },
+ "readback_nominee": {
+  "en": "Nominee name {name}, relation {relation}. Is that correct? Please say yes.",
+  "hi": "नामांकित व्यक्ति का नाम {name}, संबंध {relation}। क्या यह सही है? कृपया हाँ कहें।"
+ },
+ "readback_ok": {
+  "en": "Noted, thank you.",
+  "hi": "ठीक है, धन्यवाद।"
+ },
+ "readback_payment": {
+  "en": "Let me confirm: the UTR is {utr} and the amount is {amount}. Is that correct? Please say yes, then I will check.",
+  "hi": "मैं दोहराती हूँ: यूटीआर {utr} और राशि {amount}। क्या यह सही है? कृपया हाँ कहें, फिर मैं जाँच करूँगी।"
+ },
+ "readback_ptp": {
+  "en": "Just to confirm: you will pay {amount} on {date}. Is that correct? Please say yes.",
+  "hi": "पुष्टि के लिए: आप {date} को {amount} का भुगतान करेंगे। क्या यह सही है? कृपया हाँ कहें।"
+ },
+ "rtp_ack": {
+  "en": "I have noted that. The payment is still due, and a colleague will follow up with you.",
+  "hi": "मैंने यह दर्ज कर लिया है। भुगतान अभी भी देय है, और हमारे सहकर्मी आपसे संपर्क करेंगे।"
+ },
+ "rtp_dispute": {
+  "en": "I have noted your concern. I will connect you to a colleague who can look into it.",
+  "hi": "मैंने आपकी शिकायत दर्ज कर ली है। मैं आपको ऐसे सहकर्मी से जोड़ती हूँ जो इसे देख सकें।"
+ },
+ "rtp_hardship": {
+  "en": "I have noted that, and I am sorry to hear it. I can record this as a hardship for a colleague to review. Would you like me to do that?",
+  "hi": "मैंने यह दर्ज कर लिया है, और यह सुनकर मुझे दुख हुआ। मैं इसे कठिनाई के रूप में दर्ज कर सकती हूँ ताकि सहकर्मी इसे देखें। क्या मैं ऐसा करूँ?"
+ },
+ "rtp_paid": {
+  "en": "I have noted that you say you already paid. Please give me the payment date, amount and UTR so I can check it.",
+  "hi": "मैंने दर्ज किया कि आप भुगतान कर चुके हैं। कृपया भुगतान की तारीख, राशि और यूटीआर बताएं ताकि मैं जाँच सकूँ।"
+ },
+ "secret_reassure": {
+  "en": "Thank you for stopping. Nothing was saved. Never share these with anyone, including the bank.",
+  "hi": "रुकने के लिए धन्यवाद। कुछ भी सेव नहीं हुआ। इन्हें किसी के साथ, बैंक के साथ भी, कभी साझा न करें।"
+ },
+ "secret_warning": {
+  "en": "Please do not share your password, PIN, OTP or card details with me. I have not saved it. Let us continue without it.",
+  "hi": "कृपया अपना पासवर्ड, पिन, ओटीपी या कार्ड की जानकारी मुझे न बताएं। मैंने इसे सेव नहीं किया है। हम इसके बिना आगे बढ़ते हैं।"
+ },
+ "sms_document": {
+  "en": "Sahyadri Finance Bank: your {doc} request {ticket} is received. It will be emailed to your registered email.",
+  "hi": "सह्याद्रि फ़ाइनेंस बैंक: आपका {doc} अनुरोध {ticket} प्राप्त हुआ। यह आपके पंजीकृत ईमेल पर भेजा जाएगा।"
+ },
+ "sms_sent": {
+  "en": "I have sent the details by SMS to your number {v}. For your safety I do not read them out.",
+  "hi": "मैंने विवरण आपके {v} नंबर पर एसएमएस से भेज दिया है। आपकी सुरक्षा के लिए मैं इन्हें बोलकर नहीं बताती।"
+ },
+ "tier_too_low": {
+  "en": "For this I need your approval in the bank app on your phone. I will send a request.",
+  "hi": "इसके लिए मुझे आपके फ़ोन पर बैंक ऐप में आपकी मंज़ूरी चाहिए। मैं एक अनुरोध भेजती हूँ।"
+ },
+ "txn_cr": {
+  "en": "credit",
+  "hi": "क्रेडिट"
+ },
+ "txn_dr": {
+  "en": "debit",
+  "hi": "डेबिट"
+ },
+ "txn_item": {
+  "en": "{date}, {dir} of {amount}, {narr}",
+  "hi": "{date}, {amount} का {dir}, {narr}"
+ },
+ "txn_list": {
+  "en": "Your last {n} transactions: {items}.",
+  "hi": "आपके पिछले {n} लेन-देन: {items}।"
+ },
+ "txn_none": {
+  "en": "I do not see any recent transactions on your account.",
+  "hi": "आपके खाते में मुझे कोई हाल का लेन-देन नहीं दिख रहा।"
+ },
+ "verify_failed": {
+  "en": "I could not verify those details. Please check your registered mobile number and date of birth, or the last four digits of your loan number, and try again.",
+  "hi": "मैं ये जानकारी सत्यापित नहीं कर पाई। कृपया अपना पंजीकृत मोबाइल नंबर और जन्मतिथि, या लोन नंबर के आखिरी चार अंक जाँचकर फिर बताएं।"
+ },
+ "verify_ok": {
+  "en": "Thank you, {name}. You are verified. How can I help?",
+  "hi": "धन्यवाद, {name}। आपकी पहचान सत्यापित हो गई है। मैं कैसे मदद करूँ?"
+ }
+}

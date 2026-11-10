@@ -1,0 +1,662 @@
+{
+ "open_account": {
+  "sms": true,
+  "keywords_en": [
+   "open account",
+   "new account",
+   "open savings account",
+   "account opening",
+   "video kyc",
+   "new savings account",
+   "open a new account",
+   "open a savings account"
+  ],
+  "answer_en": "You can open an account at a branch or through video KYC in the app. You will need Aadhaar, PAN, a photo and an address proof, plus an initial deposit.",
+  "sms_text_en": "Opening a savings account:\n1. Visit a Sahyadri Bank branch, or choose video KYC in the app.\n2. Documents: Aadhaar, PAN, one photo, and address proof if the Aadhaar address is old.\n3. Fill the form and complete KYC.\n4. Make the initial deposit. The amount depends on the account type; see the app for current details.\n5. Your account number and welcome kit follow after approval.",
+  "answer_hi": "आप शाखा में या ऐप पर वीडियो केवाईसी से खाता खोल सकते हैं। इसके लिए आधार, पैन, फोटो और पते का प्रमाण चाहिए, और शुरुआती जमा राशि भी।"
+ },
+ "account_types": {
+  "sms": false,
+  "keywords_en": [
+   "savings vs current",
+   "account types",
+   "current account",
+   "difference savings current",
+   "types of account"
+  ],
+  "answer_en": "A savings account is for personal use and earns interest on your balance. A current account is for businesses with many daily transactions and usually does not pay interest.",
+  "sms_text_en": "",
+  "answer_hi": "बचत खाता निजी इस्तेमाल के लिए है और बैलेंस पर ब्याज देता है। चालू खाता कारोबार के लिए है, जिसमें रोज़ बहुत लेन-देन होते हैं, और उस पर आमतौर पर ब्याज नहीं मिलता।"
+ },
+ "min_balance": {
+  "sms": false,
+  "keywords_en": [
+   "minimum balance",
+   "min balance",
+   "average balance",
+   "balance not maintained",
+   "penalty low balance"
+  ],
+  "answer_en": "The minimum balance depends on your account type, and Sahyadri Bank's current requirement is in the app. If it is not maintained, the bank can charge a fee, so it is best to top up before month end.",
+  "sms_text_en": "",
+  "answer_hi": "मिनिमम बैलेंस खाते के प्रकार पर निर्भर करता है, और सह्याद्रि बैंक की मौजूदा शर्त ऐप में दी गई है। बैलेंस न रखने पर बैंक शुल्क लगा सकता है, इसलिए महीने के अंत से पहले रकम जमा कर दें।"
+ },
+ "dormant_account": {
+  "sms": true,
+  "keywords_en": [
+   "dormant account",
+   "inactive account",
+   "inoperative account",
+   "reactivate account",
+   "account not used"
+  ],
+  "answer_en": "If an account has no customer-initiated transaction for a long period, usually two years, it becomes inoperative. To reactivate it, complete KYC at the branch. Your money stays safe.",
+  "sms_text_en": "Reactivating a dormant account:\n1. Visit your home branch with ID and address proof.\n2. Submit a reactivation request and update KYC.\n3. Make a small transaction after the branch confirms.\nMoney in the account stays safe and is not lost.",
+  "answer_hi": "अगर खाते में लंबे समय, आमतौर पर दो साल, तक ग्राहक की ओर से कोई लेन-देन नहीं होता तो वह निष्क्रिय हो जाता है। दोबारा चालू करने के लिए शाखा में केवाईसी करें। आपका पैसा सुरक्षित रहता है।"
+ },
+ "account_closure": {
+  "sms": true,
+  "keywords_en": [
+   "close account",
+   "account closure",
+   "close my account",
+   "closing savings account",
+   "account band karna"
+  ],
+  "answer_en": "To close an account, submit a closure request at your branch with ID, after clearing any dues and returning the cheque book and cards. Closing soon after opening may attract a charge, which the branch will confirm.",
+  "sms_text_en": "Closing your account:\n1. Clear loans, standing instructions and pending dues linked to the account.\n2. Visit the branch with ID and fill the closure form.\n3. Return unused cheque leaves and the debit card.\n4. Say where the remaining balance should be sent.\nAny closure charge will be confirmed by the branch.",
+  "answer_hi": "खाता बंद करने के लिए शाखा में पहचान पत्र के साथ अनुरोध दें, बकाया चुकाएँ और चेकबुक व कार्ड लौटाएँ। खोलने के तुरंत बाद बंद करने पर शुल्क लग सकता है, जो शाखा बताएगी।"
+ },
+ "balance_hold": {
+  "sms": false,
+  "keywords_en": [
+   "available balance",
+   "account balance different",
+   "amount on hold",
+   "balance hold",
+   "lien"
+  ],
+  "answer_en": "Available balance can be lower than account balance when some money is on hold, for example a cheque in clearing, a card authorisation or a lien. Once the hold is released, the amount becomes available again.",
+  "sms_text_en": "",
+  "answer_hi": "जब कुछ रकम होल्ड पर हो, जैसे क्लियरिंग में चेक, कार्ड ऑथराइज़ेशन या लियन, तब उपलब्ध बैलेंस खाते के बैलेंस से कम हो सकता है। होल्ड हटने पर रकम फिर उपलब्ध हो जाती है।"
+ },
+ "statement_request": {
+  "sms": true,
+  "keywords_en": [
+   "bank statement",
+   "account statement",
+   "passbook",
+   "statement request",
+   "mini statement",
+   "send statement"
+  ],
+  "answer_en": "You can download your statement from the app or net banking, or get a printed one at the branch or a passbook kiosk.",
+  "sms_text_en": "Getting a statement:\n1. App: Accounts > Statements > choose period > Download PDF.\n2. Net banking: same path under Account Services.\n3. Branch: ask for a printed statement with ID; a small fee may apply.\n4. Statements go only to your registered email or mobile.",
+  "answer_hi": "आप स्टेटमेंट ऐप या नेट बैंकिंग से डाउनलोड कर सकते हैं, या शाखा और पासबुक किओस्क से प्रिंट ले सकते हैं।"
+ },
+ "interest_certificate": {
+  "sms": true,
+  "keywords_en": [
+   "interest certificate",
+   "interest statement",
+   "tax certificate",
+   "loan interest certificate",
+   "provisional certificate"
+  ],
+  "answer_en": "The interest certificate shows the interest earned or paid in a financial year and is used for tax filing. You can download it from the app, or a verified caller can ask for a request to be raised.",
+  "sms_text_en": "Interest certificate:\n1. App: Accounts or Loans > Certificates > Interest Certificate > choose financial year.\n2. Download the PDF, or ask for it on your registered email.\n3. For loans, it shows interest and principal paid in the year.\n4. A provisional certificate can be issued before year end.",
+  "answer_hi": "ब्याज प्रमाणपत्र में किसी वित्त वर्ष में मिला या चुकाया गया ब्याज दिखता है, और यह टैक्स भरने में काम आता है। इसे ऐप से डाउनलोड कर सकते हैं, या सत्यापित होने पर अनुरोध दर्ज करवा सकते हैं।"
+ },
+ "statement_codes": {
+  "sms": true,
+  "keywords_en": [
+   "UPI DR",
+   "NEFT CR",
+   "ATM WDL",
+   "POS",
+   "ACH ECS",
+   "statement short form"
+  ],
+  "answer_en": "In a statement, UPI DR is a UPI payment you made, and NEFT CR is money received by NEFT. ATM WDL is an ATM cash withdrawal, POS is a card swipe at a shop, and ACH or ECS is an auto-debit like an EMI or SIP.",
+  "sms_text_en": "Common statement codes:\nUPI DR: UPI payment sent. UPI CR: UPI money received.\nNEFT/RTGS/IMPS CR: money received; DR: money sent.\nATM WDL: cash withdrawn at an ATM.\nPOS: card payment at a shop.\nECOM: online card payment.\nACH/ECS DR: auto-debit such as an EMI or SIP.\nCHQ: cheque.\nINT: interest credited.",
+  "answer_hi": "स्टेटमेंट में UPI DR का मतलब आपका किया हुआ यूपीआई भुगतान है, और NEFT CR का मतलब एनईएफटी से आया पैसा। ATM WDL एटीएम से नकद निकासी है, POS दुकान पर कार्ड स्वाइप है, और ACH या ECS ईएमआई या एसआईपी जैसा ऑटो-डेबिट है।"
+ },
+ "atm_limits": {
+  "sms": false,
+  "keywords_en": [
+   "atm limit",
+   "withdrawal limit",
+   "daily withdrawal",
+   "cash withdrawal limit",
+   "how much cash"
+  ],
+  "answer_en": "Your daily ATM withdrawal limit depends on your card type, and Sahyadri Bank's current limit is shown in the app under card controls. You can also ask the branch to change it.",
+  "sms_text_en": "",
+  "answer_hi": "आपकी रोज़ की एटीएम निकासी सीमा कार्ड के प्रकार पर निर्भर करती है, और सह्याद्रि बैंक की मौजूदा सीमा ऐप में कार्ड कंट्रोल में दिखती है। आप शाखा से भी इसे बदलवा सकते हैं।"
+ },
+ "failed_atm_withdrawal": {
+  "sms": true,
+  "keywords_en": [
+   "atm failed",
+   "money deducted atm",
+   "cash not dispensed",
+   "atm transaction failed",
+   "atm refund",
+   "atm did not give cash",
+   "atm did not dispense",
+   "atm debited",
+   "account was debited"
+  ],
+  "answer_en": "If money was deducted but the ATM did not give cash, it is usually reversed automatically within five working days. If it is not, tell us and the bank owes you compensation for each day of delay, as per RBI rules.",
+  "sms_text_en": "Failed ATM withdrawal:\n1. Keep the slip or note date, time, ATM location and amount.\n2. Wait up to 5 working days for the automatic reversal.\n3. If not reversed, raise a complaint in the app, at the branch, or by calling customer care.\n4. As per RBI rules, compensation is payable for each day of delay beyond the time limit.\n5. If unresolved in 30 days, you can approach the RBI Ombudsman at cms.rbi.org.in.",
+  "answer_hi": "अगर पैसे कट गए पर एटीएम से कैश नहीं निकला, तो आमतौर पर पाँच कामकाजी दिनों में अपने आप वापस आ जाते हैं। न आएँ तो हमें बताएँ, देरी के हर दिन के लिए आरबीआई नियमों के अनुसार बैंक आपको हर्जाना देता है।"
+ },
+ "cash_deposit": {
+  "sms": false,
+  "keywords_en": [
+   "cash deposit",
+   "deposit cash",
+   "cdm",
+   "cash deposit machine",
+   "deposit limit"
+  ],
+  "answer_en": "You can deposit cash at a branch counter or a cash deposit machine. Cash deposits above a certain amount need PAN, and the bank's current free limits and charges are in the app.",
+  "sms_text_en": "",
+  "answer_hi": "आप नकद शाखा के काउंटर या कैश डिपॉजिट मशीन में जमा कर सकते हैं। एक तय राशि से ऊपर के नकद जमा पर पैन चाहिए, और बैंक की मौजूदा मुफ्त सीमा और शुल्क ऐप में हैं।"
+ },
+ "upi_setup": {
+  "sms": true,
+  "keywords_en": [
+   "set up upi",
+   "register upi",
+   "activate upi",
+   "upi registration",
+   "how to use upi"
+  ],
+  "answer_en": "To start UPI, install a UPI app, register with the mobile number linked to your account, and choose your bank. Then set a UPI PIN using your debit card details inside the app.",
+  "sms_text_en": "Setting up UPI:\n1. Install a UPI app and open it.\n2. Register with the mobile number linked to your bank account (an SMS verification happens automatically).\n3. Choose Sahyadri Bank and select your account.\n4. Set a UPI PIN inside the app using your debit card's last six digits and expiry date.\n5. Never share your UPI PIN with anyone, including the bank.",
+  "answer_hi": "यूपीआई शुरू करने के लिए कोई यूपीआई ऐप इंस्टॉल करें, खाते से जुड़े मोबाइल नंबर से रजिस्टर करें और अपना बैंक चुनें। फिर ऐप के अंदर डेबिट कार्ड की जानकारी से यूपीआई पिन बनाएँ।"
+ },
+ "upi_pin_reset": {
+  "sms": true,
+  "keywords_en": [
+   "forgot upi pin",
+   "reset upi pin",
+   "change upi pin",
+   "upi pin forgot",
+   "upi pin"
+  ],
+  "answer_en": "You can reset your UPI PIN yourself inside the UPI app. Choose your bank account, tap forgot UPI PIN, and verify with your debit card details. The bank never asks you for the PIN.",
+  "sms_text_en": "Resetting your UPI PIN:\n1. Open your UPI app > Bank accounts > select the account.\n2. Tap Forgot UPI PIN.\n3. Enter the last six digits and expiry of your debit card in the app only.\n4. Set a new PIN.\nThe bank, the agent or a caller will never ask for your PIN or OTP.",
+  "answer_hi": "आप यूपीआई पिन यूपीआई ऐप के अंदर खुद रीसेट कर सकते हैं। अपना बैंक खाता चुनें, फॉरगॉट यूपीआई पिन दबाएँ और डेबिट कार्ड की जानकारी से सत्यापित करें। बैंक आपसे पिन कभी नहीं माँगता।"
+ },
+ "upi_failed": {
+  "sms": true,
+  "keywords_en": [
+   "upi failed",
+   "upi payment failed",
+   "upi money deducted",
+   "upi pending",
+   "upi refund",
+   "payment stuck"
+  ],
+  "answer_en": "If a UPI payment failed but money was deducted, it is usually reversed automatically within a few working days, up to five. If it is still not back after that, raise a complaint with the bank.",
+  "sms_text_en": "UPI payment failed but money deducted:\n1. Note the date, amount, UPI reference number and the receiver.\n2. Wait up to 5 working days for automatic reversal.\n3. If not reversed, raise a complaint in the UPI app and with the bank, quoting the reference number.\n4. If unresolved in 30 days, approach the RBI Ombudsman at cms.rbi.org.in.",
+  "answer_hi": "अगर यूपीआई भुगतान फेल हुआ पर पैसे कट गए, तो आमतौर पर कुछ कामकाजी दिनों में, ज़्यादा से ज़्यादा पाँच, अपने आप वापस आ जाते हैं। उसके बाद भी न आएँ तो बैंक में शिकायत दर्ज करें।"
+ },
+ "upi_wrong_transfer": {
+  "sms": true,
+  "keywords_en": [
+   "wrong upi transfer",
+   "sent money to wrong person",
+   "wrong number upi",
+   "reverse upi payment",
+   "paid wrong account",
+   "wrong upi id",
+   "reverse a completed upi payment",
+   "reverse completed upi",
+   "undo upi payment",
+   "cancel upi payment"
+  ],
+  "answer_en": "A completed UPI payment cannot be reversed by the bank alone, and getting the money back is not guaranteed. Please raise a complaint right away with the transaction details, and the bank will try to contact the receiver's bank.",
+  "sms_text_en": "Money sent to the wrong person:\n1. Act quickly; note the date, amount, UPI reference and receiver's UPI ID or number.\n2. Raise a dispute in your UPI app (Help > transaction > report) and call or visit your bank branch.\n3. The bank will contact the receiver's bank; recovery depends on the receiver's consent and is not guaranteed.\n4. If it was a fraud, call 1930 or report at cybercrime.gov.in.\n5. Unresolved in 30 days: cms.rbi.org.in.",
+  "answer_hi": "पूरा हो चुका यूपीआई भुगतान बैंक अकेले वापस नहीं कर सकता, और पैसे वापस मिलने की गारंटी नहीं है। कृपया लेन-देन की जानकारी के साथ तुरंत शिकायत दर्ज करें, बैंक पाने वाले के बैंक से संपर्क करने की कोशिश करेगा।"
+ },
+ "upi_limits": {
+  "sms": false,
+  "keywords_en": [
+   "upi limit",
+   "upi daily limit",
+   "upi transaction limit",
+   "how much upi",
+   "upi per day"
+  ],
+  "answer_en": "UPI usually allows up to one lakh rupees per transaction for most payments, with a daily cap that can be lower depending on your bank and UPI app. Sahyadri Bank's current limits are in the app.",
+  "sms_text_en": "",
+  "answer_hi": "यूपीआई में ज़्यादातर भुगतान के लिए आमतौर पर एक लेन-देन में एक लाख रुपये तक की अनुमति होती है, और रोज़ की सीमा आपके बैंक और ऐप के हिसाब से कम हो सकती है। सह्याद्रि बैंक की मौजूदा सीमाएँ ऐप में हैं।"
+ },
+ "upi_fraud_collect": {
+  "sms": true,
+  "keywords_en": [
+   "collect request",
+   "upi collect fraud",
+   "receive money upi pin",
+   "pin to receive money",
+   "scan to receive",
+   "refund link"
+  ],
+  "answer_en": "You never enter your UPI PIN to receive money. A PIN is needed only to send money, so if anyone asks you to enter it, scan a code or approve a collect request to get money, it is a fraud. Decline it.",
+  "sms_text_en": "UPI safety:\n1. You do not enter a UPI PIN to receive money.\n2. Decline unknown collect requests.\n3. Do not scan a QR code to receive a refund or prize.\n4. Never share your PIN, OTP or card details, even with someone who says they are from the bank.\n5. If you already paid, call 1930 immediately and report at cybercrime.gov.in; also inform your bank.",
+  "answer_hi": "पैसे पाने के लिए आपको यूपीआई पिन कभी नहीं डालना होता। पिन सिर्फ पैसे भेजने में लगता है, इसलिए कोई पैसे देने के नाम पर पिन डलवाए, कोड स्कैन करवाए या कलेक्ट रिक्वेस्ट मंज़ूर करवाए, तो वह धोखाधड़ी है। उसे अस्वीकार करें।"
+ },
+ "neft_rtgs_imps": {
+  "sms": true,
+  "keywords_en": [
+   "neft rtgs imps",
+   "difference neft rtgs",
+   "neft timing",
+   "rtgs limit",
+   "imps limit",
+   "fund transfer",
+   "neft, rtgs and imps",
+   "neft and rtgs",
+   "difference between neft"
+  ],
+  "answer_en": "IMPS and NEFT work round the clock, IMPS being instant, while NEFT settles in batches and usually completes within a short time. RTGS is for large amounts, with a minimum of two lakh rupees, and is credited in real time.",
+  "sms_text_en": "Fund transfer options:\nIMPS: instant, 24x7, for smaller amounts.\nNEFT: 24x7, settled in batches, no fixed minimum.\nRTGS: for large payments, minimum Rs 2 lakh, real time.\nUPI: instant, for everyday payments.\nTransfer limits and charges for Sahyadri Bank are in the app. Always add and check the beneficiary's account number and IFSC carefully.",
+  "answer_hi": "आईएमपीएस और एनईएफटी चौबीसों घंटे चलते हैं; आईएमपीएस तुरंत होता है, जबकि एनईएफटी बैच में होकर आमतौर पर थोड़ी देर में पूरा होता है। आरटीजीएस बड़ी रकम के लिए है, जिसकी न्यूनतम सीमा दो लाख रुपये है, और पैसा तुरंत पहुँचता है।"
+ },
+ "add_beneficiary": {
+  "sms": true,
+  "keywords_en": [
+   "add beneficiary",
+   "add payee",
+   "new payee",
+   "register beneficiary",
+   "beneficiary activation"
+  ],
+  "answer_en": "You add a beneficiary in the app or net banking by entering their name, account number and IFSC, and confirming with a verification step that the app itself runs. A new beneficiary can take a short time to become active.",
+  "sms_text_en": "Adding a beneficiary:\n1. App > Transfer > Manage Payees > Add.\n2. Enter name, account number and IFSC; re-check them carefully.\n3. Complete the verification step shown inside the app. Do not share any code with anyone.\n4. Wait for the payee to become active, then transfer.\nIf you do not know the IFSC, ask me for the branch's IFSC.",
+  "answer_hi": "आप ऐप या नेट बैंकिंग में लाभार्थी का नाम, खाता नंबर और आईएफएससी डालकर जोड़ते हैं, और पुष्टि ऐप खुद वाले सत्यापन से होती है। नया लाभार्थी सक्रिय होने में थोड़ा समय लग सकता है।"
+ },
+ "debit_card_block": {
+  "sms": false,
+  "keywords_en": [
+   "block debit card",
+   "block my card",
+   "card lost",
+   "card stolen",
+   "hotlist card",
+   "lost card",
+   "lost my debit card",
+   "lost my card",
+   "lost debit card"
+  ],
+  "answer_en": "Please block your card right away in the app under card controls, or through customer care. Once blocked, no new transactions can happen, and you can then ask for a replacement card.",
+  "sms_text_en": "",
+  "answer_hi": "कृपया अपना कार्ड तुरंत ऐप में कार्ड कंट्रोल से या कस्टमर केयर के ज़रिए ब्लॉक करें। ब्लॉक होने के बाद कोई नया लेन-देन नहीं हो सकता, और फिर आप नया कार्ड माँग सकते हैं।"
+ },
+ "debit_card_replace": {
+  "sms": true,
+  "keywords_en": [
+   "replace debit card",
+   "new debit card",
+   "card damaged",
+   "reissue card",
+   "card expired",
+   "debit card request"
+  ],
+  "answer_en": "You can request a replacement debit card in the app or at the branch. It is sent to your registered address, usually within a week or two, and a replacement fee may apply, which is shown in the app.",
+  "sms_text_en": "Replacing a debit card:\n1. If lost or stolen, block the card first in the app.\n2. App > Cards > Request new card, or visit the branch with ID.\n3. The card is posted to your registered address; you can track it in the app.\n4. Set your PIN yourself using the app or an ATM when the card arrives. Nobody from the bank will ask for it.",
+  "answer_hi": "आप नया डेबिट कार्ड ऐप या शाखा में माँग सकते हैं। यह आपके पंजीकृत पते पर आमतौर पर एक-दो हफ्ते में आ जाता है, और बदलने का शुल्क लग सकता है, जो ऐप में दिखता है।"
+ },
+ "card_pin": {
+  "sms": true,
+  "keywords_en": [
+   "card pin",
+   "debit card pin",
+   "forgot card pin",
+   "change atm pin",
+   "generate pin",
+   "set pin"
+  ],
+  "answer_en": "Your card PIN is secret, and nobody including the bank can tell it to you. You can set or reset it yourself in the app, net banking or at an ATM.",
+  "sms_text_en": "Setting or changing a card PIN:\n1. App: Cards > select card > Set or Change PIN.\n2. ATM: insert the card and choose Green PIN or Change PIN, then follow the screen.\n3. Choose a PIN that is not your birth date or phone number.\n4. The bank never asks for your PIN, on a call, SMS or email.",
+  "answer_hi": "आपका कार्ड पिन गोपनीय है, और बैंक समेत कोई भी आपको उसे बता नहीं सकता। आप उसे ऐप, नेट बैंकिंग या एटीएम से खुद सेट या रीसेट कर सकते हैं।"
+ },
+ "card_controls": {
+  "sms": true,
+  "keywords_en": [
+   "card controls",
+   "international usage",
+   "online transactions card",
+   "contactless",
+   "enable international",
+   "disable online"
+  ],
+  "answer_en": "You can switch international, online and contactless use of your card on or off, and set transaction limits, in the app under card controls. It is a good safety habit to keep them off when you do not need them.",
+  "sms_text_en": "Card controls:\n1. App > Cards > select your card > Manage controls.\n2. Switch ON or OFF: domestic online, international, contactless, ATM, POS.\n3. Set per-transaction or daily limits.\n4. Changes usually apply immediately.\n5. If you did not do a transaction, block the card and call 1930 if money was lost.",
+  "answer_hi": "आप ऐप में कार्ड कंट्रोल से अपने कार्ड का इंटरनेशनल, ऑनलाइन और कॉन्टैक्टलेस इस्तेमाल चालू या बंद कर सकते हैं और लेन-देन की सीमा तय कर सकते हैं। जब ज़रूरत न हो तो इन्हें बंद रखना अच्छी सुरक्षा आदत है।"
+ },
+ "credit_card_basics": {
+  "sms": false,
+  "keywords_en": [
+   "credit card",
+   "credit card limit",
+   "credit card bill",
+   "credit card interest",
+   "minimum due",
+   "credit card apply"
+  ],
+  "answer_en": "A credit card lets you spend up to a limit and pay later. If you pay the full bill by the due date there is usually no interest, but paying only the minimum due or paying late attracts interest and fees, so the full amount is always better.",
+  "sms_text_en": "",
+  "answer_hi": "क्रेडिट कार्ड से आप एक सीमा तक खर्च करके बाद में भुगतान कर सकते हैं। देय तारीख तक पूरा बिल भरने पर आमतौर पर ब्याज नहीं लगता, लेकिन सिर्फ मिनिमम ड्यू भरने या देर करने पर ब्याज और शुल्क लगते हैं, इसलिए पूरी रकम भरना बेहतर है।"
+ },
+ "personal_loan_apply": {
+  "sms": true,
+  "keywords_en": [
+   "personal loan",
+   "apply personal loan",
+   "loan eligibility",
+   "personal loan documents",
+   "need a loan"
+  ],
+  "answer_en": "You can apply for a personal loan in the app or at a branch. You will need identity and address proof, income proof such as salary slips or bank statements, and approval depends on eligibility. The rate and charges are shown at the time of application.",
+  "sms_text_en": "Applying for a personal loan:\n1. App > Loans > Personal Loan, or visit a branch.\n2. Documents: Aadhaar, PAN, address proof, last 3 months salary slips, last 6 months bank statement.\n3. Complete KYC and e-sign.\n4. The bank checks eligibility and shows the interest rate, tenure and charges before you accept.\n5. Approved loans are credited to your account.",
+  "answer_hi": "आप पर्सनल लोन के लिए ऐप या शाखा में आवेदन कर सकते हैं। पहचान और पते का प्रमाण, और वेतन पर्ची या बैंक स्टेटमेंट जैसा आय प्रमाण चाहिए, और मंज़ूरी पात्रता पर निर्भर है। दर और शुल्क आवेदन के समय दिखाए जाते हैं।"
+ },
+ "home_loan_apply": {
+  "sms": true,
+  "keywords_en": [
+   "home loan",
+   "housing loan",
+   "apply home loan",
+   "home loan documents",
+   "home loan eligibility"
+  ],
+  "answer_en": "You can apply for a home loan at a branch or in the app. The bank needs identity, address and income proof, and the property papers, and the loan amount depends on your income and the property value. Rates and charges are shared at the time of sanction.",
+  "sms_text_en": "Applying for a home loan:\n1. Visit a branch or start in the app > Loans > Home Loan.\n2. Documents: Aadhaar, PAN, address proof, income proof (salary slips or ITR), 6 months bank statement.\n3. Property papers: sale agreement, title documents, approved plan.\n4. The bank does a legal and valuation check of the property.\n5. After sanction you receive the offer letter with rate, tenure and charges.",
+  "answer_hi": "आप होम लोन के लिए शाखा या ऐप में आवेदन कर सकते हैं। बैंक को पहचान, पते और आय के प्रमाण और संपत्ति के कागज़ चाहिए, और लोन की रकम आपकी आय और संपत्ति के मूल्य पर निर्भर है। दर और शुल्क मंज़ूरी के समय बताए जाते हैं।"
+ },
+ "loan_prepayment": {
+  "sms": true,
+  "keywords_en": [
+   "loan prepayment",
+   "part payment",
+   "foreclose loan",
+   "prepay loan",
+   "close loan early",
+   "prepayment charges",
+   "prepay my loan",
+   "if i prepay"
+  ],
+  "answer_en": "You can prepay part of your loan or close it early. For floating-rate loans taken by individuals, RBI rules say no prepayment charge applies, while fixed-rate loans may carry one, so check your loan terms. A verified caller can ask for a foreclosure quote.",
+  "sms_text_en": "Prepaying or closing a loan:\n1. Part payment: pay the extra amount in the app or at a branch and choose whether to reduce EMI or tenure.\n2. Full closure: ask for a foreclosure quote, which is valid for a few days.\n3. Pay the quoted amount; the loan is closed after it is received.\n4. A No Objection Certificate and release of documents follow after closure.\n5. Charges: none on floating-rate loans to individuals as per RBI; fixed-rate loans may have a charge, as per your loan agreement.",
+  "answer_hi": "आप लोन का कुछ हिस्सा पहले चुका सकते हैं या उसे जल्दी बंद कर सकते हैं। व्यक्तियों के फ्लोटिंग रेट लोन पर आरबीआई नियमों के अनुसार प्रीपेमेंट शुल्क नहीं लगता, जबकि फिक्स्ड रेट लोन पर लग सकता है, इसलिए अपने लोन की शर्तें देखें। सत्यापित होने पर फोरक्लोज़र कोट माँग सकते हैं।"
+ },
+ "emi_missed": {
+  "sms": true,
+  "keywords_en": [
+   "missed emi",
+   "emi bounce",
+   "emi not paid",
+   "late emi",
+   "emi failed",
+   "emi penalty",
+   "pay emi"
+  ],
+  "answer_en": "If an EMI is missed, a late payment charge and interest can apply, and repeated misses can be reported to credit bureaus and affect your credit score. Please pay as soon as possible in the app or at a branch, and if you are facing difficulty, tell us so we can help.",
+  "sms_text_en": "Missed EMI:\n1. Pay the overdue EMI as soon as possible: app > Loans > Pay EMI, UPI, net banking or branch.\n2. Keep enough balance before the EMI date if you use auto-debit, to avoid a bounce.\n3. A late charge and extra interest can apply; your dues are available after you verify.\n4. Repeated delays can be reported to credit bureaus.\n5. If you face financial difficulty, tell us; we will arrange a call with a colleague who can discuss options.",
+  "answer_hi": "अगर ईएमआई छूट जाए तो देर से भुगतान का शुल्क और ब्याज लग सकता है, और बार-बार छूटने पर क्रेडिट ब्यूरो को रिपोर्ट होकर आपका क्रेडिट स्कोर प्रभावित हो सकता है। कृपया जल्दी से जल्दी ऐप या शाखा में भुगतान करें, और परेशानी हो तो हमें बताएँ ताकि हम मदद कर सकें।"
+ },
+ "loan_restructure": {
+  "sms": false,
+  "keywords_en": [
+   "restructure loan",
+   "loan restructuring",
+   "can't pay emi",
+   "lost job",
+   "financial hardship",
+   "reduce emi",
+   "extend tenure"
+  ],
+  "answer_en": "I am sorry you are going through this. Any change to your loan terms is decided by the bank after reviewing your case, so I will pass your situation to a colleague who can discuss the options with you.",
+  "sms_text_en": "",
+  "answer_hi": "आपको इस परिस्थिति से गुज़रना पड़ रहा है, इसका मुझे खेद है। लोन की शर्तों में कोई भी बदलाव बैंक आपका मामला देखकर तय करता है, इसलिए आपकी स्थिति एक सहकर्मी तक पहुँचाई जा रही है, जो आपसे विकल्पों पर बात करेंगे।"
+ },
+ "fd_open": {
+  "sms": true,
+  "keywords_en": [
+   "fixed deposit",
+   "open fd",
+   "fd rate",
+   "fd interest",
+   "fd tenure",
+   "term deposit"
+  ],
+  "answer_en": "You can open a fixed deposit in the app or at a branch by choosing the amount and tenure. The interest rate is fixed at the time of booking, and Sahyadri Bank's current rates are shown in the app.",
+  "sms_text_en": "Opening a fixed deposit:\n1. App > Deposits > Fixed Deposit > New FD, or visit a branch.\n2. Choose the amount, tenure and payout option (at maturity or periodic interest).\n3. Select the account to debit and confirm.\n4. The FD advice is sent to your registered email.\n5. Interest is taxable; TDS may apply, see Form 15G/15H information.\nCurrent rates are in the app.",
+  "answer_hi": "आप ऐप या शाखा में राशि और अवधि चुनकर फिक्स्ड डिपॉजिट खोल सकते हैं। ब्याज दर बुकिंग के समय तय हो जाती है, और सह्याद्रि बैंक की मौजूदा दरें ऐप में दिखती हैं।"
+ },
+ "fd_premature": {
+  "sms": false,
+  "keywords_en": [
+   "break fd",
+   "premature withdrawal",
+   "close fd early",
+   "fd penalty",
+   "fd loan",
+   "withdraw fd"
+  ],
+  "answer_en": "You can break a fixed deposit before maturity, but the bank usually pays a lower interest rate and may charge a small penalty, as per the deposit terms. If you only need cash for a short time, a loan against the deposit is another option.",
+  "sms_text_en": "",
+  "answer_hi": "आप परिपक्वता से पहले एफडी तोड़ सकते हैं, लेकिन बैंक आमतौर पर कम ब्याज देता है और जमा की शर्तों के अनुसार थोड़ा जुर्माना ले सकता है। थोड़े समय के लिए पैसे चाहिए तो एफडी पर लोन भी एक विकल्प है।"
+ },
+ "rd_basics": {
+  "sms": false,
+  "keywords_en": [
+   "recurring deposit",
+   "open rd",
+   "rd instalment",
+   "rd missed",
+   "monthly deposit"
+  ],
+  "answer_en": "A recurring deposit lets you save a fixed amount every month for a chosen period and earn interest, with the total paid at maturity. If you miss an instalment, a small penalty can apply, as per the deposit terms.",
+  "sms_text_en": "",
+  "answer_hi": "रिकरिंग डिपॉजिट में आप चुनी हुई अवधि तक हर महीने तय रकम जमा करते हैं और ब्याज कमाते हैं, और पूरी रकम परिपक्वता पर मिलती है। किस्त छूटने पर जमा की शर्तों के अनुसार थोड़ा जुर्माना लग सकता है।"
+ },
+ "kyc_update": {
+  "sms": true,
+  "keywords_en": [
+   "update kyc",
+   "kyc update",
+   "re kyc",
+   "kyc pending",
+   "kyc expired",
+   "aadhaar update",
+   "pan link"
+  ],
+  "answer_en": "KYC has to be kept up to date. You can update it in the app, by video KYC, or at the branch with your Aadhaar, PAN and address proof, and if nothing has changed, a simple self-declaration may be enough.",
+  "sms_text_en": "Updating KYC:\n1. App > Profile > KYC > Update, or visit your branch.\n2. Documents: Aadhaar, PAN, recent photo, address proof if the address changed.\n3. Complete video KYC or in-branch verification.\n4. If nothing has changed, a self-declaration in the app or by registered email may be enough.\n5. Do not share OTPs with anyone who calls you about KYC; the bank never asks for them.",
+  "answer_hi": "केवाईसी अपडेट रखना ज़रूरी है। आप इसे ऐप में, वीडियो केवाईसी से, या शाखा में आधार, पैन और पते के प्रमाण के साथ अपडेट कर सकते हैं, और कुछ न बदला हो तो सिर्फ स्व-घोषणा काफी हो सकती है।"
+ },
+ "update_mobile": {
+  "sms": true,
+  "keywords_en": [
+   "change mobile number",
+   "update mobile",
+   "new phone number",
+   "registered mobile change",
+   "mobile number update"
+  ],
+  "answer_en": "For safety, your registered mobile number is changed only after strong verification, usually at the branch with ID, or through a secure app process. Because of this I cannot change it on this call.",
+  "sms_text_en": "Changing your registered mobile number:\n1. Visit your home branch with ID, or use App > Profile > Mobile number if available.\n2. Fill the mobile update form and verify with your ID.\n3. The new number is linked after verification, usually within a day or two.\n4. Until then, SMS and approvals still go to the old number.\nFor safety, large transfers may be limited for a short period after a change.",
+  "answer_hi": "सुरक्षा के लिए पंजीकृत मोबाइल नंबर मज़बूत सत्यापन के बाद ही बदला जाता है, आमतौर पर शाखा में पहचान पत्र के साथ या ऐप की सुरक्षित प्रक्रिया से। इसलिए इसे इस कॉल पर नहीं बदला जा सकता।"
+ },
+ "fraud_report": {
+  "sms": true,
+  "keywords_en": [
+   "fraud",
+   "scam",
+   "unauthorised transaction",
+   "money stolen",
+   "cyber fraud",
+   "report fraud",
+   "hacked account"
+  ],
+  "answer_en": "Please act immediately. Block your cards and UPI in the app, then call 1930, the national cyber fraud helpline, report it on the national cybercrime portal, and tell the bank about the transaction. Reporting fast improves the chance of recovery.",
+  "sms_text_en": "If you suspect fraud:\n1. Block your debit/credit card and UPI in the app right away.\n2. Call 1930 (National Cyber Crime Helpline) and report at cybercrime.gov.in.\n3. Inform the bank in writing or in the app with the date, time and amount; keep the screenshots.\n4. Do not share OTP, PIN or passwords with anyone, even someone claiming to be from the bank.\n5. Report within 3 working days to keep your liability limited as per RBI rules.",
+  "answer_hi": "कृपया तुरंत कार्रवाई करें। ऐप में अपने कार्ड और यूपीआई ब्लॉक करें, फिर राष्ट्रीय साइबर फ्रॉड हेल्पलाइन 1930 पर कॉल करें, राष्ट्रीय साइबर क्राइम पोर्टल पर रिपोर्ट करें, और बैंक को लेन-देन के बारे में बताएँ। जल्दी रिपोर्ट करने से पैसे वापस मिलने की संभावना बढ़ती है।"
+ },
+ "bank_never_asks": {
+  "sms": false,
+  "keywords_en": [
+   "bank asks otp",
+   "bank never asks",
+   "caller asked otp",
+   "is this call genuine",
+   "share otp",
+   "bank employee otp"
+  ],
+  "answer_en": "The bank will never ask for your OTP, PIN, password, CVV or full card number, on a call, SMS or email, and neither will I. If anyone asks, do not share it and hang up.",
+  "sms_text_en": "",
+  "answer_hi": "बैंक आपसे आपका ओटीपी, पिन, पासवर्ड, सीवीवी या पूरा कार्ड नंबर कॉल, एसएमएस या ईमेल पर कभी नहीं माँगता, और यहाँ भी कभी नहीं माँगा जाएगा। कोई माँगे तो न बताएँ और फोन काट दें।"
+ },
+ "complaint_escalation": {
+  "sms": true,
+  "keywords_en": [
+   "complaint",
+   "grievance",
+   "ombudsman",
+   "escalate complaint",
+   "not resolved",
+   "file complaint",
+   "complaint status"
+  ],
+  "answer_en": "You can register a complaint with the bank through the app, a branch or customer care and get a reference number. If it is not resolved, or you are not satisfied with the reply within 30 days, you can approach the RBI Ombudsman.",
+  "sms_text_en": "Complaint and escalation:\n1. Register your complaint in the app, at a branch or with customer care; note the reference number.\n2. The bank should reply within 30 days.\n3. If there is no reply, or you are not satisfied, file a complaint with the RBI Ombudsman at cms.rbi.org.in.\n4. Keep your reference number, dates and screenshots ready.",
+  "answer_hi": "आप बैंक में शिकायत ऐप, शाखा या कस्टमर केयर से दर्ज कर सकते हैं और रेफरेंस नंबर पा सकते हैं। हल न हो, या 30 दिन में जवाब से संतुष्ट न हों, तो आप आरबीआई ओम्बड्समैन से संपर्क कर सकते हैं।"
+ },
+ "branch_hours": {
+  "sms": false,
+  "keywords_en": [
+   "branch timings",
+   "branch hours",
+   "bank hours",
+   "is branch open",
+   "bank holiday",
+   "saturday open"
+  ],
+  "answer_en": "Most branches are open on weekdays during normal banking hours, and are closed on Sundays and bank holidays. For a specific branch's timings, tell me the branch or city and I will look it up.",
+  "sms_text_en": "",
+  "answer_hi": "ज़्यादातर शाखाएँ कामकाजी दिनों में सामान्य बैंकिंग समय में खुलती हैं, और रविवार व बैंक छुट्टियों में बंद रहती हैं। किसी खास शाखा का समय जानने के लिए शाखा या शहर का नाम बताइए, देखा जा सकता है।"
+ },
+ "cheque_book": {
+  "sms": true,
+  "keywords_en": [
+   "cheque book",
+   "request cheque book",
+   "new cheque book",
+   "cheque leaves",
+   "chequebook"
+  ],
+  "answer_en": "You can request a cheque book in the app, net banking or at the branch. It is sent to your registered address, usually within a week, and the first few leaves may be free as per your account type.",
+  "sms_text_en": "Requesting a cheque book:\n1. App > Services > Cheque Book > Request, or net banking, or the branch.\n2. Confirm the delivery address (your registered address).\n3. Delivery is usually within a week; track it in the app.\n4. Charges, if any, are shown before you confirm.",
+  "answer_hi": "आप चेकबुक ऐप, नेट बैंकिंग या शाखा से माँग सकते हैं। यह आपके पंजीकृत पते पर आमतौर पर एक हफ्ते में आ जाती है, और खाते के प्रकार के अनुसार शुरुआती कुछ पत्ते मुफ्त हो सकते हैं।"
+ },
+ "cheque_stop_payment": {
+  "sms": true,
+  "keywords_en": [
+   "stop cheque",
+   "stop payment",
+   "cheque lost",
+   "cancel cheque",
+   "cheque stop payment"
+  ],
+  "answer_en": "You can ask the bank to stop payment on a cheque you issued, in the app, net banking or at the branch, by giving the cheque number, date and amount. Do it before the cheque is cleared, and a small fee may apply.",
+  "sms_text_en": "Stopping a cheque payment:\n1. Keep the cheque number, date, amount and payee name ready.\n2. App > Services > Stop Cheque, or visit the branch with a written request.\n3. Do this before the cheque is presented for clearing.\n4. A fee may apply; it is shown before you confirm.\n5. If the cheque is lost, also tell the bank in writing.",
+  "answer_hi": "आपने जो चेक जारी किया है उसका भुगतान रुकवाने के लिए बैंक को ऐप, नेट बैंकिंग या शाखा में चेक नंबर, तारीख और राशि देकर कह सकते हैं। यह चेक क्लियर होने से पहले करें, और थोड़ा शुल्क लग सकता है।"
+ },
+ "cheque_clearing": {
+  "sms": false,
+  "keywords_en": [
+   "cheque clearing",
+   "cheque not cleared",
+   "cheque bounce",
+   "cheque deposit",
+   "how long cheque",
+   "cheque return"
+  ],
+  "answer_en": "A cheque deposited at a branch is usually cleared within one or two working days. If it is returned, the reason is stated on the return memo, such as insufficient funds or signature mismatch, and a charge may apply.",
+  "sms_text_en": "",
+  "answer_hi": "शाखा में जमा किया गया चेक आमतौर पर एक या दो कामकाजी दिनों में क्लियर हो जाता है। लौटे तो रिटर्न मेमो पर कारण लिखा होता है, जैसे अपर्याप्त बैलेंस या हस्ताक्षर न मिलना, और शुल्क लग सकता है।"
+ },
+ "nominee_info": {
+  "sms": true,
+  "keywords_en": [
+   "nominee",
+   "add nominee",
+   "change nominee",
+   "nomination",
+   "nominee details"
+  ],
+  "answer_en": "A nominee is the person who receives your account balance if something happens to you. You can add or change the nominee in the app or at the branch, and it is a good idea to keep it updated.",
+  "sms_text_en": "Nominee details:\n1. App > Profile > Nominee > Add or Change, or visit the branch.\n2. You need the nominee's name, relationship, date of birth and address; for a minor nominee, a guardian is required.\n3. You can nominate more than one person and set shares.\n4. Nomination can be changed any time.\n5. A verified caller can ask me to raise a nominee update request.",
+  "answer_hi": "नॉमिनी वह व्यक्ति है जिसे आपको कुछ हो जाने पर आपके खाते की रकम मिलती है। आप नॉमिनी ऐप या शाखा में जोड़ या बदल सकते हैं, और इसे अपडेट रखना अच्छा है।"
+ },
+ "deceased_claim": {
+  "sms": true,
+  "keywords_en": [
+   "deceased account",
+   "death of account holder",
+   "father passed away",
+   "legal heir",
+   "claim deceased",
+   "account of late"
+  ],
+  "answer_en": "I am sorry for your loss. The balance can be claimed by the nominee, or by the legal heirs if there is no nominee, at the branch with the death certificate and identity documents. I cannot give access to the account on this call.",
+  "sms_text_en": "Claiming a deceased person's account:\n1. The nominee or legal heir visits the branch.\n2. Documents: death certificate, claimant's ID and address proof, claim form, and the passbook or account details if available.\n3. If there is no nominee, a legal heir certificate or succession document may be needed; the branch will guide you.\n4. The bank verifies and then pays the balance to the rightful claimant.\n5. The branch manager can explain timelines for your case.",
+  "answer_hi": "आपके नुकसान के लिए मुझे खेद है। रकम का दावा नॉमिनी कर सकता है, या नॉमिनी न हो तो कानूनी वारिस, शाखा में मृत्यु प्रमाणपत्र और पहचान दस्तावेज़ों के साथ। इस कॉल पर खाते की जानकारी नहीं दी जा सकती।"
+ },
+ "nri_accounts": {
+  "sms": false,
+  "keywords_en": [
+   "nri account",
+   "nre account",
+   "nro account",
+   "nre vs nro",
+   "foreign remittance",
+   "nri savings"
+  ],
+  "answer_en": "An NRE account holds money earned abroad, which can be moved back abroad freely, while an NRO account holds income earned in India, such as rent or pension, with limits on sending it abroad. Interest tax rules differ, so a branch can guide you.",
+  "sms_text_en": "",
+  "answer_hi": "एनआरई खाते में विदेश में कमाया पैसा रखा जाता है, जिसे आसानी से वापस विदेश भेजा जा सकता है, जबकि एनआरओ खाते में भारत में कमाई, जैसे किराया या पेंशन, रखी जाती है और उसे विदेश भेजने की सीमाएँ हैं। ब्याज पर कर के नियम अलग हैं, इसलिए शाखा आपको मार्गदर्शन देगी।"
+ },
+ "tds_15g_15h": {
+  "sms": true,
+  "keywords_en": [
+   "form 15g",
+   "form 15h",
+   "tds on fd",
+   "tds deduction",
+   "avoid tds",
+   "tds certificate"
+  ],
+  "answer_en": "Banks deduct TDS on interest above a yearly limit. If your total income is below the taxable limit, you can submit Form 15G, or Form 15H if you are a senior citizen, to avoid TDS. It is usually submitted at the start of each financial year.",
+  "sms_text_en": "Form 15G / 15H:\n1. 15G is for individuals below 60 whose total income is below the taxable limit; 15H is for senior citizens.\n2. Submit it in the app (Deposits > Tax forms) or at the branch, once each financial year.\n3. Keep your PAN updated; without PAN, TDS is deducted at a higher rate.\n4. Form 15G/15H cannot be used if your total income is above the taxable limit.\n5. TDS certificate (Form 16A) is available in the app after each quarter.",
+  "answer_hi": "बैंक सालाना सीमा से ऊपर के ब्याज पर टीडीएस काटता है। अगर आपकी कुल आय कर योग्य सीमा से कम है, तो टीडीएस से बचने के लिए फॉर्म 15G, या वरिष्ठ नागरिक हों तो फॉर्म 15H जमा कर सकते हैं। यह आमतौर पर हर वित्त वर्ष की शुरुआत में जमा किया जाता है।"
+ },
+ "positive_pay": {
+  "sms": false,
+  "keywords_en": [
+   "positive pay",
+   "positive pay system",
+   "cheque confirmation",
+   "cheque verification",
+   "high value cheque"
+  ],
+  "answer_en": "Positive Pay is a safety step for higher-value cheques, where you confirm the cheque details such as number, date, amount and payee in the app before issuing it. The bank matches them when the cheque is presented, which helps prevent cheque fraud.",
+  "sms_text_en": "",
+  "answer_hi": "पॉज़िटिव पे ज़्यादा रकम के चेक के लिए सुरक्षा का कदम है, जिसमें चेक जारी करने से पहले आप ऐप में चेक का नंबर, तारीख, राशि और पाने वाले की जानकारी पुष्ट करते हैं। चेक आने पर बैंक इन्हें मिलाता है, जिससे चेक धोखाधड़ी रोकने में मदद मिलती है।"
+ }
+}
