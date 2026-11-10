@@ -1,5 +1,7 @@
-# LoanLoop launcher (Windows PowerShell 5.1). Usage: .\start.ps1 [-Seed]
-param([switch]$Seed, [switch]$Dev)
+# LoanLoop launcher (Windows PowerShell 5.1). Usage: .\start.ps1 [-Seed] [-NoDev]
+# Developer console (/dev, per-call settings) is on by default for the local demo; -NoDev turns it off.
+param([switch]$Seed, [switch]$NoDev, [switch]$Dev)  # -Dev kept for old docs: dev is already the default
+$Dev = -not $NoDev  # shadows the switch: on unless -NoDev
 $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
 $ollama = 'http://127.0.0.1:11434'
