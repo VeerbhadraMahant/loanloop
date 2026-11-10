@@ -128,28 +128,31 @@ export function StatTile({
   className?: string;
 }) {
   const str = typeof value === "string" || typeof value === "number" ? String(value) : "";
-  const sizeClass =
-    str.length > 8
-      ? "text-lg sm:text-xl"
-      : str.length > 4
-      ? "text-xl sm:text-2xl"
-      : str.length > 2
-      ? "text-2xl sm:text-3xl"
-      : "text-3xl sm:text-4xl";
+  const isCurrency = str.startsWith("₹") || str.startsWith("$");
+  const isLong = str.length > 8;
+  const isMedium = str.length > 4 || isCurrency;
+
+  const sizeClass = isLong
+    ? "text-base sm:text-lg lg:text-base xl:text-lg"
+    : isMedium
+    ? "text-lg sm:text-xl lg:text-lg xl:text-xl"
+    : str.length > 2
+    ? "text-xl sm:text-2xl"
+    : "text-2xl sm:text-3xl";
 
   return (
     <div
-      className={`rounded-xl border border-line p-3.5 sm:p-4 shadow-[0_1px_2px_rgba(31,42,36,0.04)] flex flex-col justify-between min-w-0 overflow-hidden ${
+      className={`rounded-xl border border-line p-3 sm:p-3.5 shadow-[0_1px_2px_rgba(31,42,36,0.04)] flex flex-col justify-between min-w-0 overflow-hidden ${
         accent ? "bg-accent-soft/40 border-accent/20" : "bg-card"
       } ${className}`}
     >
       <p
-        className={`serif num font-semibold leading-tight text-fg tracking-tight truncate ${sizeClass}`}
+        className={`num font-mono font-bold leading-tight text-fg tracking-tight truncate ${sizeClass}`}
         title={str || undefined}
       >
         {value}
       </p>
-      <p className="mt-2 text-xs text-muted font-normal truncate" title={caption}>
+      <p className="mt-1.5 text-[11px] sm:text-xs text-muted font-normal truncate" title={caption}>
         {caption}
       </p>
     </div>
