@@ -59,7 +59,13 @@
      "account types",
      "current account",
      "difference savings current",
-     "types of account"
+     "types of account",
+     "multiple savings accounts",
+     "two savings accounts",
+     "more than one account",
+     "salary account",
+     "change my account type",
+     "change account type"
     ],
     "hi": [
      "बचत और चालू",
@@ -139,7 +145,13 @@
      "inactive account",
      "inoperative account",
      "reactivate account",
-     "account not used"
+     "account not used",
+     "account inactive",
+     "account is inactive",
+     "marked dormant",
+     "account showing as inactive",
+     "account has become inactive",
+     "salary account has become inactive"
     ],
     "hi": [
      "निष्क्रिय खाता",
@@ -188,7 +200,14 @@
      "account closure",
      "close my account",
      "closing savings account",
-     "account band karna"
+     "account band karna",
+     "close my bank account",
+     "close my savings account",
+     "close my current account",
+     "close my salary account",
+     "before closure",
+     "reopen my closed",
+     "reopen closed account"
     ],
     "hi": [
      "खाता बंद",
@@ -201,7 +220,9 @@
      "account close",
      "account closure",
      "khata band",
-     "account close karna hai"
+     "account close karna hai",
+     "savings account band",
+     "account dobara kholna"
     ],
     "mr": [
      "खाते बंद",
@@ -273,7 +294,10 @@
      "passbook",
      "statement request",
      "mini statement",
-     "send statement"
+     "send statement",
+     "transaction receipt",
+     "payment receipt",
+     "statement for a specific date"
     ],
     "hi": [
      "बैंक स्टेटमेंट",
@@ -320,7 +344,10 @@
      "interest statement",
      "tax certificate",
      "loan interest certificate",
-     "provisional certificate"
+     "provisional certificate",
+     "balance certificate",
+     "solvency certificate",
+     "account balance certificate"
     ],
     "hi": [
      "ब्याज प्रमाणपत्र",
@@ -364,7 +391,13 @@
      "ATM WDL",
      "POS",
      "ACH ECS",
-     "statement short form"
+     "statement short form",
+     "ach debit",
+     "ecs debit",
+     "what is ach",
+     "what is ecs",
+     "narration",
+     "debit entry without"
     ],
     "hi": [
      "यूपीआई डीआर",
@@ -411,7 +444,10 @@
      "withdrawal limit",
      "daily withdrawal",
      "cash withdrawal limit",
-     "how much cash"
+     "how much cash",
+     "withdraw ₹1 lakh",
+     "withdraw 1 lakh",
+     "cash withdrawal limit at"
     ],
     "hi": [
      "एटीएम लिमिट",
@@ -453,7 +489,12 @@
      "atm did not give cash",
      "atm did not dispense",
      "atm debited",
-     "account was debited"
+     "account was debited",
+     "atm withdrawal failed",
+     "dispensed only part",
+     "atm dispensed only",
+     "partial cash",
+     "atm withdrawal but"
     ],
     "hi": [
      "एटीएम फेल",
@@ -467,7 +508,9 @@
      "paisa kat gaya atm",
      "cash nahi nikla",
      "atm transaction fail",
-     "atm refund"
+     "atm refund",
+     "atm se paisa kata cash nahi",
+     "atm ne kam cash diya"
     ],
     "mr": [
      "एटीएम फेल",
@@ -537,7 +580,13 @@
      "register upi",
      "activate upi",
      "upi registration",
-     "how to use upi"
+     "how to use upi",
+     "google pay",
+     "phonepe",
+     "gpay",
+     "changed my sim",
+     "sim card changed",
+     "bank account not showing"
     ],
     "hi": [
      "यूपीआई सेट",
@@ -550,7 +599,9 @@
      "upi register",
      "upi activate",
      "upi kaise chalu karein",
-     "upi shuru"
+     "upi shuru",
+     "gpay mein account",
+     "phonepe mein account"
     ],
     "mr": [
      "यूपीआय सेट",
@@ -626,7 +677,22 @@
      "upi money deducted",
      "upi pending",
      "upi refund",
-     "payment stuck"
+     "payment stuck",
+     "merchant says",
+     "merchant has not received",
+     "payment is pending",
+     "but the transaction failed",
+     "failed upi transaction",
+     "upi transaction to be reversed",
+     "qr code payment",
+     "scanned a qr code",
+     "paid twice",
+     "payment is being declined",
+     "upi payment declined",
+     "upi reference number",
+     "upi transaction id",
+     "transaction id",
+     "money was deducted"
     ],
     "hi": [
      "यूपीआई फेल",
@@ -641,7 +707,10 @@
      "paisa kat gaya upi",
      "upi pending",
      "upi refund",
-     "payment atak gaya"
+     "payment atak gaya",
+     "merchant ko paisa nahi mila",
+     "do baar paisa kata",
+     "payment decline"
     ],
     "mr": [
      "यूपीआय अयशस्वी",
@@ -678,7 +747,10 @@
      "reverse a completed upi payment",
      "reverse completed upi",
      "undo upi payment",
-     "cancel upi payment"
+     "cancel upi payment",
+     "reverse a upi payment",
+     "to the wrong person",
+     "wrong person"
     ],
     "hi": [
      "गलत यूपीआई",
@@ -736,7 +808,11 @@
      "upi daily limit",
      "upi transaction limit",
      "how much upi",
-     "upi per day"
+     "upi per day",
+     "how many upi transactions",
+     "upi transactions can i make",
+     "increase my upi",
+     "upi transaction limit reached"
     ],
     "hi": [
      "यूपीआई लिमिट",
@@ -775,7 +851,10 @@
      "receive money upi pin",
      "pin to receive money",
      "scan to receive",
-     "refund link"
+     "refund link",
+     "unknown person",
+     "unknown upi id",
+     "qr code to receive money"
     ],
     "hi": [
      "कलेक्ट रिक्वेस्ट",
@@ -825,7 +904,24 @@
      "fund transfer",
      "neft, rtgs and imps",
      "neft and rtgs",
-     "difference between neft"
+     "difference between neft",
+     "through neft",
+     "through rtgs",
+     "through imps",
+     "neft transfer",
+     "rtgs transfer",
+     "imps transfer",
+     "neft transaction",
+     "rtgs transaction",
+     "amount for rtgs",
+     "rtgs available",
+     "upi and imps",
+     "difference between upi",
+     "to an account in another bank",
+     "cancel an neft",
+     "cancel an rtgs",
+     "neft status",
+     "imps transaction limit"
     ],
     "hi": [
      "एनईएफटी आरटीजीएस आईएमपीएस",
@@ -839,7 +935,10 @@
      "rtgs limit",
      "imps limit",
      "fund transfer",
-     "neft kitni der mein"
+     "neft kitni der mein",
+     "neft kaise karein",
+     "rtgs kaise karein",
+     "neft mein kitna time"
     ],
     "mr": [
      "एनईएफटी आरटीजीएस आयएमपीएस",
@@ -870,7 +969,10 @@
      "add payee",
      "new payee",
      "register beneficiary",
-     "beneficiary activation"
+     "beneficiary activation",
+     "add a new beneficiary",
+     "new beneficiary",
+     "activate a new beneficiary"
     ],
     "hi": [
      "लाभार्थी जोड़",
@@ -918,7 +1020,14 @@
      "lost card",
      "lost my debit card",
      "lost my card",
-     "lost debit card"
+     "lost debit card",
+     "debit card has been stolen",
+     "debit card stolen",
+     "block my debit card",
+     "block all my cards",
+     "block all cards",
+     "temporarily block my debit card",
+     "my debit card has been lost"
     ],
     "hi": [
      "कार्ड ब्लॉक",
@@ -933,7 +1042,9 @@
      "card kho gaya",
      "card chori",
      "card band karna",
-     "lost card"
+     "lost card",
+     "card turant block",
+     "saare card block"
     ],
     "mr": [
      "कार्ड ब्लॉक",
@@ -960,7 +1071,11 @@
      "card damaged",
      "reissue card",
      "card expired",
-     "debit card request"
+     "debit card request",
+     "debit card has expired",
+     "card has expired",
+     "replacement debit card",
+     "apply for a replacement"
     ],
     "hi": [
      "नया डेबिट कार्ड",
@@ -1056,7 +1171,11 @@
      "online transactions card",
      "contactless",
      "enable international",
-     "disable online"
+     "disable online",
+     "card abroad",
+     "international card transaction",
+     "foreign currency conversion",
+     "international atm"
     ],
     "hi": [
      "कार्ड कंट्रोल",
@@ -1106,7 +1225,12 @@
      "credit card bill",
      "credit card interest",
      "minimum due",
-     "credit card apply"
+     "credit card apply",
+     "minimum amount due",
+     "only the minimum",
+     "late payment",
+     "reward points",
+     "credit card eligibility"
     ],
     "hi": [
      "क्रेडिट कार्ड",
@@ -1191,7 +1315,10 @@
      "housing loan",
      "apply home loan",
      "home loan documents",
-     "home loan eligibility"
+     "home loan eligibility",
+     "down payment",
+     "margin money",
+     "how much home loan"
     ],
     "hi": [
      "होम लोन",
@@ -1338,7 +1465,13 @@
      "lost job",
      "financial hardship",
      "reduce emi",
-     "extend tenure"
+     "extend tenure",
+     "restructure my loan",
+     "lost my job",
+     "cannot pay my emi",
+     "emi holiday",
+     "waive my overdue",
+     "waive overdue charges"
     ],
     "hi": [
      "लोन रीस्ट्रक्चर",
@@ -1354,7 +1487,9 @@
      "naukri chali gayi",
      "paise ki tangi",
      "tenure badhana",
-     "emi nahi bhar sakta"
+     "emi nahi bhar sakta",
+     "emi holiday",
+     "naukri chali gayi hai emi nahi de sakta"
     ],
     "mr": [
      "कर्ज पुनर्रचना",
@@ -1382,7 +1517,12 @@
      "fd rate",
      "fd interest",
      "fd tenure",
-     "term deposit"
+     "term deposit",
+     "open an fd",
+     "fd online",
+     "tenure for an fd",
+     "amount to open an fd",
+     "interest will i earn"
     ],
     "hi": [
      "फिक्स्ड डिपॉजिट",
@@ -1430,7 +1570,12 @@
      "close fd early",
      "fd penalty",
      "fd loan",
-     "withdraw fd"
+     "withdraw fd",
+     "break my fd",
+     "fd before maturity",
+     "premature fd",
+     "loan against my fd",
+     "loan against fd"
     ],
     "hi": [
      "एफडी तोड़ना",
@@ -1476,7 +1621,13 @@
      "open rd",
      "rd instalment",
      "rd missed",
-     "monthly deposit"
+     "monthly deposit",
+     "rd interest",
+     "rd matures",
+     "rd installment",
+     "close my rd",
+     "rd maturity",
+     "miss an rd"
     ],
     "hi": [
      "रिकरिंग डिपॉजिट",
@@ -1518,7 +1669,10 @@
      "kyc pending",
      "kyc expired",
      "aadhaar update",
-     "pan link"
+     "pan link",
+     "kyc is pending",
+     "kyc has expired",
+     "kyc is due"
     ],
     "hi": [
      "केवाईसी अपडेट",
@@ -1565,7 +1719,11 @@
      "update mobile",
      "new phone number",
      "registered mobile change",
-     "mobile number update"
+     "mobile number update",
+     "registered mobile number",
+     "update my mobile number",
+     "mobile number is no longer active",
+     "mobile number without visiting"
     ],
     "hi": [
      "मोबाइल नंबर बदल",
@@ -1611,7 +1769,16 @@
      "money stolen",
      "cyber fraud",
      "report fraud",
-     "hacked account"
+     "hacked account",
+     "without my permission",
+     "withdrew money from my account",
+     "transaction i didn't make",
+     "transaction i did not make",
+     "been hacked",
+     "details have been stolen",
+     "report a suspicious transaction",
+     "account is secure",
+     "debit alert"
     ],
     "hi": [
      "धोखाधड़ी",
@@ -1628,7 +1795,9 @@
      "paisa chori",
      "cyber fraud",
      "fraud report",
-     "account hack"
+     "account hack",
+     "bina permission paisa nikla",
+     "mere account se paisa nikal gaya"
     ],
     "mr": [
      "फसवणूक",
@@ -1662,7 +1831,11 @@
      "caller asked otp",
      "is this call genuine",
      "share otp",
-     "bank employee otp"
+     "bank employee otp",
+     "ask for an otp",
+     "ask for otp",
+     "ask for a pin",
+     "bank ever ask"
     ],
     "hi": [
      "बैंक ओटीपी माँगता",
@@ -1706,7 +1879,13 @@
      "escalate complaint",
      "not resolved",
      "file complaint",
-     "complaint status"
+     "complaint status",
+     "complain about",
+     "i want to complain",
+     "not satisfied with your response",
+     "speak to a branch manager",
+     "speak to a senior",
+     "nodal officer"
     ],
     "hi": [
      "शिकायत",
@@ -1721,7 +1900,9 @@
      "ombudsman",
      "complaint resolve nahi hui",
      "complaint register karna",
-     "grievance"
+     "grievance",
+     "shikayat karni hai",
+     "nodal officer"
     ],
     "mr": [
      "तक्रार",
@@ -1754,7 +1935,12 @@
      "bank hours",
      "is branch open",
      "bank holiday",
-     "saturday open"
+     "saturday open",
+     "is the bank open",
+     "open on saturday",
+     "second saturday",
+     "public holiday",
+     "cash counter"
     ],
     "hi": [
      "शाखा का समय",
@@ -1839,7 +2025,9 @@
      "stop payment",
      "cheque lost",
      "cancel cheque",
-     "cheque stop payment"
+     "cheque stop payment",
+     "lost a signed cheque",
+     "cancel a cheque"
     ],
     "hi": [
      "चेक स्टॉप",
@@ -1886,7 +2074,12 @@
      "cheque bounce",
      "cheque deposit",
      "how long cheque",
-     "cheque return"
+     "cheque return",
+     "cheque clearance",
+     "returned unpaid",
+     "dishonoured",
+     "cheque status",
+     "without maintaining sufficient balance"
     ],
     "hi": [
      "चेक क्लियरिंग",
@@ -1971,7 +2164,9 @@
      "father passed away",
      "legal heir",
      "claim deceased",
-     "account of late"
+     "account of late",
+     "if i die",
+     "one joint account holder dies"
     ],
     "hi": [
      "मृतक का खाता",
@@ -2061,7 +2256,11 @@
      "tds on fd",
      "tds deduction",
      "avoid tds",
-     "tds certificate"
+     "tds certificate",
+     "form 16a",
+     "tax deducted from my fd",
+     "tax refund on bank interest",
+     "tax deducted"
     ],
     "hi": [
      "फॉर्म 15जी",
@@ -2135,6 +2334,1679 @@
     "hi": "पॉज़िटिव पे ज़्यादा रकम के चेक के लिए सुरक्षा का कदम है, जिसमें चेक जारी करने से पहले आप ऐप में चेक का नंबर, तारीख, राशि और पाने वाले की जानकारी पुष्ट करते हैं। चेक आने पर बैंक इन्हें मिलाता है, जिससे चेक धोखाधड़ी रोकने में मदद मिलती है।",
     "hinglish": "Positive Pay zyada value ke cheque ke liye safety step hai, jisme cheque issue karne se pehle aap app mein cheque ka number, date, amount aur payee ki details confirm karte hain. Cheque aane par bank inhe match karta hai, jisse cheque fraud rokne mein madad milti hai.",
     "mr": "पॉझिटिव्ह पे ही जास्त रकमेच्या चेकसाठी सुरक्षा पायरी आहे, ज्यात चेक देण्यापूर्वी तुम्ही ॲपमध्ये चेकचा क्रमांक, तारीख, रक्कम आणि प्राप्तकर्त्याचे तपशील निश्चित करता. चेक आल्यावर बँक ते जुळवते, ज्यामुळे चेक फसवणूक रोखण्यास मदत होते."
+   }
+  },
+  {
+   "id": "internet_banking_register",
+   "sms": true,
+   "keywords": {
+    "en": [
+     "register for internet banking",
+     "activate internet banking",
+     "activate mobile banking",
+     "register mobile banking",
+     "net banking registration",
+     "enable internet banking",
+     "download banking app",
+     "register for mobile banking",
+     "unable to register for mobile banking",
+     "official banking app"
+    ],
+    "hi": [
+     "इंटरनेट बैंकिंग रजिस्टर",
+     "इंटरनेट बैंकिंग चालू",
+     "मोबाइल बैंकिंग चालू",
+     "बैंकिंग ऐप डाउनलोड",
+     "नेट बैंकिंग शुरू"
+    ],
+    "hinglish": [
+     "internet banking register",
+     "internet banking activate",
+     "mobile banking activate",
+     "mobile banking register",
+     "net banking chalu",
+     "banking app download"
+    ],
+    "mr": [
+     "इंटरनेट बँकिंग नोंदणी",
+     "इंटरनेट बँकिंग सुरू",
+     "मोबाइल बँकिंग सुरू",
+     "बँकिंग ॲप डाउनलोड",
+     "नेट बँकिंग सुरू"
+    ]
+   },
+   "answer": {
+    "en": "You can register for mobile or internet banking from the bank's official app, using your debit card and the mobile number registered with the bank, or at your branch. Download the app only from the official app store, and never share your OTP or PIN with anyone.",
+    "hi": "आप बैंक के आधिकारिक ऐप में अपने डेबिट कार्ड और बैंक में रजिस्टर्ड मोबाइल नंबर से, या शाखा में जाकर मोबाइल या इंटरनेट बैंकिंग के लिए रजिस्टर कर सकते हैं। ऐप सिर्फ आधिकारिक ऐप स्टोर से डाउनलोड करें और अपना ओटीपी या पिन किसी को न बताएं।",
+    "hinglish": "Aap bank ke official app mein apne debit card aur bank mein registered mobile number se, ya branch jakar mobile ya internet banking ke liye register kar sakte hain. App sirf official app store se download karein aur apna OTP ya PIN kisi ko na batayein.",
+    "mr": "तुम्ही बँकेच्या अधिकृत ॲपमध्ये तुमचे डेबिट कार्ड आणि बँकेत नोंदवलेल्या मोबाइल नंबरने, किंवा शाखेत जाऊन मोबाइल किंवा इंटरनेट बँकिंगसाठी नोंदणी करू शकता. ॲप फक्त अधिकृत ॲप स्टोअरवरून डाउनलोड करा आणि तुमचा ओटीपी किंवा पिन कोणालाही सांगू नका."
+   },
+   "sms_text": {
+    "en": "Registering for mobile or internet banking:\n1. Download the bank's official app from the Play Store or App Store.\n2. Choose register and enter your debit card details and registered mobile number.\n3. Enter the OTP sent by SMS in the app only.\n4. Set your login password and MPIN.\nOr visit your branch with ID proof. Never share OTP, PIN or password with anyone.",
+    "hi": "मोबाइल या इंटरनेट बैंकिंग के लिए रजिस्टर करना:\n1. प्ले स्टोर या ऐप स्टोर से बैंक का आधिकारिक ऐप डाउनलोड करें।\n2. रजिस्टर चुनें और अपने डेबिट कार्ड की जानकारी और रजिस्टर्ड मोबाइल नंबर डालें।\n3. एसएमएस से आया ओटीपी सिर्फ ऐप में डालें।\n4. अपना लॉगिन पासवर्ड और एमपिन सेट करें।\nया पहचान प्रमाण के साथ शाखा जाएं। ओटीपी, पिन या पासवर्ड किसी को न बताएं।",
+    "hinglish": "Mobile ya internet banking ke liye register karna:\n1. Play Store ya App Store se bank ka official app download karein.\n2. Register chunein aur apne debit card ki details aur registered mobile number daalein.\n3. SMS se aaya OTP sirf app mein daalein.\n4. Apna login password aur MPIN set karein.\nYa ID proof ke saath branch jayein. OTP, PIN ya password kisi ko na batayein.",
+    "mr": "मोबाइल किंवा इंटरनेट बँकिंगसाठी नोंदणी:\n1. प्ले स्टोअर किंवा ॲप स्टोअरवरून बँकेचे अधिकृत ॲप डाउनलोड करा.\n2. नोंदणी निवडा आणि तुमच्या डेबिट कार्डची माहिती आणि नोंदवलेला मोबाइल नंबर टाका.\n3. एसएमएसने आलेला ओटीपी फक्त ॲपमध्ये टाका.\n4. तुमचा लॉगिन पासवर्ड आणि एमपिन सेट करा.\nकिंवा ओळख पुराव्यासह शाखेत जा. ओटीपी, पिन किंवा पासवर्ड कोणालाही सांगू नका."
+   }
+  },
+  {
+   "id": "banking_password_reset",
+   "sms": false,
+   "keywords": {
+    "en": [
+     "forgot internet banking password",
+     "reset internet banking password",
+     "internet banking locked",
+     "unlock internet banking",
+     "cannot log in to mobile banking",
+     "cannot login",
+     "change internet banking username",
+     "forgot login password",
+     "forgot mpin",
+     "reset mpin",
+     "app keeps crashing",
+     "session timeout",
+     "biometric login",
+     "internet banking account is locked",
+     "change internet banking password",
+     "login problem",
+     "internet banking password",
+     "unlock my internet banking",
+     "change my internet banking username",
+     "internet banking username",
+     "cannot log in"
+    ],
+    "hi": [
+     "इंटरनेट बैंकिंग पासवर्ड भूल",
+     "इंटरनेट बैंकिंग लॉक",
+     "लॉगिन नहीं हो रहा",
+     "पासवर्ड रीसेट",
+     "एमपिन भूल गया",
+     "ऐप क्रैश"
+    ],
+    "hinglish": [
+     "internet banking password bhool",
+     "internet banking lock",
+     "login nahi ho raha",
+     "password reset",
+     "mpin bhool gaya",
+     "app crash ho raha"
+    ],
+    "mr": [
+     "इंटरनेट बँकिंग पासवर्ड विसरलो",
+     "इंटरनेट बँकिंग लॉक",
+     "लॉगिन होत नाही",
+     "पासवर्ड रिसेट",
+     "एमपिन विसरलो",
+     "ॲप क्रॅश"
+    ]
+   },
+   "answer": {
+    "en": "Use the forgot password option on the login screen of the app or net banking, and follow the steps with the OTP sent to your registered mobile. If the account is locked after wrong attempts, it usually unlocks after some time, or the branch or customer care can reset it. Never tell anyone your password, MPIN or OTP.",
+    "hi": "ऐप या नेट बैंकिंग की लॉगिन स्क्रीन पर पासवर्ड भूल गए का विकल्प चुनें और रजिस्टर्ड मोबाइल पर आए ओटीपी से आगे बढ़ें। ग़लत कोशिशों के बाद खाता लॉक हो जाए तो आमतौर पर कुछ समय बाद खुल जाता है, या शाखा या कस्टमर केयर रीसेट कर सकते हैं। अपना पासवर्ड, एमपिन या ओटीपी किसी को न बताएं।",
+    "hinglish": "App ya net banking ki login screen par forgot password ka option chunein aur registered mobile par aaye OTP se aage badhein. Galat attempts ke baad account lock ho jaye to aam taur par kuch der baad khul jata hai, ya branch ya customer care reset kar sakte hain. Apna password, MPIN ya OTP kisi ko na batayein.",
+    "mr": "ॲप किंवा नेट बँकिंगच्या लॉगिन स्क्रीनवर पासवर्ड विसरलो हा पर्याय निवडा आणि नोंदवलेल्या मोबाइलवर आलेल्या ओटीपीने पुढे जा. चुकीच्या प्रयत्नांनंतर खाते लॉक झाले तर सहसा काही वेळाने उघडते, किंवा शाखा किंवा कस्टमर केअर रिसेट करू शकतात. तुमचा पासवर्ड, एमपिन किंवा ओटीपी कोणालाही सांगू नका."
+   }
+  },
+  {
+   "id": "otp_not_received",
+   "sms": false,
+   "keywords": {
+    "en": [
+     "not receiving otp",
+     "otp not received",
+     "otp not coming",
+     "otp is incorrect",
+     "otp not working",
+     "otp delay",
+     "no otp",
+     "sms not coming"
+    ],
+    "hi": [
+     "ओटीपी नहीं आ रहा",
+     "ओटीपी नहीं मिला",
+     "ओटीपी काम नहीं कर रहा",
+     "एसएमएस नहीं आ रहा"
+    ],
+    "hinglish": [
+     "otp nahi aa raha",
+     "otp nahi mila",
+     "otp kaam nahi kar raha",
+     "sms nahi aa raha"
+    ],
+    "mr": [
+     "ओटीपी येत नाही",
+     "ओटीपी मिळाला नाही",
+     "ओटीपी चालत नाही",
+     "एसएमएस येत नाही"
+    ]
+   },
+   "answer": {
+    "en": "Check that the phone has network, the SIM is the one registered with the bank, and the inbox is not full, then ask for the OTP again after a minute. If your number has changed, update it at the branch. Do not read an OTP out to anyone, including callers who say they are from the bank.",
+    "hi": "देखें कि फोन में नेटवर्क है, वही सिम चल रही है जो बैंक में रजिस्टर्ड है और इनबॉक्स भरा नहीं है, फिर एक मिनट बाद दोबारा ओटीपी मंगाएं। नंबर बदल गया हो तो शाखा में अपडेट कराएं। ओटीपी किसी को न बताएं, चाहे कोई खुद को बैंक का बताए।",
+    "hinglish": "Dekhein ki phone mein network hai, wahi SIM chal rahi hai jo bank mein registered hai aur inbox full nahi hai, phir ek minute baad dobara OTP mangayein. Number badal gaya ho to branch mein update karwayein. OTP kisi ko na batayein, chahe koi khud ko bank ka bataye.",
+    "mr": "फोनला नेटवर्क आहे, बँकेत नोंदवलेलेच सिम चालू आहे आणि इनबॉक्स भरलेला नाही हे तपासा, मग एका मिनिटाने पुन्हा ओटीपी मागवा. नंबर बदलला असेल तर शाखेत अपडेट करा. ओटीपी कोणालाही सांगू नका, कोणी स्वतःला बँकेचा म्हणत असला तरी."
+   }
+  },
+  {
+   "id": "mobile_banking_new_phone",
+   "sms": true,
+   "keywords": {
+    "en": [
+     "changed my phone",
+     "new phone mobile banking",
+     "lost my phone",
+     "phone lost banking",
+     "lost phone banking apps",
+     "disable mobile banking",
+     "mobile banking on two phones",
+     "deactivate internet banking",
+     "temporarily disable internet banking",
+     "changed sim",
+     "new sim",
+     "lose my phone"
+    ],
+    "hi": [
+     "फोन बदल लिया",
+     "नया फोन",
+     "फोन खो गया",
+     "फोन चोरी",
+     "मोबाइल बैंकिंग बंद",
+     "सिम बदल"
+    ],
+    "hinglish": [
+     "phone badal liya",
+     "naya phone",
+     "phone kho gaya",
+     "phone chori",
+     "mobile banking band",
+     "sim badal"
+    ],
+    "mr": [
+     "फोन बदलला",
+     "नवीन फोन",
+     "फोन हरवला",
+     "फोन चोरीला",
+     "मोबाइल बँकिंग बंद",
+     "सिम बदलले"
+    ]
+   },
+   "answer": {
+    "en": "If you changed your phone, install the official app and register again with the same mobile number, then set a new MPIN. If your phone is lost or stolen, call customer care right away to block mobile banking and UPI, and ask your mobile operator to block the SIM.",
+    "hi": "फोन बदला है तो आधिकारिक ऐप इंस्टॉल करें, उसी मोबाइल नंबर से दोबारा रजिस्टर करें और नया एमपिन सेट करें। फोन खो जाए या चोरी हो जाए तो तुरंत कस्टमर केयर को फोन करके मोबाइल बैंकिंग और यूपीआई बंद करवाएं, और मोबाइल कंपनी से सिम भी ब्लॉक करवाएं।",
+    "hinglish": "Phone badla hai to official app install karein, usi mobile number se dobara register karein aur naya MPIN set karein. Phone kho jaye ya chori ho jaye to turant customer care ko call karke mobile banking aur UPI band karwayein, aur mobile company se SIM bhi block karwayein.",
+    "mr": "फोन बदलला असेल तर अधिकृत ॲप इन्स्टॉल करा, त्याच मोबाइल नंबरने पुन्हा नोंदणी करा आणि नवीन एमपिन सेट करा. फोन हरवला किंवा चोरीला गेला तर लगेच कस्टमर केअरला फोन करून मोबाइल बँकिंग आणि यूपीआय बंद करून घ्या, आणि मोबाइल कंपनीकडून सिमही ब्लॉक करा."
+   },
+   "sms_text": {
+    "en": "New or lost phone:\n1. New phone: install the official app, register with the same registered mobile number and set a new MPIN.\n2. Lost phone: call customer care at once to block mobile banking and UPI.\n3. Ask your mobile operator to block the lost SIM and get a duplicate.\n4. Change your passwords after the new setup.\nNever share OTP, PIN or password.",
+    "hi": "नया या खोया फोन:\n1. नया फोन: आधिकारिक ऐप इंस्टॉल करें, उसी रजिस्टर्ड नंबर से रजिस्टर करें और नया एमपिन सेट करें।\n2. फोन खोया हो: तुरंत कस्टमर केयर को फोन करके मोबाइल बैंकिंग और यूपीआई बंद करवाएं।\n3. मोबाइल कंपनी से खोई सिम ब्लॉक करवाकर डुप्लीकेट लें।\n4. नई सेटिंग के बाद पासवर्ड बदलें।\nओटीपी, पिन या पासवर्ड किसी को न बताएं।",
+    "hinglish": "Naya ya khoya phone:\n1. Naya phone: official app install karein, usi registered number se register karein aur naya MPIN set karein.\n2. Phone khoya ho: turant customer care ko call karke mobile banking aur UPI band karwayein.\n3. Mobile company se khoi SIM block karwakar duplicate lein.\n4. Naye setup ke baad passwords badlein.\nOTP, PIN ya password kisi ko na batayein.",
+    "mr": "नवीन किंवा हरवलेला फोन:\n1. नवीन फोन: अधिकृत ॲप इन्स्टॉल करा, त्याच नोंदवलेल्या नंबरने नोंदणी करा आणि नवीन एमपिन सेट करा.\n2. फोन हरवला असल्यास: लगेच कस्टमर केअरला फोन करून मोबाइल बँकिंग आणि यूपीआय बंद करा.\n3. मोबाइल कंपनीकडून हरवलेले सिम ब्लॉक करून डुप्लिकेट घ्या.\n4. नवीन सेटअपनंतर पासवर्ड बदला.\nओटीपी, पिन किंवा पासवर्ड कोणालाही सांगू नका."
+   }
+  },
+  {
+   "id": "account_frozen",
+   "sms": false,
+   "keywords": {
+    "en": [
+     "account frozen",
+     "account freeze",
+     "freeze my account",
+     "unfreeze account",
+     "account blocked",
+     "account restricted",
+     "account debit freeze",
+     "negative balance",
+     "been frozen",
+     "unfreeze my",
+     "freeze my"
+    ],
+    "hi": [
+     "खाता फ्रीज",
+     "खाता ब्लॉक",
+     "खाता सीज",
+     "अकाउंट फ्रीज",
+     "खाता प्रतिबंधित"
+    ],
+    "hinglish": [
+     "account freeze",
+     "account frozen",
+     "account block ho gaya",
+     "account unfreeze",
+     "account restricted"
+    ],
+    "mr": [
+     "खाते फ्रीज",
+     "खाते ब्लॉक",
+     "खाते गोठवले",
+     "अकाउंट फ्रीज",
+     "खाते प्रतिबंधित"
+    ]
+   },
+   "answer": {
+    "en": "An account can be frozen or restricted for reasons like pending KYC, a legal or government order, or suspicious activity. Please visit your branch with ID proof to know the exact reason and the steps to reopen it. If you want to stop debits yourself for safety, ask customer care to put a temporary block.",
+    "hi": "खाता फ्रीज या प्रतिबंधित होने के कारण केवाईसी बाकी होना, कानूनी या सरकारी आदेश, या संदिग्ध गतिविधि हो सकते हैं। सही कारण और दोबारा चालू करने के तरीके के लिए पहचान प्रमाण के साथ शाखा जाएं। सुरक्षा के लिए खुद डेबिट रोकना चाहें तो कस्टमर केयर से अस्थायी ब्लॉक लगवाएं।",
+    "hinglish": "Account freeze ya restrict hone ke kaaran KYC pending hona, legal ya government order, ya suspicious activity ho sakte hain. Sahi kaaran aur dobara chalu karne ke tareeke ke liye ID proof ke saath branch jayein. Safety ke liye khud debit rokna ho to customer care se temporary block lagwayein.",
+    "mr": "खाते फ्रीज किंवा प्रतिबंधित होण्याची कारणे केवायसी बाकी असणे, कायदेशीर किंवा सरकारी आदेश, किंवा संशयास्पद हालचाल असू शकतात. नेमके कारण आणि पुन्हा सुरू करण्याच्या पायऱ्यांसाठी ओळख पुराव्यासह शाखेत जा. सुरक्षेसाठी स्वतः डेबिट थांबवायचे असल्यास कस्टमर केअरकडून तात्पुरता ब्लॉक लावून घ्या."
+   }
+  },
+  {
+   "id": "joint_account",
+   "sms": true,
+   "keywords": {
+    "en": [
+     "joint account",
+     "open a joint account",
+     "joint bank account",
+     "convert to joint account",
+     "add joint holder",
+     "operating instructions",
+     "either or survivor",
+     "add second holder",
+     "joint account holder",
+     "joint account be operated"
+    ],
+    "hi": [
+     "संयुक्त खाता",
+     "जॉइंट अकाउंट",
+     "जॉइंट खाता",
+     "दूसरा खाताधारक जोड़"
+    ],
+    "hinglish": [
+     "joint account",
+     "joint account kholna",
+     "joint holder add",
+     "joint account banana"
+    ],
+    "mr": [
+     "संयुक्त खाते",
+     "जॉइंट अकाउंट",
+     "जॉइंट खाते",
+     "दुसरा खातेदार जोडणे"
+    ]
+   },
+   "answer": {
+    "en": "A joint account is opened together by two or more people, each with ID and address proof and photographs, and you choose how it is operated, such as either of you or both together. An existing individual account can usually be converted by applying at the branch with every holder's KYC.",
+    "hi": "संयुक्त खाता दो या अधिक लोग मिलकर खोलते हैं, सभी के पहचान और पते के प्रमाण और फोटो के साथ, और आप तय करते हैं कि उसे कैसे चलाना है, जैसे दोनों में से कोई एक या दोनों साथ। मौजूदा अकेले के खाते को आमतौर पर सभी धारकों के केवाईसी के साथ शाखा में आवेदन करके संयुक्त बनाया जा सकता है।",
+    "hinglish": "Joint account do ya zyada log milkar kholte hain, sabki ID aur address proof aur photos ke saath, aur aap tay karte hain ki use kaise chalana hai, jaise dono mein se koi ek ya dono saath. Maujooda individual account ko aam taur par sabhi holders ke KYC ke saath branch mein apply karke joint banaya ja sakta hai.",
+    "mr": "संयुक्त खाते दोन किंवा अधिक जण मिळून उघडतात, सर्वांच्या ओळख आणि पत्त्याच्या पुराव्यासह आणि फोटोंसह, आणि ते कसे चालवायचे ते तुम्ही ठरवता, जसे दोघांपैकी कोणीही एक किंवा दोघे एकत्र. सध्याचे वैयक्तिक खाते सहसा सर्व खातेदारांच्या केवायसीसह शाखेत अर्ज करून संयुक्त करता येते."
+   },
+   "sms_text": {
+    "en": "Joint account:\n1. Every holder needs ID proof, address proof, PAN or Form 60, and a photograph.\n2. Choose the operating mode: either or survivor, former or survivor, or jointly.\n3. Add a nominee.\n4. Visit the branch together, or complete video KYC for each holder.\nTo convert an existing account, apply at the branch with all holders' KYC.",
+    "hi": "संयुक्त खाता:\n1. हर धारक के लिए पहचान प्रमाण, पते का प्रमाण, पैन या फॉर्म 60 और फोटो चाहिए।\n2. संचालन का तरीका चुनें: दोनों में से कोई, पहला या उत्तरजीवी, या संयुक्त।\n3. नॉमिनी जोड़ें।\n4. साथ शाखा जाएं या हर धारक का वीडियो केवाईसी कराएं।\nमौजूदा खाता बदलने के लिए सभी धारकों के केवाईसी के साथ शाखा में आवेदन दें।",
+    "hinglish": "Joint account:\n1. Har holder ke liye ID proof, address proof, PAN ya Form 60 aur photo chahiye.\n2. Operating mode chunein: either or survivor, former or survivor, ya jointly.\n3. Nominee add karein.\n4. Saath branch jayein ya har holder ka video KYC karwayein.\nMaujooda account badalne ke liye sabhi holders ke KYC ke saath branch mein apply karein.",
+    "mr": "संयुक्त खाते:\n1. प्रत्येक खातेदाराला ओळख पुरावा, पत्त्याचा पुरावा, पॅन किंवा फॉर्म 60 आणि फोटो लागतो.\n2. संचालन पद्धत निवडा: दोघांपैकी कोणीही, पहिला किंवा हयात, किंवा संयुक्तपणे.\n3. नॉमिनी जोडा.\n4. एकत्र शाखेत जा किंवा प्रत्येक खातेदाराचे व्हिडिओ केवायसी करा.\nसध्याचे खाते बदलण्यासाठी सर्व खातेदारांच्या केवायसीसह शाखेत अर्ज करा."
+   }
+  },
+  {
+   "id": "minor_account",
+   "sms": true,
+   "keywords": {
+    "en": [
+     "minor account",
+     "account for my child",
+     "minor child account",
+     "account for minor",
+     "child savings account",
+     "kids account",
+     "minor to major",
+     "convert minor account",
+     "account for my son",
+     "account for my daughter",
+     "for my minor child",
+     "minor's account"
+    ],
+    "hi": [
+     "बच्चे का खाता",
+     "नाबालिग खाता",
+     "माइनर अकाउंट",
+     "बेटे का खाता",
+     "बेटी का खाता"
+    ],
+    "hinglish": [
+     "bacche ka account",
+     "minor account",
+     "minor ka account",
+     "beta ke naam account",
+     "beti ke naam account"
+    ],
+    "mr": [
+     "मुलाचे खाते",
+     "अल्पवयीन खाते",
+     "मायनर अकाउंट",
+     "मुलीच्या नावाने खाते",
+     "मुलाच्या नावाने खाते"
+    ]
+   },
+   "answer": {
+    "en": "A guardian can open a savings account for a minor with the child's birth proof and the guardian's ID and address proof. When the child turns eighteen, the account is converted to a regular one after fresh KYC at the branch.",
+    "hi": "अभिभावक बच्चे के जन्म प्रमाण और अपने पहचान और पते के प्रमाण के साथ नाबालिग के नाम बचत खाता खोल सकते हैं। बच्चे के अठारह साल का होने पर शाखा में नया केवाईसी करके उसे सामान्य खाते में बदला जाता है।",
+    "hinglish": "Guardian bacche ke birth proof aur apne ID aur address proof ke saath minor ke naam savings account khol sakte hain. Bacche ke athaarah saal ke hone par branch mein fresh KYC karke use regular account mein badla jata hai.",
+    "mr": "पालक मुलाच्या जन्माच्या पुराव्यासह आणि स्वतःच्या ओळख आणि पत्त्याच्या पुराव्यासह अल्पवयीन मुलाच्या नावाने बचत खाते उघडू शकतात. मूल अठरा वर्षांचे झाल्यावर शाखेत नवीन केवायसी करून ते सामान्य खात्यात रूपांतरित केले जाते."
+   },
+   "sms_text": {
+    "en": "Account for a minor:\n1. Guardian brings the child's birth certificate or school ID.\n2. Guardian's ID proof, address proof, PAN and photograph.\n3. Photograph of the child.\n4. The guardian operates the account until the bank allows the child to operate it.\n5. At age 18 do fresh KYC to convert it to a regular account.",
+    "hi": "नाबालिग के नाम खाता:\n1. अभिभावक बच्चे का जन्म प्रमाणपत्र या स्कूल पहचान पत्र लाएं।\n2. अभिभावक का पहचान प्रमाण, पते का प्रमाण, पैन और फोटो।\n3. बच्चे का फोटो।\n4. जब तक बैंक बच्चे को खाता चलाने की अनुमति न दे, अभिभावक खाता चलाते हैं।\n5. अठारह साल पर नया केवाईसी करके खाते को सामान्य खाते में बदलें।",
+    "hinglish": "Minor ke naam account:\n1. Guardian bacche ka birth certificate ya school ID laayein.\n2. Guardian ka ID proof, address proof, PAN aur photo.\n3. Bacche ki photo.\n4. Jab tak bank bacche ko account chalane ki anumati na de, guardian account chalate hain.\n5. Athaarah saal par fresh KYC karke account ko regular account mein badlein.",
+    "mr": "अल्पवयीन मुलाच्या नावाने खाते:\n1. पालकांनी मुलाचा जन्म दाखला किंवा शाळेचे ओळखपत्र आणावे.\n2. पालकांचा ओळख पुरावा, पत्त्याचा पुरावा, पॅन आणि फोटो.\n3. मुलाचा फोटो.\n4. बँक मुलाला खाते चालवण्याची परवानगी देईपर्यंत पालक खाते चालवतात.\n5. अठरा वर्षांचे झाल्यावर नवीन केवायसी करून खाते सामान्य खात्यात बदला."
+   }
+  },
+  {
+   "id": "account_number_ifsc",
+   "sms": false,
+   "keywords": {
+    "en": [
+     "find my account number",
+     "forgot account number",
+     "account number",
+     "ifsc code",
+     "ifsc",
+     "micr code",
+     "swift code",
+     "my bank's ifsc"
+    ],
+    "hi": [
+     "खाता नंबर",
+     "अकाउंट नंबर",
+     "आईएफएससी कोड",
+     "आईएफएससी",
+     "एमआईसीआर कोड",
+     "स्विफ्ट कोड"
+    ],
+    "hinglish": [
+     "account number",
+     "account number bhool",
+     "ifsc code",
+     "ifsc",
+     "micr code",
+     "swift code"
+    ],
+    "mr": [
+     "खाते क्रमांक",
+     "अकाउंट नंबर",
+     "आयएफएससी कोड",
+     "आयएफएससी",
+     "एमआयसीआर कोड",
+     "स्विफ्ट कोड"
+    ]
+   },
+   "answer": {
+    "en": "Your account number is printed on your passbook, cheque book and statement, and is shown in the app. The IFSC code is eleven characters, with the bank code first and the branch identifier at the end, and you can find it on the passbook, cheque leaf or in the app.",
+    "hi": "आपका खाता नंबर पासबुक, चेकबुक और स्टेटमेंट पर छपा होता है और ऐप में भी दिखता है। आईएफएससी कोड ग्यारह अक्षरों का होता है, शुरू में बैंक का कोड और अंत में शाखा की पहचान होती है, और वह पासबुक, चेक या ऐप में मिल जाता है।",
+    "hinglish": "Aapka account number passbook, cheque book aur statement par chhapa hota hai aur app mein bhi dikhta hai. IFSC code gyarah characters ka hota hai, shuru mein bank ka code aur ant mein branch ki pehchaan hoti hai, aur wo passbook, cheque ya app mein mil jata hai.",
+    "mr": "तुमचा खाते क्रमांक पासबुक, चेकबुक आणि स्टेटमेंटवर छापलेला असतो आणि ॲपमध्येही दिसतो. आयएफएससी कोड अकरा अक्षरांचा असतो, सुरुवातीला बँकेचा कोड आणि शेवटी शाखेची ओळख असते, आणि तो पासबुक, चेक किंवा ॲपमध्ये मिळतो."
+   }
+  },
+  {
+   "id": "bank_wrong_transfer",
+   "sms": false,
+   "keywords": {
+    "en": [
+     "wrong beneficiary",
+     "wrong account number",
+     "wrong bank account",
+     "sent to wrong account",
+     "wrong neft",
+     "wrong imps",
+     "neft to wrong",
+     "transferred to wrong account",
+     "wrong rtgs",
+     "reverse wrong transfer",
+     "reverse a bank transfer",
+     "wrong bank transfer",
+     "reverse a wrong"
+    ],
+    "hi": [
+     "गलत खाते में पैसे",
+     "गलत बैंक खाते",
+     "गलत लाभार्थी",
+     "गलत खाता नंबर",
+     "गलत ट्रांसफर"
+    ],
+    "hinglish": [
+     "galat account mein paisa",
+     "galat bank account",
+     "galat beneficiary",
+     "galat account number",
+     "galat transfer"
+    ],
+    "mr": [
+     "चुकीच्या खात्यात पैसे",
+     "चुकीचे बँक खाते",
+     "चुकीचा लाभार्थी",
+     "चुकीचा खाते क्रमांक",
+     "चुकीचे ट्रान्सफर"
+    ]
+   },
+   "answer": {
+    "en": "Please contact customer care or your branch immediately with the date, amount and the account details you entered. The bank can ask the receiving bank to return the money, but if the account exists it usually needs the receiver's consent, so quick reporting matters.",
+    "hi": "कृपया तुरंत कस्टमर केयर या अपनी शाखा से संपर्क करें और तारीख, रकम और डाले गए खाते की जानकारी बताएं। बैंक पाने वाले बैंक से पैसे लौटाने को कह सकता है, लेकिन खाता मौजूद हो तो आमतौर पर पाने वाले की सहमति चाहिए, इसलिए जल्दी बताना ज़रूरी है।",
+    "hinglish": "Please turant customer care ya apni branch se sampark karein aur date, amount aur daale gaye account ki details batayein. Bank receiving bank se paisa wapas karne ko keh sakta hai, lekin account maujood ho to aam taur par receiver ki sahmati chahiye, isliye jaldi batana zaroori hai.",
+    "mr": "कृपया लगेच कस्टमर केअर किंवा तुमच्या शाखेशी संपर्क करा आणि तारीख, रक्कम आणि टाकलेल्या खात्याची माहिती सांगा. बँक पैसे घेणाऱ्या बँकेला परत करायला सांगू शकते, पण खाते अस्तित्वात असेल तर सहसा घेणाऱ्याची संमती लागते, म्हणून लवकर कळवणे महत्त्वाचे आहे."
+   }
+  },
+  {
+   "id": "standing_instruction",
+   "sms": false,
+   "keywords": {
+    "en": [
+     "standing instruction",
+     "recurring bank transfer",
+     "schedule a bank transfer",
+     "schedule transfer",
+     "auto transfer",
+     "cancel standing instruction",
+     "auto debit mandate",
+     "cancel autopay",
+     "set up recurring transfer",
+     "recurring transfer"
+    ],
+    "hi": [
+     "स्टैंडिंग इंस्ट्रक्शन",
+     "ऑटो ट्रांसफर",
+     "नियमित ट्रांसफर",
+     "ऑटो डेबिट",
+     "ऑटोपे बंद"
+    ],
+    "hinglish": [
+     "standing instruction",
+     "auto transfer",
+     "recurring transfer",
+     "auto debit",
+     "autopay band"
+    ],
+    "mr": [
+     "स्टँडिंग इन्स्ट्रक्शन",
+     "ऑटो ट्रान्सफर",
+     "नियमित ट्रान्सफर",
+     "ऑटो डेबिट",
+     "ऑटोपे बंद"
+    ]
+   },
+   "answer": {
+    "en": "A standing instruction makes the bank move a fixed amount to another account on a set date, and you can set it up or cancel it in the app or at the branch. To cancel, do it before the next run date, and keep enough balance so it does not fail.",
+    "hi": "स्टैंडिंग इंस्ट्रक्शन में बैंक तय तारीख पर तय रकम दूसरे खाते में भेजता है, और आप इसे ऐप या शाखा में शुरू या बंद कर सकते हैं। बंद करना हो तो अगली तारीख से पहले करें, और चालू रखना हो तो खाते में पर्याप्त बैलेंस रखें ताकि वह फेल न हो।",
+    "hinglish": "Standing instruction mein bank tay date par tay amount doosre account mein bhejta hai, aur aap ise app ya branch mein shuru ya band kar sakte hain. Band karna ho to agli date se pehle karein, aur chalu rakhna ho to account mein kaafi balance rakhein taki fail na ho.",
+    "mr": "स्टँडिंग इन्स्ट्रक्शनमध्ये बँक ठरलेल्या तारखेला ठरलेली रक्कम दुसऱ्या खात्यात पाठवते, आणि तुम्ही ते ॲप किंवा शाखेत सुरू किंवा बंद करू शकता. बंद करायचे असेल तर पुढच्या तारखेआधी करा, आणि चालू ठेवायचे असेल तर खात्यात पुरेशी शिल्लक ठेवा म्हणजे ते अयशस्वी होणार नाही."
+   }
+  },
+  {
+   "id": "fd_maturity",
+   "sms": false,
+   "keywords": {
+    "en": [
+     "fd maturity",
+     "fd mature",
+     "when will my fd mature",
+     "fd renew",
+     "renew my fd",
+     "auto renew fd",
+     "fd after maturity",
+     "fd receipt",
+     "lost fd receipt",
+     "monthly interest on fd",
+     "cumulative fd",
+     "non cumulative fd",
+     "tax saving fd",
+     "tax saver fd",
+     "fd details",
+     "maturity amount",
+     "interest on my fd",
+     "tax-saving fd"
+    ],
+    "hi": [
+     "एफडी मैच्योर",
+     "एफडी की परिपक्वता",
+     "एफडी रिन्यू",
+     "एफडी रसीद",
+     "एफडी का मासिक ब्याज",
+     "टैक्स सेविंग एफडी"
+    ],
+    "hinglish": [
+     "fd mature",
+     "fd maturity",
+     "fd renew",
+     "fd receipt",
+     "fd ka monthly interest",
+     "tax saving fd"
+    ],
+    "mr": [
+     "एफडी मॅच्युअर",
+     "एफडी मुदतपूर्ती",
+     "एफडी रिन्यू",
+     "एफडी पावती",
+     "एफडीचे मासिक व्याज",
+     "टॅक्स सेव्हिंग एफडी"
+    ]
+   },
+   "answer": {
+    "en": "On maturity, an FD is credited to your linked account or renewed automatically, depending on the instruction you gave at opening. Interest can be paid monthly, quarterly or at maturity, and a tax saving FD has a five year lock in. Your FD advice and maturity date are in the app or at the branch.",
+    "hi": "मैच्योरिटी पर एफडी की रकम आपके जुड़े खाते में आती है या अपने आप रिन्यू हो जाती है, यह खोलते समय दिए निर्देश पर निर्भर करता है। ब्याज मासिक, तिमाही या मैच्योरिटी पर मिल सकता है, और टैक्स सेविंग एफडी में पाँच साल का लॉक इन होता है। एफडी की रसीद और मैच्योरिटी तारीख ऐप या शाखा में मिलती है।",
+    "hinglish": "Maturity par FD ki raqam aapke linked account mein aati hai ya apne aap renew ho jati hai, ye opening ke time diye instruction par depend karta hai. Interest monthly, quarterly ya maturity par mil sakta hai, aur tax saving FD mein paanch saal ka lock in hota hai. FD ki receipt aur maturity date app ya branch mein milti hai.",
+    "mr": "मुदतपूर्तीवर एफडीची रक्कम तुमच्या जोडलेल्या खात्यात जमा होते किंवा आपोआप रिन्यू होते, हे उघडताना दिलेल्या सूचनेवर अवलंबून असते. व्याज मासिक, तिमाही किंवा मुदतपूर्तीवर मिळू शकते, आणि टॅक्स सेव्हिंग एफडीला पाच वर्षांचा लॉक इन असतो. एफडीची पावती आणि मुदतपूर्तीची तारीख ॲप किंवा शाखेत मिळते."
+   }
+  },
+  {
+   "id": "car_loan",
+   "sms": false,
+   "keywords": {
+    "en": [
+     "car loan",
+     "vehicle loan",
+     "auto loan",
+     "two wheeler loan",
+     "bike loan",
+     "car loan emi",
+     "car loan interest rate",
+     "apply for a car loan",
+     "how much car loan"
+    ],
+    "hi": [
+     "कार लोन",
+     "वाहन लोन",
+     "गाड़ी का लोन",
+     "बाइक लोन",
+     "कार लोन ब्याज"
+    ],
+    "hinglish": [
+     "car loan",
+     "gaadi ka loan",
+     "vehicle loan",
+     "bike loan",
+     "car loan interest"
+    ],
+    "mr": [
+     "कार लोन",
+     "वाहन कर्ज",
+     "गाडीचे कर्ज",
+     "बाईक कर्ज",
+     "कार लोन व्याज"
+    ]
+   },
+   "answer": {
+    "en": "A car loan is usually given against the vehicle, based on your income, credit history and the car's price. The interest rate and the amount depend on your profile and the bank's current offer, so please check the app or visit the branch. You will need ID proof, address proof, income proof and the dealer's quotation.",
+    "hi": "कार लोन आमतौर पर गाड़ी के बदले मिलता है, और आपकी आय, क्रेडिट हिस्ट्री और गाड़ी की कीमत पर निर्भर करता है। ब्याज दर और रकम आपकी प्रोफाइल और बैंक के मौजूदा ऑफर पर निर्भर करती है, इसलिए ऐप देखें या शाखा जाएं। पहचान, पते और आय का प्रमाण और डीलर का कोटेशन चाहिए होगा।",
+    "hinglish": "Car loan aam taur par gaadi ke against milta hai, aur aapki income, credit history aur gaadi ki keemat par depend karta hai. Interest rate aur amount aapki profile aur bank ke current offer par depend karte hain, isliye app dekhein ya branch jayein. ID proof, address proof, income proof aur dealer ka quotation chahiye hoga.",
+    "mr": "कार लोन सहसा गाडीवर दिले जाते, आणि तुमचे उत्पन्न, क्रेडिट हिस्ट्री आणि गाडीची किंमत यावर अवलंबून असते. व्याजदर आणि रक्कम तुमच्या प्रोफाइलवर आणि बँकेच्या सध्याच्या ऑफरवर अवलंबून असते, म्हणून ॲप पहा किंवा शाखेत जा. ओळख, पत्ता आणि उत्पन्नाचा पुरावा आणि डीलरचे कोटेशन लागेल."
+   }
+  },
+  {
+   "id": "education_loan",
+   "sms": true,
+   "keywords": {
+    "en": [
+     "education loan",
+     "student loan",
+     "study loan",
+     "loan for studies",
+     "education loan without collateral",
+     "education loan documents",
+     "apply for an education loan",
+     "study abroad loan"
+    ],
+    "hi": [
+     "एजुकेशन लोन",
+     "शिक्षा ऋण",
+     "पढ़ाई के लिए लोन",
+     "स्टूडेंट लोन",
+     "एजुकेशन लोन दस्तावेज"
+    ],
+    "hinglish": [
+     "education loan",
+     "student loan",
+     "padhai ke liye loan",
+     "education loan documents",
+     "bina collateral education loan"
+    ],
+    "mr": [
+     "एज्युकेशन लोन",
+     "शैक्षणिक कर्ज",
+     "शिक्षणासाठी कर्ज",
+     "स्टुडंट लोन",
+     "एज्युकेशन लोन कागदपत्रे"
+    ]
+   },
+   "answer": {
+    "en": "An education loan covers fees and related costs for studies in India or abroad, usually with a parent or guardian as co applicant. Smaller amounts are often possible without collateral, while larger ones need security, as per the bank's policy. Please check the app or visit the branch for the current terms.",
+    "hi": "एजुकेशन लोन भारत या विदेश में पढ़ाई की फीस और संबंधित खर्च के लिए मिलता है, आमतौर पर माता-पिता या अभिभावक सह-आवेदक होते हैं। कम रकम अक्सर बिना गारंटी मिल जाती है, जबकि बड़ी रकम के लिए बैंक की नीति के अनुसार सुरक्षा देनी होती है। मौजूदा शर्तों के लिए ऐप देखें या शाखा जाएं।",
+    "hinglish": "Education loan India ya videsh mein padhai ki fees aur related kharch ke liye milta hai, aam taur par parent ya guardian co applicant hote hain. Chhoti raqam aksar bina collateral mil jati hai, jabki badi raqam ke liye bank ki policy ke hisaab se security deni hoti hai. Current terms ke liye app dekhein ya branch jayein.",
+    "mr": "एज्युकेशन लोन भारत किंवा परदेशातील शिक्षणाची फी आणि संबंधित खर्चासाठी मिळते, सहसा पालक सह-अर्जदार असतात. कमी रक्कम अनेकदा तारणाशिवाय मिळते, तर मोठ्या रकमेसाठी बँकेच्या धोरणानुसार तारण द्यावे लागते. सध्याच्या अटींसाठी ॲप पहा किंवा शाखेत जा."
+   },
+   "sms_text": {
+    "en": "Education loan documents:\n1. Student's ID, address proof, admission letter and fee structure.\n2. Mark sheets of previous exams.\n3. Co applicant's ID, address, PAN and income proof.\n4. Collateral papers if the amount needs security.\n5. Passport and visa for study abroad.\nThe bank confirms the final list and terms.",
+    "hi": "एजुकेशन लोन के दस्तावेज:\n1. छात्र का पहचान और पते का प्रमाण, एडमिशन लेटर और फीस का ब्योरा।\n2. पिछली परीक्षाओं की मार्कशीट।\n3. सह-आवेदक का पहचान, पता, पैन और आय प्रमाण।\n4. रकम के हिसाब से ज़रूरी हो तो गारंटी के कागज़।\n5. विदेश में पढ़ाई के लिए पासपोर्ट और वीज़ा।\nअंतिम सूची और शर्तें बैंक बताएगा।",
+    "hinglish": "Education loan documents:\n1. Student ka ID, address proof, admission letter aur fee structure.\n2. Pichhli exams ki marksheet.\n3. Co applicant ka ID, address, PAN aur income proof.\n4. Raqam ke hisaab se zaroori ho to collateral ke papers.\n5. Videsh mein padhai ke liye passport aur visa.\nFinal list aur terms bank batayega.",
+    "mr": "एज्युकेशन लोनची कागदपत्रे:\n1. विद्यार्थ्याचा ओळख आणि पत्त्याचा पुरावा, प्रवेश पत्र आणि फीचा तपशील.\n2. मागील परीक्षांची गुणपत्रके.\n3. सह-अर्जदाराचा ओळख, पत्ता, पॅन आणि उत्पन्नाचा पुरावा.\n4. रकमेनुसार गरज असल्यास तारणाची कागदपत्रे.\n5. परदेशी शिक्षणासाठी पासपोर्ट आणि व्हिसा.\nअंतिम यादी आणि अटी बँक सांगेल."
+   }
+  },
+  {
+   "id": "gold_loan",
+   "sms": false,
+   "keywords": {
+    "en": [
+     "gold loan",
+     "loan against gold",
+     "pledge gold",
+     "gold ornaments loan",
+     "repay gold loan",
+     "interest on gold loan",
+     "apply for a gold loan"
+    ],
+    "hi": [
+     "गोल्ड लोन",
+     "सोने पर लोन",
+     "सोना गिरवी",
+     "गोल्ड लोन ब्याज",
+     "गोल्ड लोन चुकाना"
+    ],
+    "hinglish": [
+     "gold loan",
+     "sone par loan",
+     "gold girvi",
+     "gold loan interest",
+     "gold loan repay"
+    ],
+    "mr": [
+     "गोल्ड लोन",
+     "सोने तारण कर्ज",
+     "सोने गहाण",
+     "गोल्ड लोन व्याज",
+     "गोल्ड लोन परतफेड"
+    ]
+   },
+   "answer": {
+    "en": "A gold loan is given against gold ornaments you pledge with the bank, and the amount depends on the gold's weight and purity. You repay with interest as per your agreement and get the gold back after closing the loan. Bring ID proof, address proof and the ornaments to the branch.",
+    "hi": "गोल्ड लोन बैंक में गिरवी रखे सोने के गहनों पर मिलता है, और रकम सोने के वज़न और शुद्धता पर निर्भर करती है। आप अपने करार के अनुसार ब्याज सहित चुकाते हैं और लोन बंद होने पर सोना वापस मिलता है। पहचान और पते के प्रमाण और गहनों के साथ शाखा जाएं।",
+    "hinglish": "Gold loan bank mein girvi rakhe sone ke gahnon par milta hai, aur amount sone ke wazan aur shuddhta par depend karta hai. Aap apne agreement ke hisaab se interest sahit chukate hain aur loan band hone par sona wapas milta hai. ID proof, address proof aur gahnon ke saath branch jayein.",
+    "mr": "गोल्ड लोन बँकेत गहाण ठेवलेल्या सोन्याच्या दागिन्यांवर मिळते, आणि रक्कम सोन्याचे वजन आणि शुद्धता यावर अवलंबून असते. तुम्ही करारानुसार व्याजासह परतफेड करता आणि कर्ज बंद झाल्यावर सोने परत मिळते. ओळख आणि पत्त्याच्या पुराव्यासह आणि दागिन्यांसह शाखेत जा."
+   }
+  },
+  {
+   "id": "emi_date_tenure_change",
+   "sms": false,
+   "keywords": {
+    "en": [
+     "change emi date",
+     "change my emi due date",
+     "emi due date change",
+     "increase loan tenure",
+     "extend loan tenure",
+     "change loan tenure",
+     "reduce emi amount",
+     "change repayment account",
+     "change emi account",
+     "loan repayment account",
+     "loan repayment schedule",
+     "repayment schedule",
+     "increase my loan tenure",
+     "my next emi due"
+    ],
+    "hi": [
+     "ईएमआई की तारीख बदल",
+     "ईएमआई डेट बदल",
+     "लोन की अवधि बढ़ा",
+     "लोन अवधि बदल",
+     "रीपेमेंट शेड्यूल",
+     "ईएमआई खाता बदल"
+    ],
+    "hinglish": [
+     "emi date badalna",
+     "emi ki date change",
+     "loan tenure badhana",
+     "loan tenure change",
+     "repayment schedule",
+     "emi account change"
+    ],
+    "mr": [
+     "ईएमआयची तारीख बदल",
+     "ईएमआय डेट बदल",
+     "कर्जाचा कालावधी वाढव",
+     "कर्ज कालावधी बदल",
+     "परतफेड वेळापत्रक",
+     "ईएमआय खाते बदल"
+    ]
+   },
+   "answer": {
+    "en": "You can ask the branch or customer care to change the EMI date, the repayment account or the tenure, and it is allowed as per your loan agreement and the bank's approval. A longer tenure lowers the EMI but increases the total interest you pay. You can get the repayment schedule from the app or the branch.",
+    "hi": "आप शाखा या कस्टमर केयर से ईएमआई की तारीख, चुकौती खाता या अवधि बदलने का अनुरोध कर सकते हैं, जो आपके लोन करार और बैंक की मंज़ूरी के अनुसार होता है। लंबी अवधि से ईएमआई घटती है लेकिन कुल ब्याज बढ़ता है। चुकौती का शेड्यूल ऐप या शाखा से मिल जाता है।",
+    "hinglish": "Aap branch ya customer care se EMI ki date, repayment account ya tenure badalne ka request kar sakte hain, jo aapke loan agreement aur bank ki approval ke hisaab se hota hai. Lamba tenure EMI ghatata hai lekin total interest badhata hai. Repayment schedule app ya branch se mil jata hai.",
+    "mr": "तुम्ही शाखा किंवा कस्टमर केअरकडे ईएमआयची तारीख, परतफेडीचे खाते किंवा कालावधी बदलण्याची विनंती करू शकता, जे तुमच्या कर्ज करारानुसार आणि बँकेच्या मंजुरीनुसार होते. जास्त कालावधीमुळे ईएमआय कमी होतो पण एकूण व्याज वाढते. परतफेडीचे वेळापत्रक ॲप किंवा शाखेतून मिळते."
+   }
+  },
+  {
+   "id": "loan_status_disbursement",
+   "sms": false,
+   "keywords": {
+    "en": [
+     "loan application status",
+     "loan approved not disbursed",
+     "loan not disbursed",
+     "loan disbursement",
+     "loan amount not received",
+     "loan sanction",
+     "track loan application",
+     "loan documents return",
+     "original property documents",
+     "original documents after loan",
+     "loan noc",
+     "no objection certificate",
+     "been disbursed",
+     "not been disbursed",
+     "amount hasn't been disbursed"
+    ],
+    "hi": [
+     "लोन आवेदन की स्थिति",
+     "लोन मंज़ूर पैसा नहीं आया",
+     "लोन डिस्बर्समेंट",
+     "लोन का पैसा नहीं मिला",
+     "मूल दस्तावेज़ वापस",
+     "लोन एनओसी"
+    ],
+    "hinglish": [
+     "loan application status",
+     "loan approve ho gaya paisa nahi aaya",
+     "loan disbursement",
+     "loan ka paisa nahi mila",
+     "original documents wapas",
+     "loan noc"
+    ],
+    "mr": [
+     "कर्ज अर्जाची स्थिती",
+     "कर्ज मंजूर पैसे आले नाहीत",
+     "कर्ज वितरण",
+     "कर्जाचे पैसे मिळाले नाहीत",
+     "मूळ कागदपत्रे परत",
+     "कर्ज एनओसी"
+    ]
+   },
+   "answer": {
+    "en": "After approval, the money is paid out once the loan agreement is signed and the documents and verification are complete. For a loan application, quote your application number to the branch or customer care to track it. After you close a loan, the bank returns your original documents with a no dues certificate, and the app or branch can tell you the expected date.",
+    "hi": "मंज़ूरी के बाद लोन करार पर हस्ताक्षर और दस्तावेज़ों व जाँच पूरी होने पर रकम मिलती है। आवेदन की स्थिति जानने के लिए शाखा या कस्टमर केयर को अपना आवेदन नंबर बताएं। लोन बंद होने पर बैंक आपके मूल दस्तावेज़ और नो ड्यूज़ सर्टिफिकेट लौटाता है, और संभावित तारीख ऐप या शाखा बता सकती है।",
+    "hinglish": "Approval ke baad loan agreement sign hone aur documents aur verification poore hone par paisa milta hai. Application ki status jaanne ke liye branch ya customer care ko apna application number batayein. Loan band hone par bank aapke original documents aur no dues certificate lautata hai, aur expected date app ya branch bata sakti hai.",
+    "mr": "मंजुरीनंतर कर्ज करारावर सही आणि कागदपत्रे व पडताळणी पूर्ण झाल्यावर रक्कम मिळते. अर्जाची स्थिती जाणून घेण्यासाठी शाखा किंवा कस्टमर केअरला तुमचा अर्ज क्रमांक सांगा. कर्ज बंद झाल्यावर बँक तुमची मूळ कागदपत्रे आणि नो ड्यूज प्रमाणपत्र परत करते, आणि अपेक्षित तारीख ॲप किंवा शाखा सांगू शकते."
+   }
+  },
+  {
+   "id": "international_transfer",
+   "sms": false,
+   "keywords": {
+    "en": [
+     "international transfer",
+     "send money abroad",
+     "international remittance",
+     "swift transfer",
+     "what is swift",
+     "overseas transfer",
+     "receive money from abroad",
+     "foreign remittance not credited",
+     "usd to inr",
+     "exchange rate",
+     "foreign currency rate",
+     "track remittance",
+     "internationally",
+     "transfer money abroad"
+    ],
+    "hi": [
+     "अंतरराष्ट्रीय ट्रांसफर",
+     "विदेश पैसे भेजना",
+     "विदेश से पैसे",
+     "स्विफ्ट ट्रांसफर",
+     "डॉलर का रेट",
+     "विनिमय दर"
+    ],
+    "hinglish": [
+     "international transfer",
+     "videsh paisa bhejna",
+     "videsh se paisa",
+     "swift transfer",
+     "dollar ka rate",
+     "exchange rate"
+    ],
+    "mr": [
+     "आंतरराष्ट्रीय ट्रान्सफर",
+     "परदेशात पैसे पाठवणे",
+     "परदेशातून पैसे",
+     "स्विफ्ट ट्रान्सफर",
+     "डॉलरचा दर",
+     "विनिमय दर"
+    ]
+   },
+   "answer": {
+    "en": "International transfers go through the SWIFT network and need the beneficiary's name, account number and bank code, plus a purpose declaration. Charges, exchange rates and timing change often, so please check them in the app or with the branch. For money received from abroad that has not arrived, share the reference number with the branch.",
+    "hi": "अंतरराष्ट्रीय ट्रांसफर स्विफ्ट नेटवर्क से होते हैं और इसमें पाने वाले का नाम, खाता नंबर, बैंक कोड और उद्देश्य की घोषणा चाहिए। शुल्क, विनिमय दर और समय बदलते रहते हैं, इसलिए ऐप में या शाखा से देखें। विदेश से भेजा पैसा न आया हो तो रेफरेंस नंबर शाखा को बताएं।",
+    "hinglish": "International transfer SWIFT network se hote hain aur isme paane wale ka naam, account number, bank code aur purpose declaration chahiye. Charges, exchange rate aur timing badalte rehte hain, isliye app mein ya branch se dekhein. Videsh se bheja paisa na aaya ho to reference number branch ko batayein.",
+    "mr": "आंतरराष्ट्रीय ट्रान्सफर स्विफ्ट नेटवर्कमधून होतात आणि त्यासाठी घेणाऱ्याचे नाव, खाते क्रमांक, बँक कोड आणि उद्देशाची घोषणा लागते. शुल्क, विनिमय दर आणि वेळ बदलत राहतात, म्हणून ॲपमध्ये किंवा शाखेत तपासा. परदेशातून पाठवलेले पैसे आले नसतील तर रेफरन्स क्रमांक शाखेला सांगा."
+   }
+  },
+  {
+   "id": "bank_charges",
+   "sms": false,
+   "keywords": {
+    "en": [
+     "bank charges",
+     "service charges",
+     "annual maintenance charge",
+     "debit card annual fee",
+     "sms charges",
+     "sms alert charge",
+     "gst deducted",
+     "gst on charges",
+     "why was a fee deducted",
+     "charge waiver",
+     "waive bank charges",
+     "demand draft charges",
+     "neft charges",
+     "rtgs charges",
+     "imps charges",
+     "savings account charges",
+     "account maintenance charges",
+     "charges for maintaining",
+     "debit card fee",
+     "charges for a demand draft",
+     "charges for a neft",
+     "charges for an rtgs",
+     "charges for an imps",
+     "charges for neft",
+     "charges for rtgs",
+     "charges for imps",
+     "fee deducted",
+     "annual fee"
+    ],
+    "hi": [
+     "बैंक शुल्क",
+     "सर्विस चार्ज",
+     "वार्षिक रखरखाव शुल्क",
+     "एसएमएस चार्ज",
+     "जीएसटी कटा",
+     "चार्ज माफ",
+     "डिमांड ड्राफ्ट शुल्क"
+    ],
+    "hinglish": [
+     "bank charges",
+     "service charge",
+     "annual maintenance charge",
+     "sms charge",
+     "gst kata",
+     "charge waive",
+     "demand draft charges"
+    ],
+    "mr": [
+     "बँक शुल्क",
+     "सर्व्हिस चार्ज",
+     "वार्षिक देखभाल शुल्क",
+     "एसएमएस चार्ज",
+     "जीएसटी कापला",
+     "चार्ज माफी",
+     "डिमांड ड्राफ्ट शुल्क"
+    ]
+   },
+   "answer": {
+    "en": "Banks may charge for things like debit card annual fees, SMS alerts, low balance, demand drafts and some transfers, and GST applies on these charges. The exact amounts for Sahyadri Bank are in the schedule of charges in the app or at the branch. To dispute or request a waiver, raise it with your branch, and the bank decides each case.",
+    "hi": "बैंक डेबिट कार्ड वार्षिक शुल्क, एसएमएस अलर्ट, कम बैलेंस, डिमांड ड्राफ्ट और कुछ ट्रांसफर पर शुल्क ले सकते हैं, और इन पर जीएसटी लगता है। सह्याद्रि बैंक की सही रकम शुल्क सूची में है जो ऐप या शाखा में मिलती है। शुल्क पर आपत्ति या माफी के लिए अपनी शाखा से कहें, हर मामले का फैसला बैंक करता है।",
+    "hinglish": "Banks debit card annual fee, SMS alerts, low balance, demand draft aur kuch transfers par charge le sakte hain, aur in par GST lagta hai. Sahyadri Bank ki exact raqam schedule of charges mein hai jo app ya branch mein milti hai. Charge par objection ya waiver ke liye apni branch se kahein, har case ka faisla bank karta hai.",
+    "mr": "बँका डेबिट कार्ड वार्षिक शुल्क, एसएमएस अलर्ट, कमी शिल्लक, डिमांड ड्राफ्ट आणि काही ट्रान्सफरवर शुल्क आकारू शकतात, आणि त्यावर जीएसटी लागतो. सह्याद्री बँकेची नेमकी रक्कम शुल्क सूचीत आहे जी ॲप किंवा शाखेत मिळते. शुल्काबद्दल आक्षेप किंवा माफीसाठी तुमच्या शाखेला सांगा, प्रत्येक प्रकरणाचा निर्णय बँक घेते."
+   }
+  },
+  {
+   "id": "savings_interest",
+   "sms": false,
+   "keywords": {
+    "en": [
+     "savings account interest",
+     "interest rate on savings",
+     "how is interest calculated",
+     "when is interest credited",
+     "interest credit date",
+     "savings interest rate",
+     "simple and compound interest",
+     "calculate loan interest",
+     "interest on my savings",
+     "rate on my savings",
+     "interest on my loan",
+     "calculate the interest"
+    ],
+    "hi": [
+     "बचत खाते पर ब्याज",
+     "सेविंग्स ब्याज दर",
+     "ब्याज कैसे जुड़ता है",
+     "ब्याज कब जमा",
+     "ब्याज की गणना"
+    ],
+    "hinglish": [
+     "savings account interest",
+     "savings interest rate",
+     "interest kaise calculate",
+     "interest kab credit",
+     "interest ka calculation"
+    ],
+    "mr": [
+     "बचत खात्यावर व्याज",
+     "सेव्हिंग्स व्याजदर",
+     "व्याज कसे मोजतात",
+     "व्याज कधी जमा",
+     "व्याजाची गणना"
+    ]
+   },
+   "answer": {
+    "en": "Savings account interest is usually calculated on your daily closing balance and credited every quarter, and the rate depends on your account type and balance. The current rate for Sahyadri Bank is in the app or at the branch. Loan interest is generally charged on the outstanding balance, as per your loan agreement.",
+    "hi": "बचत खाते का ब्याज आमतौर पर आपके दैनिक क्लोज़िंग बैलेंस पर गिना जाता है और हर तिमाही जमा होता है, और दर खाते के प्रकार व बैलेंस पर निर्भर करती है। सह्याद्रि बैंक की मौजूदा दर ऐप या शाखा में मिलती है। लोन का ब्याज आमतौर पर बकाया रकम पर, आपके लोन करार के अनुसार लगता है।",
+    "hinglish": "Savings account ka interest aam taur par aapke daily closing balance par calculate hota hai aur har quarter credit hota hai, aur rate account type aur balance par depend karta hai. Sahyadri Bank ka current rate app ya branch mein milta hai. Loan ka interest aam taur par outstanding raqam par, aapke loan agreement ke hisaab se lagta hai.",
+    "mr": "बचत खात्याचे व्याज सहसा तुमच्या दैनंदिन क्लोजिंग शिल्लकीवर मोजले जाते आणि दर तिमाहीला जमा होते, आणि दर खात्याच्या प्रकारावर व शिल्लकीवर अवलंबून असतो. सह्याद्री बँकेचा सध्याचा दर ॲप किंवा शाखेत मिळतो. कर्जाचे व्याज सहसा थकबाकीवर, तुमच्या कर्ज करारानुसार लागते."
+   }
+  },
+  {
+   "id": "dbt_subsidy",
+   "sms": false,
+   "keywords": {
+    "en": [
+     "dbt",
+     "direct benefit transfer",
+     "government subsidy",
+     "subsidy not received",
+     "lpg subsidy",
+     "link account for dbt",
+     "aadhaar seeding",
+     "dbt status",
+     "scholarship not received"
+    ],
+    "hi": [
+     "डीबीटी",
+     "सब्सिडी नहीं आई",
+     "सरकारी सब्सिडी",
+     "एलपीजी सब्सिडी",
+     "आधार सीडिंग",
+     "छात्रवृत्ति नहीं आई"
+    ],
+    "hinglish": [
+     "dbt",
+     "subsidy nahi aayi",
+     "sarkari subsidy",
+     "lpg subsidy",
+     "aadhaar seeding",
+     "scholarship nahi aayi"
+    ],
+    "mr": [
+     "डीबीटी",
+     "सबसिडी आली नाही",
+     "सरकारी सबसिडी",
+     "एलपीजी सबसिडी",
+     "आधार सीडिंग",
+     "शिष्यवृत्ती आली नाही"
+    ]
+   },
+   "answer": {
+    "en": "For government benefits and subsidies to reach your account, it needs to be linked with your Aadhaar and set as your benefit account. You can submit the Aadhaar seeding request at the branch or in the app. If a payment is missing, first check this link, then ask the scheme office or your gas agency for the payment status.",
+    "hi": "सरकारी लाभ और सब्सिडी आपके खाते में आने के लिए खाता आधार से जुड़ा और लाभ खाते के रूप में तय होना चाहिए। आधार सीडिंग का अनुरोध शाखा या ऐप में दे सकते हैं। भुगतान न आए तो पहले यह लिंक जाँचें, फिर योजना कार्यालय या गैस एजेंसी से भुगतान की स्थिति पूछें।",
+    "hinglish": "Sarkari laabh aur subsidy aapke account mein aane ke liye account Aadhaar se linked aur benefit account ke roop mein set hona chahiye. Aadhaar seeding ka request branch ya app mein de sakte hain. Payment na aaye to pehle ye link check karein, phir scheme office ya gas agency se payment status poochein.",
+    "mr": "सरकारी लाभ आणि सबसिडी तुमच्या खात्यात येण्यासाठी खाते आधारशी जोडलेले आणि लाभ खाते म्हणून ठरलेले असावे लागते. आधार सीडिंगची विनंती शाखा किंवा ॲपमध्ये देता येते. पेमेंट न आल्यास आधी हा दुवा तपासा, मग योजना कार्यालय किंवा गॅस एजन्सीकडे पेमेंटची स्थिती विचारा."
+   }
+  },
+  {
+   "id": "pension_credit",
+   "sms": false,
+   "keywords": {
+    "en": [
+     "pension not credited",
+     "pension status",
+     "pension payment",
+     "life certificate",
+     "jeevan pramaan",
+     "pension account",
+     "update pension details",
+     "pensioner",
+     "pension has not been credited"
+    ],
+    "hi": [
+     "पेंशन नहीं आई",
+     "पेंशन की स्थिति",
+     "जीवन प्रमाण",
+     "लाइफ सर्टिफिकेट",
+     "पेंशनर"
+    ],
+    "hinglish": [
+     "pension nahi aayi",
+     "pension status",
+     "jeevan pramaan",
+     "life certificate",
+     "pensioner"
+    ],
+    "mr": [
+     "पेन्शन आली नाही",
+     "पेन्शन स्थिती",
+     "जीवन प्रमाण",
+     "लाईफ सर्टिफिकेट",
+     "पेन्शनर"
+    ]
+   },
+   "answer": {
+    "en": "Pension is credited by the pension paying branch, and you can see it in your passbook or the app. Pensioners must submit a life certificate once a year, usually by November, either at the branch or digitally through Jeevan Pramaan with Aadhaar. If a pension has not come, contact the branch with your pension payment order number.",
+    "hi": "पेंशन पेंशन भुगतान करने वाली शाखा से जमा होती है, जो पासबुक या ऐप में दिखती है। पेंशनर को साल में एक बार, आमतौर पर नवंबर तक, शाखा में या आधार से जीवन प्रमाण के ज़रिए डिजिटल जीवन प्रमाणपत्र देना होता है। पेंशन न आई हो तो अपने पेंशन भुगतान आदेश नंबर के साथ शाखा से संपर्क करें।",
+    "hinglish": "Pension pension paying branch se credit hoti hai, jo passbook ya app mein dikhti hai. Pensioner ko saal mein ek baar, aam taur par November tak, branch mein ya Aadhaar se Jeevan Pramaan ke zariye digital life certificate dena hota hai. Pension na aayi ho to apne pension payment order number ke saath branch se sampark karein.",
+    "mr": "पेन्शन पेन्शन देणाऱ्या शाखेकडून जमा होते, जी पासबुक किंवा ॲपमध्ये दिसते. पेन्शनधारकांना वर्षातून एकदा, सहसा नोव्हेंबरपर्यंत, शाखेत किंवा आधारद्वारे जीवन प्रमाणमार्फत डिजिटल हयातीचा दाखला द्यावा लागतो. पेन्शन आली नसेल तर तुमच्या पेन्शन पेमेंट ऑर्डर क्रमांकासह शाखेशी संपर्क करा."
+   }
+  },
+  {
+   "id": "insurance_products",
+   "sms": false,
+   "keywords": {
+    "en": [
+     "insurance",
+     "life insurance",
+     "health insurance",
+     "insurance premium",
+     "insurance claim",
+     "insurance policy",
+     "buy insurance",
+     "premium deducted twice",
+     "bancassurance"
+    ],
+    "hi": [
+     "बीमा",
+     "जीवन बीमा",
+     "स्वास्थ्य बीमा",
+     "बीमा प्रीमियम",
+     "बीमा क्लेम",
+     "इंश्योरेंस"
+    ],
+    "hinglish": [
+     "insurance",
+     "life insurance",
+     "health insurance",
+     "insurance premium",
+     "insurance claim",
+     "bima"
+    ],
+    "mr": [
+     "विमा",
+     "जीवन विमा",
+     "आरोग्य विमा",
+     "विमा प्रीमियम",
+     "विमा क्लेम",
+     "इन्शुरन्स"
+    ]
+   },
+   "answer": {
+    "en": "Banks usually sell life, health and general insurance of partner insurers, and insurance is not a bank deposit, so it carries no deposit guarantee. Policy status, premium and claims are handled by the insurer, with your branch helping you reach them. For the products on offer, please ask at the branch or check the app.",
+    "hi": "बैंक आमतौर पर साझेदार बीमा कंपनियों के जीवन, स्वास्थ्य और सामान्य बीमा बेचते हैं, और बीमा बैंक जमा नहीं है, इसलिए उस पर जमा की गारंटी नहीं होती। पॉलिसी की स्थिति, प्रीमियम और क्लेम बीमा कंपनी संभालती है, और शाखा आपको उनसे जोड़ने में मदद करती है। उपलब्ध उत्पादों के लिए शाखा में पूछें या ऐप देखें।",
+    "hinglish": "Banks aam taur par partner insurers ke life, health aur general insurance bechte hain, aur insurance bank deposit nahi hai, isliye us par deposit guarantee nahi hoti. Policy status, premium aur claim insurer sambhalta hai, aur branch aapko unse jodne mein madad karti hai. Available products ke liye branch mein poochein ya app dekhein.",
+    "mr": "बँका सहसा भागीदार विमा कंपन्यांचे जीवन, आरोग्य आणि सामान्य विमा विकतात, आणि विमा हा बँक ठेव नाही, म्हणून त्यावर ठेवीची हमी नसते. पॉलिसीची स्थिती, प्रीमियम आणि क्लेम विमा कंपनी हाताळते, आणि शाखा तुम्हाला त्यांच्याशी जोडण्यास मदत करते. उपलब्ध उत्पादनांसाठी शाखेत विचारा किंवा ॲप पहा."
+   }
+  },
+  {
+   "id": "investments_demat_mf",
+   "sms": false,
+   "keywords": {
+    "en": [
+     "mutual fund",
+     "mutual funds",
+     "start a sip",
+     "sip",
+     "stop my sip",
+     "redeem mutual fund",
+     "demat account",
+     "open demat",
+     "demat",
+     "invest in shares",
+     "which investment",
+     "recommend an investment",
+     "stock market"
+    ],
+    "hi": [
+     "म्यूचुअल फंड",
+     "एसआईपी",
+     "डीमैट खाता",
+     "डीमैट",
+     "शेयर में निवेश",
+     "कौन सा निवेश"
+    ],
+    "hinglish": [
+     "mutual fund",
+     "sip",
+     "demat account",
+     "demat",
+     "share mein invest",
+     "kaun sa investment"
+    ],
+    "mr": [
+     "म्युच्युअल फंड",
+     "एसआयपी",
+     "डीमॅट खाते",
+     "डीमॅट",
+     "शेअरमध्ये गुंतवणूक",
+     "कोणती गुंतवणूक"
+    ]
+   },
+   "answer": {
+    "en": "Banks can help you invest in mutual funds, including a monthly SIP, and open a demat account, which holds shares electronically, with your PAN and KYC. Returns are not guaranteed, and I cannot recommend a specific investment, so please speak to an advisor at the branch.",
+    "hi": "बैंक आपको म्यूचुअल फंड में निवेश, जिसमें मासिक एसआईपी भी है, और डीमैट खाता खोलने में मदद कर सकते हैं, जिसमें शेयर इलेक्ट्रॉनिक रूप में रहते हैं, पैन और केवाईसी के साथ। रिटर्न की गारंटी नहीं होती, और मैं कोई ख़ास निवेश सुझा नहीं सकता, इसलिए शाखा में सलाहकार से बात करें।",
+    "hinglish": "Bank aapko mutual fund mein investment, jisme monthly SIP bhi hai, aur demat account kholne mein madad kar sakte hain, jisme shares electronically rehte hain, PAN aur KYC ke saath. Returns ki guarantee nahi hoti, aur main koi khaas investment suggest nahi kar sakta, isliye branch mein advisor se baat karein.",
+    "mr": "बँक तुम्हाला म्युच्युअल फंडात गुंतवणूक, ज्यात मासिक एसआयपी देखील आहे, आणि डीमॅट खाते उघडण्यात मदत करू शकतात, ज्यात शेअर्स इलेक्ट्रॉनिक स्वरूपात राहतात, पॅन आणि केवायसीसह. परताव्याची हमी नसते, आणि मी विशिष्ट गुंतवणूक सुचवू शकत नाही, म्हणून शाखेतील सल्लागाराशी बोला."
+   }
+  },
+  {
+   "id": "kyc_basics",
+   "sms": true,
+   "keywords": {
+    "en": [
+     "what is kyc",
+     "why kyc",
+     "asking me to complete kyc",
+     "kyc documents",
+     "documents required for kyc",
+     "documents for kyc",
+     "complete my kyc",
+     "kyc online",
+     "kyc at branch",
+     "kyc through video",
+     "kyc restricted",
+     "restricted because of kyc",
+     "kyc status",
+     "don't complete kyc",
+     "not complete kyc",
+     "kyc sms",
+     "kyc link genuine",
+     "required for kyc",
+     "update my kyc",
+     "kyc is genuine"
+    ],
+    "hi": [
+     "केवाईसी क्या है",
+     "केवाईसी दस्तावेज़",
+     "केवाईसी ऑनलाइन",
+     "केवाईसी की स्थिति",
+     "केवाईसी क्यों",
+     "केवाईसी नहीं कराया"
+    ],
+    "hinglish": [
+     "kyc kya hai",
+     "kyc documents",
+     "kyc online",
+     "kyc status",
+     "kyc kyun",
+     "kyc nahi karwaya"
+    ],
+    "mr": [
+     "केवायसी म्हणजे काय",
+     "केवायसी कागदपत्रे",
+     "केवायसी ऑनलाइन",
+     "केवायसी स्थिती",
+     "केवायसी का",
+     "केवायसी केले नाही"
+    ]
+   },
+   "answer": {
+    "en": "KYC means Know Your Customer, a rule from the Reserve Bank of India that every bank must follow to confirm who you are. You usually need an ID such as Aadhaar, passport, voter ID or driving licence, plus PAN and an address proof, and it can be done at the branch or by video. If it stays pending the account can be restricted, and the bank asks for KYC only through the app, branch or official messages, never by asking for your OTP.",
+    "hi": "केवाईसी का मतलब है अपने ग्राहक को जानें, यह भारतीय रिज़र्व बैंक का नियम है जिसे हर बैंक को मानना होता है। आमतौर पर आधार, पासपोर्ट, वोटर आईडी या ड्राइविंग लाइसेंस जैसा पहचान पत्र, साथ में पैन और पते का प्रमाण चाहिए, और यह शाखा में या वीडियो से हो सकता है। बाकी रहने पर खाता प्रतिबंधित हो सकता है, और बैंक केवाईसी सिर्फ ऐप, शाखा या आधिकारिक संदेश से माँगता है, ओटीपी माँगकर कभी नहीं।",
+    "hinglish": "KYC ka matlab hai Know Your Customer, ye Reserve Bank of India ka rule hai jise har bank ko maanna hota hai. Aam taur par Aadhaar, passport, voter ID ya driving licence jaisa ID, saath mein PAN aur address proof chahiye, aur ye branch mein ya video se ho sakta hai. Pending rehne par account restrict ho sakta hai, aur bank KYC sirf app, branch ya official message se maangta hai, OTP maangkar kabhi nahi.",
+    "mr": "केवायसी म्हणजे आपल्या ग्राहकाला ओळखा, हा भारतीय रिझर्व्ह बँकेचा नियम आहे जो प्रत्येक बँकेला पाळावा लागतो. सहसा आधार, पासपोर्ट, मतदार ओळखपत्र किंवा ड्रायव्हिंग लायसन्स असे ओळखपत्र, सोबत पॅन आणि पत्त्याचा पुरावा लागतो, आणि ते शाखेत किंवा व्हिडिओद्वारे करता येते. बाकी राहिल्यास खाते प्रतिबंधित होऊ शकते, आणि बँक केवायसी फक्त ॲप, शाखा किंवा अधिकृत संदेशाद्वारे मागते, ओटीपी मागून कधीच नाही."
+   },
+   "sms_text": {
+    "en": "KYC basics:\n1. Documents: one ID from Aadhaar, passport, voter ID or driving licence, plus PAN or Form 60 and address proof.\n2. Where: at the branch, or by video KYC through the bank's official app.\n3. If pending, the account can be restricted until it is completed.\n4. The bank never asks for your OTP, PIN or password for KYC. Ignore SMS links asking for them.",
+    "hi": "केवाईसी की जानकारी:\n1. दस्तावेज़: आधार, पासपोर्ट, वोटर आईडी या ड्राइविंग लाइसेंस में से एक, साथ में पैन या फॉर्म 60 और पते का प्रमाण।\n2. कहाँ: शाखा में, या बैंक के आधिकारिक ऐप से वीडियो केवाईसी।\n3. बाकी रहने पर पूरा होने तक खाता प्रतिबंधित हो सकता है।\n4. बैंक केवाईसी के लिए कभी ओटीपी, पिन या पासवर्ड नहीं माँगता। इन्हें माँगने वाले एसएमएस लिंक अनदेखा करें।",
+    "hinglish": "KYC ki jaankari:\n1. Documents: Aadhaar, passport, voter ID ya driving licence mein se ek, saath mein PAN ya Form 60 aur address proof.\n2. Kahan: branch mein, ya bank ke official app se video KYC.\n3. Pending rehne par complete hone tak account restrict ho sakta hai.\n4. Bank KYC ke liye kabhi OTP, PIN ya password nahi maangta. Inhe maangne wale SMS links ignore karein.",
+    "mr": "केवायसीची माहिती:\n1. कागदपत्रे: आधार, पासपोर्ट, मतदार ओळखपत्र किंवा ड्रायव्हिंग लायसन्सपैकी एक, सोबत पॅन किंवा फॉर्म 60 आणि पत्त्याचा पुरावा.\n2. कुठे: शाखेत, किंवा बँकेच्या अधिकृत ॲपमधून व्हिडिओ केवायसी.\n3. बाकी राहिल्यास पूर्ण होईपर्यंत खाते प्रतिबंधित होऊ शकते.\n4. बँक केवायसीसाठी कधीही ओटीपी, पिन किंवा पासवर्ड मागत नाही. ते मागणाऱ्या एसएमएस लिंक दुर्लक्षित करा."
+   }
+  },
+  {
+   "id": "pan_aadhaar_link",
+   "sms": false,
+   "keywords": {
+    "en": [
+     "link pan",
+     "link aadhaar",
+     "link my pan with my bank account",
+     "link aadhaar with bank account",
+     "update pan details",
+     "pan card update",
+     "is aadhaar mandatory",
+     "aadhaar mandatory",
+     "aadhaar for account opening",
+     "pan aadhaar link",
+     "update my pan",
+     "link my aadhaar",
+     "update my aadhaar",
+     "aadhaar details"
+    ],
+    "hi": [
+     "पैन लिंक",
+     "आधार लिंक",
+     "पैन अपडेट",
+     "आधार अनिवार्य",
+     "आधार खाते से जोड़"
+    ],
+    "hinglish": [
+     "pan link",
+     "aadhaar link",
+     "pan update",
+     "aadhaar zaroori hai",
+     "aadhaar account se jodna"
+    ],
+    "mr": [
+     "पॅन लिंक",
+     "आधार लिंक",
+     "पॅन अपडेट",
+     "आधार सक्तीचे",
+     "आधार खात्याशी जोडणे"
+    ]
+   },
+   "answer": {
+    "en": "You can link or update your PAN and Aadhaar with your bank account in the app or at the branch by giving a copy of the document. Aadhaar is not mandatory to open a bank account, because other valid ID documents are accepted. Linking PAN with Aadhaar is a separate step done on the income tax e filing portal.",
+    "hi": "आप ऐप या शाखा में दस्तावेज़ की कॉपी देकर अपने पैन और आधार को खाते से जोड़ या अपडेट कर सकते हैं। खाता खोलने के लिए आधार अनिवार्य नहीं है, क्योंकि दूसरे वैध पहचान पत्र भी चलते हैं। पैन को आधार से जोड़ना अलग प्रक्रिया है जो आयकर ई फाइलिंग पोर्टल पर होती है।",
+    "hinglish": "Aap app ya branch mein document ki copy dekar apne PAN aur Aadhaar ko account se link ya update kar sakte hain. Account kholne ke liye Aadhaar zaroori nahi hai, kyunki doosre valid ID documents bhi chalte hain. PAN ko Aadhaar se link karna alag process hai jo income tax e filing portal par hota hai.",
+    "mr": "तुम्ही ॲप किंवा शाखेत कागदपत्राची प्रत देऊन तुमचा पॅन आणि आधार खात्याशी जोडू किंवा अपडेट करू शकता. खाते उघडण्यासाठी आधार सक्तीचे नाही, कारण इतर वैध ओळखपत्रे चालतात. पॅन आधारशी जोडणे ही वेगळी प्रक्रिया आहे जी आयकर ई फाइलिंग पोर्टलवर होते."
+   }
+  },
+  {
+   "id": "update_personal_details",
+   "sms": true,
+   "keywords": {
+    "en": [
+     "change my name",
+     "update my name",
+     "name is incorrect",
+     "update date of birth",
+     "change date of birth",
+     "update my address",
+     "change address",
+     "update email",
+     "change email",
+     "registered email",
+     "name correction",
+     "address change",
+     "update my date of birth",
+     "date of birth in my bank account",
+     "name in my bank account"
+    ],
+    "hi": [
+     "नाम बदलना",
+     "नाम सही",
+     "जन्म तिथि अपडेट",
+     "पता बदलना",
+     "पता अपडेट",
+     "ईमेल अपडेट"
+    ],
+    "hinglish": [
+     "naam badalna",
+     "naam galat hai",
+     "date of birth update",
+     "address badalna",
+     "address update",
+     "email update"
+    ],
+    "mr": [
+     "नाव बदलणे",
+     "नाव चुकीचे",
+     "जन्मतारीख अपडेट",
+     "पत्ता बदलणे",
+     "पत्ता अपडेट",
+     "ईमेल अपडेट"
+    ]
+   },
+   "answer": {
+    "en": "To change your name, date of birth, address or email, submit the request with supporting documents at the branch, and address and email can often be updated in the app too. For a name or date of birth correction, bring proof such as a marriage certificate, gazette notification or birth certificate along with your ID. The bank will confirm the exact documents.",
+    "hi": "नाम, जन्म तिथि, पता या ईमेल बदलने के लिए सहायक दस्तावेज़ों के साथ शाखा में अनुरोध दें, और पता व ईमेल अक्सर ऐप में भी अपडेट हो जाते हैं। नाम या जन्म तिथि सुधारने के लिए पहचान पत्र के साथ विवाह प्रमाणपत्र, गैज़ेट अधिसूचना या जन्म प्रमाणपत्र जैसा प्रमाण लाएं। सही दस्तावेज़ों की सूची बैंक बताएगा।",
+    "hinglish": "Naam, date of birth, address ya email badalne ke liye supporting documents ke saath branch mein request dein, aur address aur email aksar app mein bhi update ho jate hain. Naam ya date of birth sudhaarne ke liye ID ke saath marriage certificate, gazette notification ya birth certificate jaisa proof laayein. Sahi documents ki list bank batayega.",
+    "mr": "नाव, जन्मतारीख, पत्ता किंवा ईमेल बदलण्यासाठी पूरक कागदपत्रांसह शाखेत विनंती द्या, आणि पत्ता व ईमेल अनेकदा ॲपमध्येही अपडेट होतात. नाव किंवा जन्मतारीख दुरुस्तीसाठी ओळखपत्रासोबत विवाह प्रमाणपत्र, राजपत्र अधिसूचना किंवा जन्म दाखला असा पुरावा आणा. योग्य कागदपत्रांची यादी बँक सांगेल."
+   },
+   "sms_text": {
+    "en": "Updating personal details:\n1. Name: ID plus marriage certificate or gazette notification.\n2. Date of birth: birth certificate or school leaving certificate.\n3. Address: a current address proof such as Aadhaar or utility bill.\n4. Email: update in the app or at the branch.\n5. Submit the signed request at your branch. The bank confirms the exact documents.",
+    "hi": "व्यक्तिगत जानकारी बदलना:\n1. नाम: पहचान पत्र के साथ विवाह प्रमाणपत्र या गैज़ेट अधिसूचना।\n2. जन्म तिथि: जन्म प्रमाणपत्र या स्कूल छोड़ने का प्रमाणपत्र।\n3. पता: आधार या बिजली बिल जैसा मौजूदा पते का प्रमाण।\n4. ईमेल: ऐप या शाखा में अपडेट करें।\n5. हस्ताक्षर किया अनुरोध शाखा में दें। सही दस्तावेज़ बैंक बताएगा।",
+    "hinglish": "Personal details badalna:\n1. Naam: ID ke saath marriage certificate ya gazette notification.\n2. Date of birth: birth certificate ya school leaving certificate.\n3. Address: Aadhaar ya bijli bill jaisa current address proof.\n4. Email: app ya branch mein update karein.\n5. Sign kiya request branch mein dein. Sahi documents bank batayega.",
+    "mr": "वैयक्तिक माहिती बदलणे:\n1. नाव: ओळखपत्रासोबत विवाह प्रमाणपत्र किंवा राजपत्र अधिसूचना.\n2. जन्मतारीख: जन्म दाखला किंवा शाळा सोडल्याचा दाखला.\n3. पत्ता: आधार किंवा वीज बिलासारखा सध्याच्या पत्त्याचा पुरावा.\n4. ईमेल: ॲप किंवा शाखेत अपडेट करा.\n5. सही केलेली विनंती शाखेत द्या. योग्य कागदपत्रे बँक सांगेल."
+   }
+  },
+  {
+   "id": "identity_theft_loan",
+   "sms": false,
+   "keywords": {
+    "en": [
+     "identity theft",
+     "account opened using my identity",
+     "loan taken in my name",
+     "loan using my pan",
+     "loan i never took",
+     "recovery calls for loan i never took",
+     "someone used my documents",
+     "misuse of my pan",
+     "misuse of my aadhaar",
+     "account using my identity",
+     "using my identity"
+    ],
+    "hi": [
+     "पहचान की चोरी",
+     "मेरे नाम पर लोन",
+     "मेरे पैन से लोन",
+     "जो लोन लिया नहीं",
+     "मेरे दस्तावेज़ का दुरुपयोग"
+    ],
+    "hinglish": [
+     "identity theft",
+     "mere naam par loan",
+     "mere pan se loan",
+     "jo loan liya nahi",
+     "mere documents ka misuse"
+    ],
+    "mr": [
+     "ओळख चोरी",
+     "माझ्या नावावर कर्ज",
+     "माझ्या पॅनवर कर्ज",
+     "न घेतलेले कर्ज",
+     "माझ्या कागदपत्रांचा गैरवापर"
+    ]
+   },
+   "answer": {
+    "en": "Please report it right away to the lender in writing, and file a complaint on the national cyber crime helpline, one nine three zero, or with the police. Also check your credit report with the credit bureaus and ask the lender to correct the wrong entry. Do not pay anything until it is verified.",
+    "hi": "कृपया तुरंत ऋणदाता को लिखित में सूचना दें, और राष्ट्रीय साइबर अपराध हेल्पलाइन एक नौ तीन शून्य पर या पुलिस में शिकायत दर्ज करें। अपनी क्रेडिट रिपोर्ट भी क्रेडिट ब्यूरो से जाँचें और ग़लत प्रविष्टि सुधारने को कहें। जाँच पूरी होने तक कुछ भुगतान न करें।",
+    "hinglish": "Please turant lender ko likhit mein report karein, aur national cyber crime helpline, ek nau teen zero, par ya police mein complaint karein. Apni credit report bhi credit bureau se check karein aur galat entry sudharne ko kahein. Verification hone tak kuch payment na karein.",
+    "mr": "कृपया लगेच कर्जदात्याला लेखी कळवा, आणि राष्ट्रीय सायबर गुन्हे हेल्पलाइन एक नऊ तीन शून्य वर किंवा पोलिसांकडे तक्रार नोंदवा. तुमचा क्रेडिट रिपोर्ट क्रेडिट ब्युरोकडून तपासा आणि चुकीची नोंद दुरुस्त करायला सांगा. पडताळणी होईपर्यंत काहीही पैसे भरू नका."
+   }
+  },
+  {
+   "id": "shared_otp_or_link",
+   "sms": false,
+   "keywords": {
+    "en": [
+     "shared my otp",
+     "shared otp",
+     "gave my otp",
+     "shared my pin",
+     "shared my password",
+     "shared my atm pin",
+     "shared internet banking password",
+     "clicked on a link",
+     "clicked on a suspicious link",
+     "suspicious link",
+     "suspicious payment link",
+     "fake kyc message",
+     "fake sms",
+     "installed an app",
+     "otp that i didn't request",
+     "pretending to be a bank officer",
+     "pretending to be bank",
+     "shared my internet banking password",
+     "fake bank kyc message",
+     "suspicious banking link",
+     "sms asking me to update my kyc",
+     "fake bank"
+    ],
+    "hi": [
+     "ओटीपी बता दिया",
+     "पिन बता दिया",
+     "पासवर्ड बता दिया",
+     "लिंक पर क्लिक",
+     "संदिग्ध लिंक",
+     "फर्जी केवाईसी मैसेज",
+     "बैंक अफसर बनकर कॉल"
+    ],
+    "hinglish": [
+     "otp bata diya",
+     "otp share kar diya",
+     "pin bata diya",
+     "password bata diya",
+     "link par click",
+     "suspicious link",
+     "fake kyc message",
+     "bank officer bankar call"
+    ],
+    "mr": [
+     "ओटीपी सांगितला",
+     "पिन सांगितला",
+     "पासवर्ड सांगितला",
+     "लिंकवर क्लिक",
+     "संशयास्पद लिंक",
+     "फसवा केवायसी मेसेज",
+     "बँक अधिकारी बनून फोन"
+    ]
+   },
+   "answer": {
+    "en": "Act immediately: call customer care to block your cards, UPI and net banking, then report it on the national cyber crime helpline, one nine three zero. Do not click or share anything more, and change your passwords. Reporting within three working days limits your liability for an unauthorised transaction, so please do it now.",
+    "hi": "तुरंत कार्रवाई करें: कस्टमर केयर को फोन करके अपने कार्ड, यूपीआई और नेट बैंकिंग ब्लॉक करवाएं, फिर राष्ट्रीय साइबर अपराध हेल्पलाइन एक नौ तीन शून्य पर शिकायत करें। आगे कुछ क्लिक या साझा न करें और अपने पासवर्ड बदलें। अनधिकृत लेन-देन की सूचना तीन कार्यदिवस में देने पर आपकी ज़िम्मेदारी सीमित रहती है, इसलिए अभी करें।",
+    "hinglish": "Turant action lein: customer care ko call karke apne card, UPI aur net banking block karwayein, phir national cyber crime helpline, ek nau teen zero, par report karein. Aage kuch click ya share na karein aur apne passwords badlein. Unauthorised transaction ki report teen working days mein karne par aapki liability limited rehti hai, isliye abhi karein.",
+    "mr": "ताबडतोब कृती करा: कस्टमर केअरला फोन करून तुमचे कार्ड, यूपीआय आणि नेट बँकिंग ब्लॉक करा, मग राष्ट्रीय सायबर गुन्हे हेल्पलाइन एक नऊ तीन शून्य वर तक्रार करा. पुढे काहीही क्लिक किंवा शेअर करू नका आणि तुमचे पासवर्ड बदला. अनधिकृत व्यवहाराची तक्रार तीन कामकाजाच्या दिवसांत केल्यास तुमची जबाबदारी मर्यादित राहते, म्हणून आताच करा."
+   }
+  },
+  {
+   "id": "branch_locator",
+   "sms": false,
+   "keywords": {
+    "en": [
+     "nearest branch",
+     "nearest atm",
+     "branch near me",
+     "atm near me",
+     "find a branch",
+     "branch address",
+     "address of my home branch",
+     "change home branch",
+     "transfer my account to another branch",
+     "branch locator",
+     "home branch",
+     "appointment with bank officer",
+     "book an appointment",
+     "book a token",
+     "token for branch",
+     "nearest bank branch",
+     "contact my branch manager"
+    ],
+    "hi": [
+     "नज़दीकी शाखा",
+     "नज़दीकी एटीएम",
+     "शाखा का पता",
+     "होम ब्रांच",
+     "ब्रांच बदलना",
+     "अपॉइंटमेंट बुक"
+    ],
+    "hinglish": [
+     "nearest branch",
+     "nearest atm",
+     "branch ka address",
+     "home branch",
+     "branch badalna",
+     "appointment book"
+    ],
+    "mr": [
+     "जवळची शाखा",
+     "जवळचे एटीएम",
+     "शाखेचा पत्ता",
+     "होम ब्रांच",
+     "शाखा बदलणे",
+     "अपॉइंटमेंट बुक"
+    ]
+   },
+   "answer": {
+    "en": "You can find the nearest branch or ATM with the locator in the bank's app or website, or ask customer care. To move your account to another branch, submit a transfer request at your current or new branch, and your account number stays the same. Appointments or visit tokens can be booked in the app where available.",
+    "hi": "आप बैंक के ऐप या वेबसाइट के लोकेटर से नज़दीकी शाखा या एटीएम ढूँढ सकते हैं, या कस्टमर केयर से पूछ सकते हैं। खाता दूसरी शाखा में ले जाने के लिए मौजूदा या नई शाखा में स्थानांतरण का अनुरोध दें, और आपका खाता नंबर वही रहता है। जहाँ उपलब्ध हो, ऐप में अपॉइंटमेंट या टोकन बुक कर सकते हैं।",
+    "hinglish": "Aap bank ke app ya website ke locator se nearest branch ya ATM dhoondh sakte hain, ya customer care se pooch sakte hain. Account doosri branch mein le jaane ke liye current ya nayi branch mein transfer request dein, aur aapka account number wahi rehta hai. Jahan available ho, app mein appointment ya token book kar sakte hain.",
+    "mr": "तुम्ही बँकेच्या ॲप किंवा वेबसाइटवरील लोकेटरने जवळची शाखा किंवा एटीएम शोधू शकता, किंवा कस्टमर केअरला विचारू शकता. खाते दुसऱ्या शाखेत नेण्यासाठी सध्याच्या किंवा नवीन शाखेत हस्तांतरणाची विनंती द्या, आणि तुमचा खाते क्रमांक तोच राहतो. जिथे उपलब्ध असेल तिथे ॲपमध्ये अपॉइंटमेंट किंवा टोकन बुक करता येते."
+   }
+  },
+  {
+   "id": "cash_without_card",
+   "sms": false,
+   "keywords": {
+    "en": [
+     "withdraw without debit card",
+     "cash without card",
+     "cardless cash",
+     "withdraw cash using aadhaar",
+     "aeps",
+     "aadhaar enabled payment",
+     "aadhaar cash withdrawal",
+     "upi atm",
+     "scan qr at atm"
+    ],
+    "hi": [
+     "बिना कार्ड पैसे निकालना",
+     "कार्ड के बिना कैश",
+     "आधार से पैसे निकालना",
+     "एईपीएस",
+     "आधार पेमेंट सिस्टम"
+    ],
+    "hinglish": [
+     "bina card paisa nikalna",
+     "card ke bina cash",
+     "aadhaar se paisa nikalna",
+     "aeps",
+     "aadhaar payment system"
+    ],
+    "mr": [
+     "कार्डशिवाय पैसे काढणे",
+     "कार्डविना कॅश",
+     "आधारने पैसे काढणे",
+     "एईपीएस",
+     "आधार पेमेंट सिस्टम"
+    ]
+   },
+   "answer": {
+    "en": "Many ATMs let you withdraw cash without a card by scanning a UPI QR code, and the Aadhaar enabled payment system lets you withdraw using your Aadhaar number and fingerprint at a banking agent or micro ATM. Your Aadhaar must be linked to the account. If an Aadhaar withdrawal fails, check the status in your statement and tell the branch.",
+    "hi": "कई एटीएम में यूपीआई क्यूआर कोड स्कैन करके बिना कार्ड कैश निकाला जा सकता है, और आधार सक्षम भुगतान प्रणाली से बैंकिंग एजेंट या माइक्रो एटीएम पर आधार नंबर और फिंगरप्रिंट से पैसे निकाले जा सकते हैं। इसके लिए आधार खाते से जुड़ा होना चाहिए। आधार से निकासी फेल हो तो स्टेटमेंट में स्थिति देखें और शाखा को बताएं।",
+    "hinglish": "Kai ATM mein UPI QR code scan karke bina card cash nikala ja sakta hai, aur Aadhaar enabled payment system se banking agent ya micro ATM par Aadhaar number aur fingerprint se paisa nikala ja sakta hai. Iske liye Aadhaar account se linked hona chahiye. Aadhaar se withdrawal fail ho to statement mein status dekhein aur branch ko batayein.",
+    "mr": "अनेक एटीएममध्ये यूपीआय क्यूआर कोड स्कॅन करून कार्डशिवाय कॅश काढता येते, आणि आधार सक्षम पेमेंट प्रणालीने बँकिंग एजंट किंवा मायक्रो एटीएमवर आधार क्रमांक आणि फिंगरप्रिंटने पैसे काढता येतात. त्यासाठी आधार खात्याशी जोडलेले असावे लागते. आधारने पैसे काढणे अयशस्वी झाल्यास स्टेटमेंटमध्ये स्थिती पहा आणि शाखेला सांगा."
+   }
+  },
+  {
+   "id": "other_bank_atm",
+   "sms": false,
+   "keywords": {
+    "en": [
+     "another bank atm",
+     "other bank atm",
+     "other bank's atm",
+     "another bank's atm",
+     "atm of another bank",
+     "atm charges",
+     "interchange",
+     "free atm transactions",
+     "free atm"
+    ],
+    "hi": [
+     "दूसरे बैंक के एटीएम",
+     "दूसरे बैंक का एटीएम",
+     "एटीएम शुल्क",
+     "मुफ्त एटीएम लेन-देन"
+    ],
+    "hinglish": [
+     "doosre bank ke atm",
+     "doosre bank ka atm",
+     "atm charges",
+     "free atm transactions"
+    ],
+    "mr": [
+     "दुसऱ्या बँकेचे एटीएम",
+     "दुसऱ्या बँकेच्या एटीएम",
+     "एटीएम शुल्क",
+     "मोफत एटीएम व्यवहार"
+    ]
+   },
+   "answer": {
+    "en": "Yes, you can use another bank's ATM. Each month a limited number of transactions is free, and after that a per transaction charge applies, as set under Reserve Bank of India rules and the bank's schedule of charges. The current free limit and charge are in the app or at the branch.",
+    "hi": "हाँ, आप दूसरे बैंक का एटीएम इस्तेमाल कर सकते हैं। हर महीने सीमित लेन-देन मुफ्त होते हैं, उसके बाद भारतीय रिज़र्व बैंक के नियमों और बैंक की शुल्क सूची के अनुसार प्रति लेन-देन शुल्क लगता है। मौजूदा मुफ्त सीमा और शुल्क ऐप या शाखा में मिलेंगे।",
+    "hinglish": "Haan, aap doosre bank ka ATM use kar sakte hain. Har mahine limited transactions free hote hain, uske baad Reserve Bank of India ke rules aur bank ki schedule of charges ke hisaab se per transaction charge lagta hai. Current free limit aur charge app ya branch mein milenge.",
+    "mr": "हो, तुम्ही दुसऱ्या बँकेचे एटीएम वापरू शकता. दर महिन्याला मर्यादित व्यवहार मोफत असतात, त्यानंतर भारतीय रिझर्व्ह बँकेच्या नियमांनुसार आणि बँकेच्या शुल्क सूचीनुसार प्रति व्यवहार शुल्क लागते. सध्याची मोफत मर्यादा आणि शुल्क ॲप किंवा शाखेत मिळेल."
+   }
+  },
+  {
+   "id": "debit_card_activate",
+   "sms": false,
+   "keywords": {
+    "en": [
+     "activate debit card",
+     "activate my debit card",
+     "unblock debit card",
+     "unblock my card",
+     "debit card inactive",
+     "debit card not working",
+     "card declined",
+     "debit card declined",
+     "card not received",
+     "track debit card",
+     "debit card delivery",
+     "debit card annual fee",
+     "card transaction limit",
+     "change card limit",
+     "unblock my debit card",
+     "unblock it",
+     "received my debit card",
+     "debit card is not working",
+     "card was declined",
+     "debit card showing as inactive",
+     "card being charged an annual fee",
+     "debit card fee"
+    ],
+    "hi": [
+     "डेबिट कार्ड एक्टिवेट",
+     "कार्ड अनब्लॉक",
+     "कार्ड काम नहीं कर रहा",
+     "कार्ड डिक्लाइन",
+     "कार्ड नहीं मिला",
+     "कार्ड की लिमिट"
+    ],
+    "hinglish": [
+     "debit card activate",
+     "card unblock",
+     "card kaam nahi kar raha",
+     "card decline",
+     "card nahi mila",
+     "card ki limit"
+    ],
+    "mr": [
+     "डेबिट कार्ड सक्रिय",
+     "कार्ड अनब्लॉक",
+     "कार्ड चालत नाही",
+     "कार्ड डिक्लाइन",
+     "कार्ड मिळाले नाही",
+     "कार्ड लिमिट"
+    ]
+   },
+   "answer": {
+    "en": "To activate a new card, set the PIN in the app or at an ATM and do the first transaction with the PIN. A card you blocked temporarily can be unblocked in card controls, but a permanently blocked one needs a replacement. If a card is declined, the usual causes are low balance, a wrong PIN, a transaction limit, or online or international use switched off, and a delivery that is late can be tracked with the branch.",
+    "hi": "नया कार्ड एक्टिवेट करने के लिए ऐप या एटीएम में पिन सेट करें और पहला लेन-देन पिन से करें। जो कार्ड अस्थायी रूप से ब्लॉक किया था उसे कार्ड कंट्रोल में अनब्लॉक कर सकते हैं, लेकिन स्थायी रूप से ब्लॉक कार्ड की जगह नया कार्ड लेना होता है। कार्ड डिक्लाइन होने के आम कारण कम बैलेंस, ग़लत पिन, लेन-देन की सीमा, या ऑनलाइन या अंतरराष्ट्रीय उपयोग बंद होना हैं, और कार्ड की डिलीवरी में देरी शाखा से ट्रैक हो सकती है।",
+    "hinglish": "Naya card activate karne ke liye app ya ATM mein PIN set karein aur pehla transaction PIN se karein. Jo card temporarily block kiya tha use card controls mein unblock kar sakte hain, lekin permanently blocked card ki jagah naya card lena hota hai. Card decline hone ke aam kaaran low balance, galat PIN, transaction limit, ya online ya international use band hona hain, aur card delivery mein deri branch se track ho sakti hai.",
+    "mr": "नवीन कार्ड सक्रिय करण्यासाठी ॲप किंवा एटीएममध्ये पिन सेट करा आणि पहिला व्यवहार पिनने करा. तात्पुरते ब्लॉक केलेले कार्ड कार्ड कंट्रोलमध्ये अनब्लॉक करता येते, पण कायमचे ब्लॉक केलेले असल्यास नवीन कार्ड घ्यावे लागते. कार्ड डिक्लाइन होण्याची सामान्य कारणे कमी शिल्लक, चुकीचा पिन, व्यवहार मर्यादा, किंवा ऑनलाइन किंवा आंतरराष्ट्रीय वापर बंद असणे ही आहेत, आणि कार्ड मिळण्यास उशीर झाल्यास शाखेतून ट्रॅक करता येते."
+   }
+  },
+  {
+   "id": "upi_features",
+   "sms": false,
+   "keywords": {
+    "en": [
+     "upi lite",
+     "upi without internet",
+     "use upi offline",
+     "upi offline",
+     "multiple bank accounts to upi",
+     "link multiple bank accounts",
+     "same upi id",
+     "multiple upi apps",
+     "upi on multiple apps",
+     "star 99 hash"
+    ],
+    "hi": [
+     "यूपीआई लाइट",
+     "बिना इंटरनेट यूपीआई",
+     "ऑफलाइन यूपीआई",
+     "कई खाते यूपीआई से जोड़",
+     "एक ही यूपीआई आईडी"
+    ],
+    "hinglish": [
+     "upi lite",
+     "bina internet upi",
+     "offline upi",
+     "multiple account upi se jodna",
+     "same upi id"
+    ],
+    "mr": [
+     "यूपीआय लाईट",
+     "इंटरनेटशिवाय यूपीआय",
+     "ऑफलाइन यूपीआय",
+     "अनेक खाती यूपीआयशी जोडणे",
+     "तोच यूपीआय आयडी"
+    ]
+   },
+   "answer": {
+    "en": "UPI Lite is a small value wallet inside your UPI app for quick low amount payments without entering the PIN each time. You can link more than one bank account to UPI, and each app gives its own UPI ID for the same account. Without internet you can pay by dialling star ninety nine hash from your registered mobile.",
+    "hi": "यूपीआई लाइट यूपीआई ऐप के अंदर एक छोटे मूल्य का वॉलेट है, जिससे कम रकम के भुगतान हर बार पिन डाले बिना हो जाते हैं। आप एक से ज़्यादा बैंक खाते यूपीआई से जोड़ सकते हैं, और हर ऐप उसी खाते के लिए अपनी अलग यूपीआई आईडी देता है। इंटरनेट के बिना आप रजिस्टर्ड मोबाइल से स्टार नाइंटी नाइन हैश डायल करके भुगतान कर सकते हैं।",
+    "hinglish": "UPI Lite UPI app ke andar ek chhote value ka wallet hai, jisse kam raqam ke payment har baar PIN daale bina ho jate hain. Aap ek se zyada bank account UPI se jod sakte hain, aur har app usi account ke liye apni alag UPI ID deta hai. Internet ke bina aap registered mobile se star ninety nine hash dial karke payment kar sakte hain.",
+    "mr": "यूपीआय लाईट हे यूपीआय ॲपमधील लहान रकमेचे वॉलेट आहे, ज्याने कमी रकमेची पेमेंट्स प्रत्येक वेळी पिन टाकल्याशिवाय होतात. तुम्ही एकापेक्षा जास्त बँक खाती यूपीआयशी जोडू शकता, आणि प्रत्येक ॲप त्याच खात्यासाठी स्वतःचा वेगळा यूपीआय आयडी देते. इंटरनेटशिवाय तुम्ही नोंदवलेल्या मोबाइलवरून स्टार नाइन्टी नाइन हॅश डायल करून पेमेंट करू शकता."
    }
   }
  ]

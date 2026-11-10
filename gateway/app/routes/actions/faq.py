@@ -44,7 +44,7 @@ def load_faq() -> dict[str, dict]:
 
 
 def _norm(s: str) -> str:
-    return re.sub(r"\s+", " ", s.lower()).strip()
+    return re.sub(r"\s+", " ", s.lower().replace("’", "'")).strip()  # curly apostrophe from typed/pasted text
 
 
 def match(intents: dict[str, dict], query: str, lang: str) -> str | None:
