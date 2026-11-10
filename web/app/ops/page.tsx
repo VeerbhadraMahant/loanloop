@@ -274,7 +274,7 @@ export default function Ops() {
                               }`}
                             ></span>
                             <div className="font-semibold text-fg flex items-center gap-1.5">
-                              <span>{c.customer_ref}</span>
+                              <span>{c.customer_ref || "Caller"}</span>
                               {c.ended_at && (
                                 <span className="text-[10px] font-mono text-muted uppercase px-1 py-0.2 rounded bg-sunken border border-line">
                                   ended
@@ -331,9 +331,9 @@ export default function Ops() {
                               <span>{isSel ? "Active" : "Timeline"}</span>
                             </Button>
                             <Link
-                              href={`/call/${encodeURIComponent(c.customer_ref.toLowerCase())}`}
+                              href={`/call/${encodeURIComponent((c.customer_ref || "priya").toLowerCase())}`}
                               className="p-1.5 rounded-lg border border-line bg-card hover:bg-sunken text-primary hover:text-accent-hover text-xs transition-colors flex items-center"
-                              title={`Open Calling Desk for ${c.customer_ref}`}
+                              title={`Open Calling Desk for ${c.customer_ref || "caller"}`}
                             >
                               <Icon name="phone" size={13} />
                             </Link>
@@ -361,7 +361,7 @@ export default function Ops() {
               </h2>
               {selectedCall && (
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-mono bg-secondary-container text-primary font-semibold border border-primary/20">
-                  {selectedCall.customer_ref}
+                  {selectedCall.customer_ref || "Active Session"}
                 </span>
               )}
             </div>

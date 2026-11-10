@@ -30,8 +30,10 @@ const safety: { icon: IconName; title: string; body: string }[] = [
 
 function Waveform() {
   const bars = Array.from({ length: 64 }, (_, i) => {
-    const h = 14 + Math.abs(Math.sin(i * 0.37) * 52 + Math.sin(i * 0.11 + 1) * 34);
-    return <rect key={i} x={i * 18 + 4} y={110 - h / 2} width={6} height={h} rx={3} />;
+    const rawH = 14 + Math.abs(Math.sin(i * 0.37) * 52 + Math.sin(i * 0.11 + 1) * 34);
+    const h = Math.round(rawH);
+    const y = Math.round((110 - h / 2) * 2) / 2;
+    return <rect key={i} x={i * 18 + 4} y={y} width={6} height={h} rx={3} />;
   });
   return (
     <svg aria-hidden viewBox="0 0 1152 220" preserveAspectRatio="xMidYMid slice" className="h-full w-full">
