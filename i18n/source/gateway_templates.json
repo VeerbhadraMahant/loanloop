@@ -44,8 +44,8 @@
   "hi": "सह्याद्रि फ़ाइनेंस बैंक को कॉल करने के लिए धन्यवाद। नमस्कार।"
  },
  "call_started": {
-  "en": "Welcome to Sahyadri Finance Bank. Which language would you like: English, Hindi, Marathi or Hinglish?",
-  "hi": "सह्याद्रि फ़ाइनेंस बैंक में आपका स्वागत है। आप कौन सी भाषा चाहेंगे: अंग्रेज़ी, हिंदी, मराठी या हिंग्लिश?"
+  "en": "Welcome to Sahyadri Finance Bank. Which language would you like: English, Hindi, Marathi or another Indian language?",
+  "hi": "सह्याद्रि फ़ाइनेंस बैंक में आपका स्वागत है। आप कौन सी भाषा चाहेंगे: अंग्रेज़ी, हिंदी, मराठी या कोई और भारतीय भाषा?"
  },
  "call_started_out": {
   "en": "This is LoanLoop calling from Sahyadri Bank about your loan. To continue, please confirm your date of birth.",
