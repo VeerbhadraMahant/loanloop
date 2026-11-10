@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Newsreader, JetBrains_Mono } from "next/font/google";
+import { Agentation } from "agentation";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
@@ -14,7 +15,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} ${newsreader.variable} ${jetbrainsMono.variable}`}>
-      <body className="min-h-screen antialiased selection:bg-[#d8e6df] selection:text-[#121e1a]">{children}</body>
+      <body className="min-h-screen antialiased selection:bg-[#d8e6df] selection:text-[#121e1a]">
+        {children}
+        <Agentation endpoint="http://localhost:4747" />
+      </body>
     </html>
   );
 }
