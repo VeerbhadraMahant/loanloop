@@ -172,7 +172,7 @@ async def test_secret_never_stored(client, field, val):
         assert needle not in dump
         ev = await sessions.redis.xrange("ll:events")
         assert needle not in json.dumps(ev)
-        rows = (await db.execute(select(AuditLog).where(AuditLog.error_code == "SECRET_DETECTED"))).scalars().all()
+        rows = (await db.execute(select(AuditLog).where(AuditLog.error_code == "SECRET_DETECTED").order_by(AuditLog.id))).scalars().all()
         assert rows and rows[-1].flags["field"] in ("value", "outcome")
     keys = await sessions.redis.keys("*")
     for k in keys:
