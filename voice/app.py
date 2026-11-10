@@ -771,6 +771,7 @@ def wants_human(text: str) -> bool:
 
 _LEAK = re.compile(r"system\s*prompt|tool\s*list|\b(?:my|the|these|those|above|previous|original)\s+instructions\b|"
                    r"\bmy\s+prompt\b|सिस्टम\s*प्रॉम्प्ट", re.I)
+_INJECT = re.compile(r"system\s*prompt|tool\s*list|(?:ignore|forget|disregard)\s+(?:all\s+)?(?:the\s+)?(?:previous|above|prior|earlier)\s+instructions", re.I)
 SAFE = {"en": "I can only help with banking requests. How can I help you?",
         "hinglish": "Main sirf banking requests mein madad kar sakta hoon. Main aapki kaise madad karun?",
         "hi": "मैं केवल बैंकिंग से जुड़े अनुरोधों में मदद कर सकता हूँ। मैं आपकी कैसे मदद करूँ?",
@@ -1615,6 +1616,8 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             c.setdefault("said", []).append(user_text)
             if (early := language_turn(c, user_text)):
                 return early
+            if _INJECT.search(user_text):  # a prompt-extraction attempt never reaches the model (it can ramble for minutes)
+                return canned(c, user_text, SAFE[c["language"]])
             auto = (await human_turn(c, user_text) or await approval_precheck(c, user_text) or await auto_confirm(c, user_text)
                     or await faq_direct(c, user_text) or await outbound_turn(c, user_text) or await txn_turn(c, user_text))
             pst = None
