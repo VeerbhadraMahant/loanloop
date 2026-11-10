@@ -91,6 +91,8 @@ const PERSONAS: Record<
       "Mera EMI kitna hai aur agla due date kab hai?",
       "Mujhe EMI date 5th se 10th change karni hai",
       "मेरा IFSC code मुझे message कर दो",
+      "What is the difference between NRE and NRO accounts?",
+      "Bank bol raha hai ki KYC karo, kaunse kaagaz lagenge?",
       "Kothrud branch timing kya hai?",
     ],
   },
@@ -784,9 +786,15 @@ export default function CallApp({ customer, caseId }: { customer: string; caseId
                       </div>
 
                       {/* Action Chips for this turn */}
-                      {!!m.actions?.length && (
-                        <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-                          {m.actions.map((a, j) => (
+                      <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                        {m.stat?.timings && m.stat.timings.llm_calls === 0 && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono font-medium bg-ok-bg text-ok-fg border border-ok-border">
+                            <Icon name="check" size={11} />
+                            <span>⚡ Instant FAQ Match (0ms LLM)</span>
+                          </span>
+                        )}
+                        {!!m.actions?.length && (
+                          m.actions.map((a, j) => (
                             <span
                               key={j}
                               className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono font-medium ${
@@ -798,9 +806,9 @@ export default function CallApp({ customer, caseId }: { customer: string; caseId
                               <Icon name={a.ok ? "check" : "x"} size={11} />
                               <span>{a.name}</span>
                             </span>
-                          ))}
-                        </div>
-                      )}
+                          ))
+                        )}
+                      </div>
 
                       {/* Turn latency telemetry */}
                       {m.stat && <TurnStat s={m.stat} />}

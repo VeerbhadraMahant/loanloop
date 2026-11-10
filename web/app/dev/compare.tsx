@@ -97,7 +97,7 @@ export function Compare({ runs }: { runs: BenchRun[] }) {
                   {r.turns.map((t, i) => (
                     <tr key={i} className="border-t border-line align-top">
                       <td>{t.rep}</td><td>{t.index}</td><td>{t.ok ? "yes" : `no${t.error ? `: ${t.error}` : ""}`}</td>
-                      <td>{t.timings?.total_ms ?? "-"}</td><td>{t.timings?.stt_ms ?? "-"}</td><td>{t.timings?.llm_ms ?? "-"}</td><td>{t.timings?.llm_calls ?? "-"}</td>
+                      <td>{t.timings?.total_ms ?? "-"}</td><td>{t.timings?.stt_ms ?? "-"}</td><td>{t.timings?.llm_ms ?? "-"}</td><td>{t.timings?.llm_calls === 0 ? <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] bg-ok-bg text-ok-fg font-semibold border border-ok-border">⚡ 0 (FAQ)</span> : t.timings?.llm_calls ?? "-"}</td>
                       <td>{t.timings?.gateway_ms ?? "-"}</td><td>{t.timings?.tts_ms ?? "-"}</td><td>{t.timings?.other_ms ?? "-"}</td><td>{t.actions.join(", ")}</td>
                     </tr>
                   ))}

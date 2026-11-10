@@ -63,6 +63,21 @@ const testCases = [
     color: "border-danger-fg",
     avatar: "VM",
   },
+  {
+    id: "TC-8805",
+    name: "Knowledge Base & FAQ Router",
+    subtitle: "Instant Match vs Grounded LLM",
+    badge: "Knowledge / FAQ",
+    badgeTone: "ok",
+    tier: "0ms LLM Direct Bypass",
+    facility: "NRE/NRO, KYC, Branch, Fraud",
+    dialect: "Multilingual (Hinglish/Marathi/English)",
+    validation: "Confidence routing (~100ms)",
+    desc: "Tests hybrid FAQ classification. High-confidence general queries bypass LLM token generation for instant audio responses; medium-confidence turns ground the prompt with verified bank facts.",
+    href: "/call/priya",
+    color: "border-secondary",
+    avatar: "KB",
+  },
 ];
 
 export default function TestCasesPage() {
@@ -93,7 +108,7 @@ export default function TestCasesPage() {
             <div className="shrink-0 flex flex-col items-start lg:items-end gap-2">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-card border border-line shadow-xs text-xs font-mono">
                 <span className="w-2 h-2 rounded-full bg-ok-fg"></span>
-                <span className="text-fg font-medium">4 Presets Active</span>
+                <span className="text-fg font-medium">5 Presets Active</span>
                 <span className="text-line">|</span>
                 <span>1 Calling Desk</span>
                 <span className="text-line">|</span>
