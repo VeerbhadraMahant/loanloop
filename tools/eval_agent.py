@@ -137,8 +137,8 @@ def fill(s: str, vals: dict) -> str:
     return s
 
 
-def run_case(v: httpx.Client, c: dict, vals: dict, case_id: int | None, start_path: str) -> dict:
-    body: dict = {"customer": c["persona"], "direction": c["direction"]}
+def run_case(v: httpx.Client, c: dict, vals: dict, case_id: int | None, start_path: str, extra: dict | None = None) -> dict:
+    body: dict = {"customer": c["persona"], "direction": c["direction"], **(extra or {})}
     if c["direction"] == "outbound":
         body["case_id"] = case_id
     d = post(v, f"{start_path}?tts=false", json=body)
@@ -147,7 +147,7 @@ def run_case(v: httpx.Client, c: dict, vals: dict, case_id: int | None, start_pa
     d.raise_for_status()
     d = d.json()
     cid, x = d["call_id"], c["expect"]
-    oks, texts, langs, lat, llm, log = [], [], [], [], [], []
+    oks, texts, langs, lat, llm, llm_ms, log = [], [], [], [], [], [], []
     for t in c["turns"]:
         say = fill(t, vals)
         t0 = time.perf_counter()
@@ -159,6 +159,7 @@ def run_case(v: httpx.Client, c: dict, vals: dict, case_id: int | None, start_pa
         j = r.json()
         lat.append(ms)
         llm.append((j.get("timings") or {}).get("llm_calls", 0))
+        llm_ms.append((j.get("timings") or {}).get("llm_ms", 0))
         oks += [a["name"] for a in j.get("actions", []) if a.get("ok")]
         texts.append(j.get("agent_text", ""))
         langs.append(j.get("language"))
@@ -189,7 +190,7 @@ def run_case(v: httpx.Client, c: dict, vals: dict, case_id: int | None, start_pa
         why.append(f"{max(llm)} LLM calls in one turn (max {cap})")
     if not lat:
         why.append("no turn completed")
-    return {"id": c["id"], "pass": not why, "why": why, "latency_ms": lat, "llm_calls": llm, "log": log}
+    return {"id": c["id"], "pass": not why, "why": why, "latency_ms": lat, "llm_calls": llm, "llm_ms": llm_ms, "log": log}
 
 
 def pct(xs: list[float], p: float) -> float:
@@ -210,6 +211,8 @@ def main(argv=None) -> int:
     ap.add_argument("--reset-limits", action="store_true", help="delete ll:rl:verify:* in Redis before the run and before each outbound case")
     ap.add_argument("--resume", action="store_true", help="skip case ids that passed in the previous --out file")
     ap.add_argument("--start-path", default="/calls", help="voice endpoint that opens a call (contract names /start; the service today exposes /calls)")
+    ap.add_argument("--llm", help="provider for /calls (ollama|gemini|sarvam...), dev mode only")
+    ap.add_argument("--model", help="model name for /calls (must be in ollama list for ollama), dev mode only")
     ap.add_argument("--out", type=Path, default=OUT)
     ap.add_argument("--dry", action="store_true", help="validate the cases file only")
     a = ap.parse_args(argv)
@@ -256,13 +259,13 @@ def main(argv=None) -> int:
         if a.reset_limits and c["direction"] == "outbound":
             reset_limits(redis_url)
         try:
-            r = run_case(v, c, vals, case_id, a.start_path)
+            r = run_case(v, c, vals, case_id, a.start_path, {k: x for k, x in (("llm", a.llm), ("model", a.model)) if x})
         except CallCap:
             print(f"STOP {c['id']}: voice service returned 429 (50-call cap). Restart it and re-run with --resume.")
             skipped += [x["id"] for x in cases[cases.index(c):]]
             break
         except Exception as ex:
-            r = {"id": c["id"], "pass": False, "why": [f"error: {ex}"], "latency_ms": [], "llm_calls": [], "log": []}
+            r = {"id": c["id"], "pass": False, "why": [f"error: {ex}"], "latency_ms": [], "llm_calls": [], "llm_ms": [], "log": []}
         results.append(r)
         print(f"{'PASS' if r['pass'] else 'FAIL'} {r['id']}" + ("" if r["pass"] else "\n     - " + "\n     - ".join(r["why"])))
         if not r["pass"]:
@@ -275,7 +278,7 @@ def main(argv=None) -> int:
                "turn_latency_ms": {"median": round(statistics.median(lat), 1) if lat else 0.0, "p95": pct(lat, 0.95)},
                "avg_llm_calls_per_turn": round(statistics.mean(llm), 2) if llm else 0.0}
     a.out.parent.mkdir(parents=True, exist_ok=True)
-    a.out.write_text(json.dumps({"summary": summary, "results": [{k: r[k] for k in ("id", "pass", "why", "latency_ms", "llm_calls")} for r in results]},
+    a.out.write_text(json.dumps({"summary": summary, "results": [{k: r[k] for k in ("id", "pass", "why", "latency_ms", "llm_calls", "llm_ms", "log")} for r in results]},
                                 ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"\n{n_pass}/{len(results)} passed ({summary['pass_rate']:.0%}); median {summary['turn_latency_ms']['median']} ms, "
           f"p95 {summary['turn_latency_ms']['p95']} ms, {summary['avg_llm_calls_per_turn']} LLM calls/turn -> {a.out}")
