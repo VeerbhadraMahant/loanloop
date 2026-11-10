@@ -15,6 +15,11 @@ def _fields(s: str) -> set[str]:
     return {f for _, f, _, _ in Formatter().parse(s) if f is not None}
 
 
+def is_warning(problem: str) -> bool:
+    """Missing faq intents only warn: faq_lookup falls back to the English answer."""
+    return problem.startswith("warning:")
+
+
 def _text(v) -> bool:
     return isinstance(v, str) and bool(v.strip())
 
@@ -51,7 +56,7 @@ def check_file(code: str, d: dict, src: dict) -> list[str]:
     if not isinstance(faq, dict):
         bad.append("faq section missing")
     else:
-        bad += [f"faq: missing intent {k}" for k in fsrc if k not in faq]
+        bad += [f"warning: faq: missing intent {k} (callers get the English answer)" for k in fsrc if k not in faq]
         bad += [f"faq: unknown intent {k}" for k in faq if k not in fsrc]
         for k, s in fsrc.items():
             f = faq.get(k)
@@ -122,9 +127,10 @@ def check_all(i18n_dir: Path | None = None, source_root: Path = ROOT) -> dict[st
 if __name__ == "__main__":
     res = check_all(Path(sys.argv[1]) if len(sys.argv) > 1 else None)
     for code, problems in res.items():
-        print(f"{code}: " + ("ok" if not problems else f"{len(problems)} problem(s)"))
+        errs = [p for p in problems if not is_warning(p)]
+        print(f"{code}: " + ("ok" if not problems else f"{len(errs)} problem(s), {len(problems) - len(errs)} warning(s)"))
         for p in problems:
             print("  -", p)
     if not res:
         print("no language files present")
-    sys.exit(1 if any(res.values()) else 0)
+    sys.exit(1 if any(not is_warning(p) for v in res.values() for p in v) else 0)

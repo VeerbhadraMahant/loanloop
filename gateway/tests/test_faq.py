@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 
 import pytest
 from sqlalchemy import select
@@ -84,3 +85,23 @@ async def test_reloads_when_file_changes(client, faq_file):
     import os
     os.utime(faq_file, (1, faq_file.stat().st_mtime + 5))
     assert (await call(client, "faq_lookup", topic="branch_hours"))["speak"] == "Nine to five."
+
+
+async def test_missing_language_answer_falls_back_to_english(client, faq_file):
+    only_en = {"version": 1, "intents": [{"id": "x_topic", "sms": False, "keywords": {"en": ["xtopic"]}, "answer": {"en": "English only."}}]}
+    faq_file.write_text(json.dumps(only_en), encoding="utf-8")
+    await call(client, "start_call")
+    r = await call(client, "faq_lookup", topic="x_topic", language="mr")
+    assert r["ok"] and r["speak"] == "English only."
+
+
+def test_shipped_faq_has_all_core_languages_and_sms_text():
+    real = json.loads((Path(__file__).resolve().parents[1] / "app" / "data" / "faq.json").read_text(encoding="utf-8"))
+    ids = [i["id"] for i in real["intents"]]
+    assert len(ids) == len(set(ids))
+    for it in real["intents"]:
+        for lang in ("en", "hi", "hinglish", "mr"):
+            assert it["answer"].get(lang, "").strip(), (it["id"], "answer", lang)
+            assert it["keywords"].get(lang), (it["id"], "keywords", lang)
+            if it["sms"]:
+                assert it.get("sms_text", {}).get(lang, "").strip(), (it["id"], "sms_text", lang)

@@ -127,11 +127,12 @@ def test_validator_accepts_complete_file_and_rejects_broken_ones():
     bad["voice"]["ASK"] = ["no placeholder", " and "]
     bad["words"]["affirm"] = []
     problems = " | ".join(chk.check_file("ta", bad, src))
-    for frag in (f"gateway.{k}: placeholders", "gateway: missing key", "faq: missing intent", "months must be 12", "voice.ASK", "words.affirm"):
+    for frag in (f"gateway.{k}: placeholders", "gateway: missing key", "warning: faq: missing intent", "months must be 12", "voice.ASK", "words.affirm"):
         assert frag in problems, frag
 
 
 def test_every_present_language_file_is_valid():
     """Drop i18n/<code>.json in and this runs on it: keys, placeholders, intent ids, sms_text, months, ASK, FIELD_LABEL, words."""
     res = _load_check().check_all()
-    assert not any(res.values()), res
+    chk = _load_check()
+    assert not [p for v in res.values() for p in v if not chk.is_warning(p)], res
