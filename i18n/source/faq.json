@@ -984,11 +984,12 @@
    "find my account number",
    "forgot account number",
    "account number",
-   "ifsc code",
-   "ifsc",
    "micr code",
    "swift code",
-   "my bank's ifsc"
+   "my bank's ifsc",
+   "where is my ifsc",
+   "find my ifsc",
+   "where to find ifsc"
   ],
   "answer_en": "Your account number is printed on your passbook, cheque book and statement, and is shown in the app. The IFSC code is eleven characters, with the bank code first and the branch identifier at the end, and you can find it on the passbook, cheque leaf or in the app.",
   "sms_text_en": "",

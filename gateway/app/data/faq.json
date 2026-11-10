@@ -2698,35 +2698,37 @@
      "find my account number",
      "forgot account number",
      "account number",
-     "ifsc code",
-     "ifsc",
      "micr code",
      "swift code",
-     "my bank's ifsc"
+     "my bank's ifsc",
+     "where is my ifsc",
+     "find my ifsc",
+     "where to find ifsc"
     ],
     "hi": [
      "खाता नंबर",
      "अकाउंट नंबर",
-     "आईएफएससी कोड",
-     "आईएफएससी",
      "एमआईसीआर कोड",
-     "स्विफ्ट कोड"
+     "स्विफ्ट कोड",
+     "आईएफएससी कहाँ मिलेगा",
+     "मेरा आईएफएससी कहाँ"
     ],
     "hinglish": [
      "account number",
      "account number bhool",
-     "ifsc code",
-     "ifsc",
      "micr code",
-     "swift code"
+     "swift code",
+     "ifsc kahan milega",
+     "mera ifsc kahan",
+     "ifsc kaise pata"
     ],
     "mr": [
      "खाते क्रमांक",
      "अकाउंट नंबर",
-     "आयएफएससी कोड",
-     "आयएफएससी",
      "एमआयसीआर कोड",
-     "स्विफ्ट कोड"
+     "स्विफ्ट कोड",
+     "आयएफएससी कुठे मिळेल",
+     "माझा आयएफएससी कुठे"
     ]
    },
    "answer": {

@@ -105,3 +105,17 @@ def test_shipped_faq_has_all_core_languages_and_sms_text():
             assert it["keywords"].get(lang), (it["id"], "keywords", lang)
             if it["sms"]:
                 assert it.get("sms_text", {}).get(lang, "").strip(), (it["id"], "sms_text", lang)
+
+
+# the shipped file, not the conftest fixture FAQ
+_REAL = {i["id"]: i for i in json.loads((Path(faq.__file__).resolve().parents[2] / "data" / "faq.json").read_text(encoding="utf-8"))["intents"]}
+
+
+@pytest.mark.parametrize("q,lang", [("Kothrud branch ka IFSC batao", "hinglish"), ("what is the IFSC of Kothrud branch", "en"),
+                                    ("validate IFSC SBIN0001234", "en"), ("send me my IFSC by sms", "en")])
+def test_branch_ifsc_questions_are_not_taken_by_the_faq(q, lang):
+    assert faq.match(_REAL, q, lang) is None  # these belong to branch_lookup / validate_ifsc / send_details_sms
+
+
+def test_where_to_find_ifsc_still_matches():
+    assert faq.match(_REAL, "where is my IFSC printed", "en") == "account_number_ifsc"
