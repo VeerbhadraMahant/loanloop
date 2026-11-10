@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import { Metrics, useGet } from "@/lib/api";
 import { Card, Empty, ErrorBox, Icon, Pill, Shell, Skeleton, StatTile } from "@/components/ui";
 
@@ -18,8 +19,74 @@ function NotMeasured({ why }: { why: string }) {
   );
 }
 
+function LoadTestCard({
+  label,
+  value,
+  copiedKey,
+  onCopy,
+}: {
+  label: string;
+  value: unknown;
+  copiedKey: string | null;
+  onCopy: (val: string, key: string) => void;
+}) {
+  const isCopied = copiedKey === label;
+  const rawString = typeof value === "object" ? JSON.stringify(value, null, 2) : String(value);
+  const isSimple =
+    typeof value === "number" || (typeof value === "string" && value.length < 16 && !value.includes("{"));
+
+  return (
+    <Card className="p-3.5 flex flex-col justify-between min-w-0 overflow-hidden h-44 shadow-xs">
+      <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-line shrink-0">
+        <dt className="text-xs font-mono font-semibold uppercase tracking-wider text-muted truncate" title={label}>
+          {label.replace(/_/g, " ")}
+        </dt>
+        <button
+          type="button"
+          onClick={() => onCopy(rawString, label)}
+          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono font-medium transition-colors cursor-pointer shrink-0 border ${
+            isCopied
+              ? "bg-ok-bg text-ok-fg border-ok-border"
+              : "bg-sunken hover:bg-surface-variant text-primary border-line"
+          }`}
+          title="Copy value to clipboard"
+        >
+          <Icon name={isCopied ? "check" : "inbox"} size={12} />
+          <span>{isCopied ? "Copied" : "Copy"}</span>
+        </button>
+      </div>
+
+      <dd className="flex-1 min-h-0 overflow-y-auto rounded-lg bg-surface-container-low p-2 border border-line text-xs font-mono text-fg break-all">
+        {isSimple ? (
+          <div className="h-full flex items-center">
+            <span className="serif num text-xl sm:text-2xl font-bold text-fg">
+              {typeof value === "number" && label === "rps" ? Number(value).toFixed(1) : String(value)}
+            </span>
+          </div>
+        ) : (
+          <pre className="whitespace-pre-wrap font-mono text-[11px] leading-relaxed text-muted">
+            {rawString}
+          </pre>
+        )}
+      </dd>
+    </Card>
+  );
+}
+
 export default function MetricsPage() {
   const { data: m, error, loading } = useGet<Metrics>("/dashboard/metrics", 10000);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  const copyText = (val: string, key: string) => {
+    try {
+      navigator.clipboard?.writeText(val);
+    } catch {
+      // clipboard access fallback
+    }
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey(null), 2000);
+  };
+
   const t = m?.totals;
   const tiles: [string, string | number][] = t
     ? [
@@ -50,7 +117,7 @@ export default function MetricsPage() {
       ) : (
         <div className="space-y-8">
           {/* Headline KPIs */}
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4">
             {tiles.map(([k, v], i) => (
               <StatTile key={k} value={v} caption={k} accent={i === 1} />
             ))}
@@ -144,18 +211,24 @@ export default function MetricsPage() {
 
           {/* Load Test Results */}
           <section aria-labelledby="lt">
-            <h2 id="lt" className={h2}>
-              Locust Gateway Concurrency Load Test Proof
-            </h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2 id="lt" className={h2}>
+                Locust Gateway Concurrency Load Test Proof
+              </h2>
+              <span className="text-xs font-mono text-muted">
+                1000 Users · 240s Ramp · Sustained Async Proof
+              </span>
+            </div>
             {m.loadtest ? (
-              <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+              <dl className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
                 {Object.entries(m.loadtest).map(([k, v]) => (
-                  <Card key={k} className="p-4">
-                    <dt className="text-xs font-mono uppercase text-muted mb-1">{k}</dt>
-                    <dd className="num break-words font-bold text-lg text-fg">
-                      {typeof v === "object" ? JSON.stringify(v) : String(v)}
-                    </dd>
-                  </Card>
+                  <LoadTestCard
+                    key={k}
+                    label={k}
+                    value={v}
+                    copiedKey={copiedKey}
+                    onCopy={copyText}
+                  />
                 ))}
               </dl>
             ) : (

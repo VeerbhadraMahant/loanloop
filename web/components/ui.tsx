@@ -128,13 +128,14 @@ export function StatTile({
   className?: string;
 }) {
   const str = typeof value === "string" || typeof value === "number" ? String(value) : "";
-  const isLong = str.length > 7;
-  const isMedium = str.length > 4;
-  const sizeClass = isLong
-    ? "text-xl sm:text-2xl"
-    : isMedium
-    ? "text-2xl sm:text-3xl"
-    : "text-3xl sm:text-4xl";
+  const sizeClass =
+    str.length > 8
+      ? "text-lg sm:text-xl"
+      : str.length > 4
+      ? "text-xl sm:text-2xl"
+      : str.length > 2
+      ? "text-2xl sm:text-3xl"
+      : "text-3xl sm:text-4xl";
 
   return (
     <div
