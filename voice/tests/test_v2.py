@@ -200,7 +200,7 @@ def test_outbound_verify_dob_only_pre_llm_and_stripped(env):
     fake.llm_script = [AFTER]
     turn(c, d, "I was born on 15 March 1990")
     body = gw_calls(fake, "verify_caller")[-1]
-    assert body["dob"] == "1990-03-15" and "registered_mobile" not in body and len(fake.of("llm")) == 1
+    assert body["dob"] == "1990-03-15" and "registered_mobile" not in body and len(fake.of("llm")) == 0  # dues are read out by the service
     d = c.post("/calls?tts=false", json={"direction": "outbound", "case_id": 7}, headers=OPS).json()
     fake.llm_script = [tc("verify_caller", registered_mobile="9876543210", loan_last4="1234", dob="1990-03-15"), AFTER]
     turn(c, d, "hello there")

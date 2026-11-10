@@ -215,7 +215,7 @@ TOOL_HINTS = {
     "last_transactions": " Only after verification; pass count (1 to 5) only if the caller said a number.",
     "dues_info": " Only after verification; the overdue amount, missed EMIs and days past due.",
     "record_ptp": " Only after the caller SAID the amount and the date they will pay. amount in plain rupees, promised_date as YYYY-MM-DD.",
-    "record_rtp": " When the caller will not or cannot pay now: pass the closest reason_code. Never argue.",
+    "record_rtp": " When the caller will not or cannot pay now: pass the closest reason_code (\"I already paid\" on an outbound call: already_paid). Never argue.",
     "end_call": " Call it as soon as the caller says goodbye / bye / that is all, in any language.",
 }
 
@@ -620,6 +620,9 @@ _UNSUPPORTED = {"tamil", "kannada", "kannad", "bengali", "bangla", "gujarati", "
 _SWITCH_CUES = {"talk", "speak", "switch", "change", "in", "mein", "me", "madhe", "bolo", "bol", "bolna", "bolu", "kar", "karo", "kara",
                 "sang", "sanga", "बोल", "बोलो", "बोला", "बोलिए", "बोलें", "बोलू", "बोलना", "बात", "मध्ये", "मराठीत", "हिंदीत", "में", "मैं",
                 "कर", "करो", "करा", "बदल", "बदला", "सांग", "सांगा"}
+_LANG_STOP = {"please", "pls", "plz", "kripya", "ji", "jee", "ok", "okay", "yes", "sure", "baat", "kijiye", "kijiyega", "karein", "karen",
+              "kare", "kariye", "bolein", "boliye", "dijiye", "we", "can", "could", "you", "i", "want", "would", "like", "to", "the",
+              "a", "lets", "let", "let's", "hum", "aap", "ab", "se", "continue", "only", "language"}
 _FIRST_TURN_HINGLISH = {"hai", "kya", "mera", "meri", "mujhe", "kitna", "ka", "ki", "ko", "nahi", "kab", "bata", "batao", "aap", "mere"}
 LANG_OK = {"en": "Sure, I will continue in English. How can I help you?",
            "hinglish": "Theek hai, hum Hinglish mein baat karenge. Main aapki kaise madad kar sakta hoon?",
@@ -633,9 +636,15 @@ CUSTOMER_Q = {"en": "To check that, I need to verify a few details: your registe
               "mr": "ते तपासण्यासाठी मला काही तपशील पडताळावे लागतील: तुमचा नोंदणीकृत मोबाइल नंबर आणि जन्मतारीख."}
 
 
+def first_named(toks: list[str]) -> bool:
+    return any(set(toks) & w for w in _LANG_WORDS.values())
+
+
 def detect_language(text: str, first: bool) -> tuple[str | None, bool, bool]:
     """(language | 'unsupported' | None, whole reply is just the language choice, caller named one at all)."""
     toks = _tokens(text.lower())
+    if re.search("[ঀ-෿]", text) and not first_named(toks):  # Bengali, Tamil, Telugu... script: not a language we speak
+        return "unsupported", True, True
     named = next((k for k, w in _LANG_WORDS.items() if set(toks) & w), None)
     bad = bool(set(toks) & _UNSUPPORTED)
     cue = bool(set(toks) & _SWITCH_CUES)
@@ -643,7 +652,8 @@ def detect_language(text: str, first: bool) -> tuple[str | None, bool, bool]:
         return None, False, False
     if bad and not named:
         return "unsupported", True, True
-    return named, len(toks) <= 5, True
+    rest = set(toks) - set().union(*_LANG_WORDS.values()) - _SWITCH_CUES - _LANG_STOP
+    return named, not rest and len(toks) <= 8, True  # only a language choice; "Hinglish. KYC kaise karein?" is a question too
 
 
 def first_turn_language(text: str, current: str) -> str:
@@ -690,9 +700,20 @@ _ACCT_NOUNS = {"emi", "balance", "loan", "payment", "paid", "transaction", "tran
                "ईएमआई", "ईएमआय", "बैलेंस", "बॅलन्स", "लोन", "कर्ज", "खाता", "खाते", "अकाउंट", "account", "ifsc", "number", "नंबर"}
 
 
+# General-process and safety topics: answered from the FAQ even with "my ... account" (fraud, bereavement, KYC, a missed EMI as a
+# question). Balance / EMI amount / payment lookups stay account-specific and need verification.
+_GENERAL_TOPIC = re.compile(
+    r"fraud|scam|phishing|unauthori[sz]ed|धोखा|ठगी|फसवणूक|स्कॅम|deceased|passed away|\bdeath\b|मृत|"
+    r"dormant|inactive|inoperative|निष्क्रिय|डॉरमेंट|डॉर्मंट|\bkyc\b|केवाईसी|केवायसी|"
+    r"\bmiss(?:ed)?\b|bounce|not paid|छूट गई|छूट गया|चुकला|चुकली|"
+    r"complaint|grievance|ombudsman|shikayat|शिकायत|तक्रार|लोकपाल|"
+    r"(?:block|lost|stolen).{0,12}card|card.{0,12}(?:block|lost|stolen)|कार्ड ब्लॉक|bank.{0,15}(?:asks?|never|maang)")
+
+
 def account_specific(text: str) -> bool:
-    t = set(_tokens(text.lower()))
-    return bool(t & _POSSESSIVE and t & _ACCT_NOUNS)
+    low = text.lower()
+    t = set(_tokens(low))
+    return bool(t & _POSSESSIVE and t & _ACCT_NOUNS and not _GENERAL_TOPIC.search(low))
 
 
 def faq_args(text: str) -> dict | None:
@@ -794,11 +815,10 @@ def parse_spoken_date(text: str, today=None) -> str | None:
         for w, wd in _WEEKDAYS.items():
             if w in toks:
                 return (today + dt.timedelta(days=(wd - today.weekday()) % 7 or 7)).isoformat()
-        m = re.search(r"(?<!\d)(\d{1,2})(?:st|nd|rd|th)?\s+([a-zऀ-ॿ]+)", t)
-        mon = _MONTHS_MAP.get(m[2]) if m else None
-        if m and mon:
-            d = dt.date(today.year, mon, int(m[1]))
-            return (d if d >= today else d.replace(year=today.year + 1)).isoformat()
+        for m in re.finditer(r"(?<!\d)(\d{1,2})(?:st|nd|rd|th)?\s+([a-zऀ-ॿ]+)(?:\s+(20\d\d)(?!\d))?", t):
+            if mon := _MONTHS_MAP.get(m[2]):  # "5 rupees on 17 November": skip the non-month pair
+                d = dt.date(int(m[3] or today.year), mon, int(m[1]))
+                return (d if d >= today or m[3] else d.replace(year=today.year + 1)).isoformat()
         m = re.search(r"(?<!\d)(\d{1,2})(?:st|nd|rd|th)?\s*(?:tarikh|tareekh|date|तारीख|तारिख)|(?:on|by|को|ला)\s+(\d{1,2})(?!\d)", t)
         if m:
             day = int(m[1] or m[2])
@@ -809,6 +829,44 @@ def parse_spoken_date(text: str, today=None) -> str | None:
     except ValueError:
         return None
     return None
+
+
+_DATE_SPANS = re.compile(
+    r"\d{4}-\d{2}-\d{2}|(?<!\d)\d{1,2}(?:st|nd|rd|th)?\s+(?:" + "|".join(map(re.escape, _MONTHS_MAP)) + r")(?:\s+20\d\d)?(?![a-zऀ-ॿ])"
+    r"|(?<!\d)\d{1,2}\s*(?:tarikh|tareekh|date|तारीख|तारिख)")  # a bare "on 15" is left in: two figures -> not auto-routed
+_BIG_NUMBER_WORDS = {"k", "thousand", "hazaar", "hajar", "lakh", "lac", "हजार", "हज़ार", "लाख", "हजारांचे"}
+_FULL_WORDS = {"full", "pura", "poora", "puri", "poori", "whole", "entire", "saara", "saari", "पूरा", "पूरी", "सारी", "सारा", "संपूर्ण", "पूर्ण"}
+_PAID = re.compile(r"already paid|paid already|\bi(?:'ve| have)? paid\b|\bpaid (?:last|yesterday|earlier|before)|"
+                   r"pay(?:ment)?\s+(?:kar\s+)?(?:diya|kar diya|kar di)\b|bhar diya|jama kar|भर दिया|भुगतान कर दिया|दे दिया|भरले|भरलेत|भरल्या")
+
+
+def parse_amount(text: str, dues: dict | None = None) -> int | None:
+    """The one rupee figure in a promise ('1000 rupees on 17 November'), or the whole due ('pura') from the last dues_info.
+    None when unclear ('two thousand', two figures): the model or a re-ask handles it."""
+    t = text.translate(_DEVA_DIGITS).lower()
+    nums = re.findall(r"(?<![\d,])\d[\d,]*(?!\d)", _DATE_SPANS.sub(" ", t))
+    toks = set(_tokens(t))
+    if len(nums) == 1 and not toks & _BIG_NUMBER_WORDS:
+        return int(nums[0].replace(",", "")) or None
+    if not nums and toks & _FULL_WORDS and dues and isinstance(dues.get("overdue_amount"), int):
+        return dues["overdue_amount"] + int(dues.get("charges") or 0)
+    return None
+
+
+_TXN = re.compile(r"(?:last|recent|latest)(?: \d)? transactions?|mini statement|शेवटचे व्यवहार|शेवटचा व्यवहार|(?:आखिरी|पिछले|अंतिम) (?:लेन|ट्रांजैक्शन)|pichle transaction")
+
+
+def last_txn_count(text: str) -> int | None:
+    """Asked for the last few transactions with no other request in the sentence; the count only if the caller said 1 to 5."""
+    low = text.translate(_DEVA_DIGITS).lower()
+    if not _TXN.search(low) or set(_tokens(low)) & _MULTI_WORDS:
+        return None
+    n = re.findall(r"(?<!\d)[1-5](?!\d)", low)
+    return int(n[0]) if len(n) == 1 else 0
+
+
+def is_already_paid(text: str) -> bool:
+    return bool(_PAID.search(text.lower()))
 
 
 def parse_field(content_type: str, body: bytes, name: str) -> str | None:
@@ -1060,12 +1118,15 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
                 c.setdefault("refs", set()).add(re.sub(r"\D", "", utr))  # the caller's own UTR may be read back
             args["language"] = c["language"]  # the service owns the call language, never the model's argument
             if name == "record_ptp":  # spoken dates are parsed by us, not trusted from the model
-                args["promised_date"] = parse_spoken_date(" ".join(c.get("said", [])[-3:])) or args.get("promised_date")
+                # newest utterance first, one at a time: joining them let an earlier date of birth ("17 June 1988") win
+                args["promised_date"] = next(filter(None, (parse_spoken_date(u) for u in reversed(c.get("said", [])[-3:]))), None) or args.get("promised_date")
             if name == "check_approval" and c.get("approval_id"):
                 args["approval_id"] = str(c["approval_id"])  # the model often mangles the id
             res = await gateway(c["id"], name, args)
             if name == "verify_caller" and res.get("ok"):
                 c["verified"] = True
+            if name == "dues_info" and res.get("ok") and isinstance(res.get("data"), dict):
+                c["dues_data"] = res["data"]
             if isinstance(res.get("speak"), str) and res["speak"]:
                 st["speaks"].append((bool(res.get("ok")), res["speak"]))
             st["last"] = res.get("speak") or st["last"]
@@ -1133,6 +1194,39 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         c["messages"] += [{"role": "user", "content": text}, {"role": "assistant", "content": speak}]
         return speak, st["done"]
 
+    async def outbound_turn(c: dict, text: str) -> tuple[str, list[dict]] | None:
+        """Outbound, verified: a clear promise (amount + date, or 'the full amount' + date) or 'I already paid' is recorded by the
+        service, so the gateway's own read-back sentence is what the caller hears (the model asks 'are you saying...?' instead)."""
+        if c["direction"] != "outbound" or not c.get("verified") or c["ended"] or set(_tokens(text.lower())) & NEGATE_WORDS:
+            return None
+        if (when := parse_spoken_date(text)) and (amount := parse_amount(text, c.get("dues_data"))):
+            name, args = "record_ptp", {"amount": amount, "promised_date": when}
+        elif is_already_paid(text):
+            name, args = "record_rtp", {"reason_code": "already_paid"}
+        else:
+            return None
+        st = new_state()
+        res = await exec_call(c, name, {**args, "language": c["language"]}, st, internal=True)
+        speak = st["rb"] or (res.get("speak") if isinstance(res.get("speak"), str) else "")
+        if not speak:
+            return None
+        c.pop("note", None)
+        c["messages"] += [{"role": "user", "content": text}, {"role": "assistant", "content": speak}]
+        return speak, st["done"]
+
+    async def txn_turn(c: dict, text: str) -> tuple[str, list[dict]] | None:
+        """Verified caller asks for their last transactions: run it, no model round (the small model drifted to other tools)."""
+        n = last_txn_count(text)
+        if n is None or not c.get("verified") or c["direction"] != "inbound" or c["ended"]:
+            return None
+        st = new_state()
+        res = await exec_call(c, "last_transactions", {"language": c["language"], **({"count": n} if n else {})}, st, internal=True)
+        speak = res.get("speak") if res.get("ok") and isinstance(res.get("speak"), str) else ""
+        if not speak:
+            return None
+        c["messages"] += [{"role": "user", "content": text}, {"role": "assistant", "content": speak}]
+        return speak, st["done"]
+
     async def human_turn(c: dict, text: str) -> tuple[str, list[dict]] | None:
         if not wants_human(text):
             return None
@@ -1159,10 +1253,13 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         c["vtried"].add(key)
         st = new_state()
         res = await exec_call(c, "verify_caller", dict(args), st, internal=True)
-        if res.get("ok") and c["direction"] == "outbound":
-            res["instruction"] = "Verified. Now call dues_info and say its speak as is."
         c["messages"] += [{"role": "assistant", "content": "", "tool_calls": [{"function": {"name": "verify_caller", "arguments": args}}]},
                           {"role": "tool", "tool_name": "verify_caller", "content": json.dumps(res, ensure_ascii=False)}]
+        if res.get("ok") and c["direction"] == "outbound":
+            # the small model often skips dues_info after verifying: the service reads the dues out itself, no LLM round
+            dres = await exec_call(c, "dues_info", {"language": c["language"]}, st, internal=True)
+            if dres.get("ok") and isinstance(dres.get("speak"), str) and dres["speak"]:
+                st["direct"] = " ".join(x for x in (res.get("speak"), dres["speak"]) if isinstance(x, str) and x)
         return st
 
     async def run_actions(c: dict, st: dict | None = None) -> tuple[str, list[dict]]:
@@ -1519,12 +1616,15 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             if (early := language_turn(c, user_text)):
                 return early
             auto = (await human_turn(c, user_text) or await approval_precheck(c, user_text) or await auto_confirm(c, user_text)
-                    or await faq_direct(c, user_text))
+                    or await faq_direct(c, user_text) or await outbound_turn(c, user_text) or await txn_turn(c, user_text))
             pst = None
             if not auto:
                 note = c.pop("note", None)
                 c["messages"].append({"role": "user", "content": f"{user_text}\n[service note: {note}]" if note else user_text})
                 pst = await pre_verify(c, user_text)
+            if pst and pst.get("direct"):
+                auto = (pst["direct"], pst["done"])
+                c["messages"].append({"role": "assistant", "content": pst["direct"]})
             text, acts = auto if auto else await run_actions(c, pst)
             acts = (c.pop("pre_acts", None) or []) + acts
             if is_goodbye(user_text) and not c["ended"]:  # safety net: a small model often just says bye
