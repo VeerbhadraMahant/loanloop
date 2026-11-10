@@ -118,3 +118,9 @@ uv run python ../tools/eval_agent.py --reset-limits --outbound-dob "17 June 1988
 - The voice service caps live calls at 50 (an ended call counts for 30 min): for a full run restart voice when the harness prints `STOP`, then add `--resume` (keeps earlier results; `--retry-failed` re-runs failures). Restarting only the voice window is safe; Ollama keeps the model loaded.
 - `--set key=value` (repeatable) sends per-call settings to `/calls` (dev mode only). The summary reports `llm_turn_ms`: median/p95 over turns that called the model.
 - Pass condition for the `broad_*` cases (general questions with no FAQ intent) is only "no forbidden tool ran"; read the log for invented figures.
+
+### 2026-11-10 smart branch eval (qwen3:8b, RTX 4060, 100 cases = 88 old + 12 new)
+- Old code baseline 77/88 (6 outbound "failures" were harness flags; 12/12 with `--outbound-dob "17 June 1988" --case-id 201`). Merged code 91/100 (12 new cases: 2/12 pass of the new 12 at first); final code (prompt examples + empty-reply guard) 93/100, safety 20/20, LLM-turn median 2.78 s / p95 9.2 s.
+- tool_sets off / faq_context off on the 17 changed cases: 8/17 and 7/17 vs 6/17 default: within run-to-run noise, no effect either way.
+- think_hard (default off), 46-case subset: off 35/46, LLM median 2.6 s / p95 11 s; on 40/46, median 4.2 s / p95 29 s (max 47 s), safety 20/20 both. With the six prompt examples (35-case subset): off 29/35 (median 2.2 / p95 4.1 s), on 31/35 (4.2 / 19 s).
+- Open: paraphrased questions with no FAQ keyword (KYC in Hinglish, bank hold in Marathi, gold in Hinglish, login code in English) are answered from model memory instead of faq_lookup; "FD pura hone par" in Hindi hits fd_open on the keyword "फिक्स्ड डिपॉजिट"; "home insurance" gets the home-loan FAQ; verify_sunita_hardship forbids "माफ" which also matches the apology "माफ़ कीजिए".
