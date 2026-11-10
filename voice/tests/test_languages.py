@@ -25,11 +25,14 @@ def test_registry_codes_for_all_modes():
     assert set(va.TTS_LANG) == set(va.STT_LANG) == {"en", "hi", "hinglish", "mr", "bn", "gu", "kn", "ml", "pa", "ta", "te"}
 
 
-def test_without_a_file_the_language_is_not_offered():
+def test_without_a_file_the_language_is_not_offered(tmp_path):
+    shutil.copy(FIXTURE / "languages.json", tmp_path / "languages.json")  # registry only, no ta.json
+    va.load_languages(tmp_path)
     assert va.ACTIVE_LANGS == ["en", "hi", "hinglish", "mr"]
     assert va.detect_language("Tamil", True)[0] == "unsupported"
     assert va.detect_language("என் இஎம்ஐ எவ்வளவு", False)[0] == "unsupported"
     assert "Tamil" not in va.LANG_SORRY
+    va.load_languages()
 
 
 def test_missing_registry_and_invalid_file_do_not_fail(tmp_path):
@@ -73,11 +76,13 @@ def test_word_sets_and_fixed_lines_extended(ta):
     assert [va._tokens(x) for x in ("தமிழ்",)] == [["தமிழ்"]]  # matras stay inside the token
 
 
-def test_reload_drops_the_language_and_its_words():
+def test_reload_drops_the_language_and_its_words(tmp_path):
+    shutil.copy(FIXTURE / "languages.json", tmp_path / "languages.json")
     va.load_languages(FIXTURE)
-    va.load_languages()
+    va.load_languages(tmp_path)
     assert "ta" not in va.LANG_OK and "ஆம்" not in va.AFFIRM_WORDS and "நவம்பர்" not in va._MONTHS_MAP
     assert not va.is_bare_affirmative("ஆம்")
+    va.load_languages()
 
 
 def test_pin_in_indic_digits_is_blocked():
