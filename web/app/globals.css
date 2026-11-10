@@ -1,7 +1,47 @@
 @import "tailwindcss";
 
 /* Warm Ledger Design Tokens (Sahyadri Bank Voice Agent Studio) */
-:root {
+/* Default: Radiant Warm Ledger (Brighter, Crisp Porcelain & High-Contrast Emerald) */
+:root, [data-theme="bright"] {
+  --bg: #FBF9F5;
+  --card: #FFFFFF;
+  --line: #E8E3D8;
+  --fg: #14221A;
+  --muted: #56645A;
+  --primary: #00704E;
+  --primary-fg: #FFFFFF;
+  --accent: #059669;
+  --accent-hover: #047857;
+  --accent-soft: #E6F7EF;
+  --accent-ink: #00704E;
+  --ok-bg: #E8F8EE;
+  --ok-fg: #15803D;
+  --ok-border: #86EFAC;
+  --warn-bg: #FEF9C3;
+  --warn-fg: #B45309;
+  --warn-border: #FDE047;
+  --danger-bg: #FEF2F2;
+  --danger-fg: #DC2626;
+  --danger-line: #FECACA;
+  --sunken: #F4F1EA;
+  --surface: #FFFFFF;
+  --surface-container: #F3EFE8;
+  --surface-container-high: #ECE7DE;
+  --surface-container-low: #F8F5EE;
+  --surface-variant: #E8E3D8;
+  --surface-bright: #FFFFFF;
+  --secondary-container: #D1F4E2;
+  --on-secondary-fixed: #064E3B;
+  --outline-variant: #CCD6CF;
+  --wash-from: #E6F7EF;
+  --wash-to: #FBF9F5;
+  --ring: #059669;
+  --bezel: #14221A;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Classic Subdued Warm Paper (Original DESIGN.md §2.1) */
+[data-theme="classic"] {
   --bg: #FAF7F2;
   --card: #FFFFFF;
   --line: #E4DED3;
@@ -36,7 +76,6 @@
   --wash-to: #FAF7F2;
   --ring: #00513A;
   --bezel: #1F2A24;
-  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .dark, [data-theme="dark"] {
@@ -178,7 +217,7 @@ body {
 .btn-primary {
   background: var(--primary);
   color: var(--primary-fg);
-  box-shadow: 0 1px 2px rgba(0, 81, 58, 0.15);
+  box-shadow: 0 1px 3px rgba(0, 112, 78, 0.2);
 }
 .btn-secondary {
   background: var(--card);

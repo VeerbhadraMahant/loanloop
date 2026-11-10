@@ -265,6 +265,12 @@ export function SidebarNav() {
           ))}
         </nav>
 
+        {/* Theme Selector Strip */}
+        <div className="px-3 py-2 border-t border-line shrink-0 bg-surface-bright/30 flex items-center justify-between">
+          <span className="font-mono text-[10px] text-muted uppercase font-semibold">Theme</span>
+          <ThemeSelector />
+        </div>
+
         {/* Live SSE Stream Telemetry */}
         <div className="p-3 border-t border-line shrink-0 bg-surface-bright/50">
           <div className="flex items-center gap-2 p-2 rounded-lg bg-ok-bg text-ok-fg text-xs font-mono border border-ok-border">
@@ -291,6 +297,92 @@ export function SidebarNav() {
         </div>
       </aside>
     </>
+  );
+}
+
+export function ThemeSelector() {
+  const [theme, setTheme] = useState<"bright" | "classic" | "dark">("bright");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    try {
+      const stored = localStorage.getItem("loanloop.theme") as "bright" | "classic" | "dark" | null;
+      if (stored) {
+        setTheme(stored);
+        document.documentElement.setAttribute("data-theme", stored);
+      } else {
+        setTheme("bright");
+        document.documentElement.setAttribute("data-theme", "bright");
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const changeTheme = (newTheme: "bright" | "classic" | "dark") => {
+    setTheme(newTheme);
+    try {
+      localStorage.setItem("loanloop.theme", newTheme);
+      document.documentElement.setAttribute("data-theme", newTheme);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  if (!mounted) {
+    return <div className="h-7 w-20 rounded-md bg-sunken animate-pulse" />;
+  }
+
+  return (
+    <div
+      className="inline-flex items-center p-0.5 rounded-lg bg-sunken border border-line text-[11px] font-mono shadow-xs"
+      role="group"
+      aria-label="Theme selector"
+    >
+      <button
+        type="button"
+        onClick={() => changeTheme("bright")}
+        className={`px-2 py-0.5 rounded transition-all flex items-center gap-1 cursor-pointer ${
+          theme === "bright"
+            ? "bg-card text-primary font-bold shadow-xs border border-line"
+            : "text-muted hover:text-fg"
+        }`}
+        title="Radiant Warm Ledger: Brighter, crisp porcelain & vivid emerald"
+        aria-label="Radiant bright theme"
+      >
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+        <span>Bright</span>
+      </button>
+      <button
+        type="button"
+        onClick={() => changeTheme("classic")}
+        className={`px-2 py-0.5 rounded transition-all flex items-center gap-1 cursor-pointer ${
+          theme === "classic"
+            ? "bg-card text-fg font-bold shadow-xs border border-line"
+            : "text-muted hover:text-fg"
+        }`}
+        title="Classic Warm Paper: Subdued original (§2.1)"
+        aria-label="Classic theme"
+      >
+        <span className="w-1.5 h-1.5 rounded-full bg-[#8A5A00]"></span>
+        <span className="hidden sm:inline">Classic</span>
+      </button>
+      <button
+        type="button"
+        onClick={() => changeTheme("dark")}
+        className={`px-2 py-0.5 rounded transition-all flex items-center gap-1 cursor-pointer ${
+          theme === "dark"
+            ? "bg-card text-primary font-bold shadow-xs border border-line"
+            : "text-muted hover:text-fg"
+        }`}
+        title="Control Room Dark: (§2.4)"
+        aria-label="Dark theme"
+      >
+        <span className="w-1.5 h-1.5 rounded-full bg-[#3FB98A]"></span>
+        <span className="hidden sm:inline">Dark</span>
+      </button>
+    </div>
   );
 }
 
@@ -344,6 +436,7 @@ export function AppHeader({
 
       <div className="flex items-center gap-3 shrink-0">
         {status}
+        <ThemeSelector />
         <div className="hidden lg:flex items-center px-2.5 py-1 rounded-md bg-sunken text-muted text-xs font-mono border border-line">
           Bank Sandbox v2.4
         </div>

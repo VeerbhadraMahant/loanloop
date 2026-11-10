@@ -594,7 +594,7 @@ export default function CallApp({ customer, caseId }: { customer: string; caseId
                 className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border shadow-xs ${
                   viewMode === "simulation"
                     ? "bg-primary text-primary-fg border-primary shadow-md ring-2 ring-primary/30"
-                    : "bg-secondary-container hover:bg-[#c9ddd3] text-primary border-primary/30 hover:border-primary"
+                    : "bg-secondary-container hover:bg-accent-soft text-primary border-primary/30 hover:border-primary"
                 }`}
                 title={
                   viewMode === "simulation"
