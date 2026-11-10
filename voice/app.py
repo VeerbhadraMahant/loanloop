@@ -106,6 +106,7 @@ KNOBS = [
     _k("tts_speed", "TTS speed", "number", 1.0, "Speech", "Speech rate multiplier.", min=0.85, max=1.15, step=0.05),
     _k("tool_hints", "Tool hints", "bool", True, "Conversation", "Per-tool nudges added to tool descriptions for the small local model."),
     _k("tool_sets", "Tool sets by call state", "bool", True, "Conversation", "On: the model sees only the tools of the call state (inbound unverified / inbound verified / outbound). Off: all tools every turn."),
+    _k("think_hard", "Think on hard turns", "bool", False, "LLM", "Ollama only: qwen3 thinking mode on LLM turns that look hard (18+ words, several requests, or after a tool error). The thinking text is never spoken or stored."),
     _k("faq_context", "FAQ grounding", "bool", True, "Conversation", "On: the top 3 bank FAQ answers are appended to the current general-question turn (never stored in history)."),
 ]
 KNOB_BY_KEY = {k["key"]: k for k in KNOBS}
@@ -860,6 +861,26 @@ def faq_reference(text: str, lang: str, n: int = 3) -> str:
     return _FAQ_HEAD.get(lang, _FAQ_HEAD["en"]) + "\n" + "\n".join(f"- {a}" for a in top) if top else ""
 
 
+THINK_WORDS = 18  # a turn this long (in tokens) counts as hard
+
+
+def is_hard_turn(text: str, msgs: list[dict]) -> bool:
+    """A turn that reached the LLM and looks hard: long, several requests / questions, or the last tool call failed."""
+    t = _tokens(text or "")
+    if len(t) >= THINK_WORDS or set(t) & _MULTI_WORDS or sum(w in _QUESTION_WORDS for w in t) >= 2 or (text or "").count("?") >= 2:
+        return True
+    last = msgs[-1] if msgs else None
+    if isinstance(last, dict) and last.get("role") == "tool":
+        try:
+            return json.loads(last.get("content") or "{}").get("ok") is False
+        except (ValueError, AttributeError):
+            return False
+    return False
+
+
+_THINK_TAG = re.compile(r"<think>.*?(?:</think>|$)", re.S)
+
+
 _ACTION_STEMS = ("update", "change", "close", "send", "raise", "cancel", "block", "apply", "badal", "badla", "band", "bhej", "bhejo",
                  "बदल", "बंद", "भेज", "अपडेट", "पाठव", "रद्द")
 _QUESTION_WORDS = {"how", "what", "when", "why", "where", "which", "can", "kaise", "kya", "kab", "kyun", "kahan", "kaun",
@@ -1221,13 +1242,21 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
                 opts["temperature"] = st_["temperature"]
             if st_["max_tokens"]:
                 opts["num_predict"] = st_["max_tokens"]
+            think = bool(st_["think_hard"] and is_hard_turn(c.get("user_text", ""), msgs))
+            if think and not opts.get("num_predict"):
+                opts["num_predict"] = 1500  # bounds a rambling thought
             r = await http.post(f"{cfg.ollama_url}/api/chat", json={
                 "model": c["model"], "messages": msgs, "tools": tl, "stream": False,
-                "think": False, "keep_alive": -1, "options": opts})
+                "think": think, "keep_alive": -1, "options": opts})
             r.raise_for_status()
             msg = r.json()["message"]
             if not isinstance(msg, dict):
                 raise ValueError
+            msg.pop("thinking", None)  # never spoken, never stored in history
+            if think:
+                log.info("call=%s think=1", c["id"])
+                if isinstance(msg.get("content"), str):
+                    msg["content"] = _THINK_TAG.sub("", msg["content"]).strip()
             return msg
         except providers.ProviderError as e:
             raise bad_gateway(p, c["id"], e.status) from None
@@ -1927,6 +1956,8 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
                         c.pop(k, None)
                 raise
             c["ts"] = time.time()
+            if not (text or "").strip() and not c["ended"]:  # the model sometimes returns nothing: never answer with silence
+                text = REPROMPT.get(c["language"], REPROMPT["hinglish"])
             text = redact_agent(text, c.get("refs"))
             aud = tts_defer(c, text, text in REPROMPT.values()) if text and want_tts and stream else {}
             audio = await tts(text, c["language"], call_id, c["set"]) if text and want_tts and not stream else ""
