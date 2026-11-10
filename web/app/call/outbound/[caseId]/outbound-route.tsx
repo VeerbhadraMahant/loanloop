@@ -7,3 +7,4 @@ export default function OutboundRoute() {
   if (!caseId || !/^\d{1,9}$/.test(caseId)) notFound();
   return <CallApp customer={`Outbound case ${caseId}`} caseId={Number(caseId)} />;
 }
+

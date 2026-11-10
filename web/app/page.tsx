@@ -1,5 +1,6 @@
+"use client";
 import Link from "next/link";
-import { TopNav } from "@/components/top-nav";
+import { SidebarLayout } from "@/components/sidebar-nav";
 import { Button, Card, Eyebrow, Icon, StatTile, type IconName } from "@/components/ui";
 
 const stats = [
@@ -46,21 +47,20 @@ function Waveform() {
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-bg">
-      <TopNav />
+    <SidebarLayout title="Voice Banking Studio" sub="Sahyadri Finance Bank">
       <main>
         {/* Hero Section */}
         <section
           className="relative overflow-hidden border-b border-line"
           style={{ background: "linear-gradient(180deg, var(--wash-from) 0%, var(--wash-to) 100%)" }}
         >
-          <div className="mx-auto max-w-5xl px-4 pb-12 pt-16 text-center sm:px-6 sm:pt-24">
+          <div className="mx-auto max-w-5xl px-4 pb-12 pt-12 text-center sm:px-6 sm:pt-16">
             <Eyebrow>
               <span className="h-2 w-2 rounded-full bg-primary" />
               Sahyadri Finance Bank · Voice Agent Studio
             </Eyebrow>
 
-            <h1 className="serif mx-auto mt-6 max-w-4xl text-5xl leading-[1.05] sm:text-7xl lg:text-[76px] text-fg font-semibold tracking-tight">
+            <h1 className="serif mx-auto mt-6 max-w-4xl text-5xl leading-[1.05] sm:text-6xl lg:text-[72px] text-fg font-semibold tracking-tight">
               Every call ends with <span className="italic text-primary">the work done.</span>
             </h1>
 
@@ -83,13 +83,13 @@ export default function Home() {
               </Button>
             </div>
           </div>
-          <div className="mx-auto h-36 max-w-5xl px-4 pb-6 sm:h-44">
+          <div className="mx-auto h-32 max-w-5xl px-4 pb-6 sm:h-40">
             <Waveform />
           </div>
         </section>
 
         {/* Key Metrics Strip */}
-        <section aria-label="Key numbers" className="mx-auto max-w-5xl px-4 pt-12 sm:px-6">
+        <section aria-label="Key numbers" className="mx-auto max-w-5xl px-4 pt-10 sm:px-6">
           <div className="grid grid-cols-1 gap-4 min-[480px]:grid-cols-2 lg:grid-cols-4">
             {stats.map((s) => (
               <StatTile key={s.caption} {...s} />
@@ -98,13 +98,13 @@ export default function Home() {
         </section>
 
         {/* Safety & Zero Secrets Policy */}
-        <section aria-labelledby="safe" className="mx-auto max-w-5xl px-4 pt-20 sm:px-6">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+        <section aria-labelledby="safe" className="mx-auto max-w-5xl px-4 pt-16 sm:px-6">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
             <div>
-              <h2 id="safe" className="serif text-3xl sm:text-4xl text-fg font-semibold">
+              <h2 id="safe" className="serif text-2xl sm:text-3xl text-fg font-semibold">
                 How it stays safe
               </h2>
-              <p className="text-sm text-muted mt-1">
+              <p className="text-xs sm:text-sm text-muted mt-1">
                 Zero Secrets Protocol with out-of-band bilateral mobile pairing.
               </p>
             </div>
@@ -115,18 +115,18 @@ export default function Home() {
 
           <div className="grid gap-4 md:grid-cols-3">
             {safety.map((s) => (
-              <Card key={s.title} className="p-6">
-                <span className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-sunken text-primary">
+              <Card key={s.title} className="p-5">
+                <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-sunken text-primary">
                   <Icon name={s.icon} size={20} />
                 </span>
                 <h3 className="font-semibold text-fg text-base">{s.title}</h3>
-                <p className="mt-2 text-xs sm:text-sm text-muted leading-relaxed">{s.body}</p>
+                <p className="mt-2 text-xs text-muted leading-relaxed">{s.body}</p>
               </Card>
             ))}
           </div>
 
           {/* Persona phone shortcuts */}
-          <div className="mt-8 p-4 rounded-xl bg-card border border-line flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div className="mt-6 p-4 rounded-xl bg-card border border-line flex flex-wrap items-center justify-between gap-3 text-xs">
             <span className="text-muted">
               Explore standalone simulated handsets:
             </span>
@@ -146,10 +146,10 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="mx-auto mt-20 max-w-5xl border-t border-line px-4 py-8 text-xs text-muted sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <footer className="mx-auto mt-16 max-w-5xl border-t border-line px-4 py-6 text-xs text-muted sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
         <p>Sahyadri Finance Bank · LoanLoop Voice Banking Desk</p>
         <p className="font-mono">Bank Sandbox v2.4 · Synthetic Grounded Data</p>
       </footer>
-    </div>
+    </SidebarLayout>
   );
 }

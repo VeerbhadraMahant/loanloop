@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ButtonHTMLAttributes } from "react";
-import { TopNav } from "@/components/top-nav";
+import { SidebarLayout } from "@/components/sidebar-nav";
 
 export function Wordmark() {
   return (
@@ -10,7 +10,7 @@ export function Wordmark() {
   );
 }
 
-/** Page chrome: top bar + content. */
+/** Page chrome: vertical sidebar + content. */
 export function Shell({
   title,
   sub,
@@ -23,21 +23,20 @@ export function Shell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-bg">
-      <TopNav status={status} />
-      <main className="mx-auto max-w-[1440px] px-4 pb-16 pt-6 sm:px-6 lg:px-8">
-        <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-line pb-5">
+    <SidebarLayout title={title} sub={sub} status={status}>
+      <div className="mx-auto max-w-[1440px] px-4 pb-16 pt-5 sm:px-6 lg:px-8">
+        <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-line pb-4">
           <div>
             <h1 className="serif text-3xl font-semibold leading-tight sm:text-4xl text-fg">
               {title}
             </h1>
-            {sub && <p className="mt-1 text-sm text-muted max-w-3xl leading-relaxed">{sub}</p>}
+            {sub && <p className="mt-1 text-xs sm:text-sm text-muted max-w-3xl leading-relaxed">{sub}</p>}
           </div>
           {status && <div className="shrink-0">{status}</div>}
         </div>
         {children}
-      </main>
-    </div>
+      </div>
+    </SidebarLayout>
   );
 }
 

@@ -7,6 +7,7 @@ import { PcmPlayer } from "@/lib/pcm-player";
 import { langLabel } from "@/lib/languages";
 import { LLMS, SessionSummary, TurnStat, type LlmId, type Stat, type Timings, type Turn } from "@/components/turn-stats";
 import { PhoneHandset } from "@/app/phone/[customer]/phone-app";
+import { SidebarLayout } from "@/components/sidebar-nav";
 
 const VOICE = process.env.NEXT_PUBLIC_VOICE_URL ?? "http://127.0.0.1:8100";
 const MIN_SECONDS = 0.3;
@@ -523,8 +524,19 @@ export default function CallApp({ customer, caseId }: { customer: string; caseId
   const totalMs = lastTiming ? Math.round(lastTiming.llm_ms + (lastTiming.tts_ms ?? 0) + (lastTiming.gateway_ms ?? 0) + (lastTiming.stt_ms ?? 0)) : null;
 
   return (
-    <div className="min-h-screen bg-bg">
-      <main className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <SidebarLayout
+      title="Live Calling Desk"
+      sub={`${persona.name} · ${persona.loan}`}
+      status={
+        <div className="flex items-center gap-2">
+          <Pill tone={statusTone[status]}>
+            <span role="status" aria-live="polite">{status}</span>
+          </Pill>
+          {lang && <Pill>{langLabel(lang)}</Pill>}
+        </div>
+      }
+    >
+      <main className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
         {/* TOP UTILITY BAR: Test Case & Live Context Controls */}
         <section className="w-full mb-4">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 rounded-xl bg-card border border-line shadow-xs">
@@ -729,7 +741,7 @@ export default function CallApp({ customer, caseId }: { customer: string; caseId
                 role="log"
                 aria-live="polite"
                 aria-label="Call transcript"
-                className="p-5 flex flex-col gap-4 min-h-[380px] max-h-[500px] overflow-y-auto bg-surface-bright/50"
+                className="p-4 sm:p-5 flex flex-col gap-3.5 h-[360px] xl:h-[calc(100vh-420px)] min-h-[280px] max-h-[460px] overflow-y-auto bg-surface-bright/50"
                 id="transcript-stream"
               >
                 {msgs.length === 0 ? (
@@ -980,12 +992,12 @@ export default function CallApp({ customer, caseId }: { customer: string; caseId
           </div>
 
           {/* RIGHT 4 COLUMNS: Borrower Phone Sidecar */}
-          <div className="xl:col-span-4 flex flex-col gap-4">
+          <div className="xl:col-span-4 xl:sticky xl:top-3 self-start flex flex-col gap-2.5">
             <PhoneHandset customer={customer} isSidecar />
 
             {/* Sidecar Explainer Note */}
-            <div className="p-3.5 rounded-xl bg-surface-container-low border border-line text-xs text-muted flex items-start gap-2.5">
-              <Icon name="phone" size={16} />
+            <div className="p-2.5 rounded-xl bg-surface-container-low border border-line text-[11px] text-muted flex items-start gap-2">
+              <Icon name="phone" size={14} />
               <div>
                 <span className="font-semibold text-fg">Sidecar Synchronizer:</span> Demonstrates real-time out-of-band mobile verification without requiring caller speech verification of confidential keys.
               </div>
@@ -993,6 +1005,6 @@ export default function CallApp({ customer, caseId }: { customer: string; caseId
           </div>
         </div>
       </main>
-    </div>
+    </SidebarLayout>
   );
 }

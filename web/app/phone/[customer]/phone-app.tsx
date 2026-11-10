@@ -92,17 +92,27 @@ export function PhoneHandset({ customer, isSidecar }: { customer: string; isSide
   const h2 = "mb-2 text-xs font-semibold uppercase tracking-wider text-muted flex items-center justify-between";
 
   const chassis = (
-    <div className="w-full max-w-[390px] mx-auto bg-card rounded-[2.5rem] shadow-xl p-3 border-4 border-surface-container">
-      <div className="w-full bg-surface-bright rounded-[2rem] overflow-hidden flex flex-col min-h-[720px] shadow-inner relative border border-line">
+    <div
+      className={`w-full mx-auto bg-card rounded-[2.5rem] shadow-xl p-3 border-4 border-surface-container ${
+        isSidecar
+          ? "h-[640px] max-h-[calc(100vh-170px)] min-h-[500px] max-w-[370px] flex flex-col"
+          : "max-w-[390px] min-h-[720px]"
+      }`}
+    >
+      <div
+        className={`w-full bg-surface-bright rounded-[2rem] overflow-hidden flex flex-col shadow-inner relative border border-line ${
+          isSidecar ? "h-full flex-1 min-h-0" : "min-h-[720px]"
+        }`}
+      >
         {/* Hardware Notch */}
-        <div className="w-full pt-2 flex justify-center bg-card">
+        <div className="w-full pt-2 flex justify-center bg-card shrink-0">
           <div className="w-24 h-4 bg-fg rounded-full flex items-center justify-end px-2">
             <span className="w-1.5 h-1.5 rounded-full bg-sunken"></span>
           </div>
         </div>
 
         {/* Status Bar */}
-        <div className="w-full px-6 py-2 bg-card flex items-center justify-between text-fg font-mono text-xs">
+        <div className="w-full px-6 py-2 bg-card flex items-center justify-between text-fg font-mono text-xs shrink-0">
           <span className="font-semibold">10:42</span>
           <div className="flex items-center gap-1.5 text-muted">
             <span className="text-[11px] font-mono">5G</span>
@@ -111,7 +121,7 @@ export function PhoneHandset({ customer, isSidecar }: { customer: string; isSide
         </div>
 
         {/* App Header */}
-        <div className="px-5 py-3 bg-card border-b border-line flex items-center justify-between">
+        <div className="px-5 py-2.5 bg-card border-b border-line flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-primary text-primary-fg flex items-center justify-center font-bold text-xs shadow-xs">
               S
@@ -132,7 +142,7 @@ export function PhoneHandset({ customer, isSidecar }: { customer: string; isSide
         </div>
 
         {/* Realtime Channel Link Strip */}
-        <div className="bg-surface-container-low px-4 py-2 border-b border-line flex items-center justify-between text-xs text-muted">
+        <div className="bg-surface-container-low px-4 py-1.5 border-b border-line flex items-center justify-between text-xs text-muted shrink-0">
           <span className="flex items-center gap-1.5 font-medium">
             <Icon name="sync" size={13} />
             Voice desk paired via secure SSE
@@ -140,8 +150,8 @@ export function PhoneHandset({ customer, isSidecar }: { customer: string; isSide
           <span className="font-mono text-[10px] text-primary font-semibold">Live Mode</span>
         </div>
 
-        {/* Scrollable Main Area */}
-        <div className="flex-1 space-y-4 overflow-y-auto p-4">
+        {/* Scrollable Main Area — SCROLLS INTERNALLY INSIDE THE PHONE HANDSET */}
+        <div className="flex-1 min-h-0 space-y-3.5 overflow-y-auto p-3.5 overscroll-contain">
           <ErrorBox error={err} />
 
           {/* PINNED IN-APP TIER 2 APPROVAL CARD */}
@@ -149,21 +159,21 @@ export function PhoneHandset({ customer, isSidecar }: { customer: string; isSide
             <section
               key={pending.id}
               aria-labelledby="ap"
-              className="enter rounded-xl border border-warn-border bg-warn-bg p-4 shadow-sm relative overflow-hidden"
+              className="enter rounded-xl border border-warn-border bg-warn-bg p-3.5 shadow-sm relative overflow-hidden"
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-warn-border/60 text-warn-fg font-mono text-[11px] font-semibold">
-                  <Icon name="shield" size={13} />
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-warn-border/60 text-warn-fg font-mono text-[11px] font-semibold">
+                  <Icon name="shield" size={12} />
                   In-Call Authorization Needed
                 </span>
               </div>
 
-              <div className="flex items-start justify-between gap-3 mb-3">
+              <div className="flex items-start justify-between gap-3 mb-2.5">
                 <div className="flex-1">
-                  <h4 id="ap" className="serif text-base font-semibold text-fg leading-snug">
+                  <h4 id="ap" className="serif text-sm font-semibold text-fg leading-snug">
                     {pending.purpose}
                   </h4>
-                  <p className="font-sans text-xs text-muted mt-1 leading-relaxed">
+                  <p className="font-sans text-[11px] text-muted mt-1 leading-relaxed">
                     Requested by Voice Agent during your live call. Authorizes requested changes to your ledger.
                   </p>
                 </div>
@@ -180,7 +190,7 @@ export function PhoneHandset({ customer, isSidecar }: { customer: string; isSide
                 <Button
                   disabled={busy}
                   onClick={() => act(pending.id, "approve")}
-                  className="w-full h-11 text-center justify-center font-semibold text-xs"
+                  className="w-full h-10 text-center justify-center font-semibold text-xs"
                 >
                   <Icon name="check" size={14} />
                   Approve (Tap)
@@ -189,14 +199,14 @@ export function PhoneHandset({ customer, isSidecar }: { customer: string; isSide
                   variant="secondary"
                   disabled={busy}
                   onClick={() => act(pending.id, "deny")}
-                  className="w-full h-11 text-center justify-center font-semibold text-xs border-danger-line text-danger-fg hover:bg-danger-bg"
+                  className="w-full h-10 text-center justify-center font-semibold text-xs border-danger-line text-danger-fg hover:bg-danger-bg"
                 >
                   <Icon name="x" size={14} />
                   Deny
                 </Button>
               </div>
 
-              <div className="mt-3 pt-2 border-t border-warn-border/40 text-[11px] text-muted text-center italic">
+              <div className="mt-2.5 pt-2 border-t border-warn-border/40 text-[10px] text-muted text-center italic">
                 Zero Secrets Protocol: Sahyadri never asks you to tell OTP/PIN numbers to callers.
               </div>
             </section>
@@ -217,7 +227,7 @@ export function PhoneHandset({ customer, isSidecar }: { customer: string; isSide
             ) : !sms.data?.length ? (
               <Empty icon="inbox">No messages yet. Texts sent during a call appear here.</Empty>
             ) : (
-              <ul className="space-y-2.5">
+              <ul className="space-y-2">
                 {[...sms.data]
                   .sort((a, b) => b.created_at.localeCompare(a.created_at))
                   .map((m, i) => (
@@ -226,9 +236,9 @@ export function PhoneHandset({ customer, isSidecar }: { customer: string; isSide
                       className="enter rounded-xl border border-line bg-card p-3 shadow-xs"
                       style={stagger(i)}
                     >
-                      <div className="flex items-center justify-between text-xs text-muted font-mono mb-1.5">
+                      <div className="flex items-center justify-between text-xs text-muted font-mono mb-1">
                         <span className="font-semibold text-primary">VK-SAHYADRI</span>
-                        <span>{fmtTime(m.created_at)}</span>
+                        <span className="text-[10px]">{fmtTime(m.created_at)}</span>
                       </div>
                       <p className="text-xs text-fg leading-relaxed">{m.body}</p>
                       <button
@@ -258,10 +268,10 @@ export function PhoneHandset({ customer, isSidecar }: { customer: string; isSide
                 {[...appr.data]
                   .sort((a, b) => b.created_at.localeCompare(a.created_at))
                   .map((a) => (
-                    <li key={a.id} className="flex items-center justify-between gap-3 px-3 py-2.5">
+                    <li key={a.id} className="flex items-center justify-between gap-3 px-3 py-2">
                       <span className="min-w-0">
                         <span className="block font-medium text-fg">{a.purpose}</span>
-                        <span className="font-mono text-[11px] text-muted">{fmtTime(a.created_at)}</span>
+                        <span className="font-mono text-[10px] text-muted">{fmtTime(a.created_at)}</span>
                       </span>
                       <Pill
                         tone={statusTone[a.status as keyof typeof statusTone] ?? "neutral"}
@@ -277,7 +287,7 @@ export function PhoneHandset({ customer, isSidecar }: { customer: string; isSide
         </div>
 
         {/* Mobile App Bottom Nav Bar */}
-        <div className="bg-card px-6 py-2.5 border-t border-line flex items-center justify-between text-muted text-[10px]">
+        <div className="bg-card px-6 py-2 border-t border-line flex items-center justify-between text-muted text-[10px] shrink-0">
           <div className="flex flex-col items-center gap-0.5 text-primary font-semibold">
             <Icon name="lock" size={14} />
             <span>Home</span>
@@ -297,7 +307,7 @@ export function PhoneHandset({ customer, isSidecar }: { customer: string; isSide
         </div>
 
         {/* Home Indicator */}
-        <div className="w-full pb-1 pt-1 bg-card flex justify-center">
+        <div className="w-full pb-1 pt-1 bg-card flex justify-center shrink-0">
           <div className="w-32 h-1 bg-outline-variant rounded-full"></div>
         </div>
       </div>

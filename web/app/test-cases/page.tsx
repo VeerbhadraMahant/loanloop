@@ -1,6 +1,5 @@
 "use client";
-import Link from "next/link";
-import { TopNav } from "@/components/top-nav";
+import { SidebarLayout } from "@/components/sidebar-nav";
 import { Button, Card, Icon } from "@/components/ui";
 
 const testCases = [
@@ -68,11 +67,10 @@ const testCases = [
 
 export default function TestCasesPage() {
   return (
-    <div className="min-h-screen bg-bg">
-      <TopNav />
-      <main className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <SidebarLayout title="Test Cases" sub="Deterministic Evaluation & Scenario Launcher">
+      <main className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Editorial Header Section */}
-        <section className="pb-8">
+        <section className="pb-6">
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
             <div className="max-w-3xl">
               <div className="flex items-center gap-2 mb-2">
@@ -83,17 +81,17 @@ export default function TestCasesPage() {
                 <span className="text-muted font-mono text-xs">/</span>
                 <span className="font-mono text-xs text-muted">Core Engine 3.1.2</span>
               </div>
-              <h1 className="serif text-4xl sm:text-5xl lg:text-6xl text-fg tracking-tight leading-tight mb-3">
+              <h1 className="serif text-3xl sm:text-4xl lg:text-5xl text-fg tracking-tight leading-tight mb-2">
                 Banking by voice, <span className="italic text-primary">safe by design.</span>
               </h1>
-              <p className="text-base sm:text-lg text-muted leading-relaxed max-w-2xl">
+              <p className="text-sm sm:text-base text-muted leading-relaxed max-w-2xl">
                 Launch deterministic test scenarios on the unified Calling Desk. Test inbound servicing, outbound recovery, hardship de-escalation, and adversarial prompt injections with real-time ledger grounding.
               </p>
             </div>
 
             {/* Telemetry Ribbon */}
             <div className="shrink-0 flex flex-col items-start lg:items-end gap-2">
-              <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-xl bg-card border border-line shadow-xs text-xs font-mono">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-card border border-line shadow-xs text-xs font-mono">
                 <span className="w-2 h-2 rounded-full bg-ok-fg"></span>
                 <span className="text-fg font-medium">4 Presets Active</span>
                 <span className="text-line">|</span>
@@ -109,7 +107,7 @@ export default function TestCasesPage() {
           </div>
 
           {/* Quick Metrics Strip */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
             <Card className="p-4 flex items-center justify-between">
               <div>
                 <div className="font-mono text-xs text-muted uppercase tracking-wider">Evaluation Latency</div>
@@ -117,7 +115,7 @@ export default function TestCasesPage() {
                   28<span className="text-xs text-muted font-normal">ms</span>
                 </div>
               </div>
-              <Icon name="timer" size={28} />
+              <Icon name="timer" size={26} />
             </Card>
 
             <Card className="p-4 flex items-center justify-between">
@@ -127,7 +125,7 @@ export default function TestCasesPage() {
                   100<span className="text-xs text-ok-fg font-normal">%</span>
                 </div>
               </div>
-              <Icon name="verified" size={28} />
+              <Icon name="verified" size={26} />
             </Card>
 
             <Card className="p-4 flex items-center justify-between">
@@ -135,7 +133,7 @@ export default function TestCasesPage() {
                 <div className="font-mono text-xs text-muted uppercase tracking-wider">Outbound RBI Guard</div>
                 <div className="font-mono text-2xl font-bold text-fg mt-0.5">08:00–19:00</div>
               </div>
-              <Icon name="clock" size={28} />
+              <Icon name="clock" size={26} />
             </Card>
 
             <Card className="p-4 flex items-center justify-between">
@@ -145,16 +143,16 @@ export default function TestCasesPage() {
                   6 <span className="text-xs text-muted font-normal">Sandbox Nodes</span>
                 </div>
               </div>
-              <Icon name="support_agent" size={28} />
+              <Icon name="support_agent" size={26} />
             </Card>
           </div>
         </section>
 
         {/* Deterministic Test Scenarios Grid */}
-        <section className="pb-16">
-          <div className="flex items-center justify-between mb-5">
+        <section className="pb-12">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-baseline gap-2">
-              <h2 className="serif text-2xl font-semibold text-fg">Deterministic Test Scenarios</h2>
+              <h2 className="serif text-xl sm:text-2xl font-semibold text-fg">Deterministic Test Scenarios</h2>
               <span className="font-mono text-xs text-muted">Sandbox v2.4 Active Profiles</span>
             </div>
             <span className="hidden sm:inline-block text-xs text-muted">
@@ -162,7 +160,7 @@ export default function TestCasesPage() {
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {testCases.map((tc) => (
               <Card
                 key={tc.id}
@@ -190,7 +188,7 @@ export default function TestCasesPage() {
                   </div>
 
                   <div className="flex items-start gap-3 mb-3">
-                    <div className="w-11 h-11 rounded-full bg-secondary-container text-primary flex items-center justify-center font-bold text-sm shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-secondary-container text-primary flex items-center justify-center font-bold text-sm shrink-0">
                       {tc.avatar}
                     </div>
                     <div>
@@ -302,6 +300,6 @@ export default function TestCasesPage() {
           </div>
         </section>
       </main>
-    </div>
+    </SidebarLayout>
   );
 }
