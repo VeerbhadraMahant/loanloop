@@ -77,14 +77,58 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-const navItems: { href: string; label: string; icon: IconName; badge?: string }[] = [
-  { href: "/", label: "Home", icon: "shield" },
-  { href: "/test-cases", label: "Test Cases", icon: "tune", badge: "4 Presets" },
-  { href: "/call/priya", label: "Live Calling Desk", icon: "phone_in_talk", badge: "12-Col" },
-  { href: "/ops", label: "Ops Console", icon: "speed" },
-  { href: "/collections", label: "Collections", icon: "database" },
-  { href: "/metrics", label: "Metrics & SLA", icon: "verified" },
-  { href: "/dev", label: "Developer Lab", icon: "tune" },
+type NavItem = {
+  href: string;
+  label: string;
+  icon: IconName;
+  badge?: string;
+  badgeTone?: "default" | "dev" | "ok" | "primary";
+  isDev?: boolean;
+};
+
+type NavSection = {
+  title: string;
+  items: NavItem[];
+};
+
+const navSections: NavSection[] = [
+  {
+    title: "Banking Operations",
+    items: [
+      { href: "/", label: "Home", icon: "shield" },
+      { href: "/call/priya", label: "Calling Desk", icon: "phone_in_talk", badge: "Live", badgeTone: "ok" },
+      { href: "/collections", label: "Collections", icon: "database" },
+      { href: "/ops", label: "Ops Console", icon: "speed" },
+    ],
+  },
+  {
+    title: "Developer & Testing",
+    items: [
+      {
+        href: "/dev",
+        label: "Developer Lab",
+        icon: "tune",
+        badge: "DEV LAB",
+        badgeTone: "dev",
+        isDev: true,
+      },
+      {
+        href: "/test-cases",
+        label: "Test Cases",
+        icon: "verified",
+        badge: "5 Presets",
+        badgeTone: "primary",
+        isDev: true,
+      },
+      {
+        href: "/metrics",
+        label: "Metrics & SLA",
+        icon: "speed",
+        badge: "p95 Proof",
+        isDev: true,
+      },
+    ],
+  },
 ];
 
 export function SidebarNav() {
@@ -152,44 +196,73 @@ export function SidebarNav() {
           </span>
         </div>
 
-        {/* Vertical Navigation Items */}
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto" aria-label="Main menu">
-          {navItems.map((item) => {
-            const active =
-              item.href === "/"
-                ? path === "/"
-                : item.href === "/call/priya"
-                ? path.startsWith("/call")
-                : path.startsWith(item.href);
-
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium transition-all ${
-                  active
-                    ? "bg-secondary-container text-primary font-semibold shadow-xs border-l-4 border-primary"
-                    : "text-muted hover:text-fg hover:bg-sunken"
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <Icon name={item.icon} size={16} />
-                  <span>{item.label}</span>
-                </div>
-                {item.badge && (
-                  <span
-                    className={`font-mono text-[10px] px-1.5 py-0.5 rounded ${
-                      active
-                        ? "bg-primary text-primary-fg font-semibold"
-                        : "bg-sunken text-muted"
-                    }`}
-                  >
-                    {item.badge}
+        {/* Vertical Navigation Items grouped by section */}
+        <nav className="flex-1 p-3 space-y-4 overflow-y-auto" aria-label="Main menu">
+          {navSections.map((section) => (
+            <div key={section.title} className="space-y-1">
+              <div className="px-3 pt-1 pb-1 flex items-center justify-between">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-muted font-bold">
+                  {section.title}
+                </span>
+                {section.title.includes("Developer") && (
+                  <span className="inline-flex items-center gap-1 font-mono text-[9px] text-warn-fg font-bold bg-warn-bg px-1.5 py-0.5 rounded border border-warn-border">
+                    SANDBOX
                   </span>
                 )}
-              </Link>
-            );
-          })}
+              </div>
+
+              <div className="space-y-1">
+                {section.items.map((item) => {
+                  const active =
+                    item.href === "/"
+                      ? path === "/"
+                      : item.href === "/call/priya"
+                      ? path.startsWith("/call")
+                      : path.startsWith(item.href);
+
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                        active
+                          ? item.isDev
+                            ? "bg-warn-bg text-warn-fg font-semibold shadow-xs border-l-4 border-warn-fg"
+                            : "bg-secondary-container text-primary font-semibold shadow-xs border-l-4 border-primary"
+                          : item.isDev
+                          ? "text-fg/80 hover:text-fg hover:bg-warn-bg/25 font-medium"
+                          : "text-muted hover:text-fg hover:bg-sunken"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Icon name={item.icon} size={15} />
+                        <span>{item.label}</span>
+                      </div>
+                      {item.badge && (
+                        <span
+                          className={`font-mono text-[10px] px-1.5 py-0.5 rounded font-semibold ${
+                            item.badgeTone === "dev"
+                              ? active
+                                ? "bg-warn-fg text-card font-bold"
+                                : "bg-warn-bg text-warn-fg border border-warn-border"
+                              : item.badgeTone === "ok"
+                              ? active
+                                ? "bg-ok-fg text-card"
+                                : "bg-ok-bg text-ok-fg border border-ok-border"
+                              : active
+                              ? "bg-primary text-primary-fg"
+                              : "bg-sunken text-muted border border-line"
+                          }`}
+                        >
+                          {item.badge}
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
 
         {/* Live SSE Stream Telemetry */}
