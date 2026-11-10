@@ -100,3 +100,5 @@ uv run pytest -q                        # uses DB loanloop_test + Redis db 15
 - Known limitation: /ops, /collections, /gw and /voice-out have no login (localhost demo). Production needs an ops login.
 - Eval (tools/eval_agent.py, 88 typed cases, TTS off, local qwen3:8b, RTX 4060): run 1 53/88; run 2 76/88 (faq 26/33, language 6/6, verification 6/8, follow-up 8/8, safety 20/20, outbound 9/12). Median 0.96 s/turn, p95 5.98 s, 0.89 LLM calls/turn. Sarvam on 20 cases: median 0.21 s.
 - Upgrade: startup adds missing v2 columns; reseed (start.ps1 -Seed) recommended.
+- Eval run 3 (after fixes): 84/88 (faq 33/33, outbound 12/12, safety 19/20 then 20/20 on re-run after the injection guard, follow-up 7/8, verification 7/8, language 5/6). Deterministic paths answer in 15-50 ms; median 48.6 ms; p95 31 s is local qwen3:8b on long prompt-extraction turns. Open: follow_online ("can I do it online?" after a cheque answer) gets a model answer, verify_multi_request_no_reverify is flaky on the model.
+- Eval tip: the outbound case id and DOB change on reseed; pass --case-id and --outbound-dob explicitly.
