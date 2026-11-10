@@ -972,6 +972,12 @@ _WORDSETS = {"affirm": AFFIRM_WORDS, "negate": NEGATE_WORDS, "bye": BYE_WORDS, "
 _SNAP = ({k: set(v) for k, v in _WORDSETS.items()}, dict(_MONTHS_MAP), dict(_WEEKDAYS))  # the built-in words, to reload from
 
 
+def _beta_token_ok(s: str) -> bool:
+    """Beta-language words: native script always; romanised only from 4 chars, so "na", "ki", "te", "pan" cannot hijack en/hi/hinglish/mr turns."""
+    s = s.strip()
+    return bool(s) and (not s.isascii() or len(s) >= 4)
+
+
 def load_languages(base: Path | None = None) -> list[str]:
     """Merge every present <base>/<code>.json (registry languages beyond the built-in 4) into the fixed lines and word sets.
     A missing or invalid file is skipped with a warning. Returns the active language codes. Safe to call again."""
@@ -1021,13 +1027,13 @@ def load_languages(base: Path | None = None) -> list[str]:
 
         def words(key: str) -> list[str]:
             x = w.get(key)
-            return [i.lower() for i in x if isinstance(i, str) and i.strip()] if isinstance(x, list) else []
+            return [i.lower() for i in x if isinstance(i, str) and _beta_token_ok(i)] if isinstance(x, list) else []
 
         def table(key: str, ok) -> dict[str, int]:
             x = w.get(key)
-            return {k.lower(): n for k, n in x.items() if isinstance(k, str) and k.strip() and isinstance(n, int) and ok(n)} if isinstance(x, dict) else {}
+            return {k.lower(): n for k, n in x.items() if isinstance(k, str) and _beta_token_ok(k) and isinstance(n, int) and ok(n)} if isinstance(x, dict) else {}
 
-        _LANG_WORDS[code] = {code, m["name"].lower(), m.get("native", "").lower(), *_BETA_NAMES.get(code, ()), *words("lang_names")}
+        _LANG_WORDS[code] = {m["name"].lower(), m.get("native", "").lower(), *_BETA_NAMES.get(code, ()), *words("lang_names")}
         _LANG_WORDS[code].discard("")
         for name, target in _WORDSETS.items():
             target.update(words(name))

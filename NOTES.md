@@ -102,3 +102,9 @@ uv run pytest -q                        # uses DB loanloop_test + Redis db 15
 - Upgrade: startup adds missing v2 columns; reseed (start.ps1 -Seed) recommended.
 - Eval run 3 (after fixes): 84/88 (faq 33/33, outbound 12/12, safety 19/20 then 20/20 on re-run after the injection guard, follow-up 7/8, verification 7/8, language 5/6). Deterministic paths answer in 15-50 ms; median 48.6 ms; p95 31 s is local qwen3:8b on long prompt-extraction turns. Open: follow_online ("can I do it online?" after a cheque answer) gets a model answer, verify_multi_request_no_reverify is flaky on the model.
 - Eval tip: the outbound case id and DOB change on reseed; pass --case-id and --outbound-dob explicitly.
+
+### 2026-11-10 all Gnani languages (11 modes)
+- Modes: en, hi, hinglish, mr + beta bn, gu, kn, ml, pa, ta, te. Registry `i18n/languages.json` (STT `<l>-IN,en-IN` hints, TTS `<l>-IN`, codes from docs.gnani.ai). Dropping a valid `i18n/<code>.json` activates a language on gateway and voice; `tools/i18n_check.py` validates (also run by the gateway tests). Format: `i18n/README.md`.
+- The 7 beta files are machine-written by agents, not reviewed by native speakers. Callers pick by name (any script) or by speaking in that script; other Indian languages (Odia, Assamese, Urdu...) get the sorry line listing supported ones.
+- Indic digits in 9 scripts normalise to ASCII before the secret scan (PIN in Tamil digits is blocked). Known gap: PIN/OTP/password keywords written in the new scripts (no digits, no Latin word) are not detected by the gateway scrub.
+- Live Timbre v3.0 check, one LANG_OK line each: first chunk bn 354, gu 178, kn 152, ml 208, pa 364, ta 306, te 146 ms; all returned audio. STT in these languages not tested live.

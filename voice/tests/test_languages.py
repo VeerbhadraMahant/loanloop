@@ -114,3 +114,13 @@ def test_stt_hint_uses_registry(env, ta):
     c.post(f"/calls/{d['call_id']}/turn?tts=false", files={"audio": ("t.wav", b"RIFFx" + b"\0" * 64, "audio/wav")})
     stt = fake.of("stt")
     assert stt and b"ta-IN,en-IN" in stt[-1][2]
+
+
+def test_beta_romanised_short_words_do_not_hijack_core_turns():
+    va.load_languages()  # the real i18n files
+    assert va.detect_language("ok te", False)[0] != "te"
+    assert va.detect_language("thanks ta", False)[0] != "ta"
+    assert va.detect_language("5 ml", False)[0] != "ml"
+    assert va.detect_language("Telugu", True)[0] == "te"
+    assert va.wants_human("manager se baat karwao na")
+    assert va.is_action_request("mera address badal do ki naya ye hai")

@@ -17,7 +17,7 @@ collections (outbound, firm) vs servicing (inbound, soft), cron jobs, PTP and RT
 - Audit log stays append-only with masked metadata only.
 - Collections: firm and direct, never threatening, never shaming, never contacting third parties,
   never promising waivers, discounts or settlements. Calls only 08:00-19:00 IST (RBI fair practice).
-- Languages: `en`, `hi`, `hinglish`, `mr`. Every new speak template needs all four.
+- Languages: `en`, `hi`, `hinglish`, `mr` in code; beta `bn gu kn ml pa ta te` via `i18n/<code>.json` (see i18n/README.md). New speak templates need the four in code and a key in every i18n file (`tools/i18n_check.py`).
 - No new dependencies unless unavoidable; say why in the report.
 
 ## File ownership (one writer per area)
