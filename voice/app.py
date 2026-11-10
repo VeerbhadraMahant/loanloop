@@ -125,8 +125,9 @@ KNOBS = [
 KNOB_BY_KEY = {k["key"]: k for k in KNOBS}
 PRESETS = [
     {"name": "Baseline local (old behaviour)", "llm": "ollama",
-     "settings": {"cache_prompt": False, "shortcut_actions": False, "tool_sets": False, "faq_context": False}},
+     "settings": {"cache_prompt": False, "shortcut_actions": False, "tool_sets": False, "faq_context": False, "faq_direct_min": 20}},
     {"name": "Optimised local", "llm": "ollama", "settings": {}},
+    {"name": "Local, no instant FAQ answers", "llm": "ollama", "settings": {"faq_direct_min": 20}},
     {"name": "Local + thinking (slow)", "llm": "ollama", "settings": {"think_hard": True}},
     {"name": "Gemini fast", "llm": "gemini", "settings": {}},
     {"name": "Sarvam fast", "llm": "sarvam", "settings": {}},
@@ -150,6 +151,14 @@ SCRIPTS = [
         "Galti se paise galat account mein chale gaye, ab kya karu?",
         "Gold loan ke liye kya kya lagta hai?",
         "What happens to my fixed deposit when it matures?",
+        "Okay, bye"]},
+    {"name": "FAQ routing: instant vs model", "lines": [
+        "English. What is the difference between NRE and NRO accounts?",
+        "मराठी. माझा ईएमआय चुकला, काय होईल?",
+        "Hinglish. Mujhe apna cheque book band karwana hai, kaise karun?",
+        "English. I think I was scammed and money was taken from my account.",
+        "Hinglish. Bank baar baar bol raha hai ki KYC karo, ye kya hota hai aur kaunse kaagaz lagenge?",
+        "Hinglish. Mere paas ghar ka sona hai, usko rakh kar paise mil sakte hain kya?",
         "Okay, bye"]},
     {"name": "Hard question (try thinking)", "lines": [
         "English. If I pay some extra amount this month on top of my regular EMI, will that reduce my tenure or my EMI, are there any charges for it, and how is the interest calculated after that?",
