@@ -25,8 +25,8 @@ def test_first_turn_language_choice_no_llm(env):
 def test_first_turn_unsupported_language(env):
     c, fake = env
     d = new_call(c)
-    r = turn(c, d, "Tamil").json()
-    assert "English, Hindi, Marathi or Hinglish" in r["agent_text"] and "मराठी" in r["agent_text"]
+    r = turn(c, d, "Odia").json()
+    assert "Sorry, I can speak English, Hindi, Marathi" in r["agent_text"] and "मराठी" in r["agent_text"]
     assert fake.of("llm") == []
     assert turn(c, d, "Marathi").json()["language"] == "mr"  # the choice is still open after "sorry"
 

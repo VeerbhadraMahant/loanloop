@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useState } from "react";
+import { langLabel } from "@/lib/languages";
 import { CallRow, GwEvent, Handover, useEvents, useGet } from "@/lib/api";
 import { Button, Card, Empty, ErrorBox, Icon, Pill, Shell, Skeleton, fmtTime, stagger } from "@/components/ui";
 
@@ -58,7 +59,7 @@ export default function Ops() {
                   {calls.data.map((c, i) => (
                     <tr key={c.call_id} style={stagger(i)} className={`enter border-t border-line first:border-t-0 ${sel === c.call_id ? "bg-sunken" : ""}`}>
                       <td className="px-3 py-2">{c.customer_ref}{c.ended_at && <span className="ml-1 text-xs text-muted">(ended)</span>}</td>
-                      <td className="px-3 py-2">{c.language}</td>
+                      <td className="px-3 py-2">{langLabel(c.language)}</td>
                       <td className="px-3 py-2"><Pill tone={tierTone[c.tier] ?? "neutral"}>{tierLabel[c.tier] ?? `Tier ${c.tier}`}</Pill></td>
                       <td className="px-3 py-2">{c.current_action ?? "-"}</td>
                       <td className="num px-3 py-2">{c.blocked_count > 0 ? <Pill tone="warn" icon="shield">{c.blocked_count}</Pill> : 0}</td>

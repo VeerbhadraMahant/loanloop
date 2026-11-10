@@ -9,6 +9,8 @@ _KW = re.compile(
 _FIELD_KW = re.compile(r"password|passcode|(?<![a-z])[mu]?pin(?![a-z])|otp|cvv|secret", re.I)
 _CARD = re.compile(r"(?<![\d])(?:\d[ -]?){16}(?![\d])")
 _DIGITS = re.compile(r"(?<!\d)\d{3,6}(?!\d)")
+# Devanagari, Bengali, Gurmukhi, Gujarati, Odia, Tamil, Telugu, Kannada, Malayalam digits -> ASCII
+INDIC_DIGITS = {z + i: 48 + i for z in (0x966, 0x9E6, 0xA66, 0xAE6, 0xB66, 0xBE6, 0xC66, 0xCE6, 0xD66) for i in range(10)}
 
 
 def _luhn(s: str) -> bool:
@@ -19,6 +21,7 @@ def _luhn(s: str) -> bool:
 def find_secret(field_name: str, value: str) -> str | None:
     if not isinstance(value, str) or not value:
         return None
+    value = value.translate(INDIC_DIGITS)
     for m in _CARD.finditer(value):
         digits = re.sub(r"\D", "", m.group())
         if _luhn(digits):
