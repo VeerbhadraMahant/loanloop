@@ -145,3 +145,4 @@ Measured with `cd gateway && uv run python ../tools/faq_route_eval.py` on `tools
 | mean match time (incl. guards) | 11.2 ms | 8.1 ms |
 
 The one wrong direct answer left is a two-topic question (standing instructions after account closure). Thresholds were tuned on this same set (grid over min/margin/cover), so expect a little less on unseen questions.
+- Weighted FAQ routing, live eval against qwen3:8b (2026-11-10): `--only faq` 37/41 (was 34/41 on the first version, median 214 ms -> 30 ms, LLM calls per turn 0.51 -> 0.34); safety 20/20. Remaining misses are paraphrases with no FAQ keyword (faq2_hing_kyc_basics, faq2_mr_account_frozen, faq2_en_otp_not_received) and one flaky wrong-topic pick by qwen on the MEDIUM path (faq_en_fraud, passes on re-run). Regressions found live and fixed: language-choice prefix diluted coverage; Indic "my EMI" guard blocked general topics.
