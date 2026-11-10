@@ -120,21 +120,37 @@ export function StatTile({
   value,
   caption,
   accent,
+  className = "",
 }: {
   value: React.ReactNode;
   caption: string;
   accent?: boolean;
+  className?: string;
 }) {
+  const str = typeof value === "string" || typeof value === "number" ? String(value) : "";
+  const isLong = str.length > 7;
+  const isMedium = str.length > 4;
+  const sizeClass = isLong
+    ? "text-xl sm:text-2xl"
+    : isMedium
+    ? "text-2xl sm:text-3xl"
+    : "text-3xl sm:text-4xl";
+
   return (
     <div
-      className={`rounded-xl border border-line p-5 shadow-[0_1px_2px_rgba(31,42,36,0.04)] ${
+      className={`rounded-xl border border-line p-3.5 sm:p-4 shadow-[0_1px_2px_rgba(31,42,36,0.04)] flex flex-col justify-between min-w-0 overflow-hidden ${
         accent ? "bg-accent-soft/40 border-accent/20" : "bg-card"
-      }`}
+      } ${className}`}
     >
-      <p className="serif num text-4xl sm:text-5xl leading-none text-fg font-semibold">
+      <p
+        className={`serif num font-semibold leading-tight text-fg tracking-tight truncate ${sizeClass}`}
+        title={str || undefined}
+      >
         {value}
       </p>
-      <p className="mt-2 text-xs sm:text-sm text-muted font-normal">{caption}</p>
+      <p className="mt-2 text-xs text-muted font-normal truncate" title={caption}>
+        {caption}
+      </p>
     </div>
   );
 }

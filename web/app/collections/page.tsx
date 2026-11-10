@@ -91,7 +91,7 @@ export default function CollectionsPage() {
       ) : (
         <div className="space-y-8">
           {/* Top KPI Tiles */}
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4">
             <StatTile value={cases.length} caption="Open Cases" />
             <StatTile value={inr(cases.reduce((s, c) => s + c.overdue_amount, 0))} caption="Overdue Total" accent />
             <StatTile
@@ -99,8 +99,8 @@ export default function CollectionsPage() {
               caption={`Open PTPs · ${inr(openPtps.reduce((s, p) => s + p.amount, 0))}`}
             />
             <StatTile value={`${kept} / ${broken}`} caption="PTPs Kept / Broken" />
-            <Card className="p-4 flex flex-col justify-between">
-              <span className="text-xs font-mono uppercase text-muted font-medium">RTPs by Reason</span>
+            <Card className="p-3.5 sm:p-4 flex flex-col justify-between min-w-0 overflow-hidden col-span-2 sm:col-span-1">
+              <span className="text-xs font-mono uppercase text-muted font-medium truncate">RTPs by Reason</span>
               {Object.keys(byReason).length === 0 ? (
                 <p className="mt-2 text-xs text-muted">None recorded</p>
               ) : (
