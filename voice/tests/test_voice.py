@@ -1434,3 +1434,11 @@ def test_only_voice_dev_enables_dev(monkeypatch):
     assert Settings(VOICE_DEV=True).dev is True
     monkeypatch.setenv("VOICE_DEV", "1")
     assert Settings().dev is True
+
+
+def test_fallback_verify_bare_last4_after_mobile_in_earlier_turn():
+    from voice.app import fallback_action as fb
+    said = ["my number is 9876543210"]
+    assert fb("4821", said) == ("verify_caller", {"registered_mobile": "9876543210", "loan_last4": "4821"})
+    assert fb("okay thanks, how are you", said) is None and fb("4821") is None
+    assert fb("4821", said, verified=True) is None
