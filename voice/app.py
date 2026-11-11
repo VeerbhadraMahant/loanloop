@@ -590,7 +590,8 @@ def _parse_dob(v: str) -> str | None:
 
 def _extract_verify(text: str, said: list[str] | None = None) -> tuple[str, dict] | None:
     t = text.translate(_DEVA_DIGITS)
-    has_cue = bool(re.search(r"\b[6-9]\d{9}\b", t) or _parse_dob(t) or re.search(r"(?:loan|कर्ज|खाते|last\s*4|last\s*four)\D{0,15}(\d{4})\b", t, re.I))
+    bare4 = re.fullmatch(r"\D{0,20}(\d{4})\D{0,20}", t)  # bare loan last-4 answer; needs the mobile from earlier turns (below)
+    has_cue = bool(bare4 or re.search(r"\b[6-9]\d{9}\b", t) or _parse_dob(t) or re.search(r"(?:loan|कर्ज|खाते|last\s*4|last\s*four)\D{0,15}(\d{4})\b", t, re.I))
     if not has_cue:
         return None
     all_text = (" ".join(said) + " " + text).translate(_DEVA_DIGITS) if said else t
@@ -602,8 +603,8 @@ def _extract_verify(text: str, said: list[str] | None = None) -> tuple[str, dict
     if dob:
         return ("verify_caller", {"registered_mobile": mob, "dob": dob})
     m_loan = re.search(r"(?:loan|कर्ज|खाते|last\s*4|last\s*four)\D{0,15}(\d{4})\b", all_text, re.I)
-    if m_loan:
-        return ("verify_caller", {"registered_mobile": mob, "loan_last4": m_loan.group(1)})
+    if m_loan or bare4:
+        return ("verify_caller", {"registered_mobile": mob, "loan_last4": (m_loan or bare4).group(1)})
     return None
 
 
