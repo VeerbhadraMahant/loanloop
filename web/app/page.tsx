@@ -4,8 +4,7 @@ import { SidebarLayout } from "@/components/sidebar-nav";
 import { Button, Card, Eyebrow, Icon, StatTile, type IconName } from "@/components/ui";
 
 const stats = [
-  { value: "~0.5 s", caption: "agent response, Sarvam 105B, typed turn (median 0.40 s, p95 0.52 s); a full voice turn is 2.9-3.3 s", accent: true },
-  { value: "33 ms", caption: "p95 gateway action latency (not voice-to-voice), 1,000 simulated concurrent calls, 0 errors" },
+  { value: "~0.5 s", caption: "agent response, Sarvam 105B, typed turn; a full voice turn is 2.9-3.3 s", accent: true },
   { value: "29", caption: "secure banking gateway actions" },
   { value: "4 + 7 beta", caption: "language modes: English, Hindi, Hinglish, Marathi, plus 7 machine-translated beta" },
 ];
