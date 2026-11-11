@@ -130,3 +130,8 @@ export interface CollRtp {
 }
 export interface JobRunRow { id: number; job: string; started_at: string; finished_at: string | null; stats: Record<string, unknown> | null }
 export interface Collections { cases: CollCase[]; ptps: CollPtp[]; rtps: CollRtp[]; queue: CollCase[]; last_runs: JobRunRow[] }
+
+export type ReqType = "statement" | "interest_cert" | "nominee" | "address" | "emi_date_change" | "reconciliation" | "closure";
+export type ReqStatus = "open" | "in_progress" | "done" | "rejected";
+export interface ServiceRequestRow { id: number; created_at: string; type: ReqType; status: ReqStatus; customer_ref: string; summary: string }
+export interface ServiceRequests { requests: ServiceRequestRow[]; counts: { by_status: Record<string, number>; by_type: Record<string, number> } }
