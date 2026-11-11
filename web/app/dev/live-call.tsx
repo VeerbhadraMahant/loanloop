@@ -21,7 +21,7 @@ export function LiveCall({ cfg, customer }: { cfg: Cfg; customer: string }) {
   const gen = useRef(0);
   const pcm = useRef<PcmPlayer | null>(null);
   const count = useRef(0);
-  useEffect(() => () => { gen.current++; pcm.current?.stop(); }, []);
+  useEffect(() => () => { gen.current++; pcm.current?.dispose(); }, []);
 
   const request = async (path: string, init: RequestInit, input: Stat["input"]) => {
     const g = gen.current;

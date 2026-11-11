@@ -62,4 +62,11 @@ export class PcmPlayer {
     this.srcs.clear();
     this.done?.(); this.done = null;
   }
+
+  /** Stop and release the AudioContext (call on unmount; browsers cap concurrent contexts). */
+  dispose() {
+    this.stop();
+    this.ctx?.close().catch(() => {});
+    this.ctx = null;
+  }
 }

@@ -26,7 +26,7 @@ export default function DevLab() {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time restore from storage after mount
     try { const s = JSON.parse(localStorage.getItem(KEY) ?? "[]"); if (Array.isArray(s)) setSaved(s.slice(0, MAX)); } catch { /* storage blocked */ }
     api<DevConfig>("/dev/config").then(setDev)
-      .catch((e) => setOff(e instanceof ApiError && e.status === 404 ? OFF : `Cannot reach the voice service (${e instanceof Error ? e.message : "failed"}).`));
+      .catch((e) => setOff(e instanceof ApiError && e.status === 404 ? OFF : (e instanceof Error ? e.message : "Voice service request failed.")));
   }, []);
 
   const persist = (list: Cfg[]) => {

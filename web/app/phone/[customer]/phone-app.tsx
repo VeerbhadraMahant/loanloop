@@ -84,15 +84,18 @@ export function PhoneHandset({
   customer,
   isSidecar,
   simulationProps,
+  noData,
 }: {
   customer: string;
   isSidecar?: boolean;
   simulationProps?: PhoneSimulationProps;
+  /** `customer` is not a gateway customer slug (e.g. outbound case): do not poll /phone/*, it would 404. */
+  noData?: boolean;
 }) {
   const base = `/phone/${encodeURIComponent(customer)}`;
-  const me = useGet<{ name: string; mobile_masked: string }>(base, 0);
-  const sms = useGet<Sms[]>(`${base}/sms`, 3000);
-  const appr = useGet<Approval[]>(`${base}/approvals`, 3000);
+  const me = useGet<{ name: string; mobile_masked: string }>(noData ? null : base, 0);
+  const sms = useGet<Sms[]>(noData ? null : `${base}/sms`, 3000);
+  const appr = useGet<Approval[]>(noData ? null : `${base}/approvals`, 3000);
   const [busy, setBusy] = useState(false);
   const [actErr, setActErr] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -628,7 +631,8 @@ export function PhoneHandset({
     </div>
   );
 
-  if (isSidecar) {
+  // Embedded (sidecar or call-desk simulation) lives inside the desk's <main>: no nested main / full-height wrapper.
+  if (isSidecar || simulationProps) {
     return chassis;
   }
 
