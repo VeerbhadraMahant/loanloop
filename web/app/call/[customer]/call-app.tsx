@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Button, Card, Icon, Pill } from "@/components/ui";
+import { Card, Icon, Pill } from "@/components/ui";
 import { downsample, encodeWav } from "@/lib/wav";
 import { PcmPlayer } from "@/lib/pcm-player";
 import { langLabel } from "@/lib/languages";
@@ -140,6 +140,9 @@ const PERSONAS: Record<
   },
 };
 
+// Module-level so the react-hooks purity rule does not flag it; only called from event handlers.
+const now = () => performance.now();
+
 export default function CallApp({ customer, caseId }: { customer: string; caseId?: number }) {
   const normKey = customer.toLowerCase().trim();
   const persona = PERSONAS[normKey] ?? {
@@ -184,11 +187,14 @@ export default function CallApp({ customer, caseId }: { customer: string; caseId
   const gen = useRef(0);
   const abort = useRef<AbortController | null>(null);
   const voiceRef = useRef(voiceReplies);
-  voiceRef.current = voiceReplies;
+  useEffect(() => {
+    voiceRef.current = voiceReplies;
+  }, [voiceReplies]);
 
   // Restore preferences
   useEffect(() => {
     try {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- restore persisted pref on mount
       if (localStorage.getItem("loanloop.voiceReplies") === "1") setVoiceReplies(true);
     } catch {
       /* blocked */
@@ -198,6 +204,7 @@ export default function CallApp({ customer, caseId }: { customer: string; caseId
   useEffect(() => {
     try {
       const v = localStorage.getItem("loanloop.llm");
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- restore persisted pref on mount
       if (LLMS.some((l) => l.id === v)) setLlmPick(v as LlmId);
     } catch {
       /* blocked */
@@ -217,6 +224,7 @@ export default function CallApp({ customer, caseId }: { customer: string; caseId
     if (status !== "idle" && status !== "ended") {
       t = setInterval(() => setCallDuration((d) => d + 1), 1000);
     } else if (status === "idle") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset timer when call returns to idle
       setCallDuration(0);
     }
     return () => clearInterval(t);
@@ -224,14 +232,6 @@ export default function CallApp({ customer, caseId }: { customer: string; caseId
 
   const ready = (id: string) => (id === "ollama" ? health?.ollama?.ready !== false : health?.[id]?.ready === true);
   const llm: LlmId = ready(llmPick) ? llmPick : "ollama";
-  const pickLlm = (v: LlmId) => {
-    setLlmPick(v);
-    try {
-      localStorage.setItem("loanloop.llm", v);
-    } catch {
-      /* blocked */
-    }
-  };
   const toggleVoice = (on: boolean) => {
     setVoiceReplies(on);
     try {
@@ -308,9 +308,9 @@ export default function CallApp({ customer, caseId }: { customer: string; caseId
     const g = gen.current,
       ac = (abort.current = new AbortController());
     try {
-      const t0 = performance.now();
+      const t0 = now();
       const r = await call<Reply & { call_id: string }>(path, { ...init, signal: ac.signal });
-      if (g === gen.current) onOk(r, performance.now() - t0);
+      if (g === gen.current) onOk(r, now() - t0);
     } catch (e) {
       if (g !== gen.current) return;
       if (e instanceof HttpError && e.status === 409) {
@@ -1039,7 +1039,7 @@ export default function CallApp({ customer, caseId }: { customer: string; caseId
                     </div>
                     <div className="bg-card p-2.5 rounded-lg border border-line">
                       <span className="text-muted block text-[10px]">Configured Provider</span>
-                      <span className="text-ok-fg font-semibold">{callLlm.current}</span>
+                      <span className="text-ok-fg font-semibold">{llm}</span>
                     </div>
                     <div className="bg-card p-2.5 rounded-lg border border-line">
                       <span className="text-muted block text-[10px]">Session Turns</span>

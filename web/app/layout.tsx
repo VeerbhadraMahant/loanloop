@@ -24,7 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-screen antialiased selection:bg-secondary-container selection:text-primary">
         {children}
-        <Agentation endpoint="http://localhost:4747" />
+        {process.env.NODE_ENV === "development" && <Agentation endpoint="http://localhost:4747" />}
       </body>
     </html>
   );
