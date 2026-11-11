@@ -805,7 +805,7 @@ export default function CallApp({ customer, caseId }: { customer: string; caseId
                   </span>
                 </div>
                 <span className="font-mono text-[10px] text-muted hidden md:inline">
-                  PCI-DSS / RBI 2024.1
+                  Demo · synthetic data
                 </span>
               </div>
 

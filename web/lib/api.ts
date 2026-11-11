@@ -99,10 +99,12 @@ export function useEvents(onEvent: (e: GwEvent) => void): boolean {
 /** Fetch `path` now, on demand via reload(), and every pollMs (0 = no polling). Data is keyed by path so a path change never shows the previous path's data. */
 export function useGet<T>(path: string | null, pollMs = 0) {
   const [res, setRes] = useState<{ path: string; data: T | null; error: string | null } | null>(null);
+  const latest = useRef(path);
+  useEffect(() => { latest.current = path; }, [path]);
   const reload = useCallback(async () => {
     if (!path) return;
-    try { const d = await get<T>(path); setRes({ path, data: d, error: null }); }
-    catch (e) { setRes((p) => ({ path, data: p?.path === path ? p.data : null, error: e instanceof Error ? e.message : "request failed" })); }
+    try { const d = await get<T>(path); if (latest.current === path) setRes({ path, data: d, error: null }); }  // drop late responses for an old path
+    catch (e) { if (latest.current === path) setRes((p) => ({ path, data: p?.path === path ? p.data : null, error: e instanceof Error ? e.message : "request failed" })); }
   }, [path]);
   useEffect(() => {
     if (!path) return;
