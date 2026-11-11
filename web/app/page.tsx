@@ -111,7 +111,7 @@ export default function Home() {
               </p>
             </div>
             <span className="font-mono text-xs text-primary font-medium bg-secondary-container px-3 py-1 rounded-full border border-primary/20">
-              RBI 2024.1 / PCI-DSS Compliant
+              Demo · synthetic data
             </span>
           </div>
 
@@ -150,7 +150,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="mx-auto mt-16 max-w-5xl border-t border-line px-4 py-6 text-xs text-muted sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
         <p>Sahyadri Finance Bank · LoanLoop Voice Banking Desk</p>
-        <p className="font-mono">Bank Sandbox v2.4 · Synthetic Grounded Data</p>
+        <p className="font-mono">Demo · Synthetic Data</p>
       </footer>
     </SidebarLayout>
   );

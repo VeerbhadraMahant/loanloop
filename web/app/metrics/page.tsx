@@ -133,7 +133,7 @@ export default function MetricsPage() {
                 </span>
               </h2>
               <span className="text-xs font-mono text-muted">
-                FastAPI Async Engine · In-Memory Caching
+                Measured at the gateway
               </span>
             </div>
 
@@ -216,7 +216,7 @@ export default function MetricsPage() {
                 Locust Gateway Concurrency Load Test Proof
               </h2>
               <span className="text-xs font-mono text-muted">
-                1000 Users · 240s Ramp · Sustained Async Proof
+                Values as recorded by the load test
               </span>
             </div>
             {m.loadtest ? (

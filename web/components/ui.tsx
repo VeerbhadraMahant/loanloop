@@ -23,7 +23,8 @@ export function Shell({
   children: React.ReactNode;
 }) {
   return (
-    <SidebarLayout title={title} sub={sub} status={status}>
+    // title/status render once in the page body; the sticky header only carries nav toggle + theme
+    <SidebarLayout>
       <div className="mx-auto max-w-[1440px] px-4 pb-16 pt-5 sm:px-6 lg:px-8">
         <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-line pb-4">
           <div>
@@ -211,7 +212,7 @@ export function ErrorBox({ error }: { error: string | null }) {
       className="mb-4 flex items-start gap-2 rounded-xl border border-danger-line bg-danger-bg px-3.5 py-2.5 text-sm text-danger-fg shadow-xs"
     >
       <Icon name="alert" size={16} />
-      <span>Cannot reach the gateway ({error}). Showing the last data received, retrying.</span>
+      <span>{error}</span>
     </p>
   );
 }

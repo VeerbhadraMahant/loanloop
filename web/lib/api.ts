@@ -54,45 +54,55 @@ export interface Metrics {
 export interface Sms { id: string; body: string; created_at: string }
 export interface Approval { id: string; purpose: string; status: string; created_at: string; expires_at: string }
 
-export async function get<T>(path: string): Promise<T> {
-  const r = await fetch(`${GATEWAY}${path}`, { cache: "no-store" });
+const DOWN = "Gateway not reachable — start the backend with start.ps1";
+
+/** fetch that turns network failures and proxy 502/503/504 into one actionable message. */
+async function call<T>(path: string, init?: RequestInit): Promise<T> {
+  let r: Response;
+  try { r = await fetch(`${GATEWAY}${path}`, init); }
+  catch { throw new Error(DOWN); }
+  if (r.status === 502 || r.status === 503 || r.status === 504) throw new Error(DOWN);
+  if (r.status === 403 && init?.method === "POST") throw new Error("Request blocked: this page's origin is not allowed (serve on port 3000 or set WEB_ALLOWED_ORIGINS)");
   if (!r.ok) throw new Error(`${path}: HTTP ${r.status}`);
   return r.json() as Promise<T>;
 }
 
-export async function post<T>(path: string): Promise<T> {
-  const r = await fetch(`${GATEWAY}${path}`, { method: "POST" });
-  if (!r.ok) throw new Error(`${path}: HTTP ${r.status}`);
-  return r.json() as Promise<T>;
-}
+export const get = <T,>(path: string) => call<T>(path, { cache: "no-store" });
+export const post = <T,>(path: string) => call<T>(path, { method: "POST" });
 
-/** Subscribe to the SSE stream; EventSource reconnects on its own. Returns connection state. */
+/** Subscribe to the SSE stream. EventSource only auto-reconnects on network drops, not on an HTTP 502, so reopen by hand. */
 export function useEvents(onEvent: (e: GwEvent) => void): boolean {
   const [live, setLive] = useState(false);
   const cb = useRef(onEvent);
   useEffect(() => { cb.current = onEvent; });
   useEffect(() => {
-    const es = new EventSource(`${GATEWAY}/events/stream`);
-    es.onopen = () => setLive(true);
-    es.onerror = () => setLive(false);
-    es.onmessage = (m) => {
-      try { cb.current(JSON.parse(m.data) as GwEvent); } catch { /* ignore malformed frame */ }
+    let es: EventSource | null = null;
+    let retry: ReturnType<typeof setTimeout> | undefined;
+    let stopped = false;
+    const open = () => {
+      es = new EventSource(`${GATEWAY}/events/stream`);
+      es.onopen = () => setLive(true);
+      es.onerror = () => {
+        setLive(false);
+        if (es?.readyState === EventSource.CLOSED && !stopped) { es.close(); retry = setTimeout(open, 3000); }
+      };
+      es.onmessage = (m) => {
+        try { cb.current(JSON.parse(m.data) as GwEvent); } catch { /* ignore malformed frame */ }
+      };
     };
-    return () => es.close();
+    open();
+    return () => { stopped = true; clearTimeout(retry); es?.close(); };
   }, []);
   return live;
 }
 
-/** Fetch `path` now, on demand via reload(), and every pollMs (0 = no polling). */
+/** Fetch `path` now, on demand via reload(), and every pollMs (0 = no polling). Data is keyed by path so a path change never shows the previous path's data. */
 export function useGet<T>(path: string | null, pollMs = 0) {
-  const [data, setData] = useState<T | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [res, setRes] = useState<{ path: string; data: T | null; error: string | null } | null>(null);
   const reload = useCallback(async () => {
     if (!path) return;
-    try { setData(await get<T>(path)); setError(null); }
-    catch (e) { setError(e instanceof Error ? e.message : "request failed"); }
-    finally { setLoading(false); }
+    try { const d = await get<T>(path); setRes({ path, data: d, error: null }); }
+    catch (e) { setRes((p) => ({ path, data: p?.path === path ? p.data : null, error: e instanceof Error ? e.message : "request failed" })); }
   }, [path]);
   useEffect(() => {
     if (!path) return;
@@ -100,7 +110,8 @@ export function useGet<T>(path: string | null, pollMs = 0) {
     const t = pollMs ? setInterval(reload, pollMs) : undefined;
     return () => { clearTimeout(first); if (t) clearInterval(t); };
   }, [path, pollMs, reload]);
-  return { data, error, loading, reload };
+  const cur = res && res.path === path ? res : null;
+  return { data: cur?.data ?? null, error: cur?.error ?? null, loading: !!path && !cur, reload };
 }
 
 export interface CollCase {

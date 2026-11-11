@@ -193,7 +193,7 @@ export function SidebarNav() {
         <div className="px-4 py-2.5 bg-surface-container-low border-b border-line flex items-center justify-between text-xs text-muted shrink-0">
           <span className="font-mono text-[11px] font-medium text-fg">Sahyadri Bank</span>
           <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-sunken border border-line">
-            Sandbox v2.4
+            Demo · synthetic data
           </span>
         </div>
 
@@ -266,23 +266,6 @@ export function SidebarNav() {
           ))}
         </nav>
 
-        {/* Theme Selector Strip */}
-        <div className="px-3 py-2 border-t border-line shrink-0 bg-surface-bright/30 flex items-center justify-between">
-          <span className="font-mono text-[10px] text-muted uppercase font-semibold">Theme</span>
-          <ThemeSelector />
-        </div>
-
-        {/* Live SSE Stream Telemetry */}
-        <div className="p-3 border-t border-line shrink-0 bg-surface-bright/50">
-          <div className="flex items-center gap-2 p-2 rounded-lg bg-ok-bg text-ok-fg text-xs font-mono border border-ok-border">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-ok-fg opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-ok-fg"></span>
-            </span>
-            <span className="truncate">SSE Stream: Connected</span>
-          </div>
-        </div>
-
         {/* User / Operator Footer */}
         <div className="p-3 border-t border-line flex items-center justify-between shrink-0 bg-card">
           <div className="flex items-center gap-2.5">
@@ -291,10 +274,9 @@ export function SidebarNav() {
             </div>
             <div>
               <div className="text-xs font-semibold text-fg leading-tight">SFB Voice Desk</div>
-              <div className="text-[10px] font-mono text-muted">Mumbai Ingress Node</div>
+              <div className="text-[10px] font-mono text-muted">Demo operator desk</div>
             </div>
           </div>
-          <span className="text-[10px] font-mono text-muted uppercase">PCI-DSS</span>
         </div>
       </aside>
     </>
@@ -440,7 +422,7 @@ export function AppHeader({
         {status}
         <ThemeSelector />
         <div className="hidden lg:flex items-center px-2.5 py-1 rounded-md bg-sunken text-muted text-xs font-mono border border-line">
-          Bank Sandbox v2.4
+          Demo · synthetic data
         </div>
       </div>
     </header>
