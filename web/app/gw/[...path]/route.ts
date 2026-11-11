@@ -1,4 +1,5 @@
 // Same-origin proxy to the gateway: the browser never sees the token and the gateway keeps CORS closed.
+export const maxDuration = 300; // SSE stream
 const GATEWAY = process.env.GATEWAY_URL ?? "http://localhost:8000";
 const DASHBOARD_TOKEN = process.env.DASHBOARD_TOKEN ?? "";
 const PHONE_TOKEN = process.env.PHONE_TOKEN ?? "";

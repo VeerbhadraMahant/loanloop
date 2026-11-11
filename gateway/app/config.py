@@ -1,5 +1,8 @@
 import logging
+import os
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -18,6 +21,26 @@ class Settings(BaseSettings):
     session_ttl_s: int = 1800
     jobs_interval_s: int = 3600  # cron-style jobs loop; 0 disables (tests)
 
+    @field_validator("database_url")
+    @classmethod
+    def _asyncpg_url(cls, v: str) -> str:
+        return normalise_db_url(v)
+
+
+def normalise_db_url(url: str) -> str:
+    """Railway gives postgres:// or postgresql://; SQLAlchemy needs the asyncpg driver. asyncpg rejects ?sslmode=, so map it to ssl=."""
+    for prefix in ("postgres://", "postgresql://"):
+        if url.startswith(prefix):
+            url = "postgresql+asyncpg://" + url[len(prefix):]
+    parts = urlsplit(url)
+    q = [(k, v) for k, v in parse_qsl(parts.query, keep_blank_values=True)]
+    if any(k == "sslmode" for k, _ in q):
+        mode = dict(q)["sslmode"]
+        q = [(k, v) for k, v in q if k != "sslmode"]
+        if mode not in ("disable", "allow", "prefer"):  # Railway's internal URL has no sslmode and needs no TLS
+            q.append(("ssl", "require"))
+    return urlunsplit(parts._replace(query=urlencode(q)))
+
 
 DEV_DEFAULTS = {"gateway_shared_secret": "dev-shared-secret-change-me", "dashboard_token": "dev-dashboard-token-change-me",
                 "phone_token": "dev-phone-token-change-me"}
@@ -34,6 +57,7 @@ def check_settings(s: Settings = settings) -> None:
             raise RuntimeError(f"{name.upper()} is empty: refusing to start")
         if getattr(s, name) == default:
             # the defaults are in the public repo: never accept them on a publicly reachable gateway
-            if not s.public_gateway_url.startswith(("http://localhost", "http://127.0.0.1")):
-                raise RuntimeError(f"{name.upper()} is the dev default but PUBLIC_GATEWAY_URL is public: refusing to start")
+            on_railway = any(os.environ.get(v) for v in ("RAILWAY_ENVIRONMENT", "RAILWAY_ENVIRONMENT_NAME", "RAILWAY_PUBLIC_DOMAIN"))
+            if on_railway or not s.public_gateway_url.startswith(("http://localhost", "http://127.0.0.1")):
+                raise RuntimeError(f"{name.upper()} is the dev default but the gateway is public (PUBLIC_GATEWAY_URL or Railway): refusing to start")
             logging.getLogger("config").warning("SECURITY: %s is the dev default. Change it before exposing the gateway.", name.upper())
