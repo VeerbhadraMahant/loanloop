@@ -605,16 +605,17 @@ _MONTHS_MAP = {
 
 
 def _parse_dob(v: str) -> str | None:
+    v = v.translate(_DEVA_DIGITS)
     m = re.search(r"\b(\d{4})[/\-.](\d{1,2})[/\-.](\d{1,2})\b", v)
     if m:
         return f"{m.group(1)}-{int(m.group(2)):02d}-{int(m.group(3)):02d}"
     m = re.search(r"\b(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{4})\b", v)
     if m:
         return f"{m.group(3)}-{int(m.group(2)):02d}-{int(m.group(1)):02d}"
-    m = re.search(r"(\d{1,2})(?:st|nd|rd|th)?\s+([a-zA-Z\u0900-\u097f]+)[,\s]+(\d{4})", v)
+    m = re.search(r"(\d{1,2})(?:st|nd|rd|th)?\s+([a-zA-Z\u0900-\u0d7f]+)[,\s]+(\d{4})", v)
     if m and m.group(2).lower() in _MONTHS_MAP:
         return f"{m.group(3)}-{_MONTHS_MAP[m.group(2).lower()]:02d}-{int(m.group(1)):02d}"
-    m = re.search(r"([a-zA-Z\u0900-\u097f]+)\s+(\d{1,2})(?:st|nd|rd|th)?[,\s]+(\d{4})", v)
+    m = re.search(r"([a-zA-Z\u0900-\u0d7f]+)\s+(\d{1,2})(?:st|nd|rd|th)?[,\s]+(\d{4})", v)
     if m and m.group(1).lower() in _MONTHS_MAP:
         return f"{m.group(3)}-{_MONTHS_MAP[m.group(1).lower()]:02d}-{int(m.group(2)):02d}"
     return None
@@ -1224,6 +1225,7 @@ def load_languages(base: Path | None = None) -> list[str]:
         tbl.clear()
         tbl.update(snap)
     _PAID_EXTRA.clear()
+    thanks: set[str] = set()
     extra_stems: list[str] = []
     for m in MODES:
         code = m["code"]
@@ -1265,6 +1267,7 @@ def load_languages(base: Path | None = None) -> list[str]:
         _MONTHS_MAP.update(table("month_words", lambda n: 1 <= n <= 12))
         _WEEKDAYS.update(table("weekdays", lambda n: 0 <= n <= 6))
         _PAID_EXTRA.extend(words("already_paid"))
+        thanks.update(words("thanks"))
         extra_stems += words("action_verbs")
         ACTIVE_LANGS.append(code)
     _INACTIVE_NAMES.clear()
@@ -1274,7 +1277,7 @@ def load_languages(base: Path | None = None) -> list[str]:
     _INACTIVE_NAMES.discard("")
     _ACTION_STEMS = tuple(dict.fromkeys(_ACTION_STEMS_BASE + tuple(extra_stems)))
     FILLER_WORDS.clear()
-    FILLER_WORDS.update(_BYE_FILLER_BASE | AFFIRM_WORDS)
+    FILLER_WORDS.update(_BYE_FILLER_BASE | AFFIRM_WORDS | thanks)
     _build_regexes()
     LANG_SORRY = _sorry_line()
     return ACTIVE_LANGS

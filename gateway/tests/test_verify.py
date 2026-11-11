@@ -1,6 +1,7 @@
 import json
 
 from app import sessions
+from app.routes.actions.verify import parse_dob
 from tests.conftest import call
 
 PRIYA = dict(registered_mobile="9000014417", dob="1991-08-14")
@@ -95,3 +96,8 @@ async def test_verify_flexible_date_and_mobile_formats(client):
     await _start(client, cid="flex3")
     r3 = await call(client, "verify_caller", call_id="flex3", registered_mobile="9000014417", dob="14 August 1991")
     assert r3["ok"] and "Priya" in r3["speak"]
+
+    await _start(client, cid="flex4")  # beta-language month names (from i18n/<code>.json words.month_words) and Indic digits
+    r4 = await call(client, "verify_caller", call_id="flex4", registered_mobile="9000014417", dob="14 ஆகஸ்ட் 1991")
+    assert r4["ok"] and "Priya" in r4["speak"]
+    assert parse_dob("১৪ আগস্ট ১৯৯১") == "1991-08-14" and parse_dob("௧௪ ஆகஸ்ட் ௧௯௯௧") == "1991-08-14"

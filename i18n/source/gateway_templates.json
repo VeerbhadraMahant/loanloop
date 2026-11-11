@@ -107,6 +107,10 @@
   "en": "Your EMI for the loan {loan} is {amount}. I do not see an upcoming due date right now.",
   "hi": "लोन {loan} की आपकी ईएमआई {amount} है। अभी मुझे कोई अगली देय तारीख नहीं दिख रही।"
  },
+ "ending": {
+  "en": "ending {d}",
+  "hi": "{d} पर समाप्त होने वाला"
+ },
  "explain_charges": {
   "en": "Recent charges on your loan: {items}.",
   "hi": "आपके लोन पर हाल के शुल्क: {items}।"
@@ -163,6 +167,10 @@
   "en": "Yes, {ifsc} is valid. It is {name}, {address}.",
   "hi": "हाँ, {ifsc} सही है। यह {name}, {address} है।"
  },
+ "ifsc_zero": {
+  "en": "zero",
+  "hi": "zero"
+ },
  "ineligible_overdue": {
   "en": "I cannot change the EMI date while an EMI is overdue. Please clear the overdue amount first.",
   "hi": "ईएमआई बकाया होने पर मैं तारीख नहीं बदल सकती। कृपया पहले बकाया राशि चुकाएं।"
@@ -182,6 +190,34 @@
  "invalid_input": {
   "en": "I could not understand that detail. Could you say it again?",
   "hi": "मैं वह जानकारी समझ नहीं पाई। क्या आप दोबारा बता सकते हैं?"
+ },
+ "label_account": {
+  "en": "account number",
+  "hi": "खाता नंबर"
+ },
+ "label_branch": {
+  "en": "branch",
+  "hi": "ब्रांच"
+ },
+ "label_customer_id": {
+  "en": "customer ID",
+  "hi": "कस्टमर आईडी"
+ },
+ "label_email": {
+  "en": "registered email",
+  "hi": "पंजीकृत ईमेल"
+ },
+ "label_ifsc": {
+  "en": "branch IFSC",
+  "hi": "ब्रांच का आईएफएससी"
+ },
+ "label_loan": {
+  "en": "loan number",
+  "hi": "लोन नंबर"
+ },
+ "label_mobile": {
+  "en": "registered mobile number",
+  "hi": "पंजीकृत मोबाइल नंबर"
  },
  "loan_not_found": {
   "en": "I could not find an active loan on your profile. Let me connect you to a colleague.",

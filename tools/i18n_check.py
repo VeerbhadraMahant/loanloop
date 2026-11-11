@@ -9,7 +9,7 @@ from string import Formatter
 ROOT = Path(__file__).resolve().parents[1]
 BUILTIN = ("en", "hi", "hinglish", "mr")
 LIST_WORDS = ["lang_names", "affirm", "negate", "bye", "approval", "switch_cues", "question", "possessive", "acct_nouns",
-              "human_target", "human_verb", "neg_human", "full", "multi", "date", "verify", "already_paid", "action_verbs"]
+              "human_target", "human_verb", "neg_human", "full", "multi", "date", "verify", "already_paid", "action_verbs", "thanks"]
 PHRASE_WORDS = ("already_paid", "date")  # matched as phrases inside a regex; every other list is compared token by token
 _TOKEN = re.compile(r"[A-Za-z0-9'’]+|[ऀ-ൿ]+")  # same tokenizer as voice/app.py _TOKEN
 

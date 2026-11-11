@@ -1,6 +1,7 @@
 """Language files (i18n/<code>.json): loading, fallback, FAQ merge, digit normalisation, and the validator over real files."""
 import importlib.util
 import json
+import re
 import shutil
 from datetime import date
 from pathlib import Path
@@ -132,6 +133,17 @@ def test_validator_accepts_complete_file_and_rejects_broken_ones():
     for frag in (f"gateway.{k}: placeholders", "gateway: missing key", "warning: faq: missing intent", "months must be 12", "voice.ASK", "words.affirm", "words.negate: entries must be single words"):
         assert frag in problems, frag
     assert "words.already_paid" not in problems
+    del full["words"]["thanks"]
+    assert "words.thanks: must be a non-empty list" in " | ".join(chk.check_file("ta", full, src))
+
+
+def test_ending_and_field_labels_are_native_in_every_beta_language():
+    from app.speak.templates.details import LABELS, ending, spell_ifsc
+
+    for code in i18n.present():
+        assert "{d}" not in ending("4417", code) and "44 17" in ending("4417", code), code
+        spoken = [ending("4417", code), spell_ifsc("SAHY0000101", code).replace("S A H Y", ""), *(speak.t("label_" + k, code) for k in LABELS)]
+        assert not any(re.search("[A-Za-z]", x) for x in spoken), (code, spoken)  # no English word leaks into beta speech
 
 
 def test_every_present_language_file_is_valid():
