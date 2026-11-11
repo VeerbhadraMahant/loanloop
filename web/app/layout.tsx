@@ -1,20 +1,31 @@
 import type { Metadata } from "next";
-import { Inter, Instrument_Serif } from "next/font/google";
+import { Inter, Newsreader, JetBrains_Mono } from "next/font/google";
+import { Agentation } from "agentation";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
-// Substitute for Gnani's Gambarino display serif (Fontshare, not on Google Fonts).
-const instrument = Instrument_Serif({ subsets: ["latin"], weight: "400", variable: "--font-instrument", display: "swap" });
+const newsreader = Newsreader({ subsets: ["latin"], weight: ["400", "500", "600"], style: ["normal", "italic"], variable: "--font-serif", display: "swap" });
+const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], weight: ["400", "500", "600"], variable: "--font-mono", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "LoanLoop",
-  description: "Voice service desk for lenders. Demo with synthetic data.",
+  title: "LoanLoop · Voice Banking Desk",
+  description: "Secure multilingual voice service desk for Sahyadri Finance Bank. Demo with synthetic data.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${instrument.variable}`}>
-      <body className="min-h-screen antialiased">{children}</body>
+    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${newsreader.variable} ${jetbrainsMono.variable}`}>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("loanloop.theme");if(t){document.documentElement.setAttribute("data-theme",t);}}catch(e){}})();`,
+          }}
+        />
+      </head>
+      <body className="min-h-screen antialiased selection:bg-secondary-container selection:text-primary">
+        {children}
+        <Agentation endpoint="http://localhost:4747" />
+      </body>
     </html>
   );
 }

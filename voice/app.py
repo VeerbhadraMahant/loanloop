@@ -590,6 +590,9 @@ def _parse_dob(v: str) -> str | None:
 
 def _extract_verify(text: str, said: list[str] | None = None) -> tuple[str, dict] | None:
     t = text.translate(_DEVA_DIGITS)
+    has_cue = bool(re.search(r"\b[6-9]\d{9}\b", t) or _parse_dob(t) or re.search(r"(?:loan|कर्ज|खाते|last\s*4|last\s*four)\D{0,15}(\d{4})\b", t, re.I))
+    if not has_cue:
+        return None
     all_text = (" ".join(said) + " " + text).translate(_DEVA_DIGITS) if said else t
     m_mob = re.search(r"(?:(?:\+?91|0)?[ -]?)?([6-9]\d{9})\b", all_text)
     if not m_mob:
@@ -604,12 +607,13 @@ def _extract_verify(text: str, said: list[str] | None = None) -> tuple[str, dict
     return None
 
 
-def fallback_action(text: str, said: list[str] | None = None) -> tuple[str, dict] | None:
+def fallback_action(text: str, said: list[str] | None = None, verified: bool = False) -> tuple[str, dict] | None:
     """Only when the model answered with prose and no action: 'EMI date 10 la karaycha aahe' is unambiguous enough
     to run emi_date_change(new_day=10) ourselves (the read-back and approval flows then take over)."""
-    fb_v = _extract_verify(text, said)
-    if fb_v:
-        return fb_v
+    if not verified:
+        fb_v = _extract_verify(text, said)
+        if fb_v:
+            return fb_v
     t = set(_tokens(text))
     if {"emi", "ईएमआय", "एमआय"} & t and _WHY_WORDS & t and _UP_WORDS & t:
         return ("explain_emi_change", {})
@@ -1517,6 +1521,8 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         log.info("call=%s action=%s ok=%s ms=%d", c["id"], name, ok, (time.monotonic() - t0) * 1000)
         if name == "end_call" and ok:
             c["ended"] = True
+        if name == "verify_caller" and ok:
+            c["verified"] = True
         return res
 
     def new_state() -> dict:
@@ -1645,7 +1651,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             argl = [clean_args(tc) for tc in tcs]
             c["messages"].append(msg)
             if (not tcs and not st.get("fb") and (not st["done"] or st.get("dup_seen"))
-                    and (fb := fallback_action(c.get("user_text", ""), c.get("said", [])))):
+                    and (fb := fallback_action(c.get("user_text", ""), c.get("said", []), c.get("verified", False)))):
                 st["fb"] = True  # replace the model's prose with the action it should have called
                 msg = {"role": "assistant", "content": "", "tool_calls": [{"function": {"name": fb[0], "arguments": fb[1]}}]}
                 c["messages"][-1] = msg

@@ -14,5 +14,6 @@ def isolated_env(monkeypatch, tmp_path):
     import voice.app as app_mod
 
     monkeypatch.setattr(app_mod, "ENV_LOCAL", tmp_path / "missing.env.local")
+    monkeypatch.setenv("DASHBOARD_TOKEN", "dev-dashboard-token-change-me")
     for name in ("GEMINI_API_KEY", "SARVAM_API_KEY", "LLM_PROVIDER", "VOICE_DEV", "GNANI_SPEECH_API_KEY"):
         monkeypatch.delenv(name, raising=False)
