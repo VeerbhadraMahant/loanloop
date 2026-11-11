@@ -9,6 +9,7 @@ import { DataTable, type Column } from "@/components/bank/data-table";
 import { FilterBar } from "@/components/bank/filter-bar";
 import { EmptyState, ErrorState } from "@/components/bank/states";
 import { istTime, num, relTime } from "@/components/bank/format";
+import { human, what } from "@/components/bank/labels";
 
 type Kind = "secret" | "blocked" | "approval";
 const kindOf = (e: GwEvent): Kind =>
@@ -19,18 +20,6 @@ const KIND: Record<Kind, { label: string; tone: Tone }> = {
   blocked: { label: "Blocked", tone: "warn" },
   approval: { label: "Not approved", tone: "info" },
 };
-const CODE: Record<string, string> = {
-  SECRET_DETECTED: "Caller said a secret; it was discarded and not stored",
-  TIER_TOO_LOW: "Asked for data above verification level",
-  NOT_VERIFIED: "Asked for data before identity was verified",
-  RATE_LIMITED: "Too many attempts; call routed to a person",
-};
-const human = (s: string) => { const t = s.replace(/_/g, " "); return t.charAt(0).toUpperCase() + t.slice(1); };
-const what = (e: GwEvent) =>
-  e.type === "approval" ? (e.detail ? human(e.detail) : "Approval not completed")
-  : e.error_code ? CODE[e.error_code] ?? human(e.error_code)
-  : e.action === "report_secret_spoken" ? "Caller said a secret; it was not stored" : "Blocked";
-
 const REFUSALS: [string, string][] = [
   ["Passwords, PINs, OTPs, CVV, full card numbers", "Never asked for, accepted or stored. If a caller says one, the agent interrupts and warns them. The value is discarded; only a \"secret detected\" event with the field name is logged."],
   ["Full account, loan or customer numbers, mobile, email", "Never spoken or returned. The agent gives masked values only, such as \"ending 4417\"."],

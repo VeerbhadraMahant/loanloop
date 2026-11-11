@@ -8,6 +8,7 @@ import { DataTable, type Column } from "@/components/bank/data-table";
 import { EmptyState, ErrorState } from "@/components/bank/states";
 import { StatusBadge } from "@/components/bank/status-badge";
 import { inrCompact, istTime, num, relTime } from "@/components/bank/format";
+import { reasonOf, what } from "@/components/bank/labels";
 import { OutcomeBadge, customerName, istDay, langLabel, ms } from "./conversations/shared";
 
 const POLL = 15000;
@@ -43,15 +44,17 @@ export default function TodayPage() {
   }, []);
   const todays = today ? rows?.filter((c) => istDay(c.started_at) === today).length : undefined;
   const ended = rows?.filter((c) => c.outcome) ?? [];
-  const resolved = ended.filter((c) => c.outcome !== "handover").length;
+  // Only completed/resolved count, and never a call that also has a handover row (matches gateway /metrics).
+  const handedOver = new Set(handovers.data?.map((h) => h.call_id));
+  const resolved = ended.filter((c) => (c.outcome === "completed" || c.outcome === "resolved") && !handedOver.has(c.call_id)).length;
   const live = rows?.filter((c) => !c.ended_at).length ?? 0;
   const overdue = coll.data?.cases.reduce((s, c) => s + c.overdue_amount, 0) ?? 0;
   const err = calls.error ?? handovers.error ?? security.error ?? coll.error;
   const retry = () => reloads.current.forEach((r) => r());
 
   const items: Item[] = [
-    ...(handovers.data ?? []).map((h): Item => ({ key: `h${h.id}`, ts: h.created_at, href: "/bank/handovers", kind: "handover", who: customerName(h.customer_ref), text: h.reason })),
-    ...(security.data ?? []).map((e): Item => ({ key: `s${e.id}`, ts: e.ts, href: "/bank/security", kind: "security", who: customerName(e.customer_ref), text: e.detail ?? e.error_code ?? "Security event" })),
+    ...(handovers.data ?? []).map((h): Item => ({ key: `h${h.id}`, ts: h.created_at, href: "/bank/handovers", kind: "handover", who: customerName(h.customer_ref), text: reasonOf(h.reason).label })),
+    ...(security.data ?? []).map((e): Item => ({ key: `s${e.id}`, ts: e.ts, href: "/bank/security", kind: "security", who: customerName(e.customer_ref), text: what(e) })),
   ].sort((a, b) => ms(b.ts) - ms(a.ts)).slice(0, 6);
 
   const cols: Column<CallRow>[] = [
@@ -65,20 +68,20 @@ export default function TodayPage() {
     <div className="space-y-6">
       <PageHeader title="Today" description="What needs your attention across calls, handovers, collections and security." />
       {err && <ErrorState message={err} onRetry={retry} />}
-      <section aria-label="Key figures" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <section aria-label="Key figures" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <Link href="/bank/conversations" className="block rounded-lg">
           <KpiTile label="Calls today" value={todays == null ? "–" : capped(todays)} hint={`${live} live now`} loading={calls.loading} />
         </Link>
         <Link href="/bank/conversations" className="block rounded-lg">
-          <KpiTile label="Resolved by agent" value={ended.length ? `${Math.round((resolved / ended.length) * 100)}%` : "–"} hint={`${num(resolved)} of ${num(ended.length)} ended calls; rest handed over`} tone="ok" loading={calls.loading} />
+          <KpiTile label="Resolved by agent" value={ended.length && handovers.data ? `${Math.round((resolved / ended.length) * 100)}%` : "–"} hint={`${num(resolved)} of ${num(ended.length)} ended calls completed without a handover`} tone="ok" loading={calls.loading || handovers.loading} />
         </Link>
         <Link href="/bank/handovers" className="block rounded-lg">
-          <KpiTile label="Handovers waiting" value={handovers.data ? capped(handovers.data.length) : "–"} hint="Calls needing a person" tone="warn" loading={handovers.loading} />
+          <KpiTile label="Handovers (latest 100)" value={handovers.data ? capped(handovers.data.length) : "–"} hint="Calls passed to a person; no resolved state yet" tone="warn" loading={handovers.loading} />
         </Link>
         <Link href="/bank/security" className="block rounded-lg">
           <KpiTile label="Blocked attempts" value={security.data ? capped(security.data.length) : "–"} hint="Secrets, failed checks, unapproved requests" tone="danger" loading={security.loading} />
         </Link>
-        <Link href="/bank/collections" className="block rounded-lg">
+        <Link href="/bank/collections" className="block rounded-lg sm:max-xl:col-span-2">
           <KpiTile label="Overdue total" value={inrCompact(overdue)} hint={`${num(coll.data?.cases.length)} open cases`} tone="info" loading={coll.loading} />
         </Link>
       </section>

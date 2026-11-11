@@ -61,7 +61,7 @@ export function DataTable<T>({ columns, rows, rowKey, onRowClick, loading, empty
                   <tr
                     key={k}
                     tabIndex={onRowClick ? 0 : undefined}
-                    aria-selected={onRowClick ? k === selectedKey : undefined}
+                    aria-current={k === selectedKey ? "true" : undefined}
                     onClick={onRowClick ? () => onRowClick(r) : undefined}
                     onKeyDown={onRowClick ? (e) => onKey(e, r) : undefined}
                     className={`border-b border-bank-line last:border-b-0 ${onRowClick ? "cursor-pointer transition-colors duration-150 hover:bg-bank-sunken focus-visible:bg-bank-sunken" : ""} ${k === selectedKey ? "bg-bank-accent-soft" : ""}`}

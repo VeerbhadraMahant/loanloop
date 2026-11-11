@@ -24,6 +24,13 @@ export function istTime(iso: string | null | undefined) {
   return ist({ day: "numeric", month: "short", hour: "numeric", minute: "2-digit", hour12: true }).format(toDate(iso));
 }
 
+/** "15 Nov" for date-only values such as a promised date: the calendar date as stored, never shifted by timezone. */
+export function istDate(iso: string | null | undefined) {
+  const m = iso?.match(/^(\d{4})-(\d\d)-(\d\d)/);
+  if (!m) return iso ? istTime(iso) : "–";
+  return new Intl.DateTimeFormat("en-IN", { timeZone: "UTC", day: "numeric", month: "short" }).format(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+}
+
 /** "just now", "5 min ago", "3 h ago"; older than a day falls back to the IST date and time. */
 export function relTime(iso: string | null | undefined, now = Date.now()) {
   if (!iso) return "–";

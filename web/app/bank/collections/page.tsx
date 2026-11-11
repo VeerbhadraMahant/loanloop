@@ -8,7 +8,7 @@ import { FilterBar } from "@/components/bank/filter-bar";
 import { DetailDrawer } from "@/components/bank/detail-drawer";
 import { StatusBadge, type Tone } from "@/components/bank/status-badge";
 import { EmptyState, ErrorState } from "@/components/bank/states";
-import { inr, inrCompact, istTime, num } from "@/components/bank/format";
+import { inr, inrCompact, istDate, istTime, num } from "@/components/bank/format";
 
 const PTP_TONE: Record<string, Tone> = { open: "info", kept: "ok", broken: "danger", cancelled: "neutral" };
 const human = (s: string) => { const t = s.replace(/_/g, " "); return t.charAt(0).toUpperCase() + t.slice(1); };
@@ -76,7 +76,7 @@ export default function CollectionsPage() {
     { key: "c", header: "Customer", cell: (p) => p.customer ?? "–" },
     { key: "l", header: "Loan", cell: (p) => p.loan, className: "hidden sm:table-cell" },
     { key: "a", header: "Promised", cell: (p) => inr(p.amount), num: true, align: "right" },
-    { key: "d", header: "Promised date", cell: (p) => istTime(p.promised_date), className: "whitespace-nowrap" },
+    { key: "d", header: "Promised date", cell: (p) => istDate(p.promised_date), className: "whitespace-nowrap" },
     { key: "t", header: "Type", cell: (p) => human(p.amount_tag), className: "hidden md:table-cell" },
     { key: "pd", header: "Paid", cell: (p) => (p.paid_amount == null ? "–" : inr(p.paid_amount)), num: true, align: "right", className: "hidden md:table-cell" },
     { key: "s", header: "Status", cell: (p) => <StatusBadge tone={PTP_TONE[p.status] ?? "neutral"}>{human(p.status)}</StatusBadge> },
@@ -137,7 +137,7 @@ export default function CollectionsPage() {
               {casePtps.length === 0 ? <p className="mt-1 text-bank-muted">None for this case.</p> : (
                 <ul className="mt-2 space-y-2">{casePtps.map((p) => (
                   <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-bank-line p-3">
-                    <span className="b-num">{inr(p.amount)} by {istTime(p.promised_date)}</span>
+                    <span className="b-num">{inr(p.amount)} by {istDate(p.promised_date)}</span>
                     <StatusBadge tone={PTP_TONE[p.status] ?? "neutral"}>{human(p.status)}</StatusBadge>
                   </li>))}</ul>
               )}

@@ -28,7 +28,9 @@ export function FilterBar({ search, filters = [], children }: {
         </label>
       )}
       {filters.map((f) => (
-        <div key={f.label} role="radiogroup" aria-label={f.label} className="inline-flex overflow-hidden rounded-md border border-bank-line-strong bg-bank-surface">
+        <div key={f.label} className="flex items-center gap-2">
+        <span aria-hidden className="text-xs font-medium text-bank-muted">{f.label}</span>
+        <div role="radiogroup" aria-label={f.label} className="inline-flex overflow-hidden rounded-md border border-bank-line-strong bg-bank-surface">
           {f.options.map((o) => {
             const on = o.value === f.value;
             return (
@@ -41,6 +43,7 @@ export function FilterBar({ search, filters = [], children }: {
               </button>
             );
           })}
+        </div>
         </div>
       ))}
       {children && <div className="ml-auto flex items-center gap-2">{children}</div>}

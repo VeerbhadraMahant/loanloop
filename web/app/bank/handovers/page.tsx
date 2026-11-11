@@ -4,30 +4,15 @@ import { useEffect, useMemo, useState } from "react";
 import { useGet, type Handover } from "@/lib/api";
 import { PageHeader } from "@/components/bank/page-header";
 import { KpiTile } from "@/components/bank/kpi-tile";
-import { StatusBadge, type Tone } from "@/components/bank/status-badge";
+import { StatusBadge } from "@/components/bank/status-badge";
 import { DataTable, type Column } from "@/components/bank/data-table";
 import { DetailDrawer } from "@/components/bank/detail-drawer";
 import { FilterBar } from "@/components/bank/filter-bar";
 import { EmptyState, ErrorState } from "@/components/bank/states";
 import { istTime, num } from "@/components/bank/format";
+import { human, keyOf, reasonOf } from "@/components/bank/labels";
 
 const GATEWAY_CAP = 100; // /dashboard/handovers returns at most 100 rows
-
-const REASONS: Record<string, { label: string; tone: Tone }> = {
-  hardship: { label: "Financial hardship", tone: "warn" },
-  brute_force: { label: "Failed verification", tone: "danger" },
-  unclear: { label: "Request unclear", tone: "info" },
-  out_of_scope: { label: "Outside agent scope", tone: "info" },
-  caller_request: { label: "Customer asked for a person", tone: "neutral" },
-  caller_asked_for_a_human: { label: "Customer asked for a person", tone: "neutral" },
-  faq_not_found: { label: "Question not in FAQ", tone: "info" },
-  dispute: { label: "Dispute", tone: "danger" },
-  other: { label: "Other", tone: "neutral" },
-};
-// Gateway reasons are free text (e.g. "FAQ NOT FOUND"); fold case and spaces so equal reasons group together.
-const keyOf = (r: string) => r.trim().toLowerCase().replace(/[\s-]+/g, "_");
-const human = (s: string) => { const t = s.replace(/_/g, " "); return t.charAt(0).toUpperCase() + t.slice(1); };
-const reasonOf = (r: string) => REASONS[keyOf(r)] ?? { label: human(keyOf(r)), tone: "neutral" as Tone };
 
 const ts = (iso: string) => new Date(/[zZ]|[+-]\d\d:?\d\d$/.test(iso) ? iso : `${iso}Z`).getTime();
 function waited(iso: string, now: number) {
@@ -72,7 +57,7 @@ export default function HandoversPage() {
   const top = counts[0];
 
   const columns: Column<Handover>[] = [
-    { key: "age", header: "Waiting", num: true, className: "w-28 whitespace-nowrap", cell: (h) => waited(h.created_at, now) },
+    { key: "age", header: "Age", num: true, className: "w-28 whitespace-nowrap", cell: (h) => waited(h.created_at, now) },
     { key: "cust", header: "Customer", className: "w-32 whitespace-nowrap", cell: (h) => h.customer_ref ?? "Unknown" },
     { key: "reason", header: "Reason", className: "w-56", cell: (h) => <StatusBadge tone={reasonOf(h.reason).tone}>{reasonOf(h.reason).label}</StatusBadge> },
     { key: "sum", header: "Summary", className: "hidden md:table-cell min-w-64", cell: (h) => <span className="line-clamp-2">{h.summary}</span> },
@@ -85,8 +70,8 @@ export default function HandoversPage() {
       {error && <ErrorState message={error} onRetry={reload} />}
 
       <section aria-label="Key figures" className="grid gap-4 sm:grid-cols-3">
-        <KpiTile label="Waiting for a person" value={waiting} hint={all.length >= GATEWAY_CAP ? "Showing the latest 100" : "Calls handed over"} tone="warn" loading={loading} />
-        <KpiTile label="Longest wait" value={oldest ? waited(oldest.created_at, now) : "–"} hint={oldest ? `Since ${istTime(oldest.created_at)}` : undefined} tone="info" loading={loading} />
+        <KpiTile label="Handovers (latest 100)" value={waiting} hint="Calls passed to your team; no resolved state yet" tone="warn" loading={loading} />
+        <KpiTile label="Oldest in list" value={oldest ? waited(oldest.created_at, now) : "–"} hint={oldest ? `Since ${istTime(oldest.created_at)}` : undefined} tone="info" loading={loading} />
         <KpiTile label="Most common reason" value={top ? <span className="text-xl">{top[0]}</span> : "–"} hint={top ? `${top[1]} of ${all.length}` : undefined} loading={loading} />
       </section>
 
@@ -116,19 +101,19 @@ export default function HandoversPage() {
 
       {!error && (
         <DataTable
-          caption="Handover queue" columns={columns} rows={rows} rowKey={(h) => String(h.id)} loading={loading}
+          caption="Handovers" columns={columns} rows={rows} rowKey={(h) => String(h.id)} loading={loading}
           onRowClick={setSelected} selectedKey={selected ? String(selected.id) : null}
-          empty={<EmptyState title={all.length ? "No handovers match" : "No handovers waiting"} description={all.length ? "Clear the search or reason filter." : "When the agent passes a call to your team it will appear here."} />}
+          empty={<EmptyState title={all.length ? "No handovers match" : "No handovers yet"} description={all.length ? "Clear the search or reason filter." : "When the agent passes a call to your team it will appear here."} />}
         />
       )}
 
-      <DetailDrawer open={!!selected} onClose={() => setSelected(null)} title={selected ? `Handover from ${selected.customer_ref ?? "unknown customer"}` : ""} subtitle={selected ? `Waiting ${waited(selected.created_at, now)}, since ${istTime(selected.created_at)}` : undefined}>
+      <DetailDrawer open={!!selected} onClose={() => setSelected(null)} title={selected ? `Handover from ${selected.customer_ref ?? "unknown customer"}` : ""} subtitle={selected ? `Handed over ${waited(selected.created_at, now)} ago, at ${istTime(selected.created_at)}` : undefined}>
         {selected && (
           <div className="space-y-5">
             {keyOf(selected.reason) === "hardship" && (
               <div role="note" className="rounded-lg border border-bank-warn-fg/40 bg-bank-warn-bg px-4 py-3 text-bank-warn-fg">
                 <p className="font-medium">This customer has said they are struggling to pay.</p>
-                <p className="mt-1 text-sm">Listen first and acknowledge their situation. The agent made no offers or promises about dues.</p>
+                <p className="mt-1 text-sm">Listen first and acknowledge their situation. Check the case summary for what was already discussed.</p>
               </div>
             )}
             <div><StatusBadge tone={reasonOf(selected.reason).tone}>{reasonOf(selected.reason).label}</StatusBadge></div>
@@ -143,7 +128,7 @@ export default function HandoversPage() {
               <Link href={`/bank/conversations?call=${encodeURIComponent(selected.call_id)}`} className="b-pressable inline-flex min-h-10 items-center rounded-md bg-bank-accent px-4 font-medium text-bank-accent-fg">Open conversation</Link>
               <button type="button" disabled title="Not wired yet: the gateway has no endpoint to assign or resolve handovers." className="min-h-10 cursor-not-allowed rounded-md border border-bank-line-strong px-4 font-medium text-bank-muted opacity-60">Assign</button>
             </div>
-            <p className="text-xs text-bank-muted">Assigning is not wired yet, so every handover here shows as waiting.</p>
+            <p className="text-xs text-bank-muted">Assigning and resolving are not wired yet, so handovers stay in this list.</p>
           </div>
         )}
       </DetailDrawer>

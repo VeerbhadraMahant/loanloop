@@ -1,5 +1,5 @@
 "use client";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { get, useGet, type CallRow, type GwEvent } from "@/lib/api";
 import { PageHeader } from "@/components/bank/page-header";
@@ -47,14 +47,23 @@ function Conversations() {
     (tier === ALL || String(c.tier) === tier) && customerName(c.customer_ref).toLowerCase().includes(q.trim().toLowerCase())), [all, q, lang, outcome, tier]);
   const visible = rows.slice(0, shown);
 
-  // "Requests handled" is not on the list endpoint, so fetch each visible call's timeline once.
-  const need = visible.filter((c) => counts[c.call_id] === undefined && c.ended_at).map((c) => c.call_id).join(",");
+  // "Requests handled" is not on the list endpoint, so fetch each ended call's timeline once, at most 4 at a time.
+  // Asked ids live in a ref (not state): a state-derived dependency re-ran this effect on every response and caused a request storm.
+  const asked = useRef(new Set<string>());
+  const ids = visible.filter((c) => c.ended_at).map((c) => c.call_id).join(",");
   useEffect(() => {
-    let off = false;
-    need.split(",").filter(Boolean).forEach((id) =>
-      get<GwEvent[]>(`/dashboard/calls/${id}/timeline`).then((t) => { if (!off) setCounts((p) => ({ ...p, [id]: handled(t) })); }).catch(() => {}));
-    return () => { off = true; };
-  }, [need]);
+    const todo = ids.split(",").filter((id) => id && !asked.current.has(id));
+    todo.forEach((id) => asked.current.add(id));
+    let i = 0;
+    const worker = async () => {
+      while (i < todo.length) {
+        const id = todo[i++];
+        try { const t = await get<GwEvent[]>(`/dashboard/calls/${id}/timeline`); setCounts((p) => ({ ...p, [id]: handled(t) })); }
+        catch { asked.current.delete(id); }
+      }
+    };
+    for (let k = 0; k < 4; k++) void worker();
+  }, [ids]);
 
   const setCall = (id: string | null) => router.replace(id ? `${pathname}?call=${encodeURIComponent(id)}` : pathname, { scroll: false });
   const selected = all.find((c) => c.call_id === callId) ?? null;

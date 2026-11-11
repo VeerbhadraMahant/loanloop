@@ -43,10 +43,10 @@ export default function RequestsPage() {
       <PageHeader title="Service requests" description="Requests raised by the voice agent during calls, awaiting action." />
       {error && <ErrorState message={error} onRetry={reload} />}
       <section aria-label="Key figures" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiTile label="Open" value={num(bs.open ?? 0)} hint="Not yet picked up" tone="warn" loading={loading} />
-        <KpiTile label="In progress" value={num(bs.in_progress ?? 0)} tone="info" loading={loading} />
-        <KpiTile label="Done" value={num(bs.done ?? 0)} tone="ok" loading={loading} />
-        <KpiTile label="Rejected" value={num(bs.rejected ?? 0)} tone="danger" loading={loading} />
+        <KpiTile label="Open" value={num(bs.open ?? 0)} hint="Not yet picked up (all requests)" tone="warn" loading={loading} />
+        <KpiTile label="In progress" value={num(bs.in_progress ?? 0)} hint="All requests" tone="info" loading={loading} />
+        <KpiTile label="Done" value={num(bs.done ?? 0)} hint="All requests" tone="ok" loading={loading} />
+        <KpiTile label="Rejected" value={num(bs.rejected ?? 0)} hint="All requests" tone="danger" loading={loading} />
       </section>
       {!error && !loading && all.length === 0 ? (
         <EmptyState
@@ -66,6 +66,7 @@ export default function RequestsPage() {
             onRowClick={setSelected} selectedKey={selected ? String(selected.id) : null}
             empty={<EmptyState title="No requests match these filters" description="Clear a filter to see more." action={<button type="button" className="b-pressable min-h-10 cursor-pointer rounded-md border border-bank-line-strong px-4 font-medium" onClick={() => { setType("all"); setStatus("all"); }}>Clear filters</button>} />}
           />
+          {all.length >= 100 && <p className="text-xs text-bank-muted">The table shows the latest 100 requests; the figures above count all requests.</p>}
         </>
       )}
       <DetailDrawer open={!!selected} onClose={() => setSelected(null)} title={selected ? `${label(selected.type)} #${selected.id}` : ""} subtitle={selected ? `${selected.customer_ref} · ${istTime(selected.created_at)} IST` : undefined}>
