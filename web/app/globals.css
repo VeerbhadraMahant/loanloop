@@ -1,11 +1,12 @@
 @import "tailwindcss";
+@import "./bank/bank.css";
 
 /* Warm Ledger Design Tokens (Sahyadri Bank Voice Agent Studio) */
 /* Default: Radiant Warm Ledger (Brighter, Crisp Porcelain & High-Contrast Emerald) */
 :root, [data-theme="bright"] {
-  --bg: #FBF9F5;
+  --bg: #F6FAF8;
   --card: #FFFFFF;
-  --line: #E8E3D8;
+  --line: #DCE7E1;
   --fg: #14221A;
   --muted: #56645A;
   --primary: #00704E;
@@ -23,59 +24,62 @@
   --danger-bg: #FEF2F2;
   --danger-fg: #DC2626;
   --danger-line: #FECACA;
-  --sunken: #F4F1EA;
+  --sunken: #EDF4F0;
   --surface: #FFFFFF;
-  --surface-container: #F3EFE8;
-  --surface-container-high: #ECE7DE;
-  --surface-container-low: #F8F5EE;
-  --surface-variant: #E8E3D8;
+  --surface-container: #EAF2EE;
+  --surface-container-high: #DFEAE4;
+  --surface-container-low: #F1F7F4;
+  --surface-variant: #DCE7E1;
   --surface-bright: #FFFFFF;
   --secondary-container: #D1F4E2;
   --on-secondary-fixed: #064E3B;
   --outline-variant: #CCD6CF;
-  --wash-from: #E6F7EF;
-  --wash-to: #FBF9F5;
+  --wash-from: #DDF5EA;
+  --wash-to: #F6FAF8;
   --ring: #059669;
   --bezel: #14221A;
+}
+
+:root {
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* Classic Subdued Warm Paper (Original DESIGN.md §2.1) */
+/* Classic: sepia parchment, brown ink, bronze accent; deliberately distinct from Bright */
 [data-theme="classic"] {
-  --bg: #FAF7F2;
-  --card: #FFFFFF;
-  --line: #E4DED3;
-  --fg: #1F2A24;
-  --muted: #6B7268;
-  --primary: #00513A;
-  --primary-fg: #FFFFFF;
-  --accent: #0F6B4F;
-  --accent-hover: #0B5740;
-  --accent-soft: #E3F1EA;
-  --accent-ink: #00513A;
-  --ok-bg: #E6F3EA;
-  --ok-fg: #1E6B3C;
-  --ok-border: #B9DCC5;
-  --warn-bg: #FFF4DC;
+  --bg: #EFE6D2;
+  --card: #FAF4E6;
+  --line: #D2C5A6;
+  --fg: #2B2418;
+  --muted: #6E634C;
+  --primary: #4A3B1F;
+  --primary-fg: #FAF4E6;
+  --accent: #7A5C1E;
+  --accent-hover: #634A16;
+  --accent-soft: #EADFC2;
+  --accent-ink: #4A3B1F;
+  --ok-bg: #E3E8CF;
+  --ok-fg: #4F6420;
+  --ok-border: #BCC896;
+  --warn-bg: #F6E3B4;
   --warn-fg: #8A5A00;
-  --warn-border: #F0D493;
-  --danger-bg: #FBE9E7;
-  --danger-fg: #A32A1F;
-  --danger-line: #EDB8B1;
-  --sunken: #F2EEE7;
-  --surface: #FCF9F4;
-  --surface-container: #F0EDE9;
-  --surface-container-high: #EBE8E3;
-  --surface-container-low: #F6F3EE;
-  --surface-variant: #E5E2DD;
-  --surface-bright: #FCF9F4;
-  --secondary-container: #D8E6DF;
-  --on-secondary-fixed: #121E1A;
-  --outline-variant: #BEC9C2;
-  --wash-from: #E3F1EA;
-  --wash-to: #FAF7F2;
-  --ring: #00513A;
-  --bezel: #1F2A24;
+  --warn-border: #E0C070;
+  --danger-bg: #F3DDD3;
+  --danger-fg: #9A2F1F;
+  --danger-line: #DDB0A0;
+  --sunken: #E6DCC4;
+  --surface: #F5EDDA;
+  --surface-container: #E9DFC8;
+  --surface-container-high: #DFD3B8;
+  --surface-container-low: #F0E8D4;
+  --surface-variant: #D8CCAF;
+  --surface-bright: #FAF4E6;
+  --secondary-container: #E0D2AC;
+  --on-secondary-fixed: #2B2418;
+  --outline-variant: #C4B68F;
+  --wash-from: #E6D8B4;
+  --wash-to: #EFE6D2;
+  --ring: #7A5C1E;
+  --bezel: #2B2418;
 }
 
 .dark, [data-theme="dark"] {

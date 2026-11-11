@@ -30,6 +30,9 @@ function LivePill({ live }: { live: boolean }) {
   );
 }
 
+// gateway caps these lists at 100 rows, so show "100+" rather than a misleading exact count
+const cap = (n: number) => (n >= 100 ? "100+" : String(n));
+
 const th = "px-3.5 py-2.5 text-xs font-mono font-medium uppercase tracking-wider text-muted";
 
 export default function Ops() {
@@ -121,7 +124,7 @@ export default function Ops() {
               : "bg-card text-muted hover:text-fg border border-line"
           }`}
         >
-          All ({callList.length})
+          All ({cap(callList.length)})
         </button>
         <button
           type="button"
@@ -191,7 +194,7 @@ export default function Ops() {
             </span>
           </div>
           <div className="mt-2">
-            <span className="font-mono text-3xl font-bold text-warn-fg">{handoverCount}</span>
+            <span className="font-mono text-3xl font-bold text-warn-fg">{cap(handoverCount)}</span>
           </div>
         </Card>
 
@@ -204,7 +207,7 @@ export default function Ops() {
               Threats Blocked
             </span>
             <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-danger-bg text-danger-fg border border-danger-line">
-              Firewall
+              Blocked
             </span>
           </div>
           <div className="mt-2">
@@ -471,7 +474,7 @@ export default function Ops() {
                     : "text-muted hover:text-fg"
                 }`}
               >
-                Handovers ({handoverCount})
+                Handovers ({cap(handoverCount)})
               </button>
               <button
                 type="button"
@@ -497,7 +500,7 @@ export default function Ops() {
                 </span>
                 {handoverCount > 0 && (
                   <Pill tone="warn" icon="clock">
-                    {handoverCount} waiting
+                    {cap(handoverCount)} waiting
                   </Pill>
                 )}
               </div>
@@ -526,7 +529,7 @@ export default function Ops() {
                           <span className="font-mono text-xs text-muted">{fmtTime(h.created_at)}</span>
                         </div>
                       </div>
-                      <Button small className="w-full font-semibold text-xs justify-center cursor-pointer mt-1">
+                      <Button small disabled title="Demo: live takeover is not wired up" className="w-full font-semibold text-xs justify-center mt-1">
                         <Icon name="support_agent" size={14} />
                         <span>Take Over Call</span>
                       </Button>

@@ -4,10 +4,9 @@ import { SidebarLayout } from "@/components/sidebar-nav";
 import { Button, Card, Eyebrow, Icon, StatTile, type IconName } from "@/components/ui";
 
 const stats = [
-  { value: "33 ms", caption: "p95 gateway latency at 1,000 concurrent calls", accent: true },
-  { value: "220+", caption: "automated unit & contract tests passing" },
-  { value: "23", caption: "secure banking gateway actions" },
-  { value: "11", caption: "Indic languages with code-switching" },
+  { value: "~0.5 s", caption: "agent response, Sarvam 105B, typed turn; a full voice turn is 2.9-3.3 s", accent: true },
+  { value: "29", caption: "secure banking gateway actions" },
+  { value: "4 + 7 beta", caption: "language modes: English, Hindi, Hinglish, Marathi, plus 7 machine-translated beta" },
 ];
 
 const safety: { icon: IconName; title: string; body: string }[] = [
@@ -111,7 +110,7 @@ export default function Home() {
               </p>
             </div>
             <span className="font-mono text-xs text-primary font-medium bg-secondary-container px-3 py-1 rounded-full border border-primary/20">
-              RBI 2024.1 / PCI-DSS Compliant
+              Demo · synthetic data
             </span>
           </div>
 
@@ -150,7 +149,9 @@ export default function Home() {
       {/* Footer */}
       <footer className="mx-auto mt-16 max-w-5xl border-t border-line px-4 py-6 text-xs text-muted sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
         <p>Sahyadri Finance Bank · LoanLoop Voice Banking Desk</p>
-        <p className="font-mono">Bank Sandbox v2.4 · Synthetic Grounded Data</p>
+        <p className="font-mono">
+          Demo · Synthetic Data · <Link href="/bank" className="underline underline-offset-2">Bank app →</Link>
+        </p>
       </footer>
     </SidebarLayout>
   );

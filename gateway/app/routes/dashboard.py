@@ -2,12 +2,14 @@
 import json
 from pathlib import Path
 
-from fastapi import APIRouter, Depends
+from typing import Literal
+
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import sessions
-from app.db.models import Approval, AuditLog, Call, Handover
+from app.db.models import Approval, AuditLog, Call, Handover, ServiceRequest
 from app.db.session import get_db
 from app.routes.actions.approvals import expire_if_stale
 from app.events import BLOCKED_CODES, _clean, customer_info
@@ -91,6 +93,53 @@ async def handovers(db: AsyncSession = Depends(get_db)):
                     "requests_pending": [str(x) for x in h.requests_pending or []],
                     "created_at": _iso(h.created_at)})
     return _clean(out)
+
+
+REQ_TYPES = ("statement", "interest_cert", "nominee", "address", "emi_date_change", "reconciliation", "closure")
+REQ_STATUSES = ("open", "in_progress", "done", "rejected")
+ReqType = Literal["statement", "interest_cert", "nominee", "address", "emi_date_change", "reconciliation", "closure"]
+ReqStatus = Literal["open", "in_progress", "done", "rejected"]
+
+
+def _initial(name) -> str:
+    n = str(name or "").strip()
+    return f"{n[:1].upper()}." if n else "?"
+
+
+def _req_summary(typ: str, p: dict) -> str:
+    """Whitelist per type: only coarse, masked facts leave; unknown payload keys are dropped."""
+    p = p or {}
+    if typ == "address":
+        pin = str(p.get("pincode") or "")
+        return "Address updated" + (f" (pincode {pin[:3]}xxx)" if len(pin) == 6 else "")
+    if typ == "nominee":
+        return f"Nominee: {p.get('relation', '?')} ({_initial(p.get('name'))})"
+    if typ == "emi_date_change":
+        return f"EMI day {p.get('old_day', '?')} -> {p.get('new_day', '?')}"
+    if typ == "reconciliation":
+        return f"Payment check: UTR ending {str(p.get('utr_last4', ''))[-4:]}, Rs {p.get('amount', '?')}, {p.get('date', '?')}"
+    if typ == "closure":
+        return f"Closure request, loan {p.get('loan', 'masked')}"
+    return f"Document request ({typ})"
+
+
+@router.get("/requests")
+async def requests(status: ReqStatus | None = Query(None), type: ReqType | None = Query(None),
+                   db: AsyncSession = Depends(get_db)):
+    q = select(ServiceRequest)
+    if status:
+        q = q.where(ServiceRequest.status == status)
+    if type:
+        q = q.where(ServiceRequest.type == type)
+    rows = (await db.execute(q.order_by(ServiceRequest.id.desc()).limit(100))).scalars().all()
+    by_status = dict((await db.execute(select(ServiceRequest.status, func.count()).group_by(ServiceRequest.status))).all())
+    by_type = dict((await db.execute(select(ServiceRequest.type, func.count()).group_by(ServiceRequest.type))).all())
+    out = []
+    for r in rows:
+        ref, _ = await customer_info(db, r.customer_id)
+        out.append({"id": r.id, "created_at": _iso(r.created_at), "type": r.type, "status": r.status,
+                    "customer_ref": ref, "summary": _req_summary(r.type, r.payload)})
+    return _clean({"requests": out, "counts": {"by_status": by_status, "by_type": by_type}})
 
 
 @router.get("/security")

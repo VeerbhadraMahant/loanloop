@@ -36,7 +36,14 @@ class HttpError extends Error {
 }
 
 async function call<T>(path: string, init: RequestInit): Promise<T> {
-  const r = await fetch(path.startsWith("/voice-out") ? path : `${VOICE}${path}`, init);
+  let r: Response;
+  try {
+    r = await fetch(path.startsWith("/voice-out") ? path : `${VOICE}${path}`, init);
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "AbortError") throw e;
+    // Opaque browser error: the service is down, or CORS (voice only allows http://localhost:3000 and 127.0.0.1:3000).
+    throw new HttpError(`Voice service not reachable at ${VOICE}. Check it is running and that this page is opened at http://localhost:3000.`, 0);
+  }
   if (!r.ok) {
     let d = `HTTP ${r.status}`;
     try {
@@ -139,6 +146,9 @@ const PERSONAS: Record<
     ],
   },
 };
+
+// The adversary spoofs Priya's number, so the sidecar shows the phone the bank would actually message.
+const phoneOf = (c: string) => (c === "vikram" ? "priya" : c);
 
 // Module-level so the react-hooks purity rule does not flag it; only called from event handlers.
 const now = () => performance.now();
@@ -325,6 +335,7 @@ export default function CallApp({ customer, caseId }: { customer: string; caseId
 
   const start = () => {
     setError(null);
+    setLang(null);
     setStatus("connecting");
     callLlm.current = llm;
     setCallDuration(0);
@@ -484,6 +495,7 @@ export default function CallApp({ customer, caseId }: { customer: string; caseId
   useEffect(() => () => {
     gen.current++;
     abort.current?.abort();
+    pcm.current?.dispose();
     const a = audio.current;
     if (a) {
       a.onended = a.onerror = null;
@@ -723,7 +735,8 @@ export default function CallApp({ customer, caseId }: { customer: string; caseId
               </button>
             </div>
             <PhoneHandset
-              customer={customer}
+              customer={phoneOf(customer)}
+              noData={!!caseId}
               simulationProps={{
                 inCall,
                 status,
@@ -792,7 +805,7 @@ export default function CallApp({ customer, caseId }: { customer: string; caseId
                   </span>
                 </div>
                 <span className="font-mono text-[10px] text-muted hidden md:inline">
-                  PCI-DSS / RBI 2024.1
+                  Demo · synthetic data
                 </span>
               </div>
 
@@ -1060,7 +1073,7 @@ export default function CallApp({ customer, caseId }: { customer: string; caseId
 
           {/* RIGHT 4 COLUMNS: Borrower Phone Sidecar */}
           <div className="xl:col-span-4 xl:sticky xl:top-3 self-start flex flex-col gap-2.5">
-            <PhoneHandset customer={customer} isSidecar />
+            {!caseId && <PhoneHandset customer={phoneOf(customer)} isSidecar />}
 
             {/* Sidecar Explainer Note */}
             <div className="p-2.5 rounded-xl bg-surface-container-low border border-line text-[11px] text-muted flex items-start gap-2">

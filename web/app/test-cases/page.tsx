@@ -168,7 +168,7 @@ export default function TestCasesPage() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-baseline gap-2">
               <h2 className="serif text-xl sm:text-2xl font-semibold text-fg">Deterministic Test Scenarios</h2>
-              <span className="font-mono text-xs text-muted">Sandbox v2.4 Active Profiles</span>
+              <span className="font-mono text-xs text-muted">Demo profiles · synthetic data</span>
             </div>
             <span className="hidden sm:inline-block text-xs text-muted">
               Clicking launch connects to the Shared Live Desk
