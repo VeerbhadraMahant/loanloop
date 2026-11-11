@@ -42,7 +42,9 @@ def _months(i18n_dir) -> dict[str, int]:
     for d in i18n.load_lang_files().values():
         mw = (d.get("words") or {}).get("month_words")
         if isinstance(mw, dict):
-            out.update({k.lower(): n for k, n in mw.items() if isinstance(k, str) and isinstance(n, int) and 1 <= n <= 12})
+            for k, n in mw.items():
+                if isinstance(k, str) and isinstance(n, int) and 1 <= n <= 12:
+                    out.setdefault(k.lower(), n)  # a language file never overrides a built-in or earlier month word
     return out
 
 
