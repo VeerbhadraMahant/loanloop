@@ -2,10 +2,19 @@ import type { Timings } from "@/components/turn-stats";
 
 export const VOICE = process.env.NEXT_PUBLIC_VOICE_URL ?? "http://127.0.0.1:8100";
 
+/** Browser fetch failures are opaque; the usual causes are the service being down or CORS (voice only allows http://localhost:3000 and 127.0.0.1:3000). */
+export const unreachable = () =>
+  `Voice service not reachable at ${VOICE}. Check it is running and that this page is opened at http://localhost:3000.`;
+
 export class ApiError extends Error { constructor(msg: string, readonly status: number) { super(msg); } }
 
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  const r = await fetch(`${VOICE}${path}`, init);
+  let r: Response;
+  try { r = await fetch(`${VOICE}${path}`, init); }
+  catch (e) {
+    if (e instanceof DOMException && e.name === "AbortError") throw e;
+    throw new ApiError(unreachable(), 0);
+  }
   if (!r.ok) {
     let d = `HTTP ${r.status}`;
     try { const j = await r.json(); if (j?.detail) d = typeof j.detail === "string" ? j.detail : JSON.stringify(j.detail); } catch { /* keep status */ }
