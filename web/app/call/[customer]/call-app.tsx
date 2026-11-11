@@ -147,6 +147,9 @@ const PERSONAS: Record<
   },
 };
 
+// The adversary spoofs Priya's number, so the sidecar shows the phone the bank would actually message.
+const phoneOf = (c: string) => (c === "vikram" ? "priya" : c);
+
 // Module-level so the react-hooks purity rule does not flag it; only called from event handlers.
 const now = () => performance.now();
 
@@ -732,7 +735,7 @@ export default function CallApp({ customer, caseId }: { customer: string; caseId
               </button>
             </div>
             <PhoneHandset
-              customer={customer}
+              customer={phoneOf(customer)}
               noData={!!caseId}
               simulationProps={{
                 inCall,
@@ -1070,7 +1073,7 @@ export default function CallApp({ customer, caseId }: { customer: string; caseId
 
           {/* RIGHT 4 COLUMNS: Borrower Phone Sidecar */}
           <div className="xl:col-span-4 xl:sticky xl:top-3 self-start flex flex-col gap-2.5">
-            {!caseId && <PhoneHandset customer={customer} isSidecar />}
+            {!caseId && <PhoneHandset customer={phoneOf(customer)} isSidecar />}
 
             {/* Sidecar Explainer Note */}
             <div className="p-2.5 rounded-xl bg-surface-container-low border border-line text-[11px] text-muted flex items-start gap-2">
