@@ -13,8 +13,8 @@
     "balance_hold": "നിങ്ങളുടെ സേവിംഗ്സ് അക്കൗണ്ട് {acct} ലെ ബാലൻസ് {balance} ആണ്. ഇതിൽ {hold} ഹോൾഡിലാണ്, അതിനാൽ ഉപയോഗിക്കാവുന്ന തുക {avail} ആണ്.",
     "branch_found": "{name}, {address}. ഐഎഫ്എസ്‌സി: {ifsc}. എംഐസിആർ: {micr}. സമയം: {hours}.",
     "call_ended": "സഹ്യാദ്രി ഫിനാൻസ് ബാങ്കിലേക്ക് വിളിച്ചതിന് നന്ദി. നമസ്കാരം.",
-    "call_started": "സഹ്യാദ്രി ഫിനാൻസ് ബാങ്കിലേക്ക് സ്വാഗതം. ഏത് ഭാഷയിൽ സംസാരിക്കണം: ഇംഗ്ലീഷ്, ഹിന്ദി, മറാഠി അല്ലെങ്കിൽ ഹിംഗ്ലീഷ്?",
-    "call_started_out": "ഞാൻ സഹ്യാദ്രി ബാങ്കിനു വേണ്ടി ലോൺലൂപ്പ് വിളിക്കുകയാണ്, നിങ്ങളുടെ ലോണിനെക്കുറിച്ച്. തുടരാൻ ദയവായി നിങ്ങളുടെ ജനനത്തീയതി പറയൂ.",
+    "call_started": "സഹ്യാദ്രി ഫിനാൻസ് ബാങ്കിലേക്ക് സ്വാഗതം. ഏത് ഭാഷയിൽ സംസാരിക്കണം: ഇംഗ്ലീഷ്, ഹിന്ദി, മറാഠി അല്ലെങ്കിൽ മറ്റൊരു ഇന്ത്യൻ ഭാഷ?",
+    "call_started_out": "സഹ്യാദ്രി ബാങ്കിൽ നിന്ന് ലോൺലൂപ്പ് ആണ് വിളിക്കുന്നത്, നിങ്ങളുടെ ലോണിനെക്കുറിച്ചാണ്. തുടരാൻ ദയവായി നിങ്ങളുടെ ജനനത്തീയതി പറയൂ.",
     "charge_item": "{date} ന് {type} {amount} ({reason})",
     "closure_raised": "ലോൺ {loan} ക്ലോസ് ചെയ്യാനുള്ള അഭ്യർത്ഥന {ticket} രജിസ്റ്റർ ചെയ്തിട്ടുണ്ട്. ക്ലോസ് ചെയ്ത് 30 ദിവസത്തിനുള്ളിൽ നിങ്ങളുടെ രേഖകളും എൻഒസിയും തിരികെ നൽകും.",
     "ctype_bounce": "ബൗൺസ് ചാർജ്",
@@ -38,7 +38,7 @@
     "foreclosure_quote": "ലോൺ {loan} ഇന്ന് ക്ലോസ് ചെയ്യാൻ നിങ്ങൾ {total} അടയ്ക്കണം: ബാക്കി തുക {outstanding}, രേഖയിലുള്ള ചാർജുകൾ {charges}, ഫോർക്ലോഷർ ഫീസ് {fee}.",
     "foreclosure_quote_nofee": "ലോൺ {loan} ഇന്ന് ക്ലോസ് ചെയ്യാൻ നിങ്ങൾ {total} അടയ്ക്കണം: ബാക്കി തുക {outstanding}, രേഖയിലുള്ള ചാർജുകൾ {charges}. ഫ്ലോട്ടിംഗ് നിരക്കിലുള്ള ലോണുകൾക്ക് ഫോർക്ലോഷർ ചാർജ് ഇല്ല.",
     "generic_error": "ക്ഷമിക്കണം, ഞങ്ങളുടെ ഭാഗത്ത് എന്തോ പിഴവ് സംഭവിച്ചു. നിങ്ങളെ ഒരു സഹപ്രവർത്തകനുമായി ബന്ധിപ്പിക്കാം.",
-    "handover_ack": "ഇപ്പോൾ നിങ്ങളെ ഒരു സഹപ്രവർത്തകനുമായി ബന്ധിപ്പിക്കുകയാണ്. അദ്ദേഹത്തിന്റെ പക്കൽ ഈ കോളിന്റെ സംഗ്രഹം ഉണ്ടാകും, അതിനാൽ ആവർത്തിച്ച് പറയേണ്ടതില്ല.",
+    "handover_ack": "ഇപ്പോൾ നിങ്ങളെ ഒരു സഹപ്രവർത്തകനുമായി ബന്ധിപ്പിക്കുകയാണ്. അവരുടെ പക്കൽ ഈ കോളിന്റെ സംഗ്രഹം ഉണ്ടാകും, അതിനാൽ ആവർത്തിച്ച് പറയേണ്ടതില്ല.",
     "hardship_ack": "ഇത് കേട്ടതിൽ വിഷമമുണ്ട്. നിങ്ങളുടെ സാഹചര്യം ഞാൻ രേഖപ്പെടുത്തി, നിങ്ങളുടെ വഴികളെക്കുറിച്ച് സംസാരിക്കാൻ കഴിയുന്ന ഒരു സഹപ്രവർത്തകനുമായി ബന്ധിപ്പിക്കുന്നു. പണമടയ്ക്കൽ ക്രമീകരണങ്ങളെക്കുറിച്ച് എനിക്ക് സംസാരിക്കാനാവില്ല.",
     "ifsc_bad_format": "ഇത് ശരിയായ ഐഎഫ്എസ്‌സി ആണെന്ന് തോന്നുന്നില്ല. ഇതിൽ നാല് അക്ഷരങ്ങൾ, പിന്നെ പൂജ്യം, പിന്നെ ആറ് അക്ഷരങ്ങളോ അക്കങ്ങളോ ഉണ്ടാകും. ഒന്നുകൂടി പറയാമോ?",
     "ifsc_other": "{ifsc} ശരിയായ രൂപത്തിലാണ്, പക്ഷേ ഇത് സഹ്യാദ്രി ശാഖയല്ല. ദയവായി സ്വീകർത്താവിന്റെ ബാങ്കിൽ ഉറപ്പാക്കൂ.",
@@ -297,7 +297,7 @@
     },
     "cheque_clearing": {
       "keywords": ["ചെക്ക് ക്ലിയറിംഗ്", "ചെക്ക് ബൗൺസ്", "ചെക്ക് മടങ്ങി", "cheque clearing", "cheque not cleared", "cheque bounce", "cheque deposit"],
-      "answer": "ശാഖയിൽ നിക്ഷേപിച്ച ചെക്ക് സാധാരണ ഒന്നോ രണ്ടോ പ്രവൃത്തി ദിവസത്തിനുള്ളിൽ ക്ലിയർ ആകും. മടങ്ങിയാൽ, അപര്യാപ്തമായ ബാലൻസ് അല്ലെങ്കിൽ ഒപ്പ് ചേരായ്ക പോലുള്ള കാരണം റിട്ടേൺ മെമ്മോയിൽ ഉണ്ടാകും, ചാർജും വരാം.",
+      "answer": "ശാഖയിൽ നിക്ഷേപിച്ച ചെക്ക് സാധാരണ ഒന്നോ രണ്ടോ പ്രവൃത്തി ദിവസത്തിനുള്ളിൽ ക്ലിയർ ആകും. മടങ്ങിയാൽ, അപര്യാപ്തമായ ബാലൻസ് അല്ലെങ്കിൽ ഒപ്പ് ഒത്തുവരാത്തത് പോലുള്ള കാരണം റിട്ടേൺ മെമ്മോയിൽ ഉണ്ടാകും, ചാർജും വരാം.",
       "sms_text": ""
     },
     "nominee_info": {
@@ -344,12 +344,12 @@
     }
   },
   "words": {
-    "lang_names": ["malayalam", "malayalam language", "മലയാളം", "മലയാളത്തിൽ", "മലയാളത്തില്", "malayalathil"],
-    "affirm": ["അതെ", "ശരി", "ശരിയാണ്", "ഓക്കെ", "ഉവ്വ്", "ആണ്", "correct", "ok", "okay", "yes", "yeah", "athe", "sari", "shari", "sheriyanu", "uvvu"],
-    "negate": ["അല്ല", "ഇല്ല", "വേണ്ട", "തെറ്റ്", "തെറ്റാണ്", "റദ്ദാക്കൂ", "നിർത്തൂ", "no", "alla", "illa", "venda", "thettu", "wrong", "cancel", "stop", "wait"],
-    "bye": ["bye", "goodbye", "നമസ്കാരം", "വിട", "ബൈ", "namaskaram", "vida"],
-    "approval": ["approve", "approved", "അപ്രൂവ്", "അപ്രൂവ് ചെയ്തു", "ചെയ്തു", "കഴിഞ്ഞു", "ടാപ്പ് ചെയ്തു", "അനുമതി", "done", "tapped", "confirm", "cheythu", "kazhinju"],
-    "switch_cues": ["സംസാരിക്കൂ", "സംസാരിക്കാം", "പറയൂ", "മാറ്റൂ", "മാറുക", "ഭാഷയിൽ", "ൽ", "speak", "talk", "in", "switch", "change", "samsarikku", "parayu", "maattu"],
+    "lang_names": ["malayalam", "malayalam language", "മലയാളം", "മലയാളത്തിൽ", "മലയാളത്തില്", "malayalathil", "malayali", "മലയാളി", "malayalam mein", "മലയാളത്തിലേക്ക്"],
+    "affirm": ["അതെ", "ശരി", "ശരിയാണ്", "ഓക്കെ", "ഉവ്വ്", "correct", "ok", "okay", "yes", "yeah", "athe", "sari", "shari", "sheriyanu", "uvvu", "അതേ", "ഓകെ", "ഓക്കേ", "ശെരി", "ശെരിയാണ്", "shariyanu", "seri", " athey", "sheri"],
+    "negate": ["അല്ല", "ഇല്ല", "വേണ്ട", "തെറ്റ്", "തെറ്റാണ്", "റദ്ദാക്കൂ", "നിർത്തൂ", "no", "alla", "illa", "venda", "thettu", "wrong", "cancel", "stop", "നോ", "വേണ്ടാ", "ഇല്ലാ", "no thanks", "thettanu", "cancel cheyyu", "റദ്ദാക്കണം"],
+    "bye": ["bye", "goodbye", "വിട", "ബൈ", "vida", "ഗുഡ്ബൈ", "ബൈ ബൈ", "bye bye", "vida parayunnu", "വിട പറയുന്നു"],
+    "approval": ["approve", "approved", "അപ്രൂവ്", "അപ്രൂവ് ചെയ്തു", "ചെയ്തു", "കഴിഞ്ഞു", "ടാപ്പ് ചെയ്തു", "done", "tapped", "confirm", "cheythu", "kazhinju", "ടാപ്പ് ചെയ്തിട്ടുണ്ട്", "അപ്രൂവ് ചെയ്തിട്ടുണ്ട്", "ചെയ്തിട്ടുണ്ട്", "approve cheythu", "tap cheythu", "ചെയ്തു കഴിഞ്ഞു"],
+    "switch_cues": ["സംസാരിക്കൂ", "സംസാരിക്കാം", "പറയൂ", "മാറ്റൂ", "മാറുക", "ഭാഷയിൽ", "speak", "talk", "in", "switch", "change", "samsarikku", "parayu", "maattu", "ഭാഷ", "bhasha", "samsarikkam", "പറയാമോ", "സംസാരിക്കാമോ", "മാറ്റാമോ", "samsarikkamo"],
     "month_words": {
       "ജനുവരി": 1, "jan": 1, "january": 1,
       "ഫെബ്രുവരി": 2, "feb": 2, "february": 2,
@@ -359,31 +359,31 @@
       "ജൂൺ": 6, "jun": 6, "june": 6,
       "ജൂലൈ": 7, "jul": 7, "july": 7,
       "ഓഗസ്റ്റ്": 8, "ആഗസ്റ്റ്": 8, "aug": 8, "august": 8,
-      "സെപ്റ്റംബർ": 9, "sep": 9, "september": 9,
+      "സെപ്റ്റംബർ": 9, "സെപ്തംബർ": 9, "sep": 9, "sept": 9, "september": 9,
       "ഒക്ടോബർ": 10, "oct": 10, "october": 10,
       "നവംബർ": 11, "nov": 11, "november": 11,
       "ഡിസംബർ": 12, "dec": 12, "december": 12
     },
     "weekdays": {
-      "തിങ്കൾ": 0, "തിങ്കളാഴ്ച": 0, "monday": 0,
-      "ചൊവ്വ": 1, "ചൊവ്വാഴ്ച": 1, "tuesday": 1,
-      "ബുധൻ": 2, "ബുധനാഴ്ച": 2, "wednesday": 2,
-      "വ്യാഴം": 3, "വ്യാഴാഴ്ച": 3, "thursday": 3,
-      "വെള്ളി": 4, "വെള്ളിയാഴ്ച": 4, "friday": 4,
-      "ശനി": 5, "ശനിയാഴ്ച": 5, "saturday": 5,
-      "ഞായർ": 6, "ഞായറാഴ്ച": 6, "sunday": 6
+      "തിങ്കൾ": 0, "തിങ്കളാഴ്ച": 0, "thinkal": 0, "thinkalazhcha": 0, "monday": 0,
+      "ചൊവ്വ": 1, "ചൊവ്വാഴ്ച": 1, "chovva": 1, "chovvazhcha": 1, "tuesday": 1,
+      "ബുധൻ": 2, "ബുധനാഴ്ച": 2, "budhan": 2, "budhanazhcha": 2, "wednesday": 2,
+      "വ്യാഴം": 3, "വ്യാഴാഴ്ച": 3, "vyazham": 3, "vyazhazhcha": 3, "thursday": 3,
+      "വെള്ളി": 4, "വെള്ളിയാഴ്ച": 4, "velli": 4, "velliyazhcha": 4, "friday": 4,
+      "ശനി": 5, "ശനിയാഴ്ച": 5, "shani": 5, "shaniyazhcha": 5, "saturday": 5,
+      "ഞായർ": 6, "ഞായറാഴ്ച": 6, "njayar": 6, "njayarazhcha": 6, "sunday": 6
     },
-    "question": ["എങ്ങനെ", "എന്ത്", "എന്താണ്", "എന്തുകൊണ്ട്", "എപ്പോൾ", "എവിടെ", "ആര്", "ഏത്", "എത്ര", "കഴിയുമോ", "how", "what", "why", "when", "where", "which", "can", "enthu", "engane", "eppol", "evide", "ethra"],
-    "possessive": ["എന്റെ", "എനിക്ക്", "എൻ്റെ", "എന്റേത്", "my", "mine", "ente", "enikku"],
-    "acct_nouns": ["ഇഎംഐ", "emi", "ബാലൻസ്", "balance", "ലോൺ", "വായ്പ", "loan", "പേയ്മെന്റ്", "അടവ്", "payment", "കുടിശ്ശിക", "ബാക്കി", "due", "dues", "overdue", "outstanding", "അക്കൗണ്ട്", "account", "നമ്പർ", "number", "ഐഎഫ്എസ്‌സി", "ifsc", "ഇടപാട്", "transaction", "transactions", "loan", "vaaypa", "adav"],
-    "human_target": ["ആൾ", "വ്യക്തി", "മനുഷ്യൻ", "ഉദ്യോഗസ്ഥൻ", "ഏജന്റ്", "മാനേജർ", "ആരെങ്കിലും", "agent", "human", "person", "officer", "manager", "executive", "representative", "someone", "somebody", "staff", "aal", "vyakthi", "udyogasthan"],
-    "human_verb": ["സംസാരിക്കണം", "സംസാരിക്കാൻ", "പറയണം", "ബന്ധിപ്പിക്കൂ", "ബന്ധപ്പെടണം", "മാറ്റൂ", "talk", "speak", "connect", "transfer", "samsarikkan", "samsaarikkanam", "bandhippikku"],
+    "question": ["എങ്ങനെ", "എന്ത്", "എന്താണ്", "എന്തുകൊണ്ട്", "എപ്പോൾ", "എവിടെ", "ആര്", "ഏത്", "എത്ര", "കഴിയുമോ", "how", "what", "why", "when", "where", "which", "can", "enthu", "engane", "eppol", "evide", "ethra", "എന്താ", "എന്തിന്", "ഏതാണ്", "എത്രയാണ്", "ആരാണ്", "does", "enthaa", "enthinu", "evideya"],
+    "possessive": ["എന്റെ", "എൻ്റെ", "എന്റേത്", "my", "mine", "ente", "എന്നുടെ", "ennude"],
+    "acct_nouns": ["ഇഎംഐ", "emi", "ബാലൻസ്", "balance", "ലോൺ", "വായ്പ", "loan", "പേയ്മെന്റ്", "അടവ്", "payment", "കുടിശ്ശിക", "ബാക്കി", "due", "dues", "overdue", "outstanding", "അക്കൗണ്ട്", "account", "നമ്പർ", "number", "ഐഎഫ്എസ്‌സി", "ifsc", "ഇടപാട്", "transaction", "transactions", "vaaypa", "adav", "ഇ എം ഐ", "ഇടപാടുകൾ", "ശേഷിക്കുന്ന തുക", "കുടിശ്ശിക തുക", "പണം", "money", "amount", "തുക", "statement", "സ്റ്റേറ്റ്മെന്റ്"],
+    "human_target": ["ആൾ", "വ്യക്തി", "മനുഷ്യൻ", "ഉദ്യോഗസ്ഥൻ", "ഏജന്റ്", "മാനേജർ", "ആരെങ്കിലും", "agent", "human", "person", "officer", "manager", "executive", "representative", "someone", "somebody", "staff", "aal", "vyakthi", "udyogasthan", "സഹപ്രവർത്തകൻ", "ജീവനക്കാരൻ", "ജീവനക്കാർ", "ആളോട്", "ആരോടെങ്കിലും", "മനുഷ്യനോട്", "manushyan", "jeevanakkaran", "colleague"],
+    "human_verb": ["സംസാരിക്കണം", "സംസാരിക്കാൻ", "ബന്ധിപ്പിക്കൂ", "ബന്ധപ്പെടണം", "talk", "speak", "connect", "transfer", "samsarikkan", "samsaarikkanam", "bandhippikku", "കണക്ട് ചെയ്യൂ", "കണക്ട്", "ട്രാൻസ്ഫർ", "ബന്ധപ്പെടാൻ", "സംസാരിക്കണമെന്ന്", "bandhappedan", "connect cheyyu"],
     "neg_human": ["വേണ്ട", "അരുത്", "അല്ല", "ഇല്ല", "not", "don't", "dont", "no", "never", "venda", "arutu", "alla"],
-    "full": ["മുഴുവൻ", "മുഴുവൻ തുക", "പൂർണ്ണ", "പൂർണ", "ആകെ", "full", "entire", "whole", "muzhuvan", "purna", "aake"],
+    "full": ["മുഴുവൻ", "മുഴുവൻ തുക", "പൂർണ്ണ", "പൂർണ", "ആകെ", "full", "entire", "whole", "muzhuvan", "purna", "aake", "മുഴുവനും", "മുഴുവൻ കുടിശ്ശിക", "full amount", "muzhuvanum"],
     "multi": ["ഒപ്പം", "കൂടാതെ", "പിന്നെ", "ഉം", "also", "and", "plus", "oppam", "koodathe", "pinne"],
-    "date": ["തീയതി", "ദിവസം", "തിയ്യതി", "date", "theeyathi", "thiyathi", "divasam"],
+    "date": ["തീയതി", "ദിവസം", "തിയ്യതി", "date", "theeyathi", "thiyathi", "divasam", "ഡേറ്റ്", "തീയ്യതി", "theeyatthi"],
     "verify": ["ജനന", "ജനനത്തീയതി", "ജന്മദിനം", "മൊബൈൽ", "നമ്പർ", "രജിസ്റ്റർ ചെയ്ത", "എന്റെ", "birth", "born", "dob", "mobile", "number", "registered", "date", "my", "is", "jananam", "mobile number"],
-    "already_paid": ["ഞാൻ അടച്ചു", "അടച്ചുകഴിഞ്ഞു", "ഇതിനകം അടച്ചു", "നേരത്തേ അടച്ചു", "പണം അടച്ചു", "already paid", "i paid", "paid already", "i have paid", "adachu", "adachu kazhinju", "njan adachu"],
-    "action_verbs": ["പുതുക്കൂ", "മാറ്റൂ", "മാറ്റണം", "ക്ലോസ് ചെയ്യൂ", "അയയ്ക്കൂ", "അയയ്ക്കണം", "റദ്ദാക്കൂ", "ബ്ലോക്ക് ചെയ്യൂ", "update", "change", "close", "send", "cancel", "block", "maattu", "close cheyyu", "ayakku"]
+    "already_paid": ["ഞാൻ അടച്ചു", "അടച്ചുകഴിഞ്ഞു", "ഇതിനകം അടച്ചു", "നേരത്തേ അടച്ചു", "പണം അടച്ചു", "already paid", "i paid", "paid already", "i have paid", "adachu", "adachu kazhinju", "njan adachu", "അടച്ചിട്ടുണ്ട്", "ഞാൻ അടച്ചിട്ടുണ്ട്", "ഇപ്പോൾ തന്നെ അടച്ചു", "അടച്ചല്ലോ", "paid", "adachittund", "njan adachittundu"],
+    "action_verbs": ["പുതുക്കൂ", "മാറ്റൂ", "മാറ്റണം", "ക്ലോസ് ചെയ്യൂ", "അയയ്ക്കൂ", "അയയ്ക്കണം", "റദ്ദാക്കൂ", "ബ്ലോക്ക് ചെയ്യൂ", "update", "change", "close", "send", "cancel", "block", "maattu", "close cheyyu", "ayakku", "അപ്ഡേറ്റ് ചെയ്യൂ", "അപ്ഡേറ്റ് ചെയ്യണം", "മാറ്റാൻ", "ക്ലോസ് ചെയ്യണം", "അയക്കൂ", "അയക്കണം", "റദ്ദാക്കണം", "ബ്ലോക്ക് ചെയ്യണം", "കൂട്ടിച്ചേർക്കൂ", "update cheyyu", "block cheyyu"]
   }
 }
