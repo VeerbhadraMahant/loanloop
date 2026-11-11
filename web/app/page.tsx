@@ -149,7 +149,9 @@ export default function Home() {
       {/* Footer */}
       <footer className="mx-auto mt-16 max-w-5xl border-t border-line px-4 py-6 text-xs text-muted sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
         <p>Sahyadri Finance Bank · LoanLoop Voice Banking Desk</p>
-        <p className="font-mono">Demo · Synthetic Data</p>
+        <p className="font-mono">
+          Demo · Synthetic Data · <Link href="/bank" className="underline underline-offset-2">Bank app →</Link>
+        </p>
       </footer>
     </SidebarLayout>
   );
