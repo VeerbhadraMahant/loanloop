@@ -101,3 +101,21 @@ def test_fallback_not_used_when_primary_ok_and_still_502_when_none():
         d = new_call(c)
         fake.fail = "llm"
         assert turn(c, d, "hello").status_code == 502
+
+
+def test_railway_env_makes_public(monkeypatch):
+    monkeypatch.setenv("RAILWAY_ENVIRONMENT", "production")
+    with pytest.raises(RuntimeError, match="Refusing to start"):  # dev defaults, no hosts set
+        create_app(Settings(gnani_speech_api_key=KEY), httpx.AsyncClient())
+    good = dict(gnani_speech_api_key=KEY, gateway_shared_secret="s3cret", dashboard_token="d4sh", voice_edge_token="edge")
+    c, _ = client(**good)
+    with c:
+        assert c.get("/health").json() == {"ok": True}  # trimmed when public
+
+
+def test_local_health_is_detailed(monkeypatch):
+    for v in ("RAILWAY_ENVIRONMENT", "RAILWAY_ENVIRONMENT_NAME", "RAILWAY_PUBLIC_DOMAIN"):
+        monkeypatch.delenv(v, raising=False)
+    c, _ = client()
+    with c:
+        assert "providers" in c.get("/health").json()

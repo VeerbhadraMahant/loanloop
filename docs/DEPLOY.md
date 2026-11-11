@@ -35,6 +35,7 @@ Variables (reference variables in `${{...}}` form):
 | DATABASE_URL | `${{Postgres.DATABASE_URL}}` |
 | REDIS_URL | `${{Redis.REDIS_URL}}` |
 | GNANI_SPEECH_API_KEY, INYA_PLATFORM_API_KEY | Gnani keys |
+| PORT | `8000` |
 | SESSION_TTL_S, JOBS_INTERVAL_S | optional (1800, 3600) |
 
 **voice**
@@ -51,6 +52,8 @@ Variables (reference variables in `${{...}}` form):
 | VOICE_ALLOWED_HOSTS | `<voice public domain>` (no scheme) |
 | VOICE_EDGE_TOKEN | generated token (same as Vercel) |
 | PORT | `8100` |
+
+The gateway and voice images start via `deploy/serve.py`, a dual-stack (IPv4+IPv6) listener on `$PORT` (needed for Railway private networking). Their startup guards also trigger automatically on Railway (`RAILWAY_ENVIRONMENT`), refusing dev-default secrets.
 
 Never set `VOICE_DEV`. Leave `VOICE_ALLOWED_ORIGINS` empty (the browser only talks to Vercel).
 
@@ -71,7 +74,7 @@ Import the repo, **Root Directory: `web`**. Env vars (Production):
 | VOICE_URL | `https://<voice public domain>` |
 | VOICE_EDGE_TOKEN | same as voice |
 
-Never set `WEB_AUTH_DISABLED`. Leave `NEXT_PUBLIC_VOICE_URL` unset. Redeploy after changing env vars.
+Never set `WEB_AUTH_DISABLED`. Leave `NEXT_PUBLIC_VOICE_URL` unset. `WEB_ALLOWED_ORIGINS` must be the exact production origin, so test POST flows (calls) on the production domain, not preview URLs. The voice proxy route allows up to 300 s per request. Redeploy after changing env vars.
 
 ## 4. Seeding
 
@@ -80,7 +83,7 @@ The gateway pre-deploy command `python -m app.db.seed_if_empty` seeds only when 
 ## 5. Smoke test
 
 - [ ] `https://<gateway>/health` returns `{"ok":true}`; gateway deploy log shows `seed_if_empty: ...`.
-- [ ] `https://<voice>/health` returns ok through the Vercel proxy path (direct hits without the edge token must be refused).
+- [ ] `https://<voice>/health` returns ok through the Vercel proxy path. Direct: `POST https://<voice-domain>/calls` without the edge token must return 401, and `/health` returns only `{"ok":true}`.
 - [ ] Vercel site asks for the basic-auth login; wrong password is refused.
 - [ ] `/bank` loads with customer data.
 - [ ] A typed call on the call page completes a verify and an EMI query.

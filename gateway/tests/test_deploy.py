@@ -15,3 +15,16 @@ def test_normalise_db_url():
 async def test_populated_db_is_not_reseeded():  # read-only: the decision only, the test DB is already seeded
     async with engine.connect() as c:
         assert await needs_seed(c) is False
+
+
+def test_railway_env_refuses_dev_secrets(monkeypatch):
+    import pytest
+    from app.config import DEV_DEFAULTS, Settings, check_settings
+
+    s = Settings(encryption_key="x", **DEV_DEFAULTS, public_gateway_url="http://localhost:8000")
+    for v in ("RAILWAY_ENVIRONMENT", "RAILWAY_ENVIRONMENT_NAME", "RAILWAY_PUBLIC_DOMAIN"):
+        monkeypatch.delenv(v, raising=False)
+    check_settings(s)  # local: only warns
+    monkeypatch.setenv("RAILWAY_ENVIRONMENT", "production")
+    with pytest.raises(RuntimeError, match="dev default"):
+        check_settings(s)

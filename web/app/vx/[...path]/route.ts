@@ -1,6 +1,6 @@
 // Same-origin proxy to the voice service: the browser reaches it only through here (behind proxy.ts Basic auth),
 // because the voice service spends paid Gnani/Sarvam credits. Never forwards the browser's Authorization/cookies.
-export const maxDuration = 60;
+export const maxDuration = 300; // CPU Ollama fallback replies can exceed a minute
 
 const VOICE = process.env.VOICE_URL ?? "http://127.0.0.1:8100";
 const EDGE_TOKEN = process.env.VOICE_EDGE_TOKEN ?? "";
@@ -27,7 +27,12 @@ async function proxy(req: Request, ctx: { params: Promise<{ path: string[] }> })
     const origin = req.headers.get("origin");
     if (!origin || !ORIGIN_ALLOW.has(origin)) return new Response("Forbidden", { status: 403 });
   }
-  const url = new URL(`${VOICE}/${path.map(encodeURIComponent).join("/")}`);
+  let url: URL;
+  try {
+    url = new URL(`${VOICE}/${path.map(encodeURIComponent).join("/")}`);
+  } catch {
+    return Response.json({ detail: "VOICE_URL is invalid (needs scheme, e.g. https://...)" }, { status: 502 });
+  }
   const inQ = new URL(req.url).searchParams;
   for (const k of QUERY_OK) {
     const v = inQ.get(k);

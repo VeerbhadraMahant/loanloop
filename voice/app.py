@@ -9,6 +9,7 @@ import importlib.util
 import json
 import logging
 import math
+import os
 import re
 import statistics
 import time
@@ -262,9 +263,14 @@ class Settings(BaseSettings):
     def _csv(v: str) -> list[str]:
         return [x.strip() for x in v.split(",") if x.strip()]
 
+    def is_public(self) -> bool:
+        """Publicly deployed: VOICE_ALLOWED_HOSTS set, or running on Railway."""
+        railway = any(os.environ.get(v) for v in ("RAILWAY_ENVIRONMENT", "RAILWAY_ENVIRONMENT_NAME", "RAILWAY_PUBLIC_DOMAIN"))
+        return bool(self._csv(self.voice_allowed_hosts)) or railway
+
     def check_public(self) -> None:
-        """Refuse to start a publicly deployed instance (VOICE_ALLOWED_HOSTS set) with dev defaults."""
-        if not self._csv(self.voice_allowed_hosts):
+        """Refuse to start a publicly deployed instance (see is_public) with dev defaults."""
+        if not self.is_public():
             return
         bad = []
         if self.gateway_shared_secret == "dev-shared-secret-change-me":
@@ -276,7 +282,7 @@ class Settings(BaseSettings):
         if self.dev:
             bad.append("VOICE_DEV is on")
         if bad:
-            raise RuntimeError("Refusing to start: VOICE_ALLOWED_HOSTS is set (public deployment) but " + "; ".join(bad) + ".")
+            raise RuntimeError("Refusing to start: public deployment (VOICE_ALLOWED_HOSTS set or on Railway) but " + "; ".join(bad) + ".")
         if self.llm_fallback and (self.llm_fallback not in PROVIDERS or self.llm_fallback == self.llm_provider):
             raise RuntimeError("LLM_FALLBACK must be one of ollama|gemini|sarvam and differ from LLM_PROVIDER.")
 
@@ -1932,6 +1938,8 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
 
     @app.get("/health")
     async def health():
+        if cfg.is_public():
+            return {"ok": True}  # unauthenticated probe: no provider/model/dev details
         return {"ok": True, "model": cfg.ollama_model, "default": cfg.llm_provider, "dev": cfg.dev,
                 "providers": {p: {"model": cfg.llm_model(p), "ready": p == "ollama" or bool(cfg.llm_key(p))} for p in PROVIDERS}}
 

@@ -1,4 +1,5 @@
 import logging
+import os
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from pydantic import field_validator
@@ -56,6 +57,7 @@ def check_settings(s: Settings = settings) -> None:
             raise RuntimeError(f"{name.upper()} is empty: refusing to start")
         if getattr(s, name) == default:
             # the defaults are in the public repo: never accept them on a publicly reachable gateway
-            if not s.public_gateway_url.startswith(("http://localhost", "http://127.0.0.1")):
-                raise RuntimeError(f"{name.upper()} is the dev default but PUBLIC_GATEWAY_URL is public: refusing to start")
+            on_railway = any(os.environ.get(v) for v in ("RAILWAY_ENVIRONMENT", "RAILWAY_ENVIRONMENT_NAME", "RAILWAY_PUBLIC_DOMAIN"))
+            if on_railway or not s.public_gateway_url.startswith(("http://localhost", "http://127.0.0.1")):
+                raise RuntimeError(f"{name.upper()} is the dev default but the gateway is public (PUBLIC_GATEWAY_URL or Railway): refusing to start")
             logging.getLogger("config").warning("SECURITY: %s is the dev default. Change it before exposing the gateway.", name.upper())

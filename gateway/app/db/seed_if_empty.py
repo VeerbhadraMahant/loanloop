@@ -1,4 +1,4 @@
-"""Seed only a fresh database. Never drops a populated one (seed() does). Always exits 0.
+"""Seed only a fresh database. Never drops a populated one (seed() does). A database failure raises (non-zero exit), so the deploy fails loudly.
 
 Run (Railway pre-deploy):  python -m app.db.seed_if_empty
 """
