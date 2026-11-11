@@ -1,6 +1,7 @@
 """Validate every i18n/<code>.json that is present against i18n/source/ (format: i18n/README.md).
 Run: python tools/i18n_check.py [i18n_dir]   (exit 1 on any problem; no files present is fine)."""
 import json
+import re
 import sys
 from pathlib import Path
 from string import Formatter
@@ -9,6 +10,8 @@ ROOT = Path(__file__).resolve().parents[1]
 BUILTIN = ("en", "hi", "hinglish", "mr")
 LIST_WORDS = ["lang_names", "affirm", "negate", "bye", "approval", "switch_cues", "question", "possessive", "acct_nouns",
               "human_target", "human_verb", "neg_human", "full", "multi", "date", "verify", "already_paid", "action_verbs"]
+PHRASE_WORDS = ("already_paid", "date")  # matched as phrases inside a regex; every other list is compared token by token
+_TOKEN = re.compile(r"[A-Za-z0-9'’]+|[ऀ-ൿ]+")  # same tokenizer as voice/app.py _TOKEN
 
 
 def _fields(s: str) -> set[str]:
@@ -94,6 +97,10 @@ def check_file(code: str, d: dict, src: dict) -> list[str]:
         for k in LIST_WORDS:
             if not (isinstance(w.get(k), list) and w[k] and all(_text(x) for x in w[k])):
                 bad.append(f"words.{k}: must be a non-empty list of strings")
+            elif k not in PHRASE_WORDS:
+                dead = [x for x in w[k] if _TOKEN.findall(x) != [x]]  # a phrase or a joiner-split word can never match a token
+                if dead:
+                    bad.append(f"words.{k}: entries must be single words (never matched): {dead[:3]}")
         for k, rng, n in (("month_words", range(1, 13), 12), ("weekdays", range(7), 7)):
             mw = w.get(k)
             if not (isinstance(mw, dict) and all(_text(x) and isinstance(y, int) and y in rng for x, y in mw.items())

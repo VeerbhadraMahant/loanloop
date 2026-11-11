@@ -126,9 +126,12 @@ def test_validator_accepts_complete_file_and_rejects_broken_ones():
     bad["months"] = bad["months"][:11]
     bad["voice"]["ASK"] = ["no placeholder", " and "]
     bad["words"]["affirm"] = []
+    bad["words"]["negate"] = ["no", "not at all", "ಬೇ‌ಡ"]  # a phrase and a ZWNJ-split word never match a token
+    bad["words"]["already_paid"] = ["already paid"]  # phrase lists may hold phrases
     problems = " | ".join(chk.check_file("ta", bad, src))
-    for frag in (f"gateway.{k}: placeholders", "gateway: missing key", "warning: faq: missing intent", "months must be 12", "voice.ASK", "words.affirm"):
+    for frag in (f"gateway.{k}: placeholders", "gateway: missing key", "warning: faq: missing intent", "months must be 12", "voice.ASK", "words.affirm", "words.negate: entries must be single words"):
         assert frag in problems, frag
+    assert "words.already_paid" not in problems
 
 
 def test_every_present_language_file_is_valid():
