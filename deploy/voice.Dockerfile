@@ -13,4 +13,5 @@ COPY i18n i18n
 RUN useradd -r -u 10001 loanloop && chown -R loanloop /app
 USER loanloop
 EXPOSE 8100
-CMD ["sh", "-c", "exec uvicorn voice.app:app --host :: --port ${PORT:-8100}"]
+COPY deploy/serve.py /app/deploy/serve.py
+CMD ["python", "/app/deploy/serve.py", "voice.app:app", "8100"]

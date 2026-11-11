@@ -12,4 +12,5 @@ COPY tools/out /app/tools/out
 RUN useradd -r -u 10001 loanloop && chown -R loanloop /app
 USER loanloop
 EXPOSE 8000
-CMD ["sh", "-c", "exec uvicorn app.main:app --host :: --port ${PORT:-8000}"]
+COPY deploy/serve.py /app/deploy/serve.py
+CMD ["python", "/app/deploy/serve.py", "app.main:app", "8000"]
