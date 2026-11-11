@@ -1,0 +1,52 @@
+/* Bank app (/bank): scoped tokens. Light default; dark via html[data-theme="dark"]. Imported by globals.css. */
+.bank {
+  --b-bg: #F4F5F7; --b-surface: #FFFFFF; --b-sunken: #EDEFF3;
+  --b-line: #E0E3E9; --b-line-strong: #C9CED8;
+  --b-fg: #14181F; --b-muted: #5B6472;
+  --b-accent: #234E8C; --b-accent-fg: #FFFFFF; --b-accent-soft: #E6EDF8; --b-accent-ink: #1B3F73; --b-ring: #3B6FC4;
+  --b-ok-fg: #166534; --b-ok-bg: #E7F5EC;
+  --b-warn-fg: #8A5200; --b-warn-bg: #FDF1DC;
+  --b-danger-fg: #B42318; --b-danger-bg: #FDECEA;
+  --b-info-fg: #1B4F9C; --b-info-bg: #E6EEFA;
+  --b-scrim: rgba(15, 20, 28, 0.5);
+  --b-cell-y: 12px; --b-text: 14px;
+  background: var(--b-bg); color: var(--b-fg); font-size: var(--b-text);
+}
+[data-theme="dark"] .bank {
+  --b-bg: #0D1015; --b-surface: #151A21; --b-sunken: #11151B;
+  --b-line: #252B35; --b-line-strong: #3A4352;
+  --b-fg: #E8EBF0; --b-muted: #9AA3B2;
+  --b-accent: #7FA6E8; --b-accent-fg: #0B1220; --b-accent-soft: #1B2740; --b-accent-ink: #A9C3F0; --b-ring: #8DB4F2;
+  --b-ok-fg: #6FD09A; --b-ok-bg: #12261B;
+  --b-warn-fg: #EBB45E; --b-warn-bg: #2B2210;
+  --b-danger-fg: #F28B82; --b-danger-bg: #2D1716;
+  --b-info-fg: #8DB4F2; --b-info-bg: #172338;
+  --b-scrim: rgba(0, 0, 0, 0.6);
+}
+.bank[data-density="compact"] { --b-cell-y: 6px; --b-text: 13px; }
+.bank :focus-visible { outline: 2px solid var(--b-ring); outline-offset: 2px; }
+.bank .b-num { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }
+.bank .b-title { font-family: var(--font-serif); font-weight: 500; letter-spacing: -0.015em; }
+.bank .b-pressable { transition: transform 140ms var(--ease-out), background-color 140ms var(--ease-out), border-color 140ms var(--ease-out); }
+.bank .b-pressable:active { transform: scale(0.98); }
+@keyframes b-slide-in { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes b-fade-in { from { opacity: 0; } to { opacity: 1; } }
+.bank .b-drawer { animation: b-slide-in 200ms cubic-bezier(0.23, 1, 0.32, 1) both; }
+.bank .b-scrim { animation: b-fade-in 160ms ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .bank .b-drawer { animation-name: b-fade-in; }
+  .bank .b-pressable:active { transform: none; }
+  .bank .skeleton { animation: none; }
+}
+
+@theme inline {
+  --color-bank-bg: var(--b-bg); --color-bank-surface: var(--b-surface); --color-bank-sunken: var(--b-sunken);
+  --color-bank-line: var(--b-line); --color-bank-line-strong: var(--b-line-strong);
+  --color-bank-fg: var(--b-fg); --color-bank-muted: var(--b-muted);
+  --color-bank-accent: var(--b-accent); --color-bank-accent-fg: var(--b-accent-fg);
+  --color-bank-accent-soft: var(--b-accent-soft); --color-bank-accent-ink: var(--b-accent-ink);
+  --color-bank-ok-fg: var(--b-ok-fg); --color-bank-ok-bg: var(--b-ok-bg);
+  --color-bank-warn-fg: var(--b-warn-fg); --color-bank-warn-bg: var(--b-warn-bg);
+  --color-bank-danger-fg: var(--b-danger-fg); --color-bank-danger-bg: var(--b-danger-bg);
+  --color-bank-info-fg: var(--b-info-fg); --color-bank-info-bg: var(--b-info-bg);
+}
