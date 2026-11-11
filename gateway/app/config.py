@@ -1,5 +1,7 @@
 import logging
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -17,6 +19,26 @@ class Settings(BaseSettings):
     public_gateway_url: str = "http://localhost:8000"
     session_ttl_s: int = 1800
     jobs_interval_s: int = 3600  # cron-style jobs loop; 0 disables (tests)
+
+    @field_validator("database_url")
+    @classmethod
+    def _asyncpg_url(cls, v: str) -> str:
+        return normalise_db_url(v)
+
+
+def normalise_db_url(url: str) -> str:
+    """Railway gives postgres:// or postgresql://; SQLAlchemy needs the asyncpg driver. asyncpg rejects ?sslmode=, so map it to ssl=."""
+    for prefix in ("postgres://", "postgresql://"):
+        if url.startswith(prefix):
+            url = "postgresql+asyncpg://" + url[len(prefix):]
+    parts = urlsplit(url)
+    q = [(k, v) for k, v in parse_qsl(parts.query, keep_blank_values=True)]
+    if any(k == "sslmode" for k, _ in q):
+        mode = dict(q)["sslmode"]
+        q = [(k, v) for k, v in q if k != "sslmode"]
+        if mode not in ("disable", "allow", "prefer"):  # Railway's internal URL has no sslmode and needs no TLS
+            q.append(("ssl", "require"))
+    return urlunsplit(parts._replace(query=urlencode(q)))
 
 
 DEV_DEFAULTS = {"gateway_shared_secret": "dev-shared-secret-change-me", "dashboard_token": "dev-dashboard-token-change-me",
