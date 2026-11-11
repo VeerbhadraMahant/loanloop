@@ -19,7 +19,7 @@ import httpx
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import Field
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from voice import providers, tts as tts_mod
@@ -230,7 +230,11 @@ class Settings(BaseSettings):
     dashboard_token: str = "dev-dashboard-token-change-me"  # outbound calls are started by ops (dialer), not callers
     ollama_url: str = "http://127.0.0.1:11434"
     ollama_model: str = "qwen3:8b"
-    voice_port: int = 8100  # only used for the Host-header check
+    voice_port: int = Field(8100, validation_alias=AliasChoices("VOICE_PORT", "PORT"))  # only used for the Host-header check
+    voice_edge_token: str = ""  # when set, every request except GET /health must carry it (X-Voice-Edge-Token)
+    voice_allowed_hosts: str = ""  # comma list of extra Host values; non-empty = publicly deployed (see check_public)
+    voice_allowed_origins: str = ""  # comma list of extra CORS origins
+    llm_fallback: str = ""  # "" = off | ollama | gemini | sarvam: retried once when the primary provider fails
     llm_provider: str = "ollama"  # default per call: ollama | gemini | sarvam
     dev: bool = Field(False, validation_alias="VOICE_DEV")  # developer lab: /dev/* routes, per-call settings
     warmup: bool = True  # background Ollama warm-up at startup (tests turn it off)
@@ -253,6 +257,28 @@ class Settings(BaseSettings):
         except OSError:
             pass
         return ""
+
+    @staticmethod
+    def _csv(v: str) -> list[str]:
+        return [x.strip() for x in v.split(",") if x.strip()]
+
+    def check_public(self) -> None:
+        """Refuse to start a publicly deployed instance (VOICE_ALLOWED_HOSTS set) with dev defaults."""
+        if not self._csv(self.voice_allowed_hosts):
+            return
+        bad = []
+        if self.gateway_shared_secret == "dev-shared-secret-change-me":
+            bad.append("GATEWAY_SHARED_SECRET is the dev default")
+        if self.dashboard_token == "dev-dashboard-token-change-me":
+            bad.append("DASHBOARD_TOKEN is the dev default")
+        if not self.voice_edge_token:
+            bad.append("VOICE_EDGE_TOKEN is empty")
+        if self.dev:
+            bad.append("VOICE_DEV is on")
+        if bad:
+            raise RuntimeError("Refusing to start: VOICE_ALLOWED_HOSTS is set (public deployment) but " + "; ".join(bad) + ".")
+        if self.llm_fallback and (self.llm_fallback not in PROVIDERS or self.llm_fallback == self.llm_provider):
+            raise RuntimeError("LLM_FALLBACK must be one of ollama|gemini|sarvam and differ from LLM_PROVIDER.")
 
     def gnani_key(self) -> str:
         return self._key(self.gnani_speech_api_key, "gnani_api_key")
@@ -1255,6 +1281,7 @@ load_languages()
 
 def create_app(settings: Settings | None = None, client: httpx.AsyncClient | None = None) -> FastAPI:
     cfg = settings or Settings()
+    cfg.check_public()
     tools, known = load_tools()
     tools_plain, _ = load_tools(hints=False)
     by_state = {h: {k: [t for t in (tools if h else tools_plain) if t["function"]["name"] in names] for k, names in TOOL_SETS.items()}
@@ -1291,13 +1318,18 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
 
     app = FastAPI(title="LoanLoop voice agent", lifespan=lifespan)
     app.state.calls = calls
-    app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", *cfg._csv(cfg.voice_allowed_origins)],
                        allow_methods=["GET", "POST"], allow_headers=["*"])
 
     @app.middleware("http")
     async def host_check(request: Request, call_next):  # DNS-rebinding guard
-        if request.headers.get("host", "") not in {f"127.0.0.1:{cfg.voice_port}", f"localhost:{cfg.voice_port}"}:
+        health = request.method == "GET" and request.url.path == "/health"  # platform health checks use their own Host
+        if not health and request.headers.get("host", "") not in {
+                f"127.0.0.1:{cfg.voice_port}", f"localhost:{cfg.voice_port}", *cfg._csv(cfg.voice_allowed_hosts)}:
             return JSONResponse({"detail": "bad host"}, status_code=400)
+        if cfg.voice_edge_token and not health and not hmac.compare_digest(
+                request.headers.get("x-voice-edge-token", "").encode(), cfg.voice_edge_token.encode()):
+            return JSONResponse({"detail": "unauthorized"}, status_code=401)
         return await call_next(request)
 
     def bad_gateway(what: str, cid: str = "-", status: int | None = None):
@@ -1328,7 +1360,22 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         return res
 
     async def llm(c: dict) -> dict:
-        p, t0, st_ = c["llm"], time.perf_counter(), c["set"]
+        try:
+            msg = await llm_once(c, c["llm"], c["model"])
+            c.pop("used", None)
+            return msg
+        except HTTPException:
+            fb = cfg.llm_fallback
+            if not fb or fb == c["llm"] or fb not in PROVIDERS:
+                raise
+            log.warning("call=%s llm_fallback=%s", c["id"], fb)
+            model = cfg.llm_model(fb)
+            msg = await llm_once(c, fb, model)
+            c["used"] = (fb, model)  # timings report the model that actually answered
+            return msg
+
+    async def llm_once(c: dict, p: str, model: str) -> dict:
+        t0, st_ = time.perf_counter(), c["set"]
         msgs, tl = trim(c["messages"], st_["keep_msgs"]), tools if st_["tool_hints"] else tools_plain
         if st_["tool_sets"]:
             tl = by_state[st_["tool_hints"]][tool_set_key(c)]
@@ -1337,7 +1384,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         try:
             if p != "ollama":
                 return await providers.openai_chat(
-                    http, base_url=getattr(cfg, f"{p}_base_url"), api_key=cfg.llm_key(p), model=c["model"],
+                    http, base_url=getattr(cfg, f"{p}_base_url"), api_key=cfg.llm_key(p), model=model,
                     messages=msgs, tools=tl, provider=p, temperature=st_["temperature"], max_tokens=st_["max_tokens"],
                     reasoning=st_["reasoning"])
             opts = {"num_ctx": st_["num_ctx"]}
@@ -1349,7 +1396,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             if think and not opts.get("num_predict"):
                 opts["num_predict"] = 1500  # bounds a rambling thought
             r = await http.post(f"{cfg.ollama_url}/api/chat", json={
-                "model": c["model"], "messages": msgs, "tools": tl, "stream": False,
+                "model": model, "messages": msgs, "tools": tl, "stream": False,
                 "think": think, "keep_alive": -1, "options": opts})
             r.raise_for_status()
             msg = r.json()["message"]
@@ -2074,7 +2121,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             if c.get("rb_new") and (audio or aud or not want_tts):  # a read-back counts as heard only once it was delivered
                 c["pending_rb"], c["rb_turn"] = c["rb_new"], c["turn"]
             c["rb_new"] = c["rb_active"] = None
-            timings = finish_timings(tm, t_start, c["llm"], c["model"])
+            timings = finish_timings(tm, t_start, *c.get("used", (c["llm"], c["model"])))
             log.info("call=%s turn=%d timings=%s", call_id, c["turn"], json.dumps(timings))
             return reply(c, text, acts, audio, user_text=redact(user_text), timings=timings, **aud)
 

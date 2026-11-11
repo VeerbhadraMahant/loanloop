@@ -1,6 +1,7 @@
 // Starts an OUTBOUND call on the voice service. The voice service wants the dashboard token for these,
 // so the browser posts here and the token is added server-side. Only direction=outbound + integer case_id.
-const VOICE = process.env.VOICE_URL ?? process.env.NEXT_PUBLIC_VOICE_URL ?? "http://127.0.0.1:8100";
+const VOICE = process.env.VOICE_URL ?? "http://127.0.0.1:8100";
+const EDGE_TOKEN = process.env.VOICE_EDGE_TOKEN ?? "";
 const DASHBOARD_TOKEN = process.env.DASHBOARD_TOKEN ?? "";
 const ORIGIN_ALLOW = new Set([
   "http://localhost:3000",
@@ -18,7 +19,7 @@ export async function POST(req: Request) {
   try {
     const up = await fetch(`${VOICE}/calls?stream=1&tts=${body.tts === true}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${DASHBOARD_TOKEN}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${DASHBOARD_TOKEN}`, ...(EDGE_TOKEN ? { "X-Voice-Edge-Token": EDGE_TOKEN } : {}) },
       body: JSON.stringify({ direction: "outbound", case_id: id }),
       cache: "no-store",
     });

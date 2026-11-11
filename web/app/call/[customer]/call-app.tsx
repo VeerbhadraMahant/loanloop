@@ -9,7 +9,7 @@ import { LLMS, SessionSummary, TurnStat, type LlmId, type Stat, type Timings, ty
 import { PhoneHandset } from "@/app/phone/[customer]/phone-app";
 import { SidebarLayout } from "@/components/sidebar-nav";
 
-const VOICE = process.env.NEXT_PUBLIC_VOICE_URL ?? "http://127.0.0.1:8100";
+const VOICE = process.env.NEXT_PUBLIC_VOICE_URL ?? "/vx";
 const MIN_SECONDS = 0.3;
 const MAX_SECONDS = 25;
 

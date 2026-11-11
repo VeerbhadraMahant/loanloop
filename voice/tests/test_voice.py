@@ -301,7 +301,7 @@ def test_content_type_host_and_call_cap(env):
     d = new_call(c)
     r = c.post(f"/calls/{d['call_id']}/turn", content='{"text": "hi"}', headers={"content-type": "text/plain"})
     assert r.status_code == 415
-    assert c.get("/health", headers={"host": "evil.com"}).status_code == 400
+    assert c.post("/calls", json={}, headers={"host": "evil.com"}).status_code == 400
     for _ in range(49):
         assert c.post("/calls?tts=false", json={}).status_code == 200
     assert c.post("/calls?tts=false", json={}).status_code == 429

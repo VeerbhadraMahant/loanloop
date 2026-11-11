@@ -1,6 +1,6 @@
 import type { Timings } from "@/components/turn-stats";
 
-export const VOICE = process.env.NEXT_PUBLIC_VOICE_URL ?? "http://127.0.0.1:8100";
+export const VOICE = process.env.NEXT_PUBLIC_VOICE_URL ?? "/vx";
 
 /** Browser fetch failures are opaque; the usual causes are the service being down or CORS (voice only allows http://localhost:3000 and 127.0.0.1:3000). */
 export const unreachable = () =>
