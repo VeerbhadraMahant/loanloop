@@ -101,6 +101,7 @@ export function PhoneHandset({
 
   useEffect(() => {
     if (simulationProps?.inCall) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- sync tab to external prop
       setActiveTab("call");
     }
   }, [simulationProps?.inCall]);

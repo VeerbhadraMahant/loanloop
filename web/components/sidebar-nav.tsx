@@ -30,6 +30,7 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored !== null) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- restore persisted pref after mount
         setIsOpen(stored === "true");
       } else if (window.innerWidth < 1024) {
         setIsOpen(false);
@@ -305,6 +306,7 @@ export function ThemeSelector() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- mount flag for hydration-safe rendering
     setMounted(true);
     try {
       const stored = localStorage.getItem("loanloop.theme") as "bright" | "classic" | "dark" | null;
