@@ -156,7 +156,7 @@ export function UnifiedUserShell({
               <Icon name="shield" size={13} />
               <span>Authorization Needed ({pendingApprovalCount})</span>
             </span>
-            <span className="text-[11px] font-mono underline">Review in Bank App →</span>
+            <span className="text-[11px] font-mono underline">Review in Inbox →</span>
           </button>
         )}
 
@@ -254,7 +254,7 @@ export function UnifiedUserShell({
               </span>
             </button>
 
-            {/* Tab 3: Bank App */}
+            {/* Tab 3: Inbox & Bank App */}
             <button
               type="button"
               onClick={() => setActiveTab("bank-app")}
@@ -270,7 +270,7 @@ export function UnifiedUserShell({
                   </span>
                 )}
               </div>
-              <span className="text-[10px] mt-0.5 tracking-tight">Bank App</span>
+              <span className="text-[10px] mt-0.5 tracking-tight font-semibold">Inbox</span>
             </button>
 
             {/* Tab 4: Account */}

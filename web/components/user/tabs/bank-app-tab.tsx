@@ -58,7 +58,7 @@ export function BankAppTab() {
           </div>
           <div className="min-w-0">
             <h3 className="text-xs font-bold text-fg tracking-tight truncate">
-              Sahyadri Mobile Banking
+              Inbox &amp; Approvals
             </h3>
             <p className="text-[10px] font-mono text-muted truncate">
               {me.data ? `${me.data.name} · ${me.data.mobile_masked}` : customerRef}
