@@ -92,3 +92,17 @@ def test_bare_pin_words_need_script_boundaries_or_a_number(use):
     for text in ("ਪਿੰਨੀ ਖਾਣੀ ਹੈ", "ਪਿੰਨ ਕੋਡ 143001", "మా పిన్ని వచ్చింది", "அதன் பின் வந்தேன்", "பின் 3 மாதம்"):
         assert find_secret("note", text) is None, text
     assert find_secret("note", "ಪಾಸ್‌ವರ್ಡ್ abc") == "password"  # ZWNJ is ignored
+
+
+def test_nfc_decomposed_forms_and_prefix_only_entries():
+    from app.security.scrub import set_extra_secret_words
+    composed, decomposed = "পাসওয়ার্ড".replace("য়", "য়"), "পাসওয়ার্ড".replace("য়", "য়")
+    try:
+        for entry, text in ((composed, decomposed), (decomposed, composed)):
+            set_extra_secret_words({"password": [entry]})
+            assert find_secret("x", f"আমার {text} 1234") == "password"
+            assert "1234" not in redact_secret("x", f"আমার {text} 1234")[0]
+        set_extra_secret_words({"pin": ["~~~~", "#", "~#"]})
+        assert find_secret("x", "hello there, nothing secret") is None
+    finally:
+        set_extra_secret_words(None)

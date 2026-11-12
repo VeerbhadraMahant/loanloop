@@ -26,18 +26,23 @@ def routed_ta(tmp_path):
     next(m for m in d["modes"] if m["code"] == "ta")["llm"] = "sarvam"
     reg.write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
     va.load_languages(tmp_path / "i18n")
+    va.ROUTE_DOWN.clear()
     yield
+    va.ROUTE_DOWN.clear()
     va.load_languages()
 
 
-def make(sarvam_ok=True, **kw):
-    hits = []
+def make(sarvam_ok=True, sarvam_hang=False, **kw):
+    hits, seen = [], []
     fake = Fake()
 
     def handler(req):
         url = str(req.url)
         if "api.sarvam.ai" in url:
             hits.append("sarvam")
+            seen.append(req.extensions["timeout"]["read"])
+            if sarvam_hang:
+                raise httpx.ReadTimeout("hung", request=req)
             if not sarvam_ok:
                 return httpx.Response(500, text="boom")
             return httpx.Response(200, json={"choices": [{"message": {"role": "assistant", "content": "from sarvam"}}]})
@@ -48,7 +53,9 @@ def make(sarvam_ok=True, **kw):
 
     cl = httpx.AsyncClient(transport=httpx.MockTransport(handler))
     cfg = Settings(**{"gnani_speech_api_key": KEY, "sarvam_api_key": "S", **kw})
-    return TestClient(create_app(cfg, cl), base_url=BASE), hits
+    c = TestClient(create_app(cfg, cl), base_url=BASE)
+    c.seen = seen
+    return c, hits
 
 
 def test_real_registry_routes_every_beta_language_and_no_core_language():
@@ -142,3 +149,20 @@ def test_health_shows_the_active_routes(routed_ta):
     c, _ = make(sarvam_api_key="")
     with c:
         assert c.get("/health").json()["lang_routing"] == {}
+
+
+def test_hung_routed_provider_uses_short_timeout_no_retry_then_cools_down(routed_ta, monkeypatch):
+    c, hits = make(sarvam_hang=True, llm_route_timeout=0.5)
+    with c:
+        d = new_call(c)
+        turn(c, d, "Tamil")
+        r = turn(c, d, TAMIL).json()
+        assert r["agent_text"] == "from ollama" and hits == ["sarvam", "ollama"]  # one routed attempt, no retry
+        assert c.seen == [0.5]  # short routed timeout, not the 30 s default
+        assert "sarvam" in c.get("/health").json()["route_cooldown_s"]
+        turn(c, d, TAMIL)  # cooldown: straight to the default
+        assert hits == ["sarvam", "ollama", "ollama"]
+        t = va.ROUTE_DOWN["sarvam"]
+        monkeypatch.setattr(va.time, "monotonic", lambda: t + 1)  # cooldown expired: routing resumes
+        turn(c, d, TAMIL)
+        assert hits[-1] == "sarvam" or hits[-2:] == ["sarvam", "ollama"]

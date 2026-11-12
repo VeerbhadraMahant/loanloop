@@ -67,7 +67,8 @@ def _args(raw) -> dict:
 
 async def openai_chat(http: httpx.AsyncClient, *, base_url: str, api_key: str, model: str,
                       messages: list[dict], tools: list[dict], provider: str, timeout: float = 30.0,
-                      temperature: float | None = None, max_tokens: int | None = None, reasoning: str | None = None) -> dict:
+                      temperature: float | None = None, max_tokens: int | None = None, reasoning: str | None = None,
+                      retry: bool = True) -> dict:
     """temperature / max_tokens / reasoning: None keeps the defaults below; reasoning is the effort ("off" = thinking off)."""
     body = {"model": model, "messages": _to_openai(messages, provider), "tools": tools, "tool_choice": "auto",
             "temperature": 0.2 if temperature is None else temperature,
@@ -80,7 +81,7 @@ async def openai_chat(http: httpx.AsyncClient, *, base_url: str, api_key: str, m
     if reasoning:
         body["reasoning_effort"] = None if reasoning == "off" else reasoning
     r = None
-    for attempt in (0, 1):  # no side effects, so one retry on transient failures is safe
+    for attempt in ((0, 1) if retry else (1,)):  # no side effects, so one retry on transient failures is safe; retry=False raises at once
         wait = 0.3
         try:
             r = await http.post(base_url.rstrip("/") + "/chat/completions", json=body,

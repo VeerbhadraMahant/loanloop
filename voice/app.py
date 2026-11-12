@@ -238,6 +238,9 @@ class Settings(BaseSettings):
     voice_allowed_origins: str = ""  # comma list of extra CORS origins
     llm_fallback: str = ""  # "" = off | ollama | gemini | sarvam: retried once when the primary provider fails
     llm_provider: str = "ollama"  # default per call: ollama | gemini | sarvam
+    # routed attempt budget: Sarvam answers in ~0.2-1 s (p95 ~9 s once seen for Kannada); 8 s keeps normal long answers and bounds dead air
+    llm_route_timeout: float = 8.0
+    llm_route_cooldown: float = 60.0  # after a routed failure, skip routing to that provider this long
     llm_lang_routing: bool = True  # beta-language turns go to the provider named by languages.json "llm" (LLM_LANG_ROUTING=false: always the default)
     dev: bool = Field(False, validation_alias="VOICE_DEV")  # developer lab: /dev/* routes, per-call settings
     warmup: bool = True  # background Ollama warm-up at startup (tests turn it off)
@@ -767,6 +770,7 @@ _SCRIPT_BLOCK = {"Bengali": (0x980, 0x9FF), "Gurmukhi": (0xA00, 0xA7F), "Gujarat
                  "Telugu": (0xC00, 0xC7F), "Kannada": (0xC80, 0xCFF), "Malayalam": (0xD00, 0xD7F)}
 _SCRIPT_LANG = {m["code"]: m["script"] for m in MODES if m.get("script") in _SCRIPT_BLOCK}  # code -> script, from the registry
 _ANY_INDIC_NON_DEVA = re.compile("[\u0980-\u0d7f]")
+ROUTE_DOWN: dict[str, float] = {}  # routed provider -> time.monotonic() until which routing to it is skipped
 LLM_ROUTE: dict[str, str] = {}  # language code -> provider (languages.json "llm"); see create_app route_for
 ACTIVE_LANGS: list[str] = list(BUILTIN_LANGS)  # built-in 4 + every language whose file loaded
 _INACTIVE_NAMES: set[str] = set()  # names of registry languages with no (valid) file: the caller gets the sorry line
@@ -1489,16 +1493,19 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
                 routes_warned.add(p)
                 log.warning("llm route %s configured for language %s but no %s_API_KEY: using %s", p, c["language"], p.upper(), c["llm"])
             return None
+        if ROUTE_DOWN.get(p, 0) > time.monotonic():
+            return None
         return p
 
     async def llm(c: dict) -> dict:
         if (rp := route_for(c)):
             try:
                 model = cfg.llm_model(rp)
-                msg = await llm_once(c, rp, model)
+                msg = await llm_once(c, rp, model, routed=True)
                 c["used"] = (rp, model)  # timings report the model that actually answered
                 return msg
             except HTTPException:  # the routed provider failed: the normal default answers this turn (below)
+                ROUTE_DOWN[rp] = time.monotonic() + cfg.llm_route_cooldown
                 log.warning("call=%s lang_route=%s failed, retrying on %s", c["id"], rp, c["llm"])
         try:
             msg = await llm_once(c, c["llm"], c["model"])
@@ -1514,7 +1521,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             c["used"] = (fb, model)  # timings report the model that actually answered
             return msg
 
-    async def llm_once(c: dict, p: str, model: str) -> dict:
+    async def llm_once(c: dict, p: str, model: str, routed: bool = False) -> dict:
         t0, st_ = time.perf_counter(), c["set"]
         msgs, tl = trim(c["messages"], st_["keep_msgs"]), tools if st_["tool_hints"] else tools_plain
         if st_["tool_sets"]:
@@ -1526,7 +1533,8 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
                 return await providers.openai_chat(
                     http, base_url=getattr(cfg, f"{p}_base_url"), api_key=cfg.llm_key(p), model=model,
                     messages=msgs, tools=tl, provider=p, temperature=st_["temperature"], max_tokens=st_["max_tokens"],
-                    reasoning=st_["reasoning"])
+                    reasoning=st_["reasoning"],
+                    **({"timeout": cfg.llm_route_timeout, "retry": False} if routed else {}))
             opts = {"num_ctx": st_["num_ctx"]}
             if st_["temperature"] is not None:
                 opts["temperature"] = st_["temperature"]
@@ -2081,6 +2089,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         if cfg.is_public():
             return {"ok": True}  # unauthenticated probe: no provider/model/dev details
         return {"ok": True, "model": cfg.ollama_model, "default": cfg.llm_provider, "dev": cfg.dev,
+                "route_cooldown_s": {p: round(t - time.monotonic()) for p, t in ROUTE_DOWN.items() if t > time.monotonic()},
                 "lang_routing": {k: v for k, v in LLM_ROUTE.items() if v != cfg.llm_provider and (v == "ollama" or cfg.llm_key(v))} if cfg.llm_lang_routing else {},
                 "providers": {p: {"model": cfg.llm_model(p), "ready": p == "ollama" or bool(cfg.llm_key(p))} for p in PROVIDERS}}
 

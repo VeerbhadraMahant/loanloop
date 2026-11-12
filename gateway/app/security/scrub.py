@@ -1,5 +1,6 @@
 """Secret detection. Returns only a secret *type*; values are never logged, stored or raised."""
 import re
+import unicodedata
 
 _KW = re.compile(
     r"pass\s*word|pass\s*code|\bpin\b(?![\s\-]*code)|\bmpin\b|\bupin\b|\botp\b|\bcvv\b|\bcvc\b|one[\s-]*time[\s-]*pass|"
@@ -26,8 +27,8 @@ def set_extra_secret_words(words: dict | None) -> None:
     global _EXTRA, _BARE_NUM
     out, bare_num = [], []
     for t, ws in (words or {}).items():
-        ws = [w.strip().lower().translate(_ZW) for w in ws if isinstance(w, str)] if isinstance(ws, list) else []
-        ws = [w for w in ws if (w.lstrip("~#") and not w.lstrip("~#").isascii()) or len(w) >= 4]
+        ws = [unicodedata.normalize("NFC", w).strip().lower().translate(_ZW) for w in ws if isinstance(w, str)] if isinstance(ws, list) else []
+        ws = [w for w in ws if (b := w.lstrip("~#")) and (not b.isascii() or len(w) >= 4)]  # prefix-only entries compile to an empty pattern: drop
         if t not in SECRET_TYPES:
             continue
         not_code = _NOT_PIN_CODE if t == "pin" else ""  # "PIN code" is a postal code, like the built-in pin(?!code)
@@ -53,7 +54,7 @@ def _luhn(s: str) -> bool:
 def find_secret(field_name: str, value: str) -> str | None:
     if not isinstance(value, str) or not value:
         return None
-    value = value.translate(INDIC_DIGITS).translate(_ZW)
+    value = unicodedata.normalize("NFC", value).translate(INDIC_DIGITS).translate(_ZW)  # NFC: য় / nukta letters compose the same way as the word lists
     for m in _CARD.finditer(value):
         digits = re.sub(r"\D", "", m.group())
         if _luhn(digits):
