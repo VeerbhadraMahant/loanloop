@@ -14,8 +14,8 @@ BLOCKS = {
 @pytest.mark.parametrize("lang", sorted(BLOCKS))
 def test_keyterms_file(lang):
     raw = (D / f"{lang}.txt").read_bytes()
-    assert not raw.startswith(b"\xef\xbb\xbf") and b"\r" not in raw
-    lines = raw.decode("utf-8").split("\n")
+    assert not raw.startswith(b"\xef\xbb\xbf")
+    lines = raw.decode("utf-8").replace("\r\n", "\n").split("\n")  # git autocrlf may check out CRLF; the loader strips lines
     assert lines[-1] == ""
     lines = lines[:-1]
     assert 40 <= len(lines) <= 100
