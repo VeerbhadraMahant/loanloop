@@ -1,11 +1,47 @@
 "use client";
-import { useCallback, useState } from "react";
+import { Fragment, useCallback, useState } from "react";
 import { langLabel } from "@/lib/languages";
 import { CallRow, GwEvent, Handover, useEvents, useGet } from "@/lib/api";
 import { Button, Card, Empty, ErrorBox, Icon, Pill, Shell, Skeleton, fmtTime, stagger } from "@/components/ui";
 
 const tierLabel = ["Tier 0 · Info", "Tier 1 · Verified", "Tier 2 · Approval"];
 const tierTone = ["neutral", "neutral", "accent"] as const;
+
+const ACTION_LABELS: Record<string, string> = {
+  start_call: "Call started",
+  end_call: "Call ended",
+  handover: "Agent handover",
+  emi_info: "EMI inquiry",
+  branch_lookup: "Branch lookup",
+  check_payment: "Payment check",
+  check_approval: "Approval check",
+  confirm_readback: "Readback confirmed",
+  emi_date_change: "EMI date change",
+  explain_emi_change: "EMI change explained",
+  report_secret_spoken: "Secret detected",
+};
+
+function humanAction(action?: string | null): string {
+  if (!action) return "—";
+  return ACTION_LABELS[action] ?? action.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
+}
+
+function shortCallId(id: string): string {
+  return id.length > 14 ? `${id.slice(0, 10)}…${id.slice(-4)}` : id;
+}
+
+function callDurationLabel(startedAt?: string | null, endedAt?: string | null): string {
+  if (!startedAt) return "—";
+  if (!endedAt) return "Active";
+  const a = new Date(startedAt).getTime();
+  const b = new Date(endedAt).getTime();
+  if (isNaN(a) || isNaN(b) || b < a) return "—";
+  const sec = Math.round((b - a) / 1000);
+  if (sec < 60) return `${sec}s`;
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${m}m ${s}s`;
+}
 
 function OutcomePill({ outcome }: { outcome: string }) {
   if (outcome === "ok") return <Pill tone="ok" icon="check">ok</Pill>;
@@ -17,13 +53,13 @@ function LivePill({ live }: { live: boolean }) {
   return (
     <span
       role="status"
-      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-mono font-medium ${
+      className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 font-mono text-[11px] font-medium ${
         live
           ? "bg-ok-bg text-ok-fg border-ok-border"
           : "bg-warn-bg text-warn-fg border-warn-border"
       }`}
     >
-      <span aria-hidden className={`h-2 w-2 rounded-full ${live ? "pulse bg-ok-fg" : "bg-warn-fg"}`} />
+      <span aria-hidden className={`h-1.5 w-1.5 rounded-full ${live ? "pulse bg-ok-fg" : "bg-warn-fg"}`} />
       Live stream: {live ? "connected" : "disconnected"}
     </span>
   );
@@ -32,15 +68,17 @@ function LivePill({ live }: { live: boolean }) {
 // gateway caps these lists at 100 rows, so show "100+" rather than a misleading exact count
 const cap = (n: number) => (n >= 100 ? "100+" : String(n));
 
-const th = "px-3.5 py-2.5 text-xs font-mono font-medium uppercase tracking-wider text-muted";
+const th = "px-3 py-2 text-[11px] font-medium uppercase tracking-wider text-muted";
 
 export default function Ops() {
   const calls = useGet<CallRow[]>("/dashboard/calls", 5000);
   const handovers = useGet<Handover[]>("/dashboard/handovers", 5000);
   const security = useGet<GwEvent[]>("/dashboard/security", 5000);
   const [sel, setSel] = useState<string | null>(null);
-  const [density, setDensity] = useState<"comfortable" | "compact">("comfortable");
+  const [density, setDensity] = useState<"comfortable" | "compact">("compact");
   const [filter, setFilter] = useState<"all" | "attention" | "verified" | "outbound">("all");
+  const [groupFilter, setGroupFilter] = useState<string>("all");
+  const [sortOrder, setSortOrder] = useState<"attention-first" | "completed-first" | "newest" | "oldest">("attention-first");
   const [hubTab, setHubTab] = useState<"all" | "handovers" | "threats">("all");
   const timeline = useGet<GwEvent[]>(sel ? `/dashboard/calls/${encodeURIComponent(sel)}/timeline` : null, 0);
 
@@ -75,35 +113,97 @@ export default function Ops() {
     return true;
   });
 
+  const classifyGroup = (c: CallRow): { key: string; label: string; order: number } => {
+    if (!c.ended_at || c.blocked_count > 0) {
+      return { key: "attention", label: "Live & Needs Attention", order: 0 };
+    }
+    if (!c.outcome || c.outcome === "completed" || c.outcome === "resolved") {
+      return { key: "completed", label: "Completed", order: 1 };
+    }
+    return {
+      key: c.outcome,
+      label: c.outcome.replace(/_/g, " ").replace(/^\w/, (ch) => ch.toUpperCase()),
+      order: 2,
+    };
+  };
+
+  const groupMap = new Map<string, { key: string; label: string; order: number; rows: CallRow[] }>([
+    ["attention", { key: "attention", label: "Live & Needs Attention", order: 0, rows: [] }],
+    ["completed", { key: "completed", label: "Completed", order: 1, rows: [] }],
+  ]);
+
+  for (const c of filteredCalls) {
+    const meta = classifyGroup(c);
+    const existing = groupMap.get(meta.key);
+    if (existing) {
+      existing.rows.push(c);
+    } else {
+      groupMap.set(meta.key, { ...meta, rows: [c] });
+    }
+  }
+
+  const availableGroups = [...groupMap.values()].filter((g) => g.rows.length > 0);
+  const activeGroupFilter =
+    groupFilter !== "all" && availableGroups.some((g) => g.key === groupFilter) ? groupFilter : "all";
+
+  const byStartDesc = (a: CallRow, b: CallRow) => b.started_at.localeCompare(a.started_at);
+  const byStartAsc = (a: CallRow, b: CallRow) => a.started_at.localeCompare(b.started_at);
+
+  const sessionGroups = (() => {
+    const chosen = availableGroups.filter((g) => activeGroupFilter === "all" || g.key === activeGroupFilter);
+    if (sortOrder === "newest" || sortOrder === "oldest") {
+      const merged = chosen.flatMap((g) => g.rows).sort(sortOrder === "newest" ? byStartDesc : byStartAsc);
+      return merged.length
+        ? [{ key: "chronological", label: sortOrder === "newest" ? "Newest first" : "Oldest first", rows: merged }]
+        : [];
+    }
+    const sortedGroups = [...chosen].sort((a, b) => {
+      if (sortOrder === "completed-first") {
+        const rank = (k: string) => (k === "completed" ? 0 : k === "attention" ? 1 : 2);
+        return rank(a.key) - rank(b.key) || a.order - b.order;
+      }
+      return a.order - b.order;
+    });
+    return sortedGroups.map((g) => ({
+      ...g,
+      rows: [...g.rows].sort(byStartDesc),
+    }));
+  })();
+
+  const visibleSessionCount = sessionGroups.reduce((sum, g) => sum + g.rows.length, 0);
+
   const selectedCall = callList.find((c) => c.call_id === sel);
 
   return (
     <Shell
       title="Live Operations"
+      sub="Real-time call stream, session timeline, handover queue, and guardrail incidents."
       status={
-        <div className="flex items-center gap-3">
-          <div className="inline-flex items-center p-0.5 rounded-lg bg-sunken border border-line">
-            <button
-              type="button"
-              onClick={() => setDensity("comfortable")}
-              className={`px-2.5 py-1 rounded text-xs transition-all cursor-pointer ${
-                density === "comfortable"
-                  ? "bg-card text-fg font-medium shadow-xs"
-                  : "text-muted hover:text-fg"
-              }`}
-            >
-              Comfortable
-            </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="inline-flex items-center rounded-md border border-line bg-sunken p-0.5">
             <button
               type="button"
               onClick={() => setDensity("compact")}
-              className={`px-2.5 py-1 rounded text-xs transition-all cursor-pointer ${
+              aria-pressed={density === "compact"}
+              className={`rounded px-2 py-1 text-[11px] font-medium transition-colors cursor-pointer ${
                 density === "compact"
-                  ? "bg-card text-fg font-medium shadow-xs"
+                  ? "bg-card text-fg border border-line"
                   : "text-muted hover:text-fg"
               }`}
             >
               Compact
+            </button>
+            <button
+              type="button"
+              onClick={() => setDensity("comfortable")}
+              aria-pressed={density === "comfortable"}
+              className={`rounded px-2 py-1 text-[11px] font-medium transition-colors cursor-pointer ${
+                density === "comfortable"
+                  ? "bg-card text-fg border border-line"
+                  : "text-muted hover:text-fg"
+              }`}
+            >
+              Comfortable
             </button>
           </div>
           <LivePill live={live} />
@@ -112,231 +212,295 @@ export default function Ops() {
     >
       <ErrorBox error={err} />
 
-      {/* Quick Filter Strip (Clean & Compact) */}
-      <div className="flex flex-wrap items-center gap-2 mb-5">
-        <button
-          type="button"
-          onClick={() => setFilter("all")}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
-            filter === "all"
-              ? "bg-primary text-primary-fg shadow-xs font-semibold"
-              : "bg-card text-muted hover:text-fg border border-line"
-          }`}
-        >
-          All ({cap(callList.length)})
-        </button>
-        <button
-          type="button"
-          onClick={() => setFilter("attention")}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
-            filter === "attention"
-              ? "bg-warn-bg text-warn-fg border border-warn-border font-semibold shadow-xs"
-              : "bg-card text-muted hover:text-fg border border-line"
-          }`}
-        >
-          Needs attention ({attentionCount})
-        </button>
-        <button
-          type="button"
-          onClick={() => setFilter("verified")}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
-            filter === "verified"
-              ? "bg-secondary-container text-primary border border-primary/20 font-semibold shadow-xs"
-              : "bg-card text-muted hover:text-fg border border-line"
-          }`}
-        >
-          Verified only
-        </button>
-        <button
-          type="button"
-          onClick={() => setFilter("outbound")}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
-            filter === "outbound"
-              ? "bg-secondary-container text-primary border border-primary/20 font-semibold shadow-xs"
-              : "bg-card text-muted hover:text-fg border border-line"
-          }`}
-        >
-          Outbound
-        </button>
+      {/* Quick Filter Strip */}
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setFilter("all")}
+            className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors cursor-pointer border ${
+              filter === "all"
+                ? "bg-primary text-primary-fg border-primary"
+                : "bg-card text-muted hover:text-fg border-line"
+            }`}
+          >
+            All ({cap(callList.length)})
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilter("attention")}
+            className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors cursor-pointer border ${
+              filter === "attention"
+                ? "bg-warn-bg text-warn-fg border-warn-border font-semibold"
+                : "bg-card text-muted hover:text-fg border-line"
+            }`}
+          >
+            Needs attention ({attentionCount})
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilter("verified")}
+            className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors cursor-pointer border ${
+              filter === "verified"
+                ? "bg-secondary-container text-accent-ink border-primary/25 font-semibold"
+                : "bg-card text-muted hover:text-fg border-line"
+            }`}
+          >
+            Verified only
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilter("outbound")}
+            className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors cursor-pointer border ${
+              filter === "outbound"
+                ? "bg-secondary-container text-accent-ink border-primary/25 font-semibold"
+                : "bg-card text-muted hover:text-fg border-line"
+            }`}
+          >
+            Outbound
+          </button>
+        </div>
       </div>
 
-      {/* 3 Streamlined KPI Cards (Zero Extra Footers) */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      {/* Streamlined Operational Counters */}
+      <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <Card
-          className="p-4 flex flex-col justify-between hover:border-primary/40 transition-all cursor-pointer shadow-xs"
+          className="cursor-pointer border-l-[3px] border-l-ok-fg px-3.5 py-2.5 transition-colors hover:bg-sunken/50"
           onClick={() => setFilter("all")}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs uppercase tracking-wider text-muted font-mono font-medium">
+            <span className="text-[11px] font-medium uppercase tracking-wider text-muted">
               Active Calls
             </span>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-ok-bg text-ok-fg font-semibold flex items-center gap-1 border border-ok-border">
-              <span className="w-1.5 h-1.5 rounded-full bg-ok-fg animate-pulse"></span>
+            <span className="inline-flex items-center gap-1 font-mono text-[11px] text-ok-fg">
+              <span className="h-1.5 w-1.5 rounded-full bg-ok-fg pulse" />
               {activeCount} live
             </span>
           </div>
-          <div className="mt-2">
-            <span className="font-mono text-3xl font-bold text-fg">{activeCount}</span>
-          </div>
+          <div className="num mt-1 text-2xl font-semibold text-fg">{activeCount}</div>
         </Card>
 
         <Card
-          className="p-4 flex flex-col justify-between hover:border-warn-border transition-all cursor-pointer shadow-xs"
+          className="cursor-pointer border-l-[3px] border-l-warn-fg px-3.5 py-2.5 transition-colors hover:bg-sunken/50"
           onClick={() => setHubTab("handovers")}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs uppercase tracking-wider text-muted font-mono font-medium">
+            <span className="text-[11px] font-medium uppercase tracking-wider text-muted">
               Pending Handover
             </span>
-            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-warn-bg text-warn-fg border border-warn-border">
-              Queue
-            </span>
+            <Pill tone="warn">Queue</Pill>
           </div>
-          <div className="mt-2">
-            <span className="font-mono text-3xl font-bold text-warn-fg">{cap(handoverCount)}</span>
-          </div>
+          <div className="num mt-1 text-2xl font-semibold text-warn-fg">{cap(handoverCount)}</div>
         </Card>
 
         <Card
-          className="p-4 flex flex-col justify-between hover:border-danger-line transition-all cursor-pointer shadow-xs"
+          className="cursor-pointer border-l-[3px] border-l-danger-fg px-3.5 py-2.5 transition-colors hover:bg-sunken/50"
           onClick={() => setHubTab("threats")}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs uppercase tracking-wider text-muted font-mono font-medium">
+            <span className="text-[11px] font-medium uppercase tracking-wider text-muted">
               Threats Blocked
             </span>
-            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-danger-bg text-danger-fg border border-danger-line">
-              Blocked
-            </span>
+            <Pill tone="danger">Blocked</Pill>
           </div>
-          <div className="mt-2">
-            <span className="font-mono text-3xl font-bold text-danger-fg">{threatCount}</span>
-          </div>
+          <div className="num mt-1 text-2xl font-semibold text-danger-fg">{threatCount}</div>
         </Card>
       </div>
 
-      {/* SECTION 1: Active Sessions Table (Full Width - Clean & Uncluttered) */}
+      {/* SECTION 1: Grouped Sessions Table */}
       <section aria-labelledby="lc" className="mb-6">
-        <div className="flex items-center justify-between gap-2 mb-3">
-          <div className="flex items-center gap-2">
-            <h2 id="lc" className="serif text-xl font-semibold text-fg flex items-center gap-2">
-              <Icon name="phone_in_talk" size={20} className="text-primary" />
-              <span>Active Sessions</span>
+        <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 id="lc" className="text-sm font-semibold text-fg">
+              Sessions
             </h2>
-            <span className="font-mono text-xs px-2 py-0.5 rounded-full bg-sunken text-muted border border-line">
-              {filteredCalls.length}
+            <span className="rounded border border-line bg-sunken px-1.5 py-0.5 font-mono text-[11px] tabular-nums text-muted">
+              {visibleSessionCount}
             </span>
+
+            {/* Status Group Filter Pills */}
+            <div
+              role="group"
+              aria-label="Filter sessions by status group"
+              className="inline-flex flex-wrap items-center gap-1 rounded-md border border-line bg-sunken p-0.5"
+            >
+              <button
+                type="button"
+                onClick={() => setGroupFilter("all")}
+                aria-pressed={activeGroupFilter === "all"}
+                className={`rounded px-2 py-0.5 text-[11px] font-medium transition-colors cursor-pointer ${
+                  activeGroupFilter === "all"
+                    ? "bg-card text-fg border border-line"
+                    : "text-muted hover:text-fg border border-transparent"
+                }`}
+              >
+                All groups ({filteredCalls.length})
+              </button>
+              {availableGroups.map((g) => (
+                <button
+                  key={g.key}
+                  type="button"
+                  onClick={() => setGroupFilter(activeGroupFilter === g.key ? "all" : g.key)}
+                  aria-pressed={activeGroupFilter === g.key}
+                  className={`rounded px-2 py-0.5 text-[11px] font-medium transition-colors cursor-pointer ${
+                    activeGroupFilter === g.key
+                      ? g.key === "attention"
+                        ? "bg-warn-bg text-warn-fg border border-warn-border font-semibold"
+                        : "bg-card text-fg border border-line font-semibold"
+                      : "text-muted hover:text-fg border border-transparent"
+                  }`}
+                >
+                  {g.label} ({g.rows.length})
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="flex items-center gap-1.5 text-xs font-mono text-muted">
-            <span className="w-1.5 h-1.5 rounded-full bg-ok-fg animate-pulse"></span>
-            <span>{activeCount} live</span>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <label className="inline-flex items-center gap-1.5 text-[11px] text-muted">
+              <Icon name="arrow_up_down" size={12} />
+              <span className="sr-only">Sort session rows</span>
+              <select
+                aria-label="Sort session rows"
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value as typeof sortOrder)}
+                className="rounded-md border border-line bg-card px-2 py-1 text-xs font-medium text-fg focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
+              >
+                <option value="attention-first">Sort: Live &amp; attention first</option>
+                <option value="completed-first">Sort: Completed first</option>
+                <option value="newest">Sort: Newest started</option>
+                <option value="oldest">Sort: Oldest started</option>
+              </select>
+            </label>
+            <span className="hidden font-mono text-[11px] text-muted sm:inline">
+              Click a row to inspect timeline
+            </span>
           </div>
         </div>
 
         {calls.loading ? (
           <Skeleton rows={4} />
-        ) : !filteredCalls.length ? (
+        ) : !visibleSessionCount ? (
           <Empty>No calls matching filter.</Empty>
         ) : (
-          <Card className="overflow-hidden shadow-xs">
-            <div className="w-full overflow-x-auto">
-              <table className="w-full text-left text-sm border-collapse min-w-[680px]">
-                <thead className="border-b border-line bg-sunken">
+          <Card className="overflow-hidden">
+            <div className="max-h-[420px] overflow-auto">
+              <table className="w-full min-w-[760px] border-collapse text-left text-xs">
+                <thead className="sticky top-0 z-10 border-b border-line bg-sunken">
                   <tr>
-                    <th className={th}>Customer</th>
+                    <th className={th}>Session / Caller</th>
                     <th className={th}>Language</th>
                     <th className={th}>Auth Tier</th>
-                    <th className={th}>Current Action</th>
+                    <th className={th}>Current State</th>
                     <th className={th}>Security</th>
+                    <th className={th}>Duration</th>
                     <th className={th}>Started</th>
                     <th className={`${th} text-right`}>Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line">
-                  {filteredCalls.map((c, i) => {
-                    const isSel = sel === c.call_id;
-                    const py = density === "compact" ? "py-2" : "py-3";
-                    const inCall = !c.ended_at;
-                    return (
-                      <tr
-                        key={c.call_id}
-                        style={stagger(i)}
-                        onClick={() => setSel(c.call_id)}
-                        className={`enter transition-colors cursor-pointer ${
-                          isSel
-                            ? "bg-secondary-container/50 border-l-4 border-primary font-medium"
-                            : "hover:bg-sunken/60"
-                        }`}
-                      >
-                        <td className={`px-3.5 ${py}`}>
-                          <div className="flex items-center gap-2.5">
-                            <span
-                              className={`w-2.5 h-2.5 rounded-full shrink-0 ${
-                                inCall ? "bg-ok-fg animate-pulse" : "bg-muted opacity-50"
-                              }`}
-                            ></span>
-                            <div className="font-semibold text-fg flex items-center gap-1.5">
-                              <span>{c.customer_ref || "Caller"}</span>
-                              {c.ended_at && (
-                                <span className="text-[10px] font-mono text-muted uppercase px-1 py-0.2 rounded bg-sunken border border-line">
-                                  ended
+                  {sessionGroups.map((group) => (
+                    <Fragment key={group.key}>
+                      {(sessionGroups.length > 1 || activeGroupFilter !== "all") && (
+                        <tr className="bg-surface-container-low">
+                          <td
+                            colSpan={8}
+                            className="px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-wider text-muted"
+                          >
+                            {group.label} ({group.rows.length})
+                          </td>
+                        </tr>
+                      )}
+                      {group.rows.map((c, i) => {
+                        const isSel = sel === c.call_id;
+                        const py = density === "compact" ? "py-1.5" : "py-2.5";
+                        const inCall = !c.ended_at;
+                        const label = c.customer_ref || "Unidentified caller";
+                        return (
+                          <tr
+                            key={c.call_id}
+                            style={stagger(i)}
+                            onClick={() => setSel(c.call_id)}
+                            className={`enter cursor-pointer transition-colors ${
+                              isSel
+                                ? "bg-secondary-container/70 font-medium"
+                                : "hover:bg-sunken/70"
+                            }`}
+                          >
+                            <td className={`px-3 ${py}`}>
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span
+                                  className={`h-2 w-2 shrink-0 rounded-full ${
+                                    inCall ? "bg-ok-fg pulse" : "bg-outline-variant"
+                                  }`}
+                                />
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="truncate font-medium text-fg">{label}</span>
+                                    {c.ended_at && (
+                                      <span className="rounded border border-line bg-sunken px-1 font-mono text-[10px] text-muted">
+                                        ended
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="font-mono text-[10px] text-muted" title={c.call_id}>
+                                    {shortCallId(c.call_id)}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className={`px-3 ${py}`}>
+                              <span className="text-fg">{langLabel(c.language)}</span>
+                            </td>
+                            <td className={`px-3 ${py}`}>
+                              <Pill tone={tierTone[c.tier] ?? "neutral"}>
+                                {tierLabel[c.tier] ?? `Tier ${c.tier}`}
+                              </Pill>
+                            </td>
+                            <td className={`px-3 ${py}`}>
+                              <span
+                                className="text-fg"
+                                title={c.current_action ? `Raw action: ${c.current_action}` : undefined}
+                              >
+                                {humanAction(c.current_action)}
+                              </span>
+                            </td>
+                            <td className={`px-3 ${py}`}>
+                              {c.blocked_count > 0 ? (
+                                <Pill tone="warn" icon="shield">
+                                  {c.blocked_count} blocked
+                                </Pill>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 font-mono text-[11px] text-ok-fg">
+                                  <Icon name="check" size={12} />
+                                  Pass
                                 </span>
                               )}
-                            </div>
-                          </div>
-                        </td>
-                        <td className={`px-3.5 ${py} text-xs`}>
-                          <span className="px-2 py-0.5 rounded bg-sunken border border-line text-fg font-medium">
-                            {langLabel(c.language)}
-                          </span>
-                        </td>
-                        <td className={`px-3.5 ${py}`}>
-                          <Pill tone={tierTone[c.tier] ?? "neutral"}>
-                            {tierLabel[c.tier] ?? `Tier ${c.tier}`}
-                          </Pill>
-                        </td>
-                        <td className={`px-3.5 ${py}`}>
-                          {c.current_action ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded font-mono text-xs bg-sunken border border-line text-fg font-medium">
-                              <Icon name="tune" size={11} className="text-primary" />
-                              {c.current_action}
-                            </span>
-                          ) : (
-                            <span className="text-muted text-xs">—</span>
-                          )}
-                        </td>
-                        <td className={`px-3.5 ${py}`}>
-                          {c.blocked_count > 0 ? (
-                            <Pill tone="warn" icon="shield">
-                              {c.blocked_count} blocked
-                            </Pill>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 text-xs text-ok-fg font-mono font-medium">
-                              <Icon name="check" size={12} />
-                              Pass
-                            </span>
-                          )}
-                        </td>
-                        <td className={`px-3.5 ${py} font-mono text-xs text-muted`}>
-                          {c.started_at ? fmtTime(c.started_at) : "—"}
-                        </td>
-                        <td className={`px-3.5 ${py} text-right`}>
-                          <div className="inline-flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                            <Button
-                              variant={isSel ? "primary" : "secondary"}
-                              small
-                              aria-pressed={isSel}
-                              onClick={() => setSel(c.call_id)}
-                              className="text-xs"
-                            >
-                              <Icon name="clock" size={12} />
-                              <span>{isSel ? "Active" : "Timeline"}</span>
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                            </td>
+                            <td className={`px-3 ${py} num text-muted`}>
+                              {callDurationLabel(c.started_at, c.ended_at)}
+                            </td>
+                            <td className={`px-3 ${py} num text-muted`}>
+                              {c.started_at ? fmtTime(c.started_at) : "—"}
+                            </td>
+                            <td className={`px-3 ${py} text-right`}>
+                              <div className="inline-flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                                <Button
+                                  variant={isSel ? "primary" : "secondary"}
+                                  small
+                                  aria-pressed={isSel}
+                                  onClick={() => setSel(c.call_id)}
+                                >
+                                  <Icon name="clock" size={12} />
+                                  <span>{isSel ? "Selected" : "Timeline"}</span>
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </Fragment>
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -345,18 +509,17 @@ export default function Ops() {
       </section>
 
       {/* SECTION 2: Balanced Lower Grid (Timeline + Escalations) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column (7 cols): Call Timeline */}
-        <section aria-labelledby="tl" className="lg:col-span-7 flex flex-col gap-3 min-w-0">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <h2 id="tl" className="serif text-xl font-semibold text-fg flex items-center gap-2">
-                <Icon name="clock" size={20} className="text-primary" />
-                <span>Call Timeline</span>
+      <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-12">
+        {/* Left Column (7 cols): Call Timeline & Raw Action Inspector */}
+        <section aria-labelledby="tl" className="lg:col-span-7 flex min-w-0 flex-col gap-2.5">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <h2 id="tl" className="text-sm font-semibold text-fg">
+                Call Timeline
               </h2>
               {selectedCall && (
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-mono bg-secondary-container text-primary font-semibold border border-primary/20">
-                  {selectedCall.customer_ref || "Active Session"}
+                <span className="truncate rounded border border-primary/25 bg-secondary-container px-2 py-0.5 font-mono text-[11px] font-medium text-accent-ink">
+                  {selectedCall.customer_ref || shortCallId(selectedCall.call_id)}
                 </span>
               )}
             </div>
@@ -364,7 +527,7 @@ export default function Ops() {
               <button
                 type="button"
                 onClick={() => setSel(null)}
-                className="text-xs font-mono text-muted hover:text-fg underline cursor-pointer"
+                className="font-mono text-xs text-muted hover:text-fg underline cursor-pointer"
               >
                 Clear
               </button>
@@ -372,11 +535,8 @@ export default function Ops() {
           </div>
 
           {!sel ? (
-            <Card className="p-8 text-center flex flex-col items-center justify-center">
-              <div className="w-10 h-10 rounded-full bg-sunken flex items-center justify-center text-muted mb-2">
-                <Icon name="clock" size={20} />
-              </div>
-              <p className="text-xs text-muted">Select a call to inspect timeline</p>
+            <Card className="p-6 text-center text-xs text-muted">
+              Select a session row above to inspect step-by-step events, latencies, and raw action IDs.
             </Card>
           ) : timeline.error ? (
             <ErrorBox error={timeline.error} />
@@ -385,46 +545,53 @@ export default function Ops() {
           ) : !timeline.data?.length ? (
             <Empty>No telemetry events logged.</Empty>
           ) : (
-            <Card className="p-4 max-h-[520px] overflow-y-auto shadow-xs">
-              <ol className="relative border-l border-line ml-3 space-y-3.5">
+            <Card className="max-h-[480px] overflow-y-auto p-3.5">
+              {selectedCall && (
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-line pb-2 font-mono text-[11px] text-muted">
+                  <span>ID: {selectedCall.call_id}</span>
+                  <span>
+                    Raw current_action: <strong className="text-fg">{selectedCall.current_action ?? "none"}</strong>
+                  </span>
+                </div>
+              )}
+              <ol className="relative ml-2.5 space-y-2.5 border-l border-line">
                 {timeline.data.map((e, i) => {
                   const isSec = e.type === "security";
+                  const rawCode = e.action ?? e.type;
+                  const titleText = isSec ? "SECURITY INCIDENT" : humanAction(rawCode);
                   return (
-                    <li key={e.id} style={stagger(i)} className="enter ml-6 relative">
+                    <li key={e.id} style={stagger(i)} className="enter relative ml-4">
                       <span
-                        className={`absolute -left-[31px] top-1.5 flex h-4 w-4 items-center justify-center rounded-full ring-4 ring-card ${
+                        className={`absolute -left-[21px] top-2 h-2 w-2 rounded-full ring-4 ring-card ${
                           isSec ? "bg-danger-fg" : "bg-primary"
                         }`}
-                      >
-                        <span className="h-1.5 w-1.5 rounded-full bg-primary-fg" />
-                      </span>
+                      />
 
                       <div
-                        className={`p-3 rounded-xl border text-sm transition-all ${
+                        className={`rounded-md border p-2.5 text-xs ${
                           isSec
-                            ? "bg-danger-bg border-danger-line text-danger-fg shadow-xs"
-                            : "bg-surface-container-low border-line text-fg"
+                            ? "border-danger-line bg-danger-bg text-danger-fg"
+                            : "border-line bg-surface-container-low text-fg"
                         }`}
                       >
                         <div className="flex flex-wrap items-center justify-between gap-2">
-                          <div className="flex items-center gap-2">
-                            <span className="font-semibold text-xs font-mono">
-                              {isSec ? "SECURITY INCIDENT" : e.action ?? e.type}
-                            </span>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-semibold">{titleText}</span>
+                            <code className="rounded border border-line bg-card px-1.5 py-0.5 font-mono text-[10px] text-muted">
+                              {rawCode}
+                            </code>
                             {e.outcome && <OutcomePill outcome={e.outcome} />}
                             {e.latency_ms != null && (
-                              <span className="font-mono text-xs text-muted px-1.5 py-0.5 rounded bg-sunken border border-line">
+                              <span className="num rounded border border-line bg-sunken px-1.5 py-0.5 font-mono text-[10px] text-muted">
                                 {e.latency_ms} ms
                               </span>
                             )}
                           </div>
-                          <span className="font-mono text-xs text-muted">
-                            {fmtTime(e.ts)}
-                          </span>
+                          <span className="num text-[11px] text-muted">{fmtTime(e.ts)}</span>
                         </div>
 
                         {e.error_code && (
-                          <p className="font-mono text-xs font-semibold mt-1">
+                          <p className="mt-1 font-mono text-[11px] font-semibold">
                             Error: {e.error_code}
                           </p>
                         )}
@@ -438,20 +605,18 @@ export default function Ops() {
         </section>
 
         {/* Right Column (5 cols): Escalation & Security Hub */}
-        <div className="lg:col-span-5 flex flex-col gap-4 min-w-0">
-          {/* Header & Tabs */}
-          <div className="flex items-center justify-between">
-            <h2 className="serif text-xl font-semibold text-fg flex items-center gap-2">
-              <Icon name="shield" size={20} className="text-primary" />
-              <span>Escalations &amp; Security</span>
+        <div className="lg:col-span-5 flex min-w-0 flex-col gap-3">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-sm font-semibold text-fg">
+              Escalations &amp; Security
             </h2>
-            <div className="inline-flex items-center p-0.5 rounded-lg bg-sunken border border-line text-xs font-mono">
+            <div className="inline-flex items-center rounded-md border border-line bg-sunken p-0.5 text-[11px] font-mono">
               <button
                 type="button"
                 onClick={() => setHubTab("all")}
-                className={`px-2 py-0.5 rounded transition-all cursor-pointer ${
+                className={`rounded px-2 py-0.5 transition-colors cursor-pointer ${
                   hubTab === "all"
-                    ? "bg-card text-fg font-bold shadow-xs border border-line"
+                    ? "bg-card text-fg font-semibold border border-line"
                     : "text-muted hover:text-fg"
                 }`}
               >
@@ -460,9 +625,9 @@ export default function Ops() {
               <button
                 type="button"
                 onClick={() => setHubTab("handovers")}
-                className={`px-2 py-0.5 rounded transition-all cursor-pointer ${
+                className={`rounded px-2 py-0.5 transition-colors cursor-pointer ${
                   hubTab === "handovers"
-                    ? "bg-card text-warn-fg font-bold shadow-xs border border-line"
+                    ? "bg-card text-warn-fg font-semibold border border-line"
                     : "text-muted hover:text-fg"
                 }`}
               >
@@ -471,9 +636,9 @@ export default function Ops() {
               <button
                 type="button"
                 onClick={() => setHubTab("threats")}
-                className={`px-2 py-0.5 rounded transition-all cursor-pointer ${
+                className={`rounded px-2 py-0.5 transition-colors cursor-pointer ${
                   hubTab === "threats"
-                    ? "bg-card text-danger-fg font-bold shadow-xs border border-line"
+                    ? "bg-card text-danger-fg font-semibold border border-line"
                     : "text-muted hover:text-fg"
                 }`}
               >
@@ -482,13 +647,11 @@ export default function Ops() {
             </div>
           </div>
 
-          {/* Handover Queue */}
           {(hubTab === "all" || hubTab === "handovers") && (
-            <section aria-labelledby="hq" className="min-w-0">
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-mono text-xs uppercase tracking-wider text-muted font-semibold flex items-center gap-1.5">
-                  <Icon name="support_agent" size={14} className="text-warn-fg" />
-                  <span>Handover Queue</span>
+            <section aria-labelledby="hq" className="min-w-0 space-y-2">
+              <div className="flex items-center justify-between">
+                <span id="hq" className="text-[11px] font-semibold uppercase tracking-wider text-muted">
+                  Handover Queue
                 </span>
                 {handoverCount > 0 && (
                   <Pill tone="warn" icon="clock">
@@ -500,29 +663,32 @@ export default function Ops() {
               {handovers.loading ? (
                 <Skeleton rows={3} />
               ) : !handovers.data?.length ? (
-                <Card className="p-3.5 text-center text-xs text-muted">
-                  No pending handovers
-                </Card>
+                <Empty icon="support_agent">No pending handovers</Empty>
               ) : (
-                <ul className="space-y-3">
+                <ul className="space-y-2">
                   {handovers.data.map((h, i) => (
                     <Card
                       as="li"
                       key={h.id}
                       style={stagger(i)}
-                      className="enter p-3.5 text-sm border-l-4 border-warn-border shadow-xs"
+                      className="enter border-l-[3px] border-l-warn-fg p-3 text-xs"
                     >
-                      <div className="flex items-center justify-between gap-2 mb-2">
-                        <span className="font-semibold text-fg">{h.customer_ref}</span>
+                      <div className="mb-2 flex items-center justify-between gap-2">
+                        <span className="font-semibold text-fg">
+                          {h.customer_ref || shortCallId(h.call_id)}
+                        </span>
                         <div className="flex items-center gap-2">
-                          <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-warn-bg text-warn-fg border border-warn-border font-medium">
-                            {h.reason}
-                          </span>
-                          <span className="font-mono text-xs text-muted">{fmtTime(h.created_at)}</span>
+                          <Pill tone="warn">{h.reason}</Pill>
+                          <span className="num text-[11px] text-muted">{fmtTime(h.created_at)}</span>
                         </div>
                       </div>
-                      <Button small disabled title="Demo: live takeover is not wired up" className="w-full font-semibold text-xs justify-center mt-1">
-                        <Icon name="support_agent" size={14} />
+                      <Button
+                        small
+                        disabled
+                        title="Demo: live takeover is not wired up"
+                        className="w-full justify-center font-medium"
+                      >
+                        <Icon name="support_agent" size={13} />
                         <span>Take Over Call</span>
                       </Button>
                     </Card>
@@ -532,16 +698,11 @@ export default function Ops() {
             </section>
           )}
 
-          {/* Attack View */}
           {(hubTab === "all" || hubTab === "threats") && (
-            <section
-              aria-labelledby="av"
-              className="min-w-0 rounded-xl border border-danger-line bg-card p-3.5 shadow-xs"
-            >
-              <div className="mb-2.5 flex items-center justify-between gap-2">
-                <span className="font-mono text-xs uppercase tracking-wider text-danger-fg font-semibold flex items-center gap-1.5">
-                  <Icon name="shield" size={15} />
-                  <span>Attack View</span>
+            <section aria-labelledby="av" className="min-w-0 space-y-2">
+              <div className="flex items-center justify-between">
+                <span id="av" className="text-[11px] font-semibold uppercase tracking-wider text-danger-fg">
+                  Attack View
                 </span>
                 {threatCount > 0 && (
                   <Pill tone="danger" icon="alert">
@@ -553,26 +714,29 @@ export default function Ops() {
               {security.loading ? (
                 <Skeleton rows={3} />
               ) : !security.data?.length ? (
-                <Empty icon="shield">
-                  No security threats
-                </Empty>
+                <Empty icon="shield">No security threats</Empty>
               ) : (
-                <ul className="space-y-2 text-sm">
+                <ul className="space-y-2 text-xs">
                   {security.data.map((e, i) => (
                     <li
                       key={e.id}
                       style={stagger(i)}
-                      className="enter rounded-lg bg-danger-bg p-2.5 text-danger-fg border border-danger-line/60"
+                      className="enter rounded-lg border border-danger-line bg-danger-bg p-2.5 text-danger-fg"
                     >
                       <div className="flex flex-wrap items-center justify-between gap-1">
-                        <span className="font-mono font-bold text-xs">
+                        <span className="font-mono font-semibold">
                           {e.error_code ?? e.type}
                         </span>
-                        <span className="font-mono text-[11px] opacity-80">{fmtTime(e.ts)}</span>
+                        <span className="num text-[11px] opacity-80">{fmtTime(e.ts)}</span>
                       </div>
                       {(e.action || e.customer_ref) && (
-                        <p className="text-xs mt-1 text-danger-fg/80">
-                          {e.action && <span>Target: {e.action}</span>}
+                        <p className="mt-1 text-[11px] opacity-90">
+                          {e.action && (
+                            <span>
+                              Target: {humanAction(e.action)}{" "}
+                              <code className="font-mono opacity-80">({e.action})</code>
+                            </span>
+                          )}
                           {e.action && e.customer_ref && <span> · </span>}
                           {e.customer_ref && <span>Caller: {e.customer_ref}</span>}
                         </p>
