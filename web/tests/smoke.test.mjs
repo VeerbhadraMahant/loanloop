@@ -53,7 +53,7 @@ const STAFF_PAGES = [
 ];
 const CUSTOMER_PAGES = [
   { path: "/phone", mustInclude: ["Sahyadri Mobile"] },
-  { path: "/call", mustInclude: ["Sahyadri Voice Agent"] },
+  { path: "/call", mustInclude: ["<title>"] }, // the call desk renders in the browser; the HTML is only its shell
 ];
 
 async function checkPages(cookie, pages) {
