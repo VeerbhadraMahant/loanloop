@@ -7,6 +7,7 @@ dropped; the call language counts fully, other languages OTHER_LANG). Three outc
 """
 import math
 import re
+import unicodedata
 
 HIGH_MIN = 4.0      # top score needed to answer without the LLM
 HIGH_MARGIN = 2.0   # and the lead over the 2nd intent
@@ -25,8 +26,36 @@ _WORD = re.compile(r"[^\s.,?!;:\"()\[\]]+")
 _ASCII = re.compile(r"^[ -~]+$")
 
 
+# Beta scripts (bn, pa, gu, ta, te, kn, ml). Their spelling varies a lot in ASR text and keyword lists, and their inflection is suffixal,
+# so text in them is folded (_fold) and matched by token prefix (_pm). Devanagari (hi/mr) and ASCII are untouched: core behaviour is unchanged.
+_BETA = re.compile("[\u0980-\u0dff]")
+_FOLD = {ord(c): None for c in "\u200c\u200d\u09bc\u0a3c\u0abc"}  # ZWNJ/ZWJ, nukta
+_FOLD.update({ord(c): None for c in "\u0981\u0982\u0a01\u0a02\u0a70\u0a71\u0a81\u0a82\u0b82\u0c01\u0c02\u0c81\u0c82\u0d02"})  # chandrabindu/anusvara/tippi/addak
+# ai/ee matra -> e matra, long ii/uu -> short i/u (one code point each, per script)
+_FOLD.update({int(a, 16): int(b, 16) for a, b in (
+    ("09c8", "09c7"), ("0a48", "0a47"), ("0ac8", "0ac7"), ("0bc7", "0bc6"), ("0bc8", "0bc6"), ("0c47", "0c46"), ("0c48", "0c46"),
+    ("0cc7", "0cc6"), ("0cc8", "0cc6"), ("0d47", "0d46"), ("0d48", "0d46"),
+    ("09c0", "09bf"), ("09c2", "09c1"), ("0a40", "0a3f"), ("0a42", "0a41"), ("0ac0", "0abf"), ("0ac2", "0ac1"), ("0bc0", "0bbf"), ("0bc2", "0bc1"),
+    ("0c40", "0c3f"), ("0c42", "0c41"), ("0cc0", "0cbf"), ("0cc2", "0cc1"), ("0d40", "0d3f"), ("0d42", "0d41"))})
+PREFIX = 0.8     # weight of a keyword whose content tokens all match question tokens only by prefix
+PREFIX_MIN = 4   # shared leading characters needed (a shorter keyword token must be a prefix of the question token)
+
+
 def norm(s: str) -> str:
-    return re.sub(r"\s+", " ", s.lower().replace("’", "'")).strip()
+    s = s.lower().replace("’", "'")
+    if _BETA.search(s):
+        s = unicodedata.normalize("NFC", s).translate(_FOLD)
+    return re.sub(r"\s+", " ", s).strip()
+
+
+def _pm(kt: str, qt: str) -> bool:
+    """Does keyword token kt match question token qt? Beta-script tokens by prefix (inflection), everything else exactly (after _stem)."""
+    if kt == qt:
+        return True
+    if not _BETA.search(kt):
+        return _stem(kt) == _stem(qt)
+    n = min(len(kt), PREFIX_MIN)
+    return qt.startswith(kt) or (len(kt) >= PREFIX_MIN and qt[:n] == kt[:n])
 
 
 STOP = GENERIC | frozenset({
@@ -36,6 +65,18 @@ STOP = GENERIC | frozenset({
     "kaun", "kaunse", "kyun", "kya", "par", "pe", "aur", "ya", "toh", "to", "bhi", "nahi", "koi", "mujhe", "hum", "aap", "ap", "kitna", "kitni",
     "मैं", "मुझे", "और", "या", "में", "से", "को", "पर", "भी", "नहीं", "कोई", "कितना", "कितनी", "कब", "कहाँ", "कौन", "मला", "आणि", "किंवा", "मध्ये", "नाही", "कोणती", "कुठे", "कधी",
 })
+_extra: frozenset = frozenset()  # words.stopwords of the loaded language files: added to GENERIC and STOP, never replacing them
+
+
+def set_extra_stopwords(words) -> None:
+    """Language files' stopwords (single words). The caller (gateway faq loader / voice load_languages) passes them on every reload."""
+    global _extra
+    new = frozenset(norm(w) for w in words if isinstance(w, str) and w.strip())
+    if new != _extra:
+        _extra = new
+        _tables.clear()
+
+
 SCATTER = 0.7  # a keyword whose words all appear in the question, not next to each other
 
 
@@ -65,12 +106,14 @@ class Table:
         idf = {t: math.log(1 + n / len(s)) for t, s in df.items()}
         self.rows = []
         for iid, lg, kn, toks in raw:
-            w = sum(idf[t] * (GENERIC_W if t in GENERIC else 1.0) for t in toks) * (1 + PHRASE_BONUS * (len(toks) - 1))
+            w = sum(idf[t] * (GENERIC_W if t in GENERIC or t in _extra else 1.0) for t in toks) * (1 + PHRASE_BONUS * (len(toks) - 1))
             ascii_ = bool(_ASCII.match(kn))
             suffix = r"[a-z]*" if len(toks[-1]) >= 4 else r"(?:s|es|ed|d|ing)?(?![a-z0-9])"  # "khol" -> "kholna", "scam" -> "scammed"; short words stay exact
             rx = re.compile(r"(?<![a-z0-9])" + re.escape(kn) + suffix) if ascii_ else None
-            stems = tuple(_stem(t) for t in toks) if ascii_ and sum(t not in GENERIC for t in toks) > 1 else None  # scatter needs 2+ distinctive words
-            self.rows.append((iid, lg, kn, w, rx, stems, toks))
+            stems = tuple(_stem(t) for t in toks) if ascii_ and sum(t not in GENERIC and t not in _extra for t in toks) > 1 else None  # scatter needs 2+ distinctive words
+            ct = [t for t in toks if t not in GENERIC and t not in _extra] or toks
+            pref = tuple(ct) if not ascii_ and _BETA.search(kn) else None  # beta scripts: order-free prefix match of the content tokens
+            self.rows.append((iid, lg, kn, w, rx, stems, toks, pref))
 
     def rank(self, query: str, lang: str) -> list[tuple[str, float, float]]:
         """[(intent id, score, coverage)] best first, only intents with a match. coverage = share of the question's content words
@@ -79,23 +122,26 @@ class Table:
         qt = _WORD.findall(q)
         qs = {_stem(t) for t in qt}
         hit: dict[str, dict[str, tuple[float, list]]] = {}
-        for iid, lg, kn, w, rx, stems, toks in self.rows:
+        for iid, lg, kn, w, rx, stems, toks, pref in self.rows:
             if (rx.search(q) if rx else kn in q):
                 f = 1.0
             elif stems and all(t in qs for t in stems):
                 f = SCATTER
+            elif pref and all(any(_pm(k, t) for t in qt) for k in pref):
+                f = PREFIX
             else:
                 continue
             d = hit.setdefault(iid, {})
             m = w * f * (1.0 if lg == lang else OTHER_LANG)
             if m > d.get(kn, (0, 0))[0]:
                 d[kn] = (m, toks)
-        content = [t for t in qt if t not in STOP]
+        content = [t for t in qt if t not in STOP and t not in _extra]
         out = []
         for iid, d in hit.items():
             keep = {kn: v for kn, v in d.items() if not any(kn != o and kn in o for o in d)}
             words = {_stem(t) for _, toks in keep.values() for t in toks}
-            cov = sum(1 for t in content if _stem(t) in words or any(t in kn for kn in keep)) / len(content) if content else 1.0
+            kts = {t for _, toks in keep.values() for t in toks if _BETA.search(t)}
+            cov = sum(1 for t in content if _stem(t) in words or any(t in kn for kn in keep) or (_BETA.search(t) and any(_pm(k, t) for k in kts))) / len(content) if content else 1.0
             out.append((iid, sum(v[0] for v in keep.values()), cov))
         return sorted(out, key=lambda x: -x[1])
 

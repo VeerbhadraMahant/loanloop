@@ -6,6 +6,7 @@ import pkgutil
 from string import Formatter
 
 from app import i18n
+from app.security import scrub
 from app.speak import templates as _pkg
 from app.speak.format import MONTHS, digits, fmt_date, rupees  # noqa: F401
 
@@ -21,7 +22,11 @@ def _fields(s: str) -> set[str]:
 def _merge_files() -> None:
     for c in [c for c in MONTHS if c not in i18n.BUILTIN]:
         del MONTHS[c]
+    secret: dict[str, list] = {}
     for code, d in i18n.load_lang_files().items():
+        for typ, ws in ((d.get("words") or {}).get("secret_words") or {}).items():
+            if isinstance(ws, list):
+                secret.setdefault(typ, []).extend(ws)
         months = d.get("months")
         if isinstance(months, list) and len(months) == 12 and all(isinstance(m, str) and m for m in months):
             MONTHS[code] = months
@@ -39,6 +44,7 @@ def _merge_files() -> None:
                 _REG[key][code] = text
             else:
                 log.warning("i18n/%s.json: template %r has different placeholders from English; skipped", code, key)
+    scrub.set_extra_secret_words(secret)  # beta-script OTP/PIN/CVV/password words: the secret scan only ever gains words
 
 
 def reload() -> None:

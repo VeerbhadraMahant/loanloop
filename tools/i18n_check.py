@@ -11,6 +11,17 @@ BUILTIN = ("en", "hi", "hinglish", "mr")
 LIST_WORDS = ["lang_names", "affirm", "negate", "bye", "approval", "switch_cues", "question", "possessive", "acct_nouns",
               "human_target", "human_verb", "neg_human", "full", "multi", "date", "verify", "already_paid", "action_verbs", "thanks"]
 PHRASE_WORDS = ("already_paid", "date")  # matched as phrases inside a regex; every other list is compared token by token
+# Added 2026-11 (language routing / core-only shortcuts). Missing = a warning for now (the call still works, the shortcut just does not fire in that
+# language); present = validated. Token lists are single words; phrase lists and group members are matched as substrings.
+NEW_TOKEN_WORDS = ["why", "went_up", "change_cue", "emi_words", "about_secret", "big_number_words", "approval_done", "today_words", "tomorrow_words", "stopwords"]
+NEW_PHRASE_WORDS = ["txn", "general_topics", "tool_owned", "self_claim", "prompt_leak"]
+TOPIC_NAMES = ("branch", "emi", "dues", "balance", "txn", "sms", "f_open", "f_minbal", "f_kyc", "f_upi", "f_card", "f_neft", "f_fraud", "f_cheque")
+NEW_GROUPS = {  # key -> (allowed member names, members are token lists?)
+    "topics": (TOPIC_NAMES, False),
+    "intent_cues": (("closure", "document", "emi_change", "nominee", "address"), False),
+    "faq_cues": (("ask", "bank", "upi", "collect", "card"), True),
+    "secret_words": (("otp", "pin", "cvv", "password"), False),
+}
 _TOKEN = re.compile(r"[A-Za-z0-9'’]+|[ऀ-ൿ]+")  # same tokenizer as voice/app.py _TOKEN
 
 
@@ -106,6 +117,35 @@ def check_file(code: str, d: dict, src: dict) -> list[str]:
             if not (isinstance(mw, dict) and all(_text(x) and isinstance(y, int) and y in rng for x, y in mw.items())
                     and set(mw.values()) == set(rng)):
                 bad.append(f"words.{k}: must map words to every value in {rng.start}-{rng.stop - 1}")
+    return bad + check_new_words(w if isinstance(w, dict) else {})
+
+
+def check_new_words(w: dict) -> list[str]:
+    """Shape of the optional newer words keys: missing -> "warning:", present but malformed -> a problem."""
+    bad: list[str] = []
+
+    def strings(k, x, token):
+        if not (isinstance(x, list) and x and all(_text(i) for i in x)):
+            return [f"words.{k}: must be a non-empty list of strings"]
+        dead = [i for i in x if token and _TOKEN.findall(i) != [i]]
+        return [f"words.{k}: entries must be single words (never matched): {dead[:3]}"] if dead else []
+
+    for k in NEW_TOKEN_WORDS + NEW_PHRASE_WORDS:
+        if k not in w:
+            bad.append(f"warning: words.{k} missing (that shortcut does not fire in this language)")
+        else:
+            bad += strings(k, w[k], k in NEW_TOKEN_WORDS)
+    for k, (names, token) in NEW_GROUPS.items():
+        g = w.get(k)
+        if g is None:
+            bad.append(f"warning: words.{k} missing (that shortcut does not fire in this language)")
+        elif not (isinstance(g, dict) and g):
+            bad.append(f"words.{k}: must be an object {{name: [words]}}")
+        else:
+            bad += [f"words.{k}: unknown name {n} (allowed: {', '.join(names)})" for n in g if n not in names]
+            for n, x in g.items():
+                if n in names:
+                    bad += strings(f"{k}.{n}", x, token)
     return bad
 
 
