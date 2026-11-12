@@ -1,6 +1,6 @@
 # LoanLoop
 
-A secure voice service desk for borrowers of a lender. Speech is all Gnani (Prisma STT, Timbre TTS, voice cloning); the LLM is a local open model (Ollama `qwen3:8b`) because Gnani Agent Builder access was not available. Entry for the Gnani Great Indian AI Internship Challenge.
+A secure voice service desk for borrowers of a lender. Speech is all Gnani (Prisma STT, Timbre TTS, voice cloning); the LLM is not Gnani because Agent Builder access was not available: a local open model (Ollama `qwen3:8b`) for English, Hindi, Hinglish and Marathi, and Sarvam (`sarvam-105b-conversations`, hosted) for the seven other Gnani languages. Entry for the Gnani Great Indian AI Internship Challenge.
 
 **All data is synthetic. "Sahyadri Finance Bank" is a fictional lender; there is no real bank branding, account or customer data anywhere in this repo.**
 
@@ -20,7 +20,7 @@ Every request ends with an action completed in the bank's system, and the agent 
 
 - Secure details: branch IFSC lookup, IFSC validation, masked account/customer ID/mobile/email, full details by SMS to the registered mobile, password-reset guidance, spoken-secret interception.
 - Loan servicing: EMI amount and due date, "I already paid" (read-back, ledger check, reconciliation ticket, reminders paused), why the EMI went up, EMI date change, foreclosure quote and closure request, statements and interest certificates, nominee and address updates, hardship handover.
-- Several requests in one call without re-verifying; English, Hindi, Hinglish and Marathi with mid-call switching; warm handover with a structured case record when unsure.
+- Several requests in one call without re-verifying; all 11 Gnani speech modes (English, Hindi, Hinglish, Marathi, plus Bengali, Gujarati, Kannada, Malayalam, Punjabi, Tamil and Telugu, the last seven marked beta) with mid-call switching; warm handover with a structured case record when unsure.
 - Every spoken figure comes from the gateway's `speak` text, built from the database, so the LLM cannot invent numbers.
 
 ## Architecture
@@ -29,7 +29,7 @@ Every request ends with an action completed in the bank's system, and the agent 
 flowchart LR
   C["Caller (browser /call)"] -->|"WAV"| VS["Voice service (FastAPI :8100)"]
   VS -->|audio| STT["Gnani Prisma STT"]
-  VS <-->|"tool calls"| LLM["Local LLM: Ollama qwen3:8b<br/>(not Gnani)"]
+  VS <-->|"tool calls"| LLM["LLM (not Gnani): Ollama qwen3:8b<br/>en, hi, hinglish, mr; Sarvam for bn, gu, kn, ml, pa, ta, te"]
   VS -->|text| TTS["Gnani Timbre TTS"]
   VS -->|"23 actions (HTTP, shared secret)"| GW["Secure Bank Gateway (FastAPI :8000)<br/>auth, secret scrub, tiers, masking, audit"]
   GW --> PG[(Postgres: synthetic bank data, audit log)]
@@ -52,24 +52,28 @@ Tiers: **0** public info (branch lookup, IFSC check, reset guidance); **1** regi
 | 3 Out-of-band delivery | SMS destination read from the DB, never from caller input | `test_details.py` |
 | 4 Tiers in code | `security/tiers.py` table + runner check; upgrades only via `verify_caller` and approved app approval | `test_verify.py`, `test_approvals.py` |
 | 5 Brute force | 3 failed verifications per call and per customer per hour, then handover only | `test_verify.py` |
-| 6 Gateway auth | shared-secret header on every action, separate dashboard and phone tokens, CORS closed | `test_foundation.py`, `test_dashboard.py`, `test_phone.py` |
+| 6 Gateway auth | shared-secret header on every action; people sign in (staff and customer doors, role checked on every route, a customer reaches only their own data); CORS closed | `test_foundation.py`, `test_auth.py`, `test_phone.py`, `tools/auth_attack_test.py` |
 | 7 Read-back before change | one-shot confirmations recorded in the session; changes refuse without them | `test_loans.py`, `test_requests.py` |
 | 8 No secrets in logs | global redaction filter incl. uvicorn access logs | `test_redact_leak.py` |
 | 9 Injection resistance | strict Pydantic schemas, extra fields scanned, caller text is data | `test_foundation.py` |
 | 10 Transcript minimisation | `tools/fetch_transcripts.py` redacts before storage | `tools/test_fetch_transcripts.py` |
 
-Web: the dashboard proxy fails closed, `/gw/actions/*` is not exposed, and the browser only receives redacted data.
+Web: pages are blocked by default unless the signed-in role may open them, the proxies fail closed, `/gw/actions/*` is not exposed, and the browser only receives redacted data. Details: [docs/AUTH-CONTRACT.md](docs/AUTH-CONTRACT.md).
 
 ## Measured results
 
 | Check | Result |
 |---|---|
-| Gateway tests | 170 pass (`cd gateway && uv run pytest -q`) |
-| Tools tests | 11 pass (`uv run --project tools pytest tools/ -q`) |
+| Gateway tests | 293 pass (`cd gateway && uv run pytest -q`) |
+| Voice service and tools tests | 297 pass (`cd gateway && uv run pytest ../voice/tests ../tools -q`) |
+| Sign-in attack checks (live app) | 129 of 129 pass (`cd gateway && uv run python ../tools/auth_attack_test.py`): wrong role, one customer reading another, tampered cookies, odd URL spellings, call hijack, lockout |
+| Scripted calls, core languages (typed, `qwen3:8b`) | 94 of 100 (`tools/eval_agent.py`, `tools/eval_cases.jsonl`) |
+| Scripted calls, 7 beta languages (typed, Sarvam) | 139 of 140 (`tools/eval_cases_beta.jsonl`, see `tools/BETA_EVALS.md`) |
+| LLM time per turn (typed, median) | 2.55 s local `qwen3:8b` (core set), 0.23 s Sarvam (beta set) |
 | Call simulator (Priya + attacker) | all expectations met; transcript in `tools/out/simulate_transcript.txt` |
 | Load test | see below |
-| STT entity benchmark (Prisma v3 with vs without keyterms) | pending: needs Gnani API key |
-| End-to-end voice-to-voice latency | pending: needs Gnani API key and live calls |
+| STT entity benchmark (Prisma v3 with vs without keyterms) | not run: tools are ready, Gnani credits are limited |
+| End-to-end voice-to-voice latency | not measured at scale: only short live Gnani checks |
 
 Load test: Locust, 1,000 concurrent simulated calls, spec think time 8-16 s (about 86 rps, inside the 50-125 rps target), 4 minutes, stats reset after ramp-up, 0 errors in about 18,900 requests.
 
@@ -146,7 +150,7 @@ Sessions end after 30 minutes idle for staff and 15 minutes idle for customers, 
 
 ## Why not Agent Builder
 
-We had no Agent Builder access, so LoanLoop runs its own voice agent in `voice/`: Gnani Prisma STT, a local open LLM (Ollama `qwen3:8b`, tool calling over the 23 actions in `agent/actions.json`), the gateway, then Gnani Timbre TTS. This relaxes "no non-Gnani AI" for the LLM only. Measured on an RTX 4060: about 1 s per tool call after a roughly 60 s first load. [docs/agent-builder-setup.md](docs/agent-builder-setup.md) is kept for reference only.
+We had no Agent Builder access, so LoanLoop runs its own voice agent in `voice/`: Gnani Prisma STT, a local open LLM (Ollama `qwen3:8b`, tool calling over the 23 actions in `agent/actions.json`), the gateway, then Gnani Timbre TTS. This relaxes "no non-Gnani AI" for the LLM only. The seven beta languages route their LLM turns to Sarvam, because the small local model handled them poorly; `LLM_LANG_ROUTING=false` keeps everything local, and the local model is the fallback if Sarvam is down. Measured on an RTX 4060: about 1 s per tool call after a roughly 60 s first load. [docs/agent-builder-setup.md](docs/agent-builder-setup.md) is kept for reference only.
 
 ## Layout
 
@@ -164,8 +168,10 @@ Reseed is recommended: `start.ps1 -Seed` (v2 adds savings, collections and outbo
 ## Limitations
 
 - A spoken secret reaches Gnani's STT/LLM pipeline before our gateway can scrub it. The gateway only guarantees it is never stored or logged by us and that the agent warns the caller.
-- The LLM is a small local model: it can pick the wrong action or wording. Numbers stay safe because they come only from the gateway's `speak` text.
+- The LLM can pick the wrong action or wording (the local model more often). Numbers stay safe because they come only from the gateway's `speak` text.
+- The seven beta languages have machine-made wording, word lists and test sets with no native-speaker review yet; their instant FAQ answers fire less often than in the core languages.
+- Sign-in has no password reset or sign-up, no per-device rate limit (anyone who knows a login can lock it for 15 minutes), and staff and customers share one web address.
 - Browser audio, not telephony: there is no phone line.
 - The load test is single-box (no network latency, no Gnani in the loop).
-- Only short live Gnani STT/TTS checks have been run; the STT benchmark and full end-to-end latency are still pending (credits are limited).
+- Only short live Gnani STT/TTS checks have been run; the STT benchmark and full end-to-end latency are not measured (credits are limited).
 - Mock bank only: no real SMS, push, core banking or credit decisions.
