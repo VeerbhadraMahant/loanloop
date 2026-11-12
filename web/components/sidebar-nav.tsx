@@ -126,7 +126,7 @@ const navSections: NavSection[] = [
     items: [
       { href: "/", label: "Home", icon: "home" },
       { href: "/call/priya", label: "Calling Desk", icon: "support_agent", liveBadge: true },
-      { href: "/user/priya", label: "User Console", icon: "phone" },
+      { href: "/user/home", label: "User Console", icon: "phone" },
       { href: "/bank", label: "Bank app", icon: "landmark" },
       { href: "/collections", label: "Collections", icon: "wallet" },
       { href: "/ops", label: "Ops Console", icon: "activity" },

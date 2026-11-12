@@ -24,7 +24,7 @@ const workspaces: {
     primary: true,
   },
   {
-    href: "/user/priya",
+    href: "/user/home",
     title: "User Console",
     role: "Customer-facing smartphone view with call audio, SMS inbox, and Tier-2 approvals",
     icon: "phone",
