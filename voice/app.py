@@ -1315,6 +1315,11 @@ def load_languages(base: Path | None = None) -> list[str]:
             x = w.get(key)
             return [i.lower() for i in x if isinstance(i, str) and _beta_token_ok(i)] if isinstance(x, list) else []
 
+        def native(ws: list[str]) -> list[str]:
+            """For the substring/phrase matchers (topics, intent and FAQ cues, phrase lists): native script only. The files' Latin entries are English
+            words ("balance", "close", "my balance", "fraud") that the built-in matchers already cover, with guards a bare substring would bypass."""
+            return [x for x in ws if not x.isascii()]
+
         def table(key: str, ok) -> dict[str, int]:
             x = w.get(key)
             return {k.lower(): n for k, n in x.items() if isinstance(k, str) and _beta_token_ok(k) and isinstance(n, int) and ok(n)} if isinstance(x, dict) else {}
@@ -1327,7 +1332,7 @@ def load_languages(base: Path | None = None) -> list[str]:
         _WEEKDAYS.update(table("weekdays", lambda n: 0 <= n <= 6))
         _PAID_EXTRA.extend(words("already_paid"))
         for k in _PHRASE_EXTRA:
-            _PHRASE_EXTRA[k].extend(words(k))
+            _PHRASE_EXTRA[k].extend(native(words(k)))
         stop.update(words("stopwords"))
 
         def groups(key: str) -> dict[str, list[str]]:  # {name: [word, ...]} sections of the language file
@@ -1336,15 +1341,15 @@ def load_languages(base: Path | None = None) -> list[str]:
 
         for n, v_ in groups("topics").items():
             if n in _TOPICS:
-                _TOPIC_EXTRA.setdefault(n, []).extend(v_)
+                _TOPIC_EXTRA.setdefault(n, []).extend(native(v_))
         for n, v_ in groups("intent_cues").items():
             if n in _INTENT_GROUP.values():
-                _INTENT_EXTRA.setdefault(n, []).extend(v_)
+                _INTENT_EXTRA.setdefault(n, []).extend(native(v_))
         for n, v_ in groups("secret_words").items():
             secret.setdefault(n, []).extend(v_)
         for n, v_ in groups("faq_cues").items():
             if n in _FAQ_CUES:
-                _FAQ_CUES[n].update(v_)
+                _FAQ_CUES[n].update(native(v_))
         thanks.update(words("thanks"))
         extra_stems += words("action_verbs")
         ACTIVE_LANGS.append(code)

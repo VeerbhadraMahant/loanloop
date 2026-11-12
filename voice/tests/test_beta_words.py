@@ -126,7 +126,7 @@ def test_secret_words_in_native_script(use):
     flip(use, {"secret_words": {"otp": ["ஓடிபி"], "pin": ["பின் எண்"]}}, lambda: va._find_secret("note", "என் ஓடிபி ஆகும்") == "otp")
     assert va._find_secret("note", "என் பின் எண் ஆகும்") == "pin"
     assert va.secret_spoken("என் ஓடிபி 4321") == "otp"
-    va.load_languages()
+    use()  # the plain fixture, not the real ta.json (which now lists this word)
     assert va._find_secret("note", "என் ஓடிபி ஆகும்") is None and va._find_secret("note", "my otp is 1") == "otp"  # built-ins unchanged
 
 
@@ -168,3 +168,12 @@ def test_stt_keyterms_language_list_first_then_global_deduped_and_capped(tmp_pat
         c.post(f"/calls/{d['call_id']}/turn?tts=false", files=wav)
         assert len(sent()) == 200 and sent()[0] == "ta0"
     va.load_languages()
+
+
+def test_real_language_files_leave_core_english_decisions_unchanged():
+    """Loading every real i18n file must not change English behaviour: Latin entries in the beta files are skipped by the shared matchers."""
+    va.load_languages()
+    assert not va.multi_request("minimum balance and savings account", "faq_lookup")
+    assert va.multi_request("EMI and balance", "emi_info") and not va.multi_request("emi and due date", "emi_info")
+    assert not va.faq_score._extra or all(not w.isascii() for w in va.faq_score._extra)
+    assert va.account_specific("what is my account balance") and not va.tool_owned("what is a savings account")

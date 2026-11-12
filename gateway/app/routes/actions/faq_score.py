@@ -76,7 +76,8 @@ _extra: frozenset = frozenset()  # words.stopwords of the loaded language files:
 def set_extra_stopwords(words) -> None:
     """Language files' stopwords (single words). The caller (gateway faq loader / voice load_languages) passes them on every reload."""
     global _extra, _extra_beta
-    new = frozenset(norm(w) for w in words if isinstance(w, str) and w.strip())
+    # native script only: Latin entries ("main", "need") would turn English content words into stopwords
+    new = frozenset(norm(w) for w in words if isinstance(w, str) and w.strip() and not w.isascii())
     if new != _extra:
         _extra = new
         _extra_beta = frozenset(w for w in new if len(w) >= STOP_PREFIX_MIN and _BETA.search(w))
