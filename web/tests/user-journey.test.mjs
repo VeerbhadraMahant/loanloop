@@ -69,11 +69,11 @@ test("user phone console main tabs render properly with borrower data", async ()
   assert.ok(inboxHtml.includes("Bank App"), "Inbox missing Bank App tab");
   assert.ok(inboxHtml.includes("Official SMS Inbox"), "Inbox missing SMS heading");
 
-  // 3. Calling Desk tab
+  // 3. Voice Chat / Calling Desk tab
   const talkRes = await fetch(`${BASE}/user/talk`, { headers });
   assert.equal(talkRes.status, 200);
   const talkHtml = await talkRes.text();
-  assert.ok(talkHtml.includes("Calling Desk"), "Talk missing Calling Desk");
+  assert.ok(talkHtml.includes("Voice Chat") || talkHtml.includes("Calling Desk"), "Talk missing Voice Chat");
 
   // 4. Account tab
   const helpRes = await fetch(`${BASE}/user/help`, { headers });

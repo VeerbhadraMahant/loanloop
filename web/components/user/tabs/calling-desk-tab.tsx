@@ -11,12 +11,14 @@ import { CircularCountdown } from "@/app/phone/[customer]/phone-app";
 
 interface CallingDeskTabProps {
   presetUtterance?: string;
+  autoStart?: boolean;
   onCallStateChange?: (state: { inCall: boolean; status: Status; duration: number }) => void;
   onGoToBankApp?: () => void;
 }
 
 export function CallingDeskTab({
   presetUtterance,
+  autoStart,
   onCallStateChange,
   onGoToBankApp,
 }: CallingDeskTabProps) {
@@ -114,6 +116,7 @@ export function CallingDeskTab({
           customer={customerRef}
           variant="phone-tab"
           presetUtterance={presetUtterance}
+          autoStart={autoStart}
           onCallStateChange={onCallStateChange}
         />
       </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { VoiceCard } from "@/components/user/voice-card";
 import { QuickActionsGrid } from "@/components/user/quick-actions-grid";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/lib/auth/auth-context";
@@ -114,11 +115,14 @@ export function ConsoleTab({ onStartCall }: ConsoleTabProps) {
             onClick={() => onStartCall()}
             className="w-full py-2.5 px-4 rounded-xl text-xs font-bold bg-primary text-primary-fg hover:opacity-90 active:scale-[0.99] transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer"
           >
-            <Icon name="support_agent" size={14} />
-            <span>Talk to Sahyadri Voice Desk</span>
+            <Icon name="mic" size={15} />
+            <span>Voice Chat with Sahyadri Assistant</span>
           </button>
         </div>
       </div>
+
+      {/* Dominant Voice Chat Card with Live Waveform & Microphone */}
+      <VoiceCard onStartTalk={onStartCall} />
 
       {/* Quick Action Shortcuts Grid */}
       <div className="space-y-2">

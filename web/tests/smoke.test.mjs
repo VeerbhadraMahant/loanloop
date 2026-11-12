@@ -49,9 +49,9 @@ const ROUTES = [
   { path: "/user/language", mustInclude: ["Language", "मराठी", "हिंदी", "English"] },
   { path: "/user/mobile", mustInclude: ["Mobile Number", "Priya"] },
   { path: "/user/otp", mustInclude: ["Verification"] },
-  { path: "/user/home", cookie: USER_COOKIE, mustInclude: ["Sahyadri", "Console", "Calling Desk"] },
+  { path: "/user/home", cookie: USER_COOKIE, mustInclude: ["Sahyadri", "Console", "Voice Chat"] },
   { path: "/user/inbox", cookie: USER_COOKIE, mustInclude: ["Sahyadri", "Bank App"] },
-  { path: "/user/talk", cookie: USER_COOKIE, mustInclude: ["Sahyadri", "Calling Desk"] },
+  { path: "/user/talk", cookie: USER_COOKIE, mustInclude: ["Sahyadri", "Voice Chat"] },
   { path: "/user/activity", cookie: USER_COOKIE, mustInclude: ["Sahyadri", "Console"] },
   { path: "/user/help", cookie: USER_COOKIE, mustInclude: ["Sahyadri", "Account", "Zero Secrets"] },
 ];

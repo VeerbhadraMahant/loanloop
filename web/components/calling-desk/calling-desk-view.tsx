@@ -155,6 +155,7 @@ export interface CallingDeskProps {
   caseId?: number;
   variant: "phone-tab" | "slide-over-staff" | "slide-over-dev";
   presetUtterance?: string;
+  autoStart?: boolean;
   onCustomerChange?: (customer: string) => void;
   onClose?: () => void;
   onCallStateChange?: (state: { inCall: boolean; status: Status; duration: number }) => void;
@@ -167,6 +168,7 @@ export function CallingDeskView({
   caseId,
   variant,
   presetUtterance,
+  autoStart,
   onCustomerChange,
   onCallStateChange,
 }: CallingDeskProps) {
@@ -392,12 +394,12 @@ export function CallingDeskView({
 
   const sendText = () => sendTextVal(text);
 
-  // If presetUtterance is provided on mount when call is ready, dispatch it
+  // If autoStart or presetUtterance is provided on mount when call is ready, dispatch it
   useEffect(() => {
-    if (presetUtterance && !inCall && status === "idle") {
+    if ((autoStart || presetUtterance) && !inCall && status === "idle") {
       start();
     }
-  }, [presetUtterance, inCall, status, start]);
+  }, [autoStart, presetUtterance, inCall, status, start]);
 
   const endTalk = useCallback(() => {
     holding.current = false;
@@ -611,14 +613,29 @@ export function CallingDeskView({
       {/* Live Transcript Stream */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0 bg-sunken/20">
         {msgs.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-3">
-            <div className="w-12 h-12 rounded-full bg-secondary-container text-primary flex items-center justify-center">
-              <Icon name="support_agent" size={24} />
-            </div>
+          <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-4">
+            <button
+              type="button"
+              disabled={busy}
+              onClick={start}
+              className="w-20 h-20 rounded-full bg-primary text-primary-fg flex items-center justify-center shadow-xl shadow-primary/30 ring-4 ring-primary/20 hover:scale-105 active:scale-95 transition-all cursor-pointer relative"
+              aria-label="Start Voice Chat"
+            >
+              <span className="absolute inset-0 rounded-full border border-primary/40 animate-ping opacity-30 pointer-events-none" />
+              <Icon name="mic" size={36} />
+            </button>
+
             <div>
-              <div className="text-sm font-bold text-fg">Voice Servicing Ready</div>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={start}
+                className="text-base font-bold text-fg hover:text-primary transition-colors cursor-pointer"
+              >
+                Tap to Start Voice Chat
+              </button>
               <p className="text-xs text-muted max-w-xs mt-1">
-                Connected to {persona.name}. Tap &quot;Start Call&quot; to begin servicing turn.
+                Connected to {persona.name}. Speak naturally in Marathi, Hindi, or English.
               </p>
             </div>
 

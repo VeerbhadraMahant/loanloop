@@ -27,6 +27,7 @@ export function UnifiedUserShell({
 
   const [activeTab, setActiveTab] = useState<UserShellTab>(initialTab);
   const [presetUtterance, setPresetUtterance] = useState<string | undefined>(initialUtterance);
+  const [autoStartCall, setAutoStartCall] = useState<boolean>(Boolean(initialUtterance));
   const [callState, setCallState] = useState<{
     inCall: boolean;
     status: Status;
@@ -64,6 +65,7 @@ export function UnifiedUserShell({
 
   const handleStartCall = (utterance?: string) => {
     setPresetUtterance(utterance);
+    setAutoStartCall(true);
     setActiveTab("calling-desk");
   };
 
@@ -177,6 +179,7 @@ export function UnifiedUserShell({
           >
             <CallingDeskTab
               presetUtterance={presetUtterance}
+              autoStart={autoStartCall}
               onCallStateChange={setCallState}
               onGoToBankApp={() => setActiveTab("bank-app")}
             />
@@ -218,21 +221,37 @@ export function UnifiedUserShell({
               <span className="text-[10px] mt-0.5 tracking-tight">Console</span>
             </button>
 
-            {/* Tab 2: Calling Desk */}
+            {/* Tab 2: Voice Chat / Calling Desk */}
             <button
               type="button"
-              onClick={() => setActiveTab("calling-desk")}
-              className={`flex flex-col items-center py-1 transition-colors cursor-pointer ${
-                activeTab === "calling-desk" ? "text-primary font-bold" : "text-muted hover:text-fg font-medium"
-              }`}
+              onClick={() => {
+                if (!callState.inCall) {
+                  handleStartCall();
+                } else {
+                  setActiveTab("calling-desk");
+                }
+              }}
+              className="relative -top-2.5 flex flex-col items-center cursor-pointer group select-none"
+              aria-label="Voice Chat"
             >
-              <div className="relative">
-                <Icon name="support_agent" size={18} />
-                {callState.inCall && (
-                  <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-ok-fg animate-pulse" />
-                )}
+              <div
+                className={`w-11 h-11 rounded-full flex items-center justify-center shadow-md transition-all duration-150 ${
+                  activeTab === "calling-desk"
+                    ? "bg-primary text-primary-fg ring-4 ring-primary/20 scale-105 shadow-primary/30"
+                    : callState.inCall
+                    ? "bg-ok-fg text-white ring-4 ring-ok-fg/30 animate-pulse"
+                    : "bg-primary text-primary-fg hover:scale-105 shadow-primary/20"
+                }`}
+              >
+                <Icon name="mic" size={20} />
               </div>
-              <span className="text-[10px] mt-0.5 tracking-tight">Calling Desk</span>
+              <span
+                className={`text-[10px] mt-0.5 tracking-tight font-bold ${
+                  activeTab === "calling-desk" ? "text-primary" : "text-fg group-hover:text-primary"
+                }`}
+              >
+                Voice Chat
+              </span>
             </button>
 
             {/* Tab 3: Bank App */}

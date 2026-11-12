@@ -42,7 +42,7 @@ test("2. User Console is phone-first (390x844 chassis) with 4 unified tabs", asy
 
   // 4 tabs in bottom navigation
   assert.ok(html.includes("Console"), "Missing Console tab");
-  assert.ok(html.includes("Calling Desk"), "Missing Calling Desk tab");
+  assert.ok(html.includes("Voice Chat") || html.includes("Calling Desk"), "Missing Voice Chat tab");
   assert.ok(html.includes("Bank App"), "Missing Bank App tab");
   assert.ok(html.includes("Account"), "Missing Account tab");
 
