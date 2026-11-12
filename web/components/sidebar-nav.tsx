@@ -1,8 +1,9 @@
 "use client";
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Wordmark, Icon, type IconName } from "@/components/ui";
+import { getAuthAdapter } from "@/lib/auth/adapters";
 
 type SidebarContextType = {
   isOpen: boolean;
@@ -120,16 +121,53 @@ type NavSection = {
   items: NavItem[];
 };
 
-const navSections: NavSection[] = [
+const staffNavSections: NavSection[] = [
+  {
+    title: "Staff Workspaces",
+    items: [
+      { href: "/staff/overview", label: "Operations Desk", icon: "home" },
+      { href: "/collections", label: "Collections", icon: "wallet" },
+      { href: "/ops", label: "Ops Console", icon: "activity" },
+      { href: "/bank", label: "Bank app", icon: "landmark" },
+    ],
+  },
+  {
+    title: "Shared Tools",
+    items: [
+      { href: "/call/priya", label: "Calling Desk", icon: "support_agent", liveBadge: true },
+      { href: "/phone/priya", label: "Handset (Priya)", icon: "phone" },
+      { href: "/user/home", label: "Borrower View", icon: "phone" },
+    ],
+  },
+];
+
+const devNavSections: NavSection[] = [
+  {
+    title: "Engineering",
+    items: [
+      { href: "/dev", label: "Developer Lab", icon: "sliders" },
+      { href: "/test-cases", label: "Test Cases", icon: "list_checks" },
+      { href: "/metrics", label: "Metrics & SLA", icon: "gauge" },
+    ],
+  },
+  {
+    title: "Shared Tools",
+    items: [
+      { href: "/call/priya", label: "Calling Desk", icon: "support_agent", liveBadge: true },
+      { href: "/phone/priya", label: "Handset (Priya)", icon: "phone" },
+    ],
+  },
+];
+
+const defaultNavSections: NavSection[] = [
   {
     title: "Operations",
     items: [
-      { href: "/", label: "Home", icon: "home" },
-      { href: "/call/priya", label: "Calling Desk", icon: "support_agent", liveBadge: true },
-      { href: "/user/home", label: "User Console", icon: "phone" },
-      { href: "/bank", label: "Bank app", icon: "landmark" },
+      { href: "/staff/overview", label: "Operations Desk", icon: "home" },
       { href: "/collections", label: "Collections", icon: "wallet" },
       { href: "/ops", label: "Ops Console", icon: "activity" },
+      { href: "/bank", label: "Bank app", icon: "landmark" },
+      { href: "/call/priya", label: "Calling Desk", icon: "support_agent", liveBadge: true },
     ],
   },
   {
@@ -208,6 +246,12 @@ function UserSettingsMenu({ align = "up" }: { align?: "up" | "down" }) {
   const [open, setOpen] = useState(false);
   const { theme } = useThemePreference();
   const wrapRef = useRef<HTMLDivElement>(null);
+  const path = usePathname();
+  const router = useRouter();
+
+  const isDev = path.startsWith("/dev") || path.startsWith("/test-cases") || path.startsWith("/metrics");
+  const isStaff = path.startsWith("/staff") || path.startsWith("/collections") || path.startsWith("/ops") || path.startsWith("/bank");
+  const role = isDev ? "dev" : isStaff ? "staff" : null;
 
   useEffect(() => {
     if (!open) return;
@@ -225,6 +269,21 @@ function UserSettingsMenu({ align = "up" }: { align?: "up" | "down" }) {
     };
   }, [open]);
 
+  const handleSignOut = () => {
+    if (role === "staff") {
+      getAuthAdapter("staff").signOut();
+      router.push("/staff/login");
+    } else if (role === "dev") {
+      getAuthAdapter("dev").signOut();
+      router.push("/dev/login");
+    } else {
+      router.push("/");
+    }
+    setOpen(false);
+  };
+
+  const roleLabel = isDev ? "Developer Lab" : isStaff ? "Bank Staff" : "Console Desk";
+
   return (
     <div ref={wrapRef} className="relative">
       <button
@@ -240,7 +299,7 @@ function UserSettingsMenu({ align = "up" }: { align?: "up" | "down" }) {
             SFB
           </div>
           <div className="min-w-0">
-            <div className="truncate text-xs font-medium text-fg leading-tight">Operator Desk</div>
+            <div className="truncate text-xs font-medium text-fg leading-tight">{roleLabel}</div>
             <div className="truncate text-[11px] text-muted capitalize">{theme} theme</div>
           </div>
         </div>
@@ -262,6 +321,32 @@ function UserSettingsMenu({ align = "up" }: { align?: "up" | "down" }) {
             <span className="font-mono text-[10px] text-muted">Cmd+B nav</span>
           </div>
           <ThemeSelector />
+
+          {/* Session & Console Switching */}
+          <div className="mt-3 pt-2.5 border-t border-line space-y-2">
+            <div className="flex items-center justify-between text-[11px] text-muted">
+              <span>Current Session</span>
+              <span className="font-mono text-fg font-semibold uppercase">{role || "Active"}</span>
+            </div>
+            <div className="flex items-center gap-1.5 pt-1">
+              <Link
+                href="/"
+                onClick={() => setOpen(false)}
+                className="flex-1 py-1 px-2 rounded border border-line bg-card hover:bg-sunken text-center text-xs font-medium text-fg transition-colors"
+              >
+                Switch Console
+              </Link>
+              {role && (
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  className="flex-1 py-1 px-2 rounded border border-danger-border bg-danger-bg text-center text-xs font-semibold text-danger-fg hover:opacity-90 transition-colors cursor-pointer"
+                >
+                  Sign Out
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -271,6 +356,10 @@ function UserSettingsMenu({ align = "up" }: { align?: "up" | "down" }) {
 export function SidebarNav() {
   const path = usePathname();
   const { isOpen, toggle } = useSidebar();
+
+  const isDev = path.startsWith("/dev") || path.startsWith("/test-cases") || path.startsWith("/metrics");
+  const isStaff = path.startsWith("/staff") || path.startsWith("/collections") || path.startsWith("/ops") || path.startsWith("/bank");
+  const activeNavSections = isDev ? devNavSections : isStaff ? staffNavSections : defaultNavSections;
 
   return (
     <>
@@ -291,16 +380,26 @@ export function SidebarNav() {
         }`}
       >
         {/* Brand Header */}
-        <div className="h-12 px-4 flex items-center justify-between border-b border-line shrink-0">
-          <Link href="/" className="flex items-baseline gap-2 min-w-0">
+        <div className="h-12 px-3.5 flex items-center justify-between border-b border-line shrink-0">
+          <Link href="/" className="flex items-baseline gap-2 min-w-0" title="Back to Console Directory">
             <Wordmark />
             <span className="text-[11px] font-mono text-muted">Sahyadri</span>
+          </Link>
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold text-muted hover:text-fg hover:bg-sunken border border-line transition-colors"
+            title="Switch between Borrower, Staff & Dev consoles"
+          >
+            <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+            </svg>
+            <span>Switch</span>
           </Link>
         </div>
 
         {/* Navigation Links */}
         <nav className="flex-1 p-2.5 space-y-4 overflow-y-auto" aria-label="Main menu">
-          {navSections.map((section) => (
+          {activeNavSections.map((section) => (
             <div key={section.title} className="space-y-0.5">
               <div className="px-2.5 pb-1 pt-1">
                 <span className="text-[11px] font-medium uppercase tracking-wider text-muted">

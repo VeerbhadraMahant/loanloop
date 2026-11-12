@@ -74,13 +74,25 @@ export function OtherConsolesCard() {
 
   return (
     <div className="bg-card rounded-2xl border border-line p-4 shadow-xs">
-      <div className="mb-3">
-        <h4 className="text-xs font-bold uppercase tracking-wider text-muted">
-          {t.help.other_consoles_title}
-        </h4>
-        <p className="text-[11px] text-muted mt-0.5">
-          {t.help.other_consoles_desc}
-        </p>
+      <div className="mb-3 flex items-start justify-between gap-2">
+        <div>
+          <h4 className="text-xs font-bold uppercase tracking-wider text-muted">
+            {t.help.other_consoles_title}
+          </h4>
+          <p className="text-[11px] text-muted mt-0.5">
+            {t.help.other_consoles_desc}
+          </p>
+        </div>
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-surface-container border border-line text-fg hover:bg-card transition-colors shrink-0"
+          title="Return to Common Landing Page"
+        >
+          <span>Switch Console</span>
+          <svg className="w-3 h-3 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+          </svg>
+        </Link>
       </div>
 
       <div className="space-y-4">
