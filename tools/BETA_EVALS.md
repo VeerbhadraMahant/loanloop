@@ -35,3 +35,7 @@ beta case opens in native script. Outbound cases keep turn 1 as the bare `{dob}`
 - `faq2_en_account_frozen`: `ID` dropped from `speak_any` (too generic); `speak_any` for the faq cases uses native words taken from `i18n/<code>.json` answers (Aadhaar/KYC, block, 1930, SIM/branch/registered) plus the Latin KYC/block.
 - `out_*`: threat words (legal action, police, arrest, court, legal notice) are given in English and the language's own word (court/legal notice only for out_refusal, as in the original).
 - Not carried over: `max_llm_calls_per_turn` and `language` semantics are unchanged; no `speak_not_contains` that depended on English-only wording exist elsewhere in the chosen cases.
+
+## Held-out FAQ routing set
+
+`tools/faq_route_set_beta_holdout.jsonl` (7 languages x 40 rows: 30 positives over 30 distinct intents, 10 `none`) was written without reading the `i18n/<lang>.json` keywords or the dev set `faq_route_set_beta.jsonl`, so it gives an honest routing score. Never tune keywords against it: run it rarely, and if a miss is fixed, add a new dev row instead of editing keywords to fit these rows. Structure is checked by `tools/test_beta_holdout.py`.
