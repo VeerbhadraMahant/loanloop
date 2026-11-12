@@ -37,14 +37,17 @@ _FOLD.update({int(a, 16): int(b, 16) for a, b in (
     ("0cc7", "0cc6"), ("0cc8", "0cc6"), ("0d47", "0d46"), ("0d48", "0d46"),
     ("09c0", "09bf"), ("09c2", "09c1"), ("0a40", "0a3f"), ("0a42", "0a41"), ("0ac0", "0abf"), ("0ac2", "0ac1"), ("0bc0", "0bbf"), ("0bc2", "0bc1"),
     ("0c40", "0c3f"), ("0c42", "0c41"), ("0cc0", "0cbf"), ("0cc2", "0cc1"), ("0d40", "0d3f"), ("0d42", "0d41"))})
+_LAT_BETA = re.compile(r"(?<=[a-z0-9])-?(?=[ঀ-෿])|(?<=[ঀ-෿])-?(?=[a-z0-9])")
 PREFIX = 0.8     # weight of a keyword whose content tokens all match question tokens only by prefix
+PREFIX_ONE = 0.5  # ...and for a keyword with a single content token (one inflected word is weak evidence)
+BETA_RATIO = 0.6  # beta-script questions: the runner-up may score at most this share of the top, else the top is a near-neighbour tie (its coverage is zeroed, so classify says medium)
 PREFIX_MIN = 4   # shared leading characters needed (a shorter keyword token must be a prefix of the question token)
 
 
 def norm(s: str) -> str:
     s = s.lower().replace("’", "'")
     if _BETA.search(s):
-        s = unicodedata.normalize("NFC", s).translate(_FOLD)
+        s = _LAT_BETA.sub(" ", unicodedata.normalize("NFC", s).translate(_FOLD))  # "imps-এর" -> "imps এর": a Latin word and its suffix are two tokens
     return re.sub(r"\s+", " ", s).strip()
 
 
@@ -65,15 +68,18 @@ STOP = GENERIC | frozenset({
     "kaun", "kaunse", "kyun", "kya", "par", "pe", "aur", "ya", "toh", "to", "bhi", "nahi", "koi", "mujhe", "hum", "aap", "ap", "kitna", "kitni",
     "मैं", "मुझे", "और", "या", "में", "से", "को", "पर", "भी", "नहीं", "कोई", "कितना", "कितनी", "कब", "कहाँ", "कौन", "मला", "आणि", "किंवा", "मध्ये", "नाही", "कोणती", "कुठे", "कधी",
 })
+_extra_beta: frozenset = frozenset()  # the beta-script ones of those that are STOP_PREFIX_MIN+ long: inflected forms count too
+STOP_PREFIX_MIN = 4
 _extra: frozenset = frozenset()  # words.stopwords of the loaded language files: added to GENERIC and STOP, never replacing them
 
 
 def set_extra_stopwords(words) -> None:
     """Language files' stopwords (single words). The caller (gateway faq loader / voice load_languages) passes them on every reload."""
-    global _extra
+    global _extra, _extra_beta
     new = frozenset(norm(w) for w in words if isinstance(w, str) and w.strip())
     if new != _extra:
         _extra = new
+        _extra_beta = frozenset(w for w in new if len(w) >= STOP_PREFIX_MIN and _BETA.search(w))
         _tables.clear()
 
 
@@ -171,8 +177,8 @@ class Table:
                     seen[i] = seen.get(i, 0) + 1
             for i, n in seen.items():
                 if n == self._need[i] and i not in exact:
-                    add(self.rows[i], f)
-        content = [t for t in qt if t not in STOP and t not in _extra]
+                    add(self.rows[i], PREFIX_ONE if f == PREFIX and len(self.rows[i][7]) == 1 else f)
+        content = [t for t in qt if t not in STOP and t not in _extra and not (_extra_beta and _BETA.search(t) and any(t[:j] in _extra_beta for j in range(STOP_PREFIX_MIN, len(t) + 1)))]
         out = []
         for iid, d in hit.items():
             keep = {kn: v for kn, v in d.items() if not any(kn != o and kn in o for o in d)}
@@ -180,7 +186,10 @@ class Table:
             kts = {t for _, toks in keep.values() for t in toks if _BETA.search(t)}
             cov = sum(1 for t in content if _stem(t) in words or any(t in kn for kn in keep) or (_BETA.search(t) and any(_pm(k, t) for k in kts))) / len(content) if content else 1.0
             out.append((iid, sum(v[0] for v in keep.values()), cov))
-        return sorted(out, key=lambda x: -x[1])
+        out.sort(key=lambda x: -x[1])
+        if _BETA.search(q) and len(out) > 1 and out[1][1] > BETA_RATIO * out[0][1]:
+            out[0] = (out[0][0], out[0][1], 0.0)
+        return out
 
 
 _tables: dict[int, tuple[dict, Table]] = {}
