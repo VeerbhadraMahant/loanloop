@@ -74,7 +74,7 @@ export function BankShell({ children }: { children: ReactNode }) {
           <span className="b-title text-base truncate">Sahyadri Finance Bank</span>
         </div>
         <Link
-          href="/"
+          href="/staff/overview"
           className="b-pressable inline-flex shrink-0 items-center gap-1 rounded-md bg-bank-accent px-2.5 py-1.5 text-xs font-semibold text-bank-accent-fg hover:opacity-90"
         >
           <Icon d="M15 18l-6-6 6-6" />
@@ -122,7 +122,7 @@ export function BankShell({ children }: { children: ReactNode }) {
               size="sm"
               className="bg-bank-accent text-bank-accent-fg hover:opacity-90"
             >
-              <Link href="/">
+              <Link href="/staff/overview">
                 <Icon d="M15 18l-6-6 6-6" />
                 <span>Return to LoanLoop Desk</span>
               </Link>
