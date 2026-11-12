@@ -1,6 +1,5 @@
 "use client";
 import { useCallback, useState } from "react";
-import Link from "next/link";
 import { langLabel } from "@/lib/languages";
 import { CallRow, GwEvent, Handover, useEvents, useGet } from "@/lib/api";
 import { Button, Card, Empty, ErrorBox, Icon, Pill, Shell, Skeleton, fmtTime, stagger } from "@/components/ui";
@@ -333,13 +332,6 @@ export default function Ops() {
                               <Icon name="clock" size={12} />
                               <span>{isSel ? "Active" : "Timeline"}</span>
                             </Button>
-                            <Link
-                              href={`/call/${encodeURIComponent((c.customer_ref || "priya").toLowerCase())}`}
-                              className="p-1.5 rounded-lg border border-line bg-card hover:bg-sunken text-primary hover:text-accent-hover text-xs transition-colors flex items-center"
-                              title={`Open Calling Desk for ${c.customer_ref || "caller"}`}
-                            >
-                              <Icon name="phone" size={13} />
-                            </Link>
                           </div>
                         </td>
                       </tr>

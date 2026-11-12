@@ -5,9 +5,9 @@ from fastapi import FastAPI
 import asyncio
 
 from app import events, jobs, logging as ll_logging
-from app.config import check_settings, settings
+from app.config import check_settings, is_public, settings
 from app.db.session import create_all
-from app.routes import dashboard, phone
+from app.routes import auth, dashboard, phone
 from app.routes.actions import approvals, calls, collections, details, faq, handover, loans, requests, verify
 
 
@@ -22,9 +22,10 @@ async def lifespan(app: FastAPI):
         task.cancel()
 
 
-app = FastAPI(title="LoanLoop gateway", lifespan=lifespan)  # CORS deliberately not enabled
+_NO_DOCS = {"docs_url": None, "redoc_url": None, "openapi_url": None} if is_public() else {}  # no API map on a public deployment
+app = FastAPI(title="LoanLoop gateway", lifespan=lifespan, **_NO_DOCS)  # CORS deliberately not enabled
 
-for m in (calls, verify, details, approvals, loans, requests, handover, collections, faq, phone, dashboard, events):
+for m in (calls, verify, details, approvals, loans, requests, handover, collections, faq, phone, dashboard, events, auth):
     app.include_router(m.router)
 
 

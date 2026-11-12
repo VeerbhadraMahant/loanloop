@@ -1,6 +1,6 @@
 # Deploying LoanLoop: Vercel (web) + Railway (gateway, voice, ollama, Postgres, Redis)
 
-Everything is synthetic data. Keep the Vercel site behind basic auth (`WEB_BASIC_AUTH`).
+Everything is synthetic data. People sign in with a per-user login (staff at `/staff/login`, customers at `/login`). `WEB_BASIC_AUTH` is an optional extra gate in front of both.
 
 ## 1. Generate secrets (once, keep them in a password manager)
 
@@ -30,6 +30,7 @@ Variables (reference variables in `${{...}}` form):
 | Var | Value |
 |---|---|
 | GATEWAY_SHARED_SECRET, DASHBOARD_TOKEN, PHONE_TOKEN | the generated tokens |
+| DEMO_STAFF_PASSWORD, DEMO_CUSTOMER_PASSCODE | **you must set them.** Your own strong password (12+ characters) and a 6-digit passcode. There are no defaults; if they are empty the seed creates no demo logins. Keep them out of Git. |
 | ENCRYPTION_KEY | the Fernet key |
 | PUBLIC_GATEWAY_URL | `https://<gateway public domain>` |
 | DATABASE_URL | `${{Postgres.DATABASE_URL}}` |
@@ -68,13 +69,16 @@ Import the repo, **Root Directory: `web`**. Env vars (Production):
 | Var | Value |
 |---|---|
 | GATEWAY_URL | `https://<gateway public domain>` |
-| DASHBOARD_TOKEN, PHONE_TOKEN | same as gateway |
-| WEB_BASIC_AUTH | `user:password` of your choice |
+| WEB_BASIC_AUTH | optional: `user:password` for an extra outer gate. Leave it out to rely on the sign-in pages. |
 | WEB_ALLOWED_ORIGINS | `https://<vercel domain>` |
 | VOICE_URL | `https://<voice public domain>` |
 | VOICE_EDGE_TOKEN | same as voice |
 
-Never set `WEB_AUTH_DISABLED`. Leave `NEXT_PUBLIC_VOICE_URL` unset. `WEB_ALLOWED_ORIGINS` must be the exact production origin, so test POST flows (calls) on the production domain, not preview URLs. The voice proxy route allows up to 300 s per request. Redeploy after changing env vars.
+The web app no longer needs `DASHBOARD_TOKEN` or `PHONE_TOKEN`; do not set them on Vercel. `WEB_AUTH_DISABLED` does nothing any more. Leave `NEXT_PUBLIC_VOICE_URL` unset. `WEB_ALLOWED_ORIGINS` must be the exact production origin, so test POST flows (calls) on the production domain, not preview URLs. The voice proxy route allows up to 300 s per request. Redeploy after changing env vars.
+
+### Staff and customer sites
+
+On a real deployment, serve the staff door and the customer door from separate web addresses (two Vercel projects or two domains built from the same `web` code). Then a staff cookie and a customer cookie never go to the same site. Cookies are marked `Secure` in production, so every address must use HTTPS or sign-in will not stick. Put each address in `WEB_ALLOWED_ORIGINS`.
 
 ## 4. Seeding
 
@@ -84,8 +88,9 @@ The gateway pre-deploy command `python -m app.db.seed_if_empty` seeds only when 
 
 - [ ] `https://<gateway>/health` returns `{"ok":true}`; gateway deploy log shows `seed_if_empty: ...`.
 - [ ] `https://<voice>/health` returns ok through the Vercel proxy path. Direct: `POST https://<voice-domain>/calls` without the edge token must return 401, and `/health` returns only `{"ok":true}`.
-- [ ] Vercel site asks for the basic-auth login; wrong password is refused.
-- [ ] `/bank` loads with customer data.
+- [ ] `/staff/login` signs in `manager@loanloop.demo` with your `DEMO_STAFF_PASSWORD`; a wrong password is refused (5 wrong tries lock the account for 15 minutes). If `WEB_BASIC_AUTH` is set, the site asks for it first.
+- [ ] `/bank` loads with customer data; a customer session cannot open it.
+- [ ] `/login` signs in a demo customer (registered mobile and `DEMO_CUSTOMER_PASSCODE`) and opens `/phone` and `/call`.
 - [ ] A typed call on the call page completes a verify and an EMI query.
 - [ ] `/ops` live events update while the call runs (SSE).
 - [ ] Mic works on the call page (HTTPS is required; allow the browser permission).

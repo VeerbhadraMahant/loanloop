@@ -96,7 +96,7 @@ OPS = {"Authorization": "Bearer dev-dashboard-token-change-me"}
 
 def test_outbound_start_passes_direction_case_and_prompt(env):
     c, fake = env
-    assert c.post("/calls?tts=false", json={"direction": "outbound", "case_id": 7}).status_code == 403  # callers cannot pick a case
+    assert c.post("/calls?tts=false", json={"direction": "outbound", "case_id": 7}, headers={"Authorization": "Bearer wrong"}).status_code == 401  # callers cannot pick a case
     d = c.post("/calls?tts=false", json={"direction": "outbound", "case_id": 7}, headers=OPS).json()
     body = fake.of("gw")[-1][2]
     assert body["direction"] == "outbound" and body["case_id"] == 7

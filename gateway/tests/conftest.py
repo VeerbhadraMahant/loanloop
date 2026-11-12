@@ -1,4 +1,5 @@
 import os
+import secrets
 
 # Must be set before any `app` import: isolated Postgres DB + Redis db 15.
 os.environ["DATABASE_URL"] = "postgresql+asyncpg://loanloop:loanloop@localhost:55432/loanloop_test"
@@ -6,6 +7,9 @@ os.environ["REDIS_URL"] = "redis://localhost:56379/15"
 os.environ["GATEWAY_SHARED_SECRET"] = "test-secret"
 os.environ["DASHBOARD_TOKEN"] = "test-dash"
 os.environ["PHONE_TOKEN"] = "test-phone"
+# Demo logins for the tests are random per run, so a private gateway/.env never matters and no password sits in the repo.
+os.environ["DEMO_STAFF_PASSWORD"] = "t-" + secrets.token_urlsafe(16)
+os.environ["DEMO_CUSTOMER_PASSCODE"] = str(secrets.randbelow(900000) + 100000)
 
 import asyncpg  # noqa: E402
 import httpx  # noqa: E402

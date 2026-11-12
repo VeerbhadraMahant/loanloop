@@ -1028,7 +1028,7 @@ def test_concurrent_turns_serialised():
     app = create_app(Settings(gnani_speech_api_key=KEY), httpx.AsyncClient(transport=httpx.MockTransport(slow)))
 
     async def go():
-        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url=BASE) as cl:
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url=BASE, headers={"Authorization": "Bearer dev-dashboard-token-change-me"}) as cl:
             d = (await cl.post("/calls?tts=false", json={})).json()
             url = f"/calls/{d['call_id']}/turn?tts=false"
             await asyncio.gather(cl.post(url, json={"text": "a"}), cl.post(url, json={"text": "b"}))

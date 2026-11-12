@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Approval, Sms, useEvents, useGet, post, GwEvent } from "@/lib/api";
+import Link from "next/link";
+import { Approval, Sms, useGet, post } from "@/lib/api";
+import { SignOut } from "@/components/auth";
 import { Button, Empty, ErrorBox, Icon, Pill, Skeleton, fmtTime, stagger } from "@/components/ui";
 
 export function CircularCountdown({ from, to }: { from: string; to: string }) {
@@ -81,18 +83,16 @@ const fmtDur = (sec: number) => {
 };
 
 export function PhoneHandset({
-  customer,
   isSidecar,
   simulationProps,
   noData,
 }: {
-  customer: string;
   isSidecar?: boolean;
   simulationProps?: PhoneSimulationProps;
-  /** `customer` is not a gateway customer slug (e.g. outbound case): do not poll /phone/*, it would 404. */
+  /** staff outbound case: there is no signed-in customer, so do not poll /phone/me. */
   noData?: boolean;
 }) {
-  const base = `/phone/${encodeURIComponent(customer)}`;
+  const base = "/phone/me"; // the gateway resolves "me" to the signed-in customer
   const me = useGet<{ name: string; mobile_masked: string }>(noData ? null : base, 0);
   const sms = useGet<Sms[]>(noData ? null : `${base}/sms`, 3000);
   const appr = useGet<Approval[]>(noData ? null : `${base}/approvals`, 3000);
@@ -108,12 +108,6 @@ export function PhoneHandset({
       setActiveTab("call");
     }
   }, [simulationProps?.inCall]);
-
-  useEvents((e: GwEvent) => {
-    if (e.customer_key !== customer) return;
-    if (e.type === "sms") sms.reload();
-    if (e.type === "approval") appr.reload();
-  });
 
   const pending = (appr.data ?? []).find((a) => a.status === "pending");
   const act = async (id: string, verb: "approve" | "deny") => {
@@ -429,7 +423,7 @@ export function PhoneHandset({
                     Sahyadri Mobile
                   </h3>
                   <p className="font-mono text-muted text-[11px]">
-                    {me.data ? `${me.data.name} · ${me.data.mobile_masked}` : customer}
+                    {me.data ? `${me.data.name} · ${me.data.mobile_masked}` : "Sahyadri customer"}
                   </p>
                 </div>
               </div>
@@ -458,9 +452,9 @@ export function PhoneHandset({
             <div className="bg-surface-container-low px-4 py-1.5 border-b border-line flex items-center justify-between text-xs text-muted shrink-0">
               <span className="flex items-center gap-1.5 font-medium">
                 <Icon name="sync" size={13} />
-                Voice desk paired via secure SSE
+                Voice desk paired, refreshes every 3 s
               </span>
-              <span className="font-mono text-[10px] text-primary font-semibold">Live Mode</span>
+              <span className="font-mono text-[10px] text-primary font-semibold">Polling</span>
             </div>
 
             {/* Scrollable Main Area */}
@@ -643,6 +637,14 @@ export function PhoneHandset({
   );
 }
 
-export default function PhoneApp({ customer }: { customer: string }) {
-  return <PhoneHandset customer={customer} />;
+export default function PhoneApp() {
+  return (
+    <>
+      <div className="fixed left-4 right-4 top-4 z-10 flex justify-between text-xs font-medium">
+        <Link href="/call" className="rounded-lg border border-line bg-card px-3 py-1.5 text-fg">Call the voice desk</Link>
+        <SignOut door="customer" className="rounded-lg border border-line bg-card px-3 py-1.5 text-fg" />
+      </div>
+      <PhoneHandset />
+    </>
+  );
 }

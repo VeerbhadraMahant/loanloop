@@ -1,16 +1,10 @@
 // Same-origin proxy to the voice service: the browser reaches it only through here (behind proxy.ts Basic auth),
-// because the voice service spends paid Gnani/Sarvam credits. Never forwards the browser's Authorization/cookies.
+// because the voice service spends paid Gnani/Sarvam credits. Forwards only the session ids (as headers), never the browser's cookies.
+import { originOk, sessionHeaders } from "@/lib/server";
 export const maxDuration = 300; // CPU Ollama fallback replies can exceed a minute
 
 const VOICE = process.env.VOICE_URL ?? "http://127.0.0.1:8100";
 const EDGE_TOKEN = process.env.VOICE_EDGE_TOKEN ?? "";
-
-// Same Origin allowlist as the gw route (fixed, never derived from Host).
-const ORIGIN_ALLOW = new Set([
-  "http://localhost:3000",
-  "http://127.0.0.1:3000",
-  ...(process.env.WEB_ALLOWED_ORIGINS ?? "").split(",").map((s) => s.trim()).filter(Boolean),
-]);
 
 // Exactly what the browser uses: call page, dev lab, live-call audio.
 const GET_OK = /^(health|dev\/config|dev\/bench\/[^/]+|calls\/[^/]+\/audio\/[^/]+)$/;
@@ -23,10 +17,9 @@ async function proxy(req: Request, ctx: { params: Promise<{ path: string[] }> })
   const joined = path.join("/");
   const allowed = req.method === "GET" ? GET_OK.test(joined) : req.method === "POST" && POST_OK.test(joined);
   if (!allowed) return new Response("Not found", { status: 404 });
-  if (req.method === "POST") {
-    const origin = req.headers.get("origin");
-    if (!origin || !ORIGIN_ALLOW.has(origin)) return new Response("Forbidden", { status: 403 });
-  }
+  if (req.method === "POST" && !originOk(req)) return new Response("Forbidden", { status: 403 });
+  const fwd: Record<string, string> = sessionHeaders(req);
+  if (!Object.keys(fwd).length) return Response.json({ detail: "unauthorized" }, { status: 401 });
   let url: URL;
   try {
     url = new URL(`${VOICE}/${path.map(encodeURIComponent).join("/")}`);
@@ -38,7 +31,6 @@ async function proxy(req: Request, ctx: { params: Promise<{ path: string[] }> })
     const v = inQ.get(k);
     if (v !== null && /^[a-z0-9]{1,8}$/i.test(v)) url.searchParams.set(k, v);
   }
-  const fwd: Record<string, string> = {};
   if (EDGE_TOKEN) fwd["X-Voice-Edge-Token"] = EDGE_TOKEN;
   const ct = req.headers.get("content-type");
   if (ct) fwd["Content-Type"] = ct;

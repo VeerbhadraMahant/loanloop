@@ -18,6 +18,8 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:56379/0"
     encryption_key: str = ""
     public_gateway_url: str = "http://localhost:8000"
+    demo_staff_password: str = ""  # owner-chosen secrets for the seeded demo logins; nothing ships in the repo
+    demo_customer_passcode: str = ""
     session_ttl_s: int = 1800
     jobs_interval_s: int = 3600  # cron-style jobs loop; 0 disables (tests)
 
@@ -48,6 +50,11 @@ DEV_DEFAULTS = {"gateway_shared_secret": "dev-shared-secret-change-me", "dashboa
 settings = Settings()
 
 
+def is_public(s: Settings = settings) -> bool:
+    on_railway = any(os.environ.get(v) for v in ("RAILWAY_ENVIRONMENT", "RAILWAY_ENVIRONMENT_NAME", "RAILWAY_PUBLIC_DOMAIN"))
+    return on_railway or not s.public_gateway_url.startswith(("http://localhost", "http://127.0.0.1"))
+
+
 def check_settings(s: Settings = settings) -> None:
     """Startup check: refuse to run without an encryption key; shout if dev default secrets are in use."""
     if not s.encryption_key:
@@ -57,7 +64,6 @@ def check_settings(s: Settings = settings) -> None:
             raise RuntimeError(f"{name.upper()} is empty: refusing to start")
         if getattr(s, name) == default:
             # the defaults are in the public repo: never accept them on a publicly reachable gateway
-            on_railway = any(os.environ.get(v) for v in ("RAILWAY_ENVIRONMENT", "RAILWAY_ENVIRONMENT_NAME", "RAILWAY_PUBLIC_DOMAIN"))
-            if on_railway or not s.public_gateway_url.startswith(("http://localhost", "http://127.0.0.1")):
+            if is_public(s):
                 raise RuntimeError(f"{name.upper()} is the dev default but the gateway is public (PUBLIC_GATEWAY_URL or Railway): refusing to start")
             logging.getLogger("config").warning("SECURITY: %s is the dev default. Change it before exposing the gateway.", name.upper())

@@ -61,6 +61,12 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
   let r: Response;
   try { r = await fetch(`${GATEWAY}${path}`, init); }
   catch { throw new Error(DOWN); }
+  if (r.status === 401 && typeof window !== "undefined") { // session expired: end cleanly at that door's sign-in page
+    const p = window.location.pathname;
+    const customerDoor = p === "/phone" || p === "/call";
+    window.location.assign(customerDoor ? "/login" : "/staff/login");
+    throw new Error("Session expired");
+  }
   if (r.status === 502 || r.status === 503 || r.status === 504) throw new Error(DOWN);
   if (r.status === 403 && init?.method === "POST") throw new Error("Request blocked: this page's origin is not allowed (serve on port 3000 or set WEB_ALLOWED_ORIGINS)");
   if (!r.ok) throw new Error(`${path}: HTTP ${r.status}`);

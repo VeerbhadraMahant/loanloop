@@ -1,8 +1,8 @@
 # Dashboard and phone API (gateway side)
 
-Consumed by `web/`. The browser never calls the gateway directly: it calls its own origin at `/gw/<path>`, and the Next.js route handler `web/app/gw/[...path]/route.ts` forwards GET/POST to the server-only env `GATEWAY_URL` (default `http://localhost:8000`), streaming SSE unbuffered. The proxy adds `Authorization: Bearer <token>` (server-only envs) to every request, including SSE (no `?token=`): `PHONE_TOKEN` for `phone/*` paths, `DASHBOARD_TOKEN` (read-only) for the rest. It forwards `Last-Event-ID`.
+Consumed by `web/`. The browser never calls the gateway directly: it calls its own origin at `/gw/<path>`, and the Next.js route handler `web/app/gw/[...path]/route.ts` forwards GET/POST to the server-only env `GATEWAY_URL` (default `http://localhost:8000`), streaming SSE unbuffered. The proxy no longer adds a bearer token. It turns the `ll_staff` / `ll_cust` cookies into the `X-LL-Staff-Session` / `X-LL-Customer-Session` headers, and the gateway checks the session and role (see `docs/AUTH-CONTRACT.md`). Scripts still use the bearer tokens below. It forwards `Last-Event-ID`.
 
-**Exposing the web app.** The phone page can approve tier-2, so the demo phone and ops views must sit behind HTTP Basic auth or stay on localhost. `web/proxy.ts` (Next 16 proxy, ex-middleware) enforces Basic auth on every route when `WEB_BASIC_AUTH=user:pass` is set; unset fails closed (503) unless `WEB_AUTH_DISABLED=1`, which is for a localhost demo only. Gateway CORS stays closed (CLAUDE.md 6.6). The routes below are the gateway's own paths.
+**Exposing the web app.** The phone page can approve tier-2, so people must sign in (staff at `/staff/login`, customers at `/login`). `web/proxy.ts` (Next 16 proxy, ex-middleware) checks the session on every page. `WEB_BASIC_AUTH=user:pass` is an optional outer gate on top; `WEB_AUTH_DISABLED` does nothing any more. Gateway CORS stays closed (CLAUDE.md 6.6). The routes below are the gateway's own paths.
 
 All dashboard data is already redacted/masked: no full identifiers, no secrets. The `/phone/*` routes serve the customer's own device and may show full details.
 

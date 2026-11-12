@@ -288,6 +288,18 @@ async def seed(engine: AsyncEngine, n_only: bool = False) -> int:
         await s.flush()
         for tbl in ("customers", "accounts", "loans", "collection_cases"):  # explicit ids were used
             await s.execute(text(f"SELECT setval(pg_get_serial_sequence('{tbl}','id'), (SELECT max(id) FROM {tbl}))"))
+        from app.config import settings
+        from app.security.passwords import hash_secret
+
+        if settings.demo_staff_password:
+            for email, name, role in (("manager@loanloop.demo", "Asha Manager", "bank_manager"), ("engineer@loanloop.demo", "Eshan Engineer", "engineer"),
+                                      ("admin@loanloop.demo", "Ankit Admin", "admin")):
+                s.add(m.StaffUser(email=email, name=name, role=role, password_hash=hash_secret(settings.demo_staff_password)))
+        if settings.demo_customer_passcode:
+            for cid in (1, 2, 3, OUT_ID):  # Priya, Ramesh, Sunita, Vikram (outbound persona)
+                s.add(m.CustomerLogin(customer_id=cid, passcode_hash=hash_secret(settings.demo_customer_passcode)))
+        if not (settings.demo_staff_password and settings.demo_customer_passcode):
+            print("No demo logins created for the missing value(s): set DEMO_STAFF_PASSWORD and DEMO_CUSTOMER_PASSCODE in gateway/.env, or use app.db.create_user.")
         await s.commit()
     from app import sessions  # reseed must fully reset: sessions, rate-limit counters, cref cache
 

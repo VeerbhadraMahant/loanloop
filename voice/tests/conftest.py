@@ -17,3 +17,21 @@ def isolated_env(monkeypatch, tmp_path):
     monkeypatch.setenv("DASHBOARD_TOKEN", "dev-dashboard-token-change-me")
     for name in ("GEMINI_API_KEY", "SARVAM_API_KEY", "LLM_PROVIDER", "VOICE_DEV", "GNANI_SPEECH_API_KEY"):
         monkeypatch.delenv(name, raising=False)
+
+
+@pytest.fixture(autouse=True)
+def service_bearer(request, monkeypatch):
+    """Existing tests act as the service identity (DASHBOARD_TOKEN bearer); a module can opt out with NO_DEFAULT_AUTH = True."""
+    if getattr(request.module, "NO_DEFAULT_AUTH", False):
+        return
+    import httpx
+    from starlette.testclient import TestClient
+
+    orig = TestClient.request
+
+    def request_(self, method, url, **kw):
+        h = httpx.Headers(kw.get("headers") or {})
+        h.setdefault("authorization", "Bearer dev-dashboard-token-change-me")
+        return orig(self, method, url, **{**kw, "headers": h})
+
+    monkeypatch.setattr(TestClient, "request", request_)
