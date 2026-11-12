@@ -127,3 +127,23 @@ def test_model_topic_without_keyword_support_is_replaced_by_the_scorer_pick(env)
     fake.llm_script = [tc("faq_lookup", topic="bank_charges"), AFTER]
     turn(c, d, text)
     assert gw_calls(fake, "faq_lookup")[-1]["topic"] == "fraud_report"
+
+
+def test_beta_account_specific_veto_blocks_only_beta_text():
+    from voice.app import beta_account_specific, load_languages
+    load_languages()
+    assert beta_account_specific("என் கடனின் வட்டி விகிதம் என்ன")  # Tamil "my loan's interest rate": inflected possessive + account noun
+    assert faq_route("என் கடனின் வட்டி விகிதம் என்ன", "ta")[0] == "low"
+    assert not beta_account_specific("என்ன கடன் என்பது")  # "என்ன" (what) must not count as "என்" (my)
+    assert not beta_account_specific("என் கணக்கு மோசடி என்றால் என்ன")  # a general topic (fraud) is exempt
+    import voice.app as va
+    seen = []
+    orig = va.beta_account_specific
+    va.beta_account_specific = lambda t: seen.append(t) or orig(t)
+    try:
+        faq_route("How do I open a savings account?", "en")
+        faq_route("नया खाता कैसे खोलूँ?", "hi")
+    finally:
+        va.beta_account_specific = orig
+    assert seen == []  # core text never reaches the beta veto
+    assert faq_route("Why has my bank account been frozen?", "en")[0] == "high"  # core unaffected

@@ -601,7 +601,7 @@
    "raviwar": 6
   },
   "question": ["શું", "કેમ", "ક્યારે", "ક્યાં", "કોણ", "કયું", "kya", "shu", "kem", "kyare", "kon", "how", "what", "when", "where", "why", "which", "can", "does", "કઈ", "કેટલું", "કેટલા", "કેટલી", "ketlu", "kai"],
-  "possessive": ["મારો", "મારી", "મારું", "મારા", "મને", "maro", "mari", "maru", "mara", "mane", "my", "mine"],
+  "possessive": ["મારો", "મારી", "મારું", "મારા", "મને", "maro", "mari", "maru", "mara", "mane", "my", "mine", "હું", "અમારો", "અમારી", "અમારા"],
   "acct_nouns": ["ખાતું", "ખાતા", "એકાઉન્ટ", "બેલેન્સ", "લોન", "ઇએમઆઈ", "ઈએમઆઈ", "બાકી", "ચુકવણી", "પેમેન્ટ", "નંબર", "વ્યવહાર", "ટ્રાન્ઝેક્શન", "account", "balance", "loan", "emi", "due", "dues", "outstanding", "overdue", "payment", "number", "paid", "transaction", "ifsc", "હપ્તો", "હપ્તા", "hapto", "hapta"],
   "human_target": ["કોઈ", "કોઈક", "માણસ", "વ્યક્તિ", "અધિકારી", "એજન્ટ", "મેનેજર", "કર્મચારી", "સ્ટાફ", "manas", "vyakti", "adhikari", "human", "person", "agent", "officer", "manager", "executive", "representative", "staff", "someone", "somebody", "સહકર્મી", "sahkarmi"],
   "human_verb": ["વાત", "બોલવું", "બોલવા", "જોડો", "કનેક્ટ", "ટ્રાન્સફર", "vat", "bolvu", "bolva", "jodo", "connect", "talk", "speak", "transfer", "બોલાવો", "bolavo"],

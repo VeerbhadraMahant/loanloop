@@ -604,7 +604,7 @@
       "sunday": 6
     },
     "question": ["എങ്ങനെ", "എന്ത്", "എന്താണ്", "എന്തുകൊണ്ട്", "എപ്പോൾ", "എവിടെ", "ആര്", "ഏത്", "എത്ര", "കഴിയുമോ", "how", "what", "why", "when", "where", "which", "can", "enthu", "engane", "eppol", "evide", "ethra", "എന്താ", "എന്തിന്", "ഏതാണ്", "എത്രയാണ്", "ആരാണ്", "does", "enthaa", "enthinu", "evideya"],
-    "possessive": ["എന്റെ", "എൻ്റെ", "എന്റേത്", "my", "mine", "ente", "എന്നുടെ", "ennude"],
+    "possessive": ["എന്റെ", "എൻ്റെ", "എന്റേത്", "my", "mine", "ente", "എന്നുടെ", "ennude", "ഞാൻ", "എനിക്ക്", "ഞങ്ങളുടെ"],
     "acct_nouns": ["ഇഎംഐ", "emi", "ബാലൻസ്", "balance", "ലോൺ", "വായ്പ", "loan", "പേയ്മെന്റ്", "അടവ്", "payment", "കുടിശ്ശിക", "ബാക്കി", "due", "dues", "overdue", "outstanding", "അക്കൗണ്ട്", "account", "നമ്പർ", "number", "ഐഎഫ്എസ്സി", "ifsc", "ഇടപാട്", "transaction", "transactions", "vaaypa", "adav", "ഇടപാടുകൾ", "പണം", "money", "amount", "തുക", "statement", "സ്റ്റേറ്റ്മെന്റ്"],
     "human_target": ["ആൾ", "വ്യക്തി", "മനുഷ്യൻ", "ഉദ്യോഗസ്ഥൻ", "ഏജന്റ്", "മാനേജർ", "ആരെങ്കിലും", "agent", "human", "person", "officer", "manager", "executive", "representative", "someone", "somebody", "staff", "aal", "vyakthi", "udyogasthan", "സഹപ്രവർത്തകൻ", "ജീവനക്കാരൻ", "ജീവനക്കാർ", "ആളോട്", "ആരോടെങ്കിലും", "മനുഷ്യനോട്", "manushyan", "jeevanakkaran", "colleague"],
     "human_verb": ["സംസാരിക്കണം", "സംസാരിക്കാൻ", "ബന്ധിപ്പിക്കൂ", "ബന്ധപ്പെടണം", "talk", "speak", "connect", "transfer", "samsarikkan", "samsaarikkanam", "bandhippikku", "കണക്ട്", "ട്രാൻസ്ഫർ", "ബന്ധപ്പെടാൻ", "സംസാരിക്കണമെന്ന്", "bandhappedan"],

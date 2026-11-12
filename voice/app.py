@@ -899,6 +899,25 @@ def account_specific(text: str) -> bool:
     return bool(t & _POSSESSIVE and t & _ACCT_NOUNS and not _GENERAL_TOPIC.search(low))
 
 
+_BETA_PREFIX_MIN = 3  # a beta word of at least this many characters (final virama dropped) also matches inflected tokens that start with it ("கடன்" ~ "கடனின்"); shorter ones only exactly
+_VIRAMA = "্੍્்్್്"
+
+
+def _beta_has(tokens: list[str], words: set[str]) -> bool:
+    """Beta scripts inflect by suffix, so a first-person / account word counts by prefix (a short one like Tamil "என்" only exactly: it prefixes "என்ன" = what; a final virama is dropped: "கடன்" ~ "கடனின்")."""
+    words = {faq_score.norm(w) for w in words}  # tokens are folded (spelling variants), so the words are too
+    pre = [w.rstrip(_VIRAMA) for w in words if not w.isascii() and len(w.rstrip(_VIRAMA)) >= _BETA_PREFIX_MIN]
+    return any(t in words or (not t.isascii() and any(t.startswith(w) for w in pre)) for t in tokens)
+
+
+def beta_account_specific(text: str) -> bool:
+    """Beta-script text about the caller's own loan/account/payment/EMI/transactions ("my loan's rate", "when did I last pay"): never an FAQ answer,
+    unless a general topic (fraud, KYC, missed EMI ...) matches. Wider than account_specific: inflected forms, EMI words and the txn phrases count."""
+    low = text.lower()
+    t = _tokens(faq_score.norm(text))
+    return bool(_beta_has(t, _POSSESSIVE) and (_beta_has(t, _ACCT_NOUNS | _EMI_WORDS) or _TXN.search(low)) and not _GENERAL_TOPIC.search(low))
+
+
 # Questions a TOOL answers (account data, branch/IFSC lookups, requests): never routed to the FAQ even if a FAQ keyword matches.
 _TOOL_OWNED = re.compile(
     r"\b(?:my|mera|meri|mere)\s+(?:branch\s+)?ifsc\b|\bifsc\b.{0,25}\b(?:of|for|ka)\b.{0,20}\bbranch\b|\bbranch\b.{0,20}\bifsc\b|"
@@ -1010,7 +1029,8 @@ def faq_route(text: str, lang: str, st: dict | None = None) -> tuple[str, str | 
     """('high', id) answer directly, ('medium', id) LLM turn with the FAQ block, ('low', None) plain LLM turn.
     Pure on the text (call-state guards stay in faq_ok); thresholds from the call's settings, else the defaults."""
     text = strip_lang_lead(text)
-    if not faq_text_ok(text, acct_guard=bool(faq_score._BETA.search(text))):  # beta scripts: "my loan's rate" is the caller's own account, not an FAQ
+    beta = bool(faq_score._BETA.search(text))
+    if not faq_text_ok(text, acct_guard=beta) or (beta and beta_account_specific(text)):  # beta scripts: "my loan's rate" is the caller's own account, not an FAQ
         return "low", None
     st = st or {}
     out = faq_score.classify(faq_rank(text, lang), st.get("faq_direct_min", faq_score.HIGH_MIN), st.get("faq_direct_margin", faq_score.HIGH_MARGIN),

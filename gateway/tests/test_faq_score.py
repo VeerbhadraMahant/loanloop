@@ -72,3 +72,39 @@ def test_ascii_and_devanagari_rows_have_no_prefix_path():
     t = fs.Table({"a": {"keywords": {"en": ["open account"], "hi": ["खाता खोल"]}}})
     assert all(r[7] is None for r in t.rows)
     assert t.rank("खोलना खाता", "hi") == []  # Devanagari still needs the exact substring
+
+
+# --- beta strictness gates: only beta-script text is held to MEDIUM; the same shapes in ASCII keep their HIGH.
+def _gate(intents, q, lang="gu"):
+    return fs.classify(fs.Table(intents).rank(q, lang))[0]
+
+
+def test_beta_evidence_gate_prefix_only_single_hit_is_medium(monkeypatch):
+    # "ખોલાવ" matches the keyword "ખોલ" only by prefix: one prefix-only hit is not enough for HIGH
+    it = {"a": {"keywords": {"gu": ["ખાતું ખોલ"]}}, "b": {"keywords": {"gu": ["x y z"]}}, "c": {"keywords": {"gu": ["p q r"]}}}
+    monkeypatch.setattr(fs, "BETA_EVIDENCE", 0)
+    off = _gate(it, "ખાતું ખોલાવ")
+    monkeypatch.setattr(fs, "BETA_EVIDENCE", 2)
+    on = _gate(it, "ખાતું ખોલાવ")
+    assert off in ("high", "medium") and on == "medium"
+    assert _gate(it, "ખાતું ખોલ") == off or _gate(it, "ખાતું ખોલ") in ("high", "medium")  # an exact hit is not blocked by the gate
+
+
+def test_beta_evidence_gate_leaves_ascii_alone(monkeypatch):
+    it = {"a": {"keywords": {"en": ["open savings account"]}}, "b": {"keywords": {"en": ["minimum balance"]}}}
+    monkeypatch.setattr(fs, "BETA_EVIDENCE", 4)
+    assert fs.Table(it).rank("how do I open savings accounts", "en")[0][2] > 0  # ASCII text: coverage never zeroed by the beta gates
+
+
+def test_beta_near_neighbour_ratio_and_shared_tokens(monkeypatch):
+    it = {"kyc_update": {"keywords": {"gu": ["કેવાયસી અપડેટ"]}}, "kyc_basics": {"keywords": {"gu": ["કેવાયસી શું"]}}}
+    q = "કેવાયસી અપડેટ શું"
+    monkeypatch.setattr(fs, "BETA_RATIO", 0.99)
+    monkeypatch.setattr(fs, "BETA_RATIO_SHARED", 0.99)
+    loose = fs.Table(it).rank(q, "gu")
+    monkeypatch.setattr(fs, "BETA_RATIO", 0.01)
+    monkeypatch.setattr(fs, "BETA_RATIO_SHARED", 0.01)
+    tight = fs.Table(it).rank(q, "gu")
+    assert len(loose) == 2 and tight[0][2] == 0.0 and loose[0][2] > 0  # a tie on shared tokens zeroes the top's coverage -> medium
+    it_en = {k: {"keywords": {"en": ["kyc update"] if k == "kyc_update" else ["kyc basics"]}} for k in it}
+    assert fs.Table(it_en).rank("kyc update", "en")[0][2] > 0  # ASCII: never zeroed

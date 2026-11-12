@@ -609,7 +609,7 @@
    "aitwar": 6
   },
   "question": ["ਕੀ", "ਕਿਵੇਂ", "ਕਦੋਂ", "ਕਿਉਂ", "ਕਿੱਥੇ", "ਕੌਣ", "ਕਿਹੜਾ", "ਕਿੰਨਾ", "kya", "kive", "kiven", "kado", "kyon", "kithe", "kaun", "kehda", "how", "what", "when", "where", "why", "which", "can", "does", "ਕਿੰਨੀ", "ਕਿੰਨੇ", "ਕਿਹੜੀ", "kinna", "kinni"],
-  "possessive": ["ਮੇਰਾ", "ਮੇਰੀ", "ਮੇਰੇ", "mera", "meri", "mere", "my", "mine"],
+  "possessive": ["ਮੇਰਾ", "ਮੇਰੀ", "ਮੇਰੇ", "mera", "meri", "mere", "my", "mine", "ਮੈਂ", "ਮੈਨੂੰ", "ਸਾਡਾ", "ਸਾਡੀ", "ਸਾਡੇ"],
   "acct_nouns": ["ਖਾਤਾ", "ਖਾਤੇ", "ਅਕਾਊਂਟ", "ਬੈਲੇਂਸ", "ਬਕਾਇਆ", "ਲੋਨ", "ਈਐਮਆਈ", "ਭੁਗਤਾਨ", "ਪੇਮੈਂਟ", "ਨੰਬਰ", "ਟ੍ਰਾਂਜ਼ੈਕਸ਼ਨ", "account", "balance", "loan", "emi", "due", "dues", "outstanding", "overdue", "payment", "number", "paid", "transaction", "ifsc", "ਕਿਸ਼ਤ", "kisht", "ਕਰਜ਼ਾ", "karza"],
   "human_target": ["ਕਿਸੇ", "ਬੰਦੇ", "ਬੰਦਾ", "ਇਨਸਾਨ", "ਵਿਅਕਤੀ", "ਅਫ਼ਸਰ", "ਅਧਿਕਾਰੀ", "ਏਜੰਟ", "ਮੈਨੇਜਰ", "ਕਰਮਚਾਰੀ", "ਸਟਾਫ਼", "banda", "insaan", "afsar", "adhikari", "human", "person", "agent", "officer", "manager", "executive", "representative", "staff", "someone", "somebody", "ਸਹਿਕਰਮੀ", "sahikarmi", "colleague"],
   "human_verb": ["ਗੱਲ", "ਬੋਲਣਾ", "ਬੋਲਣ", "ਜੋੜੋ", "ਕਨੈਕਟ", "ਟ੍ਰਾਂਸਫਰ", "gal", "gall", "bolna", "bolan", "jodo", "connect", "talk", "speak", "transfer"],

@@ -602,7 +602,7 @@
       "nyayiru": 6
     },
     "question": ["எப்படி", "என்ன", "ஏன்", "எப்போது", "எங்கே", "யார்", "எது", "முடியுமா", "எவ்வளவு", "how", "what", "why", "when", "where", "which", "can", "enna", "eppadi", "yen", "eppothu", "evvalavu", "எத்தனை", "எந்த", "எங்க", "எப்ப", "எப்போ", "ethanai", "enga"],
-    "possessive": ["என்", "என்னுடைய", "எனது", "எனக்கு", "my", "mine", "en", "ennudaiya", "enakku", "என்னோட", "ennoda"],
+    "possessive": ["என்", "என்னுடைய", "எனது", "எனக்கு", "my", "mine", "en", "ennudaiya", "enakku", "என்னோட", "ennoda", "நான்", "எங்கள்", "எங்களுடைய"],
     "acct_nouns": ["இஎம்ஐ", "ஈஎம்ஐ", "emi", "இருப்பு", "பேலன்ஸ்", "balance", "கடன்", "லோன்", "loan", "பேமென்ட்", "payment", "நிலுவை", "பாக்கி", "due", "dues", "overdue", "outstanding", "கணக்கு", "அக்கவுண்ட்", "account", "எண்", "நம்பர்", "number", "ஐஎஃப்எஸ்சி", "ifsc", "பரிவர்த்தனை", "transaction", "transactions", "kadan", "kanakku", "தவணை", "தொகை", "சேமிப்பு"],
     "human_target": ["யாரிட", "யாருட", "யாரை", "மனிதர்", "ஆள்", "நபர்", "அதிகாரி", "ஊழியர்", "ஏஜென்ட்", "மேலாளர்", "மேனேஜர்", "யாராவது", "agent", "human", "person", "officer", "manager", "executive", "representative", "someone", "somebody", "staff", "aal", "nabar", "adhikari", "அதிகாரியிடம்", "ஊழியரிடம்", "நபரிடம்", "மனிதரிடம்", "ஆளிடம்", "ஏஜென்ட்டிடம்"],
     "human_verb": ["பேச", "பேசணும்", "பேசவேண்டும்", "இணை", "இணையுங்கள்", "தொடர்பு", "பேசு", "talk", "speak", "connect", "transfer", "pesa", "pesanum", "inai", "இணைக்க", "இணைத்துவிடுங்கள்", "தொடர்புகொள்ள", "பேசுங்கள்"],

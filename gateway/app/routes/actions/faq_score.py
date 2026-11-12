@@ -40,8 +40,24 @@ _FOLD.update({int(a, 16): int(b, 16) for a, b in (
 _LAT_BETA = re.compile(r"(?<=[a-z0-9])-?(?=[ঀ-෿])|(?<=[ঀ-෿])-?(?=[a-z0-9])")
 PREFIX = 0.8     # weight of a keyword whose content tokens all match question tokens only by prefix
 PREFIX_ONE = 0.5  # ...and for a keyword with a single content token (one inflected word is weak evidence)
-BETA_RATIO = 0.6  # beta-script questions: the runner-up may score at most this share of the top, else the top is a near-neighbour tie (its coverage is zeroed, so classify says medium)
+# Beta-script strictness (a wrong canned answer misleads the caller, a miss only costs ~0.2 s via the LLM). All three only ever turn a HIGH into a
+# MEDIUM (the top's coverage is zeroed); core languages never see them.
+BETA_RATIO = 0.5         # the runner-up may score at most this share of the top, else the top is a near-neighbour tie
+BETA_RATIO_SHARED = 0.4  # ...and at most this share when top and runner-up matched some of the same keyword tokens (e.g. "kyc update" vs "kyc basics")
+BETA_EVIDENCE = 2        # evidence the top needs for HIGH: 0 none; 1 an exact (non-prefix) hit, 2+ distinct hits, or one multi-word keyword; 2 an exact hit or 2+ distinct hits; 3 an exact hit; 4 an exact multi-word keyword or 2+ exact hits
 PREFIX_MIN = 4   # shared leading characters needed (a shorter keyword token must be a prefix of the question token)
+
+
+def _strong(keep: dict) -> bool:
+    """Is a beta-script intent's evidence strong enough for HIGH at BETA_EVIDENCE level? keep: keyword -> (weight, tokens, exact?)."""
+    ex = [v[1] for v in keep.values() if v[2]]
+    if BETA_EVIDENCE <= 0:
+        return True
+    if BETA_EVIDENCE >= 4:
+        return len(ex) >= 2 or any(len(t) >= 2 for t in ex)
+    if BETA_EVIDENCE == 3:
+        return bool(ex)
+    return bool(ex) or len(keep) >= 2 or (BETA_EVIDENCE == 1 and any(len(v[1]) >= 2 for v in keep.values()))
 
 
 def norm(s: str) -> str:
@@ -159,17 +175,17 @@ class Table:
         qs = {_stem(t) for t in qt}
         hit: dict[str, dict[str, tuple[float, list]]] = {}
         pm = self._matched(qt)
-        def add(row, f):
+        def add(row, f, ex=False):
             iid, lg, kn, w, _, _, toks, _ = row
             d = hit.setdefault(iid, {})
             m = w * f * (1.0 if lg == lang else OTHER_LANG)
             if m > d.get(kn, (0, 0))[0]:
-                d[kn] = (m, toks)
+                d[kn] = (m, toks, ex)
 
         exact = set()
         for i, row in enumerate(self.rows):
             if row[2] in q and (row[4].search(q) if row[4] else True):  # the regex only adds a word-boundary/suffix check on top of the substring
-                add(row, 1.0)
+                add(row, 1.0, True)
                 exact.add(i)
         for ix, f, keys in ((self._by_stem, SCATTER, qs), (self._by_ptok, PREFIX, pm)):
             seen: dict[int, int] = {}  # loose match = every distinct unit (stem / prefix token) of the row is in the question; count via the index
@@ -183,14 +199,18 @@ class Table:
         out = []
         for iid, d in hit.items():
             keep = {kn: v for kn, v in d.items() if not any(kn != o and kn in o for o in d)}
-            words = {_stem(t) for _, toks in keep.values() for t in toks}
-            kts = {t for _, toks in keep.values() for t in toks if _BETA.search(t)}
+            words = {_stem(t) for _, toks, _ in keep.values() for t in toks}
+            kts = {t for _, toks, _ in keep.values() for t in toks if _BETA.search(t)}
             cov = sum(1 for t in content if _stem(t) in words or any(t in kn for kn in keep) or (_BETA.search(t) and any(_pm(k, t) for k in kts))) / len(content) if content else 1.0
-            out.append((iid, sum(v[0] for v in keep.values()), cov))
+            strong = _strong(keep)
+            out.append((iid, sum(v[0] for v in keep.values()), cov, strong, {t for v in keep.values() for t in v[1]}))
         out.sort(key=lambda x: -x[1])
-        if _BETA.search(q) and len(out) > 1 and out[1][1] > BETA_RATIO * out[0][1]:
-            out[0] = (out[0][0], out[0][1], 0.0)
-        return out
+        if _BETA.search(q) and out:
+            top = out[0]
+            tie = len(out) > 1 and out[1][1] > (BETA_RATIO_SHARED if top[4] & out[1][4] else BETA_RATIO) * top[1]
+            if tie or (BETA_EVIDENCE and not top[3]):
+                out[0] = (top[0], top[1], 0.0, top[3], top[4])
+        return [o[:3] for o in out]
 
 
 _tables: dict[int, tuple[dict, Table]] = {}

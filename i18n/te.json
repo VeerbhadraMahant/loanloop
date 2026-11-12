@@ -606,7 +606,7 @@
    "బృహస్పతివారం": 3
   },
   "question": ["ఎలా", "ఏమిటి", "ఏం", "ఎందుకు", "ఎప్పుడు", "ఎక్కడ", "ఎవరు", "ఏ", "ఎంత", "చేయవచ్చా", "can", "how", "what", "when", "where", "which", "why", "ela", "emiti", "enduku", "eppudu", "ekkada", "entha", "ఏంటి", "ఎన్ని", "ఎలాగ", "enti", "enni"],
-  "possessive": ["నా", "నాకు", "నాది", "నాయొక్క", "మా", "my", "mine", "naa", "naaku"],
+  "possessive": ["నా", "నాకు", "నాది", "నాయొక్క", "మా", "my", "mine", "naa", "naaku", "నేను", "మాకు"],
   "acct_nouns": ["ఖాతా", "అకౌంట్", "బ్యాలెన్స్", "నిల్వ", "బకాయి", "లోన్", "రుణం", "ఈఎంఐ", "చెల్లింపు", "నంబర్", "సంఖ్య", "లావాదేవీ", "ఐఎఫ్ఎస్సి", "account", "balance", "due", "dues", "emi", "ifsc", "loan", "number", "outstanding", "overdue", "paid", "payment", "transaction", "transactions", "బాకీ", "వాయిదా", "అప్పు", "bakaayi", "bakayi", "vayida", "appu"],
   "human_target": ["ఎవరి", "వ్యక్తి", "మనిషి", "ఏజెంట్", "అధికారి", "మేనేజర్", "సిబ్బంది", "ఎవరైనా", "ప్రతినిధి", "agent", "executive", "human", "manager", "officer", "person", "representative", "someone", "somebody", "staff", "vyakti", "manishi", "మనిషితో", "వ్యక్తితో", "అధికారితో", "ఏజెంట్తో", "manishitho", "vyaktitho"],
   "human_verb": ["మాట్లాడ", "మాట్లాడాలి", "మాట్లాడతా", "కలపండి", "కనెక్ట్", "ట్రాన్స్ఫర్", "సంప్రదించ", "connect", "speak", "talk", "transfer", "matladali", "kalapandi", "sampradinchu", "మాట్లాడాలనుకుంటున్నాను", "కలుపు", "kalupu"],
