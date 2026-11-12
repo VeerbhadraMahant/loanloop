@@ -56,7 +56,7 @@ Machine: i7-13650HX (20 threads), Windows 11, one box: Locust, gateway (`uvicorn
 ## Needs the owner
 - [ ] Gnani speech API key available to the voice service (`GNANI_SPEECH_API_KEY`).
 - [x] Create the GitHub repo and push.
-- [ ] Mic test at /call/priya (hold to talk, Hinglish and Marathi).
+- [ ] Mic test at /call after signing in as a customer (hold to talk, Hinglish and Marathi).
 - [ ] Short live Gnani STT/TTS check (credits are limited).
 - [ ] Run `tools/make_test_audio.py` then `tools/stt_benchmark.py` (STT numbers), if credits allow.
 - [ ] Record a voice clone for the attacker demo.
