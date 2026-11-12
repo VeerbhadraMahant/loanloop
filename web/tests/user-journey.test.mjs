@@ -3,6 +3,20 @@ import assert from "node:assert/strict";
 
 const BASE = process.env.SMOKE_URL ?? "http://localhost:3000";
 
+function makeUserCookie() {
+  const session = {
+    role: "user",
+    identifier: "9000014417",
+    name: "Priya Deshmukh",
+    customerId: "priya",
+    createdAt: Date.now(),
+    expiresAt: Date.now() + 3600000,
+  };
+  return `loanloop_session_user=${encodeURIComponent(JSON.stringify(session))}`;
+}
+
+const USER_COOKIE = makeUserCookie();
+
 test("user onboarding flow pages render cleanly with expected content", async () => {
   // 1. Welcome Screen
   const welcomeRes = await fetch(`${BASE}/user/welcome`);
@@ -37,8 +51,10 @@ test("user onboarding flow pages render cleanly with expected content", async ()
 });
 
 test("user phone console main tabs render properly with borrower data", async () => {
+  const headers = { Cookie: USER_COOKIE };
+
   // 1. Home tab
-  const homeRes = await fetch(`${BASE}/user/home`);
+  const homeRes = await fetch(`${BASE}/user/home`, { headers });
   assert.equal(homeRes.status, 200);
   const homeHtml = await homeRes.text();
   assert.ok(homeHtml.includes("Sahyadri Voice Desk"), "Home missing voice card");
@@ -47,28 +63,28 @@ test("user phone console main tabs render properly with borrower data", async ()
   assert.ok(homeHtml.includes("Change EMI Date"), "Home missing EMI date shortcut");
 
   // 2. Inbox tab
-  const inboxRes = await fetch(`${BASE}/user/inbox`);
+  const inboxRes = await fetch(`${BASE}/user/inbox`, { headers });
   assert.equal(inboxRes.status, 200);
   const inboxHtml = await inboxRes.text();
   assert.ok(inboxHtml.includes("Inbox & Approvals") || inboxHtml.includes("Inbox"), "Inbox missing title");
   assert.ok(inboxHtml.includes("Bank SMS Alerts"), "Inbox missing SMS heading");
 
   // 3. Talk tab
-  const talkRes = await fetch(`${BASE}/user/talk`);
+  const talkRes = await fetch(`${BASE}/user/talk`, { headers });
   assert.equal(talkRes.status, 200);
   const talkHtml = await talkRes.text();
   assert.ok(talkHtml.includes("Voice Assistant"), "Talk missing title");
   assert.ok(talkHtml.includes("Speak") && talkHtml.includes("Check") && talkHtml.includes("Done"), "Talk missing 3-step stepper");
 
   // 4. Activity tab
-  const actRes = await fetch(`${BASE}/user/activity`);
+  const actRes = await fetch(`${BASE}/user/activity`, { headers });
   assert.equal(actRes.status, 200);
   const actHtml = await actRes.text();
   assert.ok(actHtml.includes("Service Requests"), "Activity missing service requests tab");
   assert.ok(actHtml.includes("Voice Calls"), "Activity missing voice calls tab");
 
   // 5. Help tab & Other Consoles Redirect
-  const helpRes = await fetch(`${BASE}/user/help`);
+  const helpRes = await fetch(`${BASE}/user/help`, { headers });
   assert.equal(helpRes.status, 200);
   const helpHtml = await helpRes.text();
   assert.ok(helpHtml.includes("Zero Secrets Guarantee"), "Help missing zero secrets guarantee");

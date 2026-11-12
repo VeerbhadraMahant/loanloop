@@ -3,36 +3,63 @@ import assert from "node:assert/strict";
 
 const BASE = process.env.SMOKE_URL ?? "http://localhost:3000";
 
+function makeSessionCookie(role, identifier, name) {
+  const session = {
+    role,
+    identifier,
+    name,
+    createdAt: Date.now(),
+    expiresAt: Date.now() + 3600000,
+  };
+  return `loanloop_session_${role}=${encodeURIComponent(JSON.stringify(session))}`;
+}
+
+const STAFF_COOKIE = makeSessionCookie("staff", "STAFF-104", "Aaditya Joshi");
+const DEV_COOKIE = makeSessionCookie("dev", "DEV-202", "Kavya Menon");
+const USER_COOKIE = makeSessionCookie("user", "9000014417", "Priya Deshmukh");
+
 const ROUTES = [
-  { path: "/", mustInclude: ["Sahyadri", "Calling Desk", "Bank app", "User Console"] },
-  { path: "/call/priya", mustInclude: ["Live Calling Desk", "Priya", "Zero Secrets Policy", "User Console"] },
+  // Public Landing & Logins
+  { path: "/", mustInclude: ["Sahyadri", "Borrower Console", "Bank Staff Console", "Developer Lab"] },
+  { path: "/staff/login", mustInclude: ["Staff Sign In", "Staff ID", "Access Passcode"] },
+  { path: "/dev/login", mustInclude: ["Developer Sign In", "Developer ID", "Developer Key"] },
+
+  // Shared Engineering Tools
+  { path: "/call/priya", mustInclude: ["Live Calling Desk", "Priya", "Zero Secrets Policy"] },
   { path: "/call/ramesh", mustInclude: ["Live Calling Desk", "Ramesh", "Zero Secrets Policy"] },
   { path: "/call/sunita", mustInclude: ["Live Calling Desk", "Sunita", "Zero Secrets Policy"] },
   { path: "/call/vikram", mustInclude: ["Live Calling Desk", "Vikram", "Zero Secrets Policy"] },
   { path: "/user/priya", mustInclude: ["User Console", "Sahyadri Voice Agent"] },
   { path: "/user/ramesh", mustInclude: ["User Console", "Ramesh"] },
-  { path: "/bank", mustInclude: ["Sahyadri Finance Bank", "Return to LoanLoop Desk"] },
   { path: "/phone/priya", mustInclude: ["Sahyadri Mobile"] },
-  { path: "/collections", mustInclude: ["Collections"] },
-  { path: "/ops", mustInclude: ["Live Operations"] },
-  { path: "/dev", mustInclude: ["Developer lab"] },
-  { path: "/test-cases", mustInclude: ["Test Cases", "TC-8801", "TC-8802", "TC-8803", "TC-9904", "TC-8805"] },
-  { path: "/metrics", mustInclude: ["Metrics"] },
-  // Phone-first borrower routes
+
+  // Staff Workspaces (protected with staff session)
+  { path: "/staff/overview", cookie: STAFF_COOKIE, mustInclude: ["Voice Servicing", "Calling Desk", "Bank app"] },
+  { path: "/bank", cookie: STAFF_COOKIE, mustInclude: ["Sahyadri Finance Bank", "Return to LoanLoop Desk"] },
+  { path: "/collections", cookie: STAFF_COOKIE, mustInclude: ["Collections"] },
+  { path: "/ops", cookie: STAFF_COOKIE, mustInclude: ["Live Operations"] },
+
+  // Developer Lab (protected with dev session)
+  { path: "/dev", cookie: DEV_COOKIE, mustInclude: ["Developer lab"] },
+  { path: "/test-cases", cookie: DEV_COOKIE, mustInclude: ["Test Cases", "TC-8801", "TC-8802", "TC-8803", "TC-8805"] },
+  { path: "/metrics", cookie: DEV_COOKIE, mustInclude: ["Metrics"] },
+
+  // Phone-first borrower routes (onboarding is public; interior is protected with user session)
   { path: "/user/welcome", mustInclude: ["Sahyadri", "Voice Banking", "Zero Secrets"] },
   { path: "/user/language", mustInclude: ["Language", "मराठी", "हिंदी", "English"] },
   { path: "/user/mobile", mustInclude: ["Mobile Number", "Priya"] },
   { path: "/user/otp", mustInclude: ["Verification", "Demo Code"] },
-  { path: "/user/home", mustInclude: ["Sahyadri", "Desk", "Priya"] },
-  { path: "/user/inbox", mustInclude: ["Inbox", "Approvals"] },
-  { path: "/user/talk", mustInclude: ["Voice Assistant", "Speak"] },
-  { path: "/user/activity", mustInclude: ["Activity", "Service Requests"] },
-  { path: "/user/help", mustInclude: ["Security", "Zero Secrets", "Microphone Mode", "Other Consoles"] },
+  { path: "/user/home", cookie: USER_COOKIE, mustInclude: ["Sahyadri", "Desk", "Priya"] },
+  { path: "/user/inbox", cookie: USER_COOKIE, mustInclude: ["Inbox", "Approvals"] },
+  { path: "/user/talk", cookie: USER_COOKIE, mustInclude: ["Voice Assistant", "Speak"] },
+  { path: "/user/activity", cookie: USER_COOKIE, mustInclude: ["Activity", "Service Requests"] },
+  { path: "/user/help", cookie: USER_COOKIE, mustInclude: ["Security", "Zero Secrets", "Microphone Mode", "Other Consoles"] },
 ];
 
 test("all primary UI routes and scenarios render HTTP 200 without Next error boundary", async () => {
   for (const r of ROUTES) {
-    const res = await fetch(`${BASE}${r.path}`);
+    const headers = r.cookie ? { Cookie: r.cookie } : {};
+    const res = await fetch(`${BASE}${r.path}`, { headers });
     assert.equal(res.status, 200, `${r.path} returned ${res.status}`);
     const html = await res.text();
     assert.equal(html.includes("__next_error__"), false, `${r.path} rendered __next_error__`);
@@ -46,7 +73,6 @@ test("bank routes preserve SSR customer data and Devanagari scripts", async () =
   const res = await fetch(`${BASE}/call/priya`);
   assert.equal(res.status, 200);
   const html = await res.text();
-  // Ensure Devanagari script renders cleanly without escaping corruption
   assert.equal(html.includes("मेरा IFSC code") && html.includes("Priya Deshmukh"), true);
 });
 
