@@ -41,7 +41,7 @@ PERSONAS = {
     "outbound_demo": {"mobile": "", "dob": ""},  # dob comes from --outbound-dob / env OUTBOUND_DOB (the dashboard only has masked data)
 }
 EXPECT_KEYS = {"actions_any", "actions_none", "speak_not_contains", "max_llm_calls_per_turn", "speak_any", "language"}
-LANGS = {"en", "hi", "hinglish", "mr"}
+LANGS = {"en", "hi", "hinglish", "mr", "bn", "gu", "kn", "ml", "pa", "ta", "te"}  # core 4 + the beta languages
 TOOL_NAMES = ["faq_lookup", "verify_caller", "report_secret_spoken", "record_ptp", "record_rtp", "dues_info", "emi_info"]  # never spoken aloud
 HOLES = ("{mobile}", "{dob}", "{ptp_date}", "{ptp_amount}")
 
@@ -90,7 +90,7 @@ def validate(cases: list[dict]) -> list[str]:
         if "max_llm_calls_per_turn" in x and not isinstance(x["max_llm_calls_per_turn"], int):
             e("max_llm_calls_per_turn must be int")
         if "language" in x and x["language"] not in LANGS:
-            e("language must be one of en/hi/hinglish/mr")
+            e(f"language must be one of {sorted(LANGS)}")
         if not any(x.get(k) for k in ("actions_any", "actions_none", "speak_not_contains", "speak_any", "language")):
             e("expect checks nothing")
         text = json.dumps(c, ensure_ascii=False)
@@ -206,6 +206,7 @@ def main(argv=None) -> int:
     ap.add_argument("--cases", type=Path, default=CASES)
     ap.add_argument("--case-id", type=int, help="collection case id for outbound cases (default: first open one from /dashboard/collections)")
     ap.add_argument("--outbound-dob", default=os.environ.get("OUTBOUND_DOB", ""), help='DOB of the outbound case customer, e.g. "14 August 1991" (else outbound cases are skipped)')
+    ap.add_argument("--lang", action="append", default=[], metavar="CODE", help="run only cases whose expect.language (else the @suffix of the id) is this code; repeatable or comma list, e.g. --lang ta,te")
     ap.add_argument("--only", help="run only case ids starting with this prefix, e.g. faq_ or out_")
     ap.add_argument("--dashboard-token", default=env("DASHBOARD_TOKEN") or "dev-dashboard-token-change-me", help="bearer for outbound starts and the dashboard (never printed)")
     ap.add_argument("--reset-limits", action="store_true", help="delete ll:rl:verify:* in Redis before the run and before each case")
@@ -230,6 +231,10 @@ def main(argv=None) -> int:
         return 0
     if a.only:
         cases = [c for c in cases if c["id"].startswith(a.only)]
+    if a.lang:
+        want = {x for v in a.lang for x in v.split(",") if x}
+        cases = [c for c in cases if (c["expect"].get("language") or c["id"].rpartition("@")[2]) in want]
+        print(f"--lang {sorted(want)}: {len(cases)} cases")
     if a.resume and a.out.exists():
         prev = [r for r in json.loads(a.out.read_text(encoding="utf-8"))["results"] if r["pass"] or not a.retry_failed]
         done = {r["id"] for r in prev}
