@@ -1,5 +1,5 @@
 "use client";
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Wordmark, Icon, type IconName } from "@/components/ui";
@@ -21,11 +21,42 @@ export function useSidebar() {
 }
 
 const STORAGE_KEY = "loanloop.nav.open";
+const THEME_KEY = "loanloop.theme";
+export type ThemeId = "bright" | "classic" | "dark";
+
+export function useThemePreference() {
+  const [theme, setTheme] = useState<ThemeId>("bright");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate client theme once on mount
+    setMounted(true);
+    try {
+      const stored = localStorage.getItem(THEME_KEY) as ThemeId | null;
+      const next: ThemeId = stored === "classic" || stored === "dark" || stored === "bright" ? stored : "bright";
+      setTheme(next);
+      document.documentElement.setAttribute("data-theme", next);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const changeTheme = (newTheme: ThemeId) => {
+    setTheme(newTheme);
+    try {
+      localStorage.setItem(THEME_KEY, newTheme);
+      document.documentElement.setAttribute("data-theme", newTheme);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  return { theme, mounted, changeTheme };
+}
 
 export function SidebarProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(true);
 
-  // Restore user's preference from localStorage after mount
   useEffect(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
@@ -52,11 +83,10 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  // Keyboard shortcut: Cmd+B or Ctrl+B or '[' to toggle navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
-      const isInput = target && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName);
+      const isInput = target && /^(INPUT|TEXTAREA|BUTTON|SELECT)$/.test(target.tagName);
       if (isInput) return;
 
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "b") {
@@ -82,9 +112,7 @@ type NavItem = {
   href: string;
   label: string;
   icon: IconName;
-  badge?: string;
-  badgeTone?: "default" | "dev" | "ok" | "primary";
-  isDev?: boolean;
+  liveBadge?: boolean;
 };
 
 type NavSection = {
@@ -94,45 +122,151 @@ type NavSection = {
 
 const navSections: NavSection[] = [
   {
-    title: "Banking Operations",
+    title: "Operations",
     items: [
-      { href: "/", label: "Home", icon: "shield" },
-      { href: "/call/priya", label: "Calling Desk", icon: "phone_in_talk", badge: "Live", badgeTone: "ok" },
-      { href: "/user/priya", label: "User Console", icon: "phone", badge: "Phone", badgeTone: "primary" },
-      { href: "/bank", label: "Bank app", icon: "support_agent" },
-      { href: "/collections", label: "Collections", icon: "database" },
-      { href: "/ops", label: "Ops Console", icon: "speed" },
+      { href: "/", label: "Home", icon: "home" },
+      { href: "/call/priya", label: "Calling Desk", icon: "support_agent", liveBadge: true },
+      { href: "/user/priya", label: "User Console", icon: "phone" },
+      { href: "/bank", label: "Bank app", icon: "landmark" },
+      { href: "/collections", label: "Collections", icon: "wallet" },
+      { href: "/ops", label: "Ops Console", icon: "activity" },
     ],
   },
   {
-    title: "Developer & Testing",
+    title: "Engineering",
     items: [
-      {
-        href: "/dev",
-        label: "Developer Lab",
-        icon: "tune",
-        badge: "DEV LAB",
-        badgeTone: "dev",
-        isDev: true,
-      },
-      {
-        href: "/test-cases",
-        label: "Test Cases",
-        icon: "verified",
-        badge: "5 Presets",
-        badgeTone: "primary",
-        isDev: true,
-      },
-      {
-        href: "/metrics",
-        label: "Metrics & SLA",
-        icon: "speed",
-        badge: "p95 Proof",
-        isDev: true,
-      },
+      { href: "/dev", label: "Developer Lab", icon: "sliders" },
+      { href: "/test-cases", label: "Test Cases", icon: "list_checks" },
+      { href: "/metrics", label: "Metrics & SLA", icon: "gauge" },
     ],
   },
 ];
+
+export function ThemeSelector() {
+  const { theme, mounted, changeTheme } = useThemePreference();
+
+  if (!mounted) {
+    return <div className="h-7 w-full rounded-md bg-sunken animate-pulse" />;
+  }
+
+  return (
+    <div
+      className="grid grid-cols-3 gap-1 rounded-md border border-line bg-sunken p-0.5 text-[11px] font-medium"
+      role="group"
+      aria-label="Theme selector"
+    >
+      <button
+        type="button"
+        onClick={() => changeTheme("bright")}
+        className={`flex items-center justify-center gap-1.5 rounded px-2 py-1 transition-colors cursor-pointer ${
+          theme === "bright"
+            ? "bg-card text-fg font-semibold border border-line"
+            : "text-muted hover:text-fg"
+        }`}
+        title="Bright daylight slate"
+        aria-label="Radiant bright theme"
+        aria-pressed={theme === "bright"}
+      >
+        <span className="h-2 w-2 rounded-full bg-[#1D4ED8] border border-line" />
+        <span>Bright</span>
+      </button>
+      <button
+        type="button"
+        onClick={() => changeTheme("classic")}
+        className={`flex items-center justify-center gap-1.5 rounded px-2 py-1 transition-colors cursor-pointer ${
+          theme === "classic"
+            ? "bg-card text-fg font-semibold border border-line"
+            : "text-muted hover:text-fg"
+        }`}
+        title="Classic lower-glare stone"
+        aria-label="Classic theme"
+        aria-pressed={theme === "classic"}
+      >
+        <span className="h-2 w-2 rounded-full bg-[#64748B] border border-line" />
+        <span>Classic</span>
+      </button>
+      <button
+        type="button"
+        onClick={() => changeTheme("dark")}
+        className={`flex items-center justify-center gap-1.5 rounded px-2 py-1 transition-colors cursor-pointer ${
+          theme === "dark"
+            ? "bg-card text-fg font-semibold border border-line"
+            : "text-muted hover:text-fg"
+        }`}
+        title="Control room dark"
+        aria-label="Dark theme"
+        aria-pressed={theme === "dark"}
+      >
+        <span className="h-2 w-2 rounded-full bg-[#0C1017] border border-outline-variant" />
+        <span>Dark</span>
+      </button>
+    </div>
+  );
+}
+
+function UserSettingsMenu({ align = "up" }: { align?: "up" | "down" }) {
+  const [open, setOpen] = useState(false);
+  const { theme } = useThemePreference();
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  return (
+    <div ref={wrapRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        aria-haspopup="dialog"
+        aria-label="User and theme settings"
+        className="flex w-full items-center justify-between gap-2 rounded-md border border-transparent px-2 py-1.5 text-left transition-colors hover:border-line hover:bg-sunken cursor-pointer"
+      >
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary text-[11px] font-semibold text-primary-fg">
+            SFB
+          </div>
+          <div className="min-w-0">
+            <div className="truncate text-xs font-medium text-fg leading-tight">Operator Desk</div>
+            <div className="truncate text-[11px] text-muted capitalize">{theme} theme</div>
+          </div>
+        </div>
+        <Icon name="settings" size={14} className="text-muted" />
+      </button>
+
+      {open && (
+        <div
+          role="dialog"
+          aria-label="Appearance settings"
+          className={`absolute left-0 right-0 z-50 min-w-[220px] rounded-lg border border-line bg-card p-3 shadow-md ${
+            align === "up" ? "bottom-full mb-2" : "top-full mt-2 right-0 left-auto"
+          }`}
+        >
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">
+              Appearance
+            </span>
+            <span className="font-mono text-[10px] text-muted">Cmd+B nav</span>
+          </div>
+          <ThemeSelector />
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function SidebarNav() {
   const path = usePathname();
@@ -140,81 +274,41 @@ export function SidebarNav() {
 
   return (
     <>
-      {/* Mobile Backdrop Overlay */}
       {isOpen && (
         <div
           onClick={toggle}
-          className="fixed inset-0 z-40 bg-fg/20 backdrop-blur-xs md:hidden"
+          className="fixed inset-0 z-40 bg-fg/20 backdrop-blur-[1px] md:hidden"
           aria-hidden="true"
         />
       )}
 
-      {/* Vertical Sidebar */}
       <aside
         aria-label="Sidebar navigation"
-        className={`fixed md:sticky top-0 left-0 z-40 h-screen bg-card border-r border-line flex flex-col transition-all duration-300 ease-in-out shadow-xs ${
+        className={`fixed md:sticky top-0 left-0 z-40 h-screen bg-card border-r border-line flex flex-col transition-all duration-200 ease-out ${
           isOpen
-            ? "w-64 translate-x-0"
+            ? "w-60 translate-x-0"
             : "-translate-x-full md:translate-x-0 md:w-0 md:border-r-0 md:overflow-hidden md:opacity-0"
         }`}
       >
-        {/* Brand & Wordmark Header */}
-        <div className="h-14 px-4 flex items-center justify-between border-b border-line shrink-0 bg-card">
-          <Link href="/" className="flex items-baseline gap-2">
+        {/* Brand Header */}
+        <div className="h-12 px-4 flex items-center justify-between border-b border-line shrink-0">
+          <Link href="/" className="flex items-baseline gap-2 min-w-0">
             <Wordmark />
-            <span className="text-[10px] font-mono uppercase tracking-widest text-primary font-semibold px-1.5 py-0.5 rounded bg-secondary-container">
-              Desk
-            </span>
+            <span className="text-[11px] font-mono text-muted">Sahyadri</span>
           </Link>
-
-          {/* Toggle button inside sidebar header to collapse it */}
-          <button
-            type="button"
-            onClick={toggle}
-            className="p-1.5 rounded-lg text-muted hover:text-fg hover:bg-sunken transition-colors cursor-pointer"
-            title="Hide navigation (Cmd+B or [)"
-            aria-label="Hide navigation"
-          >
-            <svg
-              className="w-5 h-5"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.75"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <rect width="18" height="18" x="3" y="3" rx="2" />
-              <path d="M9 3v18" />
-              <path d="m16 15-3-3 3-3" />
-            </svg>
-          </button>
         </div>
 
-        {/* Bank Context Strip */}
-        <div className="px-4 py-2.5 bg-surface-container-low border-b border-line flex items-center justify-between text-xs text-muted shrink-0">
-          <span className="font-mono text-[11px] font-medium text-fg">Sahyadri Bank</span>
-          <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-sunken border border-line">
-            Demo · synthetic data
-          </span>
-        </div>
-
-        {/* Vertical Navigation Items grouped by section */}
-        <nav className="flex-1 p-3 space-y-4 overflow-y-auto" aria-label="Main menu">
+        {/* Navigation Links */}
+        <nav className="flex-1 p-2.5 space-y-4 overflow-y-auto" aria-label="Main menu">
           {navSections.map((section) => (
-            <div key={section.title} className="space-y-1">
-              <div className="px-3 pt-1 pb-1 flex items-center justify-between">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-muted font-bold">
+            <div key={section.title} className="space-y-0.5">
+              <div className="px-2.5 pb-1 pt-1">
+                <span className="text-[11px] font-medium uppercase tracking-wider text-muted">
                   {section.title}
                 </span>
-                {section.title.includes("Developer") && (
-                  <span className="inline-flex items-center gap-1 font-mono text-[9px] text-warn-fg font-bold bg-warn-bg px-1.5 py-0.5 rounded border border-warn-border">
-                    SANDBOX
-                  </span>
-                )}
               </div>
 
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 {section.items.map((item) => {
                   const active =
                     item.href === "/"
@@ -229,37 +323,21 @@ export function SidebarNav() {
                     <Link
                       key={item.href}
                       href={item.href}
-                      className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                      aria-current={active ? "page" : undefined}
+                      className={`flex items-center justify-between px-2.5 py-1.5 rounded-md text-[13px] transition-colors ${
                         active
-                          ? item.isDev
-                            ? "bg-warn-bg text-warn-fg font-semibold shadow-xs border-l-4 border-warn-fg"
-                            : "bg-secondary-container text-primary font-semibold shadow-xs border-l-4 border-primary"
-                          : item.isDev
-                          ? "text-fg/80 hover:text-fg hover:bg-warn-bg/25 font-medium"
-                          : "text-muted hover:text-fg hover:bg-sunken"
+                          ? "bg-secondary-container text-accent-ink font-semibold"
+                          : "text-muted hover:text-fg hover:bg-sunken font-medium"
                       }`}
                     >
-                      <div className="flex items-center gap-2.5">
-                        <Icon name={item.icon} size={15} />
-                        <span>{item.label}</span>
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <Icon name={item.icon} size={15} className={active ? "text-primary" : "text-muted"} />
+                        <span className="truncate">{item.label}</span>
                       </div>
-                      {item.badge && (
-                        <span
-                          className={`font-mono text-[10px] px-1.5 py-0.5 rounded font-semibold ${
-                            item.badgeTone === "dev"
-                              ? active
-                                ? "bg-warn-fg text-card font-bold"
-                                : "bg-warn-bg text-warn-fg border border-warn-border"
-                              : item.badgeTone === "ok"
-                              ? active
-                                ? "bg-ok-fg text-card"
-                                : "bg-ok-bg text-ok-fg border border-ok-border"
-                              : active
-                              ? "bg-primary text-primary-fg"
-                              : "bg-sunken text-muted border border-line"
-                          }`}
-                        >
-                          {item.badge}
+                      {item.liveBadge && (
+                        <span className="inline-flex items-center gap-1 rounded border border-ok-border bg-ok-bg px-1.5 py-0.5 font-mono text-[10px] font-medium text-ok-fg">
+                          <span className="h-1.5 w-1.5 rounded-full bg-ok-fg pulse" />
+                          Live
                         </span>
                       )}
                     </Link>
@@ -270,107 +348,15 @@ export function SidebarNav() {
           ))}
         </nav>
 
-        {/* User / Operator Footer */}
-        <div className="p-3 border-t border-line flex items-center justify-between shrink-0 bg-card">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-primary text-primary-fg flex items-center justify-center font-bold text-xs shadow-xs">
-              SFB
-            </div>
-            <div>
-              <div className="text-xs font-semibold text-fg leading-tight">SFB Voice Desk</div>
-              <div className="text-[10px] font-mono text-muted">Demo operator desk</div>
-            </div>
+        {/* Single Persistent Demo Notice + User/Theme Settings Menu */}
+        <div className="border-t border-line p-2.5 space-y-2 shrink-0 bg-card">
+          <UserSettingsMenu align="up" />
+          <div className="px-2 text-[11px] font-mono text-muted">
+            Demo · synthetic data
           </div>
         </div>
       </aside>
     </>
-  );
-}
-
-export function ThemeSelector() {
-  const [theme, setTheme] = useState<"bright" | "classic" | "dark">("bright");
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- mount flag for hydration-safe rendering
-    setMounted(true);
-    try {
-      const stored = localStorage.getItem("loanloop.theme") as "bright" | "classic" | "dark" | null;
-      if (stored) {
-        setTheme(stored);
-        document.documentElement.setAttribute("data-theme", stored);
-      } else {
-        setTheme("bright");
-        document.documentElement.setAttribute("data-theme", "bright");
-      }
-    } catch {
-      /* ignore */
-    }
-  }, []);
-
-  const changeTheme = (newTheme: "bright" | "classic" | "dark") => {
-    setTheme(newTheme);
-    try {
-      localStorage.setItem("loanloop.theme", newTheme);
-      document.documentElement.setAttribute("data-theme", newTheme);
-    } catch {
-      /* ignore */
-    }
-  };
-
-  if (!mounted) {
-    return <div className="h-7 w-20 rounded-md bg-sunken animate-pulse" />;
-  }
-
-  return (
-    <div
-      className="inline-flex items-center p-0.5 rounded-lg bg-sunken border border-line text-[11px] font-mono shadow-xs"
-      role="group"
-      aria-label="Theme selector"
-    >
-      <button
-        type="button"
-        onClick={() => changeTheme("bright")}
-        className={`px-2 py-0.5 rounded transition-all flex items-center gap-1 cursor-pointer ${
-          theme === "bright"
-            ? "bg-card text-primary font-bold shadow-xs border border-line"
-            : "text-muted hover:text-fg"
-        }`}
-        title="Radiant Warm Ledger: Brighter, crisp porcelain & vivid emerald"
-        aria-label="Radiant bright theme"
-      >
-        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-        <span>Bright</span>
-      </button>
-      <button
-        type="button"
-        onClick={() => changeTheme("classic")}
-        className={`px-2 py-0.5 rounded transition-all flex items-center gap-1 cursor-pointer ${
-          theme === "classic"
-            ? "bg-card text-fg font-bold shadow-xs border border-line"
-            : "text-muted hover:text-fg"
-        }`}
-        title="Classic Warm Paper: Subdued original (§2.1)"
-        aria-label="Classic theme"
-      >
-        <span className="w-1.5 h-1.5 rounded-full bg-[#8A5A00]"></span>
-        <span className="hidden sm:inline">Classic</span>
-      </button>
-      <button
-        type="button"
-        onClick={() => changeTheme("dark")}
-        className={`px-2 py-0.5 rounded transition-all flex items-center gap-1 cursor-pointer ${
-          theme === "dark"
-            ? "bg-card text-primary font-bold shadow-xs border border-line"
-            : "text-muted hover:text-fg"
-        }`}
-        title="Control Room Dark: (§2.4)"
-        aria-label="Dark theme"
-      >
-        <span className="w-1.5 h-1.5 rounded-full bg-[#3FB98A]"></span>
-        <span className="hidden sm:inline">Dark</span>
-      </button>
-    </div>
   );
 }
 
@@ -386,48 +372,46 @@ export function AppHeader({
   const { isOpen, toggle } = useSidebar();
 
   return (
-    <header className="sticky top-0 z-30 h-14 bg-card/90 backdrop-blur-md border-b border-line px-4 sm:px-6 flex items-center justify-between gap-4 shadow-[0_1px_3px_rgba(31,42,36,0.03)]">
+    <header className="sticky top-0 z-30 h-12 bg-card/95 backdrop-blur-sm border-b border-line px-4 sm:px-6 flex items-center justify-between gap-4">
       <div className="flex items-center gap-3 min-w-0">
-        {/* Toggle button to show or hide the vertical navbar */}
         <button
           type="button"
           onClick={toggle}
-          className="p-2 rounded-lg border border-line bg-sunken hover:bg-card text-fg transition-colors flex items-center gap-1.5 text-xs font-medium shadow-xs cursor-pointer"
+          className="h-8 w-8 rounded-md border border-line bg-card hover:bg-sunken text-muted hover:text-fg transition-colors flex items-center justify-center cursor-pointer"
           title={isOpen ? "Hide navigation (Cmd+B)" : "Show navigation (Cmd+B)"}
           aria-label={isOpen ? "Hide navigation" : "Show navigation"}
+          aria-expanded={isOpen}
         >
           <svg
-            className="w-4 h-4 text-primary"
+            className="w-4 h-4"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            strokeWidth="1.75"
+            strokeWidth="1.65"
             strokeLinecap="round"
             strokeLinejoin="round"
           >
             <rect width="18" height="18" x="3" y="3" rx="2" />
             <path d="M9 3v18" />
-            {isOpen ? <path d="m16 15-3-3 3-3" /> : <path d="m14 9 3 3-3 3" />}
+            {isOpen ? <path d="m15 15-3-3 3-3" /> : <path d="m13 9 3 3-3 3" />}
           </svg>
-          <span className="hidden sm:inline font-mono text-[11px]">
-            {isOpen ? "Hide Nav" : "Show Nav"}
-          </span>
         </button>
 
         {title && (
           <div className="flex items-baseline gap-2 truncate">
-            <span className="serif text-lg font-semibold text-fg truncate">{title}</span>
-            {sub && <span className="hidden xl:inline text-xs text-muted truncate">· {sub}</span>}
+            <span className="text-sm font-semibold text-fg truncate">{title}</span>
+            {sub && <span className="hidden lg:inline text-xs text-muted truncate">· {sub}</span>}
           </div>
         )}
       </div>
 
-      <div className="flex items-center gap-3 shrink-0">
+      <div className="flex items-center gap-2 shrink-0">
         {status}
-        <ThemeSelector />
-        <div className="hidden lg:flex items-center px-2.5 py-1 rounded-md bg-sunken text-muted text-xs font-mono border border-line">
-          Demo · synthetic data
-        </div>
+        {!isOpen && (
+          <div className="hidden md:block">
+            <UserSettingsMenu align="down" />
+          </div>
+        )}
       </div>
     </header>
   );
@@ -448,7 +432,7 @@ export function SidebarLayout({
     <SidebarProvider>
       <div className="min-h-screen flex bg-bg">
         <SidebarNav />
-        <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">
+        <div className="flex-1 flex flex-col min-w-0">
           <AppHeader title={title} sub={sub} status={status} />
           <div className="flex-1">{children}</div>
         </div>
