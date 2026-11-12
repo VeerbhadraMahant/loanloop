@@ -11,7 +11,7 @@ const ROUTES = [
   { path: "/call/vikram", mustInclude: ["Live Calling Desk", "Vikram", "Zero Secrets Policy"] },
   { path: "/user/priya", mustInclude: ["User Console", "Sahyadri Voice Agent"] },
   { path: "/user/ramesh", mustInclude: ["User Console", "Ramesh"] },
-  { path: "/bank", mustInclude: ["Sahyadri Finance Bank"] },
+  { path: "/bank", mustInclude: ["Sahyadri Finance Bank", "Return to LoanLoop Desk"] },
   { path: "/phone/priya", mustInclude: ["Sahyadri Mobile"] },
   { path: "/collections", mustInclude: ["Collections"] },
   { path: "/ops", mustInclude: ["Live Operations"] },

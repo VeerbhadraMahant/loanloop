@@ -65,11 +65,20 @@ export function BankShell({ children }: { children: ReactNode }) {
     <div className="bank min-h-dvh" data-density={compact ? "compact" : "comfortable"}>
       <a href="#bank-main" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[60] focus:rounded-md focus:bg-bank-accent focus:px-3 focus:py-2 focus:text-bank-accent-fg">Skip to content</a>
 
-      <div className="sticky top-0 z-30 flex items-center gap-3 border-b border-bank-line bg-bank-surface px-4 py-2 lg:hidden">
-        <button type="button" onClick={() => setMenu(true)} aria-label="Open menu" aria-expanded={menu} className="grid h-9 w-9 cursor-pointer place-items-center rounded-md text-bank-fg hover:bg-bank-sunken">
-          <Icon d="M4 7h16M4 12h16M4 17h16" />
-        </button>
-        <span className="b-title text-base">Sahyadri Finance Bank</span>
+      <div className="sticky top-0 z-30 flex items-center justify-between gap-2 border-b border-bank-line bg-bank-surface px-4 py-2 lg:hidden">
+        <div className="flex items-center gap-2 min-w-0">
+          <button type="button" onClick={() => setMenu(true)} aria-label="Open menu" aria-expanded={menu} className="grid h-9 w-9 shrink-0 cursor-pointer place-items-center rounded-md text-bank-fg hover:bg-bank-sunken">
+            <Icon d="M4 7h16M4 12h16M4 17h16" />
+          </button>
+          <span className="b-title text-base truncate">Sahyadri Finance Bank</span>
+        </div>
+        <Link
+          href="/"
+          className="b-pressable inline-flex shrink-0 items-center gap-1 rounded-md bg-bank-accent px-2.5 py-1.5 text-xs font-semibold text-bank-accent-fg hover:opacity-90"
+        >
+          <Icon d="M15 18l-6-6 6-6" />
+          <span>LoanLoop Desk</span>
+        </Link>
       </div>
       {menu && <div className="b-scrim fixed inset-0 z-40 bg-[var(--b-scrim)] lg:hidden" onClick={() => setMenu(false)} aria-hidden />}
 
@@ -77,12 +86,15 @@ export function BankShell({ children }: { children: ReactNode }) {
         <aside
           className={`fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col border-r border-bank-line bg-bank-surface transition-[transform,visibility] duration-200 ease-out lg:sticky lg:top-0 lg:h-dvh lg:w-auto lg:translate-x-0 lg:visible ${menu ? "" : "max-lg:invisible max-lg:-translate-x-full"}`}
         >
-          <div className="border-b border-bank-line px-4 py-3">
-            <Link href="/" className="mb-2 inline-flex items-center gap-1.5 text-xs font-medium text-bank-muted hover:text-bank-fg">
+          <div className="border-b border-bank-line px-3.5 py-3">
+            <Link
+              href="/"
+              className="b-pressable mb-2.5 flex w-full items-center justify-center gap-1.5 rounded-md border border-bank-line-strong bg-bank-sunken px-3 py-1.5 text-xs font-semibold text-bank-fg hover:bg-bank-accent-soft hover:text-bank-accent-ink"
+            >
               <Icon d="M15 18l-6-6 6-6" />
-              <span>LoanLoop Desk</span>
+              <span>Return to LoanLoop Desk</span>
             </Link>
-            <p className="b-title text-base leading-5">Sahyadri Finance Bank</p>
+            <p className="b-title text-base leading-5 px-0.5">Sahyadri Finance Bank</p>
           </div>
           <nav aria-label="Bank sections" className="flex-1 space-y-0.5 p-2.5">
             {NAV.map((n) => (
@@ -107,9 +119,27 @@ export function BankShell({ children }: { children: ReactNode }) {
           </div>
         </aside>
 
-        <main id="bank-main" tabIndex={-1} className="mx-auto w-full min-w-0 max-w-[1280px] px-4 py-5 outline-none sm:px-6 lg:px-8">
-          {children}
-        </main>
+        <div className="min-w-0 flex flex-col">
+          {/* Persistent Return-to-LoanLoop Desk instruction & CTA bar */}
+          <div className="border-b border-bank-line bg-bank-accent-soft px-4 py-2 sm:px-6 lg:px-8">
+            <div className="mx-auto flex max-w-[1280px] flex-wrap items-center justify-between gap-2.5">
+              <p className="text-xs text-bank-accent-ink leading-snug">
+                <span className="font-semibold">Bank App Mode</span> — Want to return to the calling console, collections, or metrics?
+              </p>
+              <Link
+                href="/"
+                className="b-pressable inline-flex shrink-0 items-center gap-1.5 rounded-md bg-bank-accent px-3 py-1.5 text-xs font-semibold text-bank-accent-fg hover:opacity-90"
+              >
+                <Icon d="M15 18l-6-6 6-6" />
+                <span>Return to LoanLoop Desk</span>
+              </Link>
+            </div>
+          </div>
+
+          <main id="bank-main" tabIndex={-1} className="mx-auto w-full min-w-0 max-w-[1280px] px-4 py-5 outline-none sm:px-6 lg:px-8">
+            {children}
+          </main>
+        </div>
       </div>
     </div>
   );
