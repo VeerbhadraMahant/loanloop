@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEvents } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 
@@ -25,19 +25,10 @@ type Theme = (typeof THEMES)[number];
 
 export function BankShell({ children }: { children: ReactNode }) {
   const path = usePathname();
-  const router = useRouter();
   const live = useEvents(noop);
   const [menu, setMenu] = useState(false);
   const [theme, setTheme] = useState<Theme>("bright");
   const [compact, setCompact] = useState(true);
-
-  const goPrev = () => {
-    if (typeof window !== "undefined" && window.history.length > 1) {
-      router.back();
-    } else {
-      router.push(path === "/bank" ? "/" : "/bank");
-    }
-  };
 
   /* eslint-disable react-hooks/set-state-in-effect -- restore persisted prefs after mount */
   useEffect(() => {
@@ -123,18 +114,8 @@ export function BankShell({ children }: { children: ReactNode }) {
         </aside>
 
         <div className="min-w-0 flex flex-col">
-          {/* Active Navigation Buttons (styled explicitly as buttons, not a card/banner) */}
-          <div className="mx-auto flex w-full max-w-[1280px] flex-wrap items-center justify-between gap-2 px-4 pt-4 sm:px-6 lg:px-8">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={goPrev}
-              className="border-bank-line-strong bg-bank-surface text-bank-fg hover:bg-bank-sunken"
-            >
-              <Icon d="M15 18l-6-6 6-6" />
-              <span>Back to previous page</span>
-            </Button>
+          {/* Active Return CTA Button */}
+          <div className="mx-auto flex w-full max-w-[1280px] flex-wrap items-center justify-end gap-2 px-4 pt-4 sm:px-6 lg:px-8">
             <Button
               asChild
               variant="default"
