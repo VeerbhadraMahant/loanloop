@@ -11,8 +11,8 @@ const ROLES = [
 ];
 
 // Whole card is the hit area (stretched link), so it is one tab stop; press/hover use transform+colour only, off under reduced motion.
-const card = "group relative flex flex-col rounded-2xl border border-line bg-card p-6 shadow-sm transition-[transform,border-color] duration-150 ease-out hover:border-primary active:scale-[0.98] has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-primary motion-reduce:transition-none motion-reduce:active:scale-100";
-const cta = "mt-auto inline-flex h-11 items-center justify-center rounded-xl bg-primary text-sm font-semibold text-primary-fg outline-none after:absolute after:inset-0 after:rounded-2xl";
+const card = "relative flex flex-col rounded-2xl border border-line bg-card p-6 shadow-sm transition-[transform,border-color] duration-150 ease-out hover:border-primary active:scale-[0.98] has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-primary motion-reduce:transition-none motion-reduce:active:scale-100";
+const cta = "mt-auto inline-flex h-11 items-center justify-center rounded-xl bg-primary text-sm font-semibold text-primary-fg outline-none focus-visible:ring-2 focus-visible:ring-primary after:absolute after:inset-0 after:rounded-2xl";
 
 // Public page: static text and plain links only. proxy.ts redirects visitors who already have a session.
 export default function Home() {

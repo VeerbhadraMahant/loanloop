@@ -133,7 +133,7 @@ Outcomes on a gated page:
 
 Other web rules:
 - No link, button or redirect leads from a customer page to a staff page or the other way, and neither login page mentions the other.
-- `/` is a public landing page (no data, no API calls, no credentials shown) that links to both `/login` and `/staff/login`. The login pages link only back to `/`.
+- `/` is a public landing page (no data, no API calls, no credentials shown) that links to both `/login` and `/staff/login`. The login pages link only back to `/`. If the gateway is unreachable, `/` still shows the public landing (it never reveals session state).
 - Navigation shows only what the signed-in role can open, plus a sign-out control.
 - Customer pages read the customer from `GET /auth/me?door=customer` and call the gateway as `/gw/phone/me/...`. They must not
   call `/gw/events/stream` or `/gw/dashboard/*` (the phone screen keeps its existing 3 s polling).
