@@ -28,16 +28,16 @@
 {"id": "ho_upi_limits_28@bn", "text": "UPI তে একদিনে সর্বোচ্চ কত টাকা পাঠানো যায়?", "lang": "bn", "expect": "upi_limits"}
 {"id": "ho_statement_request_29@bn", "text": "তিন মাসের স্টেটমেন্ট লাগবে, কীভাবে পাব", "lang": "bn", "expect": "statement_request"}
 {"id": "ho_min_balance_30@bn", "text": "অ্যাকাউন্টে মিনিমাম ব্যালেন্স কত রাখতে হয়", "lang": "bn", "expect": "min_balance"}
-{"id": "ho_neg_1@bn", "text": "আমার অ্যাকাউন্টে এখন কত টাকা আছে বলুন", "lang": "bn", "expect": "none"}
-{"id": "ho_neg_2@bn", "text": "আমার ইএমআই কত টাকা করে কাটে", "lang": "bn", "expect": "none"}
-{"id": "ho_neg_3@bn", "text": "আমার লোনের কত বাকি আছে এখন", "lang": "bn", "expect": "none"}
-{"id": "ho_neg_4@bn", "text": "আমি শেষবার কবে পেমেন্ট করেছিলাম?", "lang": "bn", "expect": "none"}
-{"id": "ho_neg_5@bn", "text": "আমার ইএমআইয়ের তারিখটা মাসের ১০ তারিখ করে দিন", "lang": "bn", "expect": "none"}
-{"id": "ho_neg_6@bn", "text": "আমার ব্রাঞ্চের IFSC কোড কত", "lang": "bn", "expect": "none"}
-{"id": "ho_neg_7@bn", "text": "নমস্কার, কেমন আছেন আপনি?", "lang": "bn", "expect": "none"}
-{"id": "ho_neg_8@bn", "text": "আমি একজন মানুষের সাথে কথা বলতে চাই, কাউকে দিন", "lang": "bn", "expect": "none"}
-{"id": "ho_neg_9@bn", "text": "আজ কলকাতায় বৃষ্টি হবে কি?", "lang": "bn", "expect": "none"}
-{"id": "ho_neg_10@bn", "text": "আমার লোনের সুদের হার কত, আমার নামে যেটা চলছে", "lang": "bn", "expect": "none"}
+{"id": "neg_ho_1@bn", "text": "আমার অ্যাকাউন্টে এখন কত টাকা আছে বলুন", "lang": "bn", "expect": "none"}
+{"id": "neg_ho_2@bn", "text": "আমার ইএমআই কত টাকা করে কাটে", "lang": "bn", "expect": "none"}
+{"id": "neg_ho_3@bn", "text": "আমার লোনের কত বাকি আছে এখন", "lang": "bn", "expect": "none"}
+{"id": "neg_ho_4@bn", "text": "আমি শেষবার কবে পেমেন্ট করেছিলাম?", "lang": "bn", "expect": "none"}
+{"id": "neg_ho_5@bn", "text": "আমার ইএমআইয়ের তারিখটা মাসের ১০ তারিখ করে দিন", "lang": "bn", "expect": "none"}
+{"id": "neg_ho_6@bn", "text": "আমার ব্রাঞ্চের IFSC কোড কত", "lang": "bn", "expect": "none"}
+{"id": "neg_ho_7@bn", "text": "নমস্কার, কেমন আছেন আপনি?", "lang": "bn", "expect": "none"}
+{"id": "neg_ho_8@bn", "text": "আমি একজন মানুষের সাথে কথা বলতে চাই, কাউকে দিন", "lang": "bn", "expect": "none"}
+{"id": "neg_ho_9@bn", "text": "আজ কলকাতায় বৃষ্টি হবে কি?", "lang": "bn", "expect": "none"}
+{"id": "neg_ho_10@bn", "text": "আমার লোনের সুদের হার কত, আমার নামে যেটা চলছে", "lang": "bn", "expect": "none"}
 {"id": "ho_upi_pin_reset_1@gu", "text": "UPI પિન ભૂલી ગયો છું, નવો કેવી રીતે સેટ કરું?", "lang": "gu", "expect": "upi_pin_reset"}
 {"id": "ho_failed_atm_withdrawal_2@gu", "text": "ATM માંથી પૈસા ના નીકળ્યા પણ ખાતામાંથી કપાઈ ગયા, હવે શું કરવું", "lang": "gu", "expect": "failed_atm_withdrawal"}
 {"id": "ho_loan_prepayment_3@gu", "text": "લોન વહેલી ભરી દઉં તો કોઈ ચાર્જ લાગે?", "lang": "gu", "expect": "loan_prepayment"}
@@ -68,16 +68,16 @@
 {"id": "ho_upi_limits_28@gu", "text": "UPI થી એક દિવસમાં વધુમાં વધુ કેટલા મોકલાય?", "lang": "gu", "expect": "upi_limits"}
 {"id": "ho_statement_request_29@gu", "text": "ત્રણ મહિનાનું સ્ટેટમેન્ટ જોઈએ છે, કેવી રીતે મળશે", "lang": "gu", "expect": "statement_request"}
 {"id": "ho_min_balance_30@gu", "text": "ખાતામાં ઓછામાં ઓછું બેલેન્સ કેટલું રાખવું પડે", "lang": "gu", "expect": "min_balance"}
-{"id": "ho_neg_1@gu", "text": "મારા ખાતામાં અત્યારે કેટલા રૂપિયા છે?", "lang": "gu", "expect": "none"}
-{"id": "ho_neg_2@gu", "text": "મારી EMI કેટલાની કપાય છે", "lang": "gu", "expect": "none"}
-{"id": "ho_neg_3@gu", "text": "મારી લોનના કેટલા બાકી છે અત્યારે", "lang": "gu", "expect": "none"}
-{"id": "ho_neg_4@gu", "text": "છેલ્લું પેમેન્ટ મેં ક્યારે કર્યું હતું?", "lang": "gu", "expect": "none"}
-{"id": "ho_neg_5@gu", "text": "મારી EMI ની તારીખ મહિનાની ૧૦ કરી આપો", "lang": "gu", "expect": "none"}
-{"id": "ho_neg_6@gu", "text": "મારી બ્રાન્ચનો IFSC કોડ શું છે", "lang": "gu", "expect": "none"}
-{"id": "ho_neg_7@gu", "text": "નમસ્તે, કેમ છો તમે?", "lang": "gu", "expect": "none"}
-{"id": "ho_neg_8@gu", "text": "મારે કોઈ માણસ સાથે વાત કરવી છે, કોઈને આપો", "lang": "gu", "expect": "none"}
-{"id": "ho_neg_9@gu", "text": "આજે અમદાવાદમાં વરસાદ પડશે કે?", "lang": "gu", "expect": "none"}
-{"id": "ho_neg_10@gu", "text": "મારા નામે ચાલતી લોનનો વ્યાજ દર કેટલો છે", "lang": "gu", "expect": "none"}
+{"id": "neg_ho_1@gu", "text": "મારા ખાતામાં અત્યારે કેટલા રૂપિયા છે?", "lang": "gu", "expect": "none"}
+{"id": "neg_ho_2@gu", "text": "મારી EMI કેટલાની કપાય છે", "lang": "gu", "expect": "none"}
+{"id": "neg_ho_3@gu", "text": "મારી લોનના કેટલા બાકી છે અત્યારે", "lang": "gu", "expect": "none"}
+{"id": "neg_ho_4@gu", "text": "છેલ્લું પેમેન્ટ મેં ક્યારે કર્યું હતું?", "lang": "gu", "expect": "none"}
+{"id": "neg_ho_5@gu", "text": "મારી EMI ની તારીખ મહિનાની ૧૦ કરી આપો", "lang": "gu", "expect": "none"}
+{"id": "neg_ho_6@gu", "text": "મારી બ્રાન્ચનો IFSC કોડ શું છે", "lang": "gu", "expect": "none"}
+{"id": "neg_ho_7@gu", "text": "નમસ્તે, કેમ છો તમે?", "lang": "gu", "expect": "none"}
+{"id": "neg_ho_8@gu", "text": "મારે કોઈ માણસ સાથે વાત કરવી છે, કોઈને આપો", "lang": "gu", "expect": "none"}
+{"id": "neg_ho_9@gu", "text": "આજે અમદાવાદમાં વરસાદ પડશે કે?", "lang": "gu", "expect": "none"}
+{"id": "neg_ho_10@gu", "text": "મારા નામે ચાલતી લોનનો વ્યાજ દર કેટલો છે", "lang": "gu", "expect": "none"}
 {"id": "ho_upi_pin_reset_1@kn", "text": "UPI ಪಿನ್ ಮರೆತುಹೋಗಿದೆ, ಹೊಸದನ್ನು ಹೇಗೆ ಸೆಟ್ ಮಾಡಬೇಕು?", "lang": "kn", "expect": "upi_pin_reset"}
 {"id": "ho_failed_atm_withdrawal_2@kn", "text": "ATM ನಿಂದ ಹಣ ಬರಲಿಲ್ಲ ಆದರೆ ಖಾತೆಯಿಂದ ಕಡಿತ ಆಗಿದೆ, ಏನು ಮಾಡಲಿ", "lang": "kn", "expect": "failed_atm_withdrawal"}
 {"id": "ho_loan_prepayment_3@kn", "text": "ಸಾಲವನ್ನು ಬೇಗ ತೀರಿಸಿದರೆ ಏನಾದರೂ ಶುಲ್ಕ ಇದೆಯಾ?", "lang": "kn", "expect": "loan_prepayment"}
@@ -108,16 +108,16 @@
 {"id": "ho_upi_limits_28@kn", "text": "UPI ಮೂಲಕ ಒಂದು ದಿನಕ್ಕೆ ಗರಿಷ್ಠ ಎಷ್ಟು ಕಳಿಸಬಹುದು?", "lang": "kn", "expect": "upi_limits"}
 {"id": "ho_statement_request_29@kn", "text": "ಮೂರು ತಿಂಗಳ ಸ್ಟೇಟ್‌ಮೆಂಟ್ ಬೇಕು, ಹೇಗೆ ಸಿಗುತ್ತದೆ", "lang": "kn", "expect": "statement_request"}
 {"id": "ho_min_balance_30@kn", "text": "ಖಾತೆಯಲ್ಲಿ ಕನಿಷ್ಠ ಬ್ಯಾಲೆನ್ಸ್ ಎಷ್ಟು ಇಡಬೇಕು", "lang": "kn", "expect": "min_balance"}
-{"id": "ho_neg_1@kn", "text": "ನನ್ನ ಖಾತೆಯಲ್ಲಿ ಈಗ ಎಷ್ಟು ಹಣ ಇದೆ ಹೇಳಿ", "lang": "kn", "expect": "none"}
-{"id": "ho_neg_2@kn", "text": "ನನ್ನ EMI ಎಷ್ಟು ಕಡಿತ ಆಗುತ್ತೆ", "lang": "kn", "expect": "none"}
-{"id": "ho_neg_3@kn", "text": "ನನ್ನ ಸಾಲದಲ್ಲಿ ಇನ್ನೂ ಎಷ್ಟು ಬಾಕಿ ಇದೆ", "lang": "kn", "expect": "none"}
-{"id": "ho_neg_4@kn", "text": "ನಾನು ಕೊನೆಯ ಬಾರಿ ಯಾವಾಗ ಪಾವತಿ ಮಾಡಿದ್ದೆ?", "lang": "kn", "expect": "none"}
-{"id": "ho_neg_5@kn", "text": "ನನ್ನ EMI ದಿನಾಂಕವನ್ನು ತಿಂಗಳ 10ಕ್ಕೆ ಬದಲಾಯಿಸಿ", "lang": "kn", "expect": "none"}
-{"id": "ho_neg_6@kn", "text": "ನನ್ನ ಬ್ರಾಂಚ್‌ನ IFSC ಕೋಡ್ ಏನು", "lang": "kn", "expect": "none"}
-{"id": "ho_neg_7@kn", "text": "ನಮಸ್ಕಾರ, ಹೇಗಿದ್ದೀರಿ?", "lang": "kn", "expect": "none"}
-{"id": "ho_neg_8@kn", "text": "ನನಗೆ ಒಬ್ಬ ವ್ಯಕ್ತಿ ಜೊತೆ ಮಾತಾಡಬೇಕು, ಯಾರನ್ನಾದ್ರೂ ಕೊಡಿ", "lang": "kn", "expect": "none"}
-{"id": "ho_neg_9@kn", "text": "ಇವತ್ತು ಬೆಂಗಳೂರಲ್ಲಿ ಮಳೆ ಬರುತ್ತಾ?", "lang": "kn", "expect": "none"}
-{"id": "ho_neg_10@kn", "text": "ನನ್ನ ಹೆಸರಲ್ಲಿರುವ ಸಾಲದ ಬಡ್ಡಿ ದರ ಎಷ್ಟು", "lang": "kn", "expect": "none"}
+{"id": "neg_ho_1@kn", "text": "ನನ್ನ ಖಾತೆಯಲ್ಲಿ ಈಗ ಎಷ್ಟು ಹಣ ಇದೆ ಹೇಳಿ", "lang": "kn", "expect": "none"}
+{"id": "neg_ho_2@kn", "text": "ನನ್ನ EMI ಎಷ್ಟು ಕಡಿತ ಆಗುತ್ತೆ", "lang": "kn", "expect": "none"}
+{"id": "neg_ho_3@kn", "text": "ನನ್ನ ಸಾಲದಲ್ಲಿ ಇನ್ನೂ ಎಷ್ಟು ಬಾಕಿ ಇದೆ", "lang": "kn", "expect": "none"}
+{"id": "neg_ho_4@kn", "text": "ನಾನು ಕೊನೆಯ ಬಾರಿ ಯಾವಾಗ ಪಾವತಿ ಮಾಡಿದ್ದೆ?", "lang": "kn", "expect": "none"}
+{"id": "neg_ho_5@kn", "text": "ನನ್ನ EMI ದಿನಾಂಕವನ್ನು ತಿಂಗಳ 10ಕ್ಕೆ ಬದಲಾಯಿಸಿ", "lang": "kn", "expect": "none"}
+{"id": "neg_ho_6@kn", "text": "ನನ್ನ ಬ್ರಾಂಚ್‌ನ IFSC ಕೋಡ್ ಏನು", "lang": "kn", "expect": "none"}
+{"id": "neg_ho_7@kn", "text": "ನಮಸ್ಕಾರ, ಹೇಗಿದ್ದೀರಿ?", "lang": "kn", "expect": "none"}
+{"id": "neg_ho_8@kn", "text": "ನನಗೆ ಒಬ್ಬ ವ್ಯಕ್ತಿ ಜೊತೆ ಮಾತಾಡಬೇಕು, ಯಾರನ್ನಾದ್ರೂ ಕೊಡಿ", "lang": "kn", "expect": "none"}
+{"id": "neg_ho_9@kn", "text": "ಇವತ್ತು ಬೆಂಗಳೂರಲ್ಲಿ ಮಳೆ ಬರುತ್ತಾ?", "lang": "kn", "expect": "none"}
+{"id": "neg_ho_10@kn", "text": "ನನ್ನ ಹೆಸರಲ್ಲಿರುವ ಸಾಲದ ಬಡ್ಡಿ ದರ ಎಷ್ಟು", "lang": "kn", "expect": "none"}
 {"id": "ho_upi_pin_reset_1@ml", "text": "UPI പിൻ മറന്നുപോയി, പുതിയത് എങ്ങനെ സെറ്റ് ചെയ്യാം?", "lang": "ml", "expect": "upi_pin_reset"}
 {"id": "ho_failed_atm_withdrawal_2@ml", "text": "എടിഎമ്മിൽ നിന്ന് പണം വന്നില്ല പക്ഷേ അക്കൗണ്ടിൽ നിന്ന് പോയി, ഇനി എന്ത് ചെയ്യണം", "lang": "ml", "expect": "failed_atm_withdrawal"}
 {"id": "ho_loan_prepayment_3@ml", "text": "ലോൺ നേരത്തെ അടച്ചു തീർത്താൽ എന്തെങ്കിലും ചാർജ് ഉണ്ടോ?", "lang": "ml", "expect": "loan_prepayment"}
@@ -148,16 +148,16 @@
 {"id": "ho_upi_limits_28@ml", "text": "UPI വഴി ഒരു ദിവസം പരമാവധി എത്ര അയക്കാം?", "lang": "ml", "expect": "upi_limits"}
 {"id": "ho_statement_request_29@ml", "text": "മൂന്ന് മാസത്തെ സ്റ്റേറ്റ്‌മെന്റ് വേണം, എങ്ങനെ കിട്ടും", "lang": "ml", "expect": "statement_request"}
 {"id": "ho_min_balance_30@ml", "text": "അക്കൗണ്ടിൽ മിനിമം ബാലൻസ് എത്ര വേണം", "lang": "ml", "expect": "min_balance"}
-{"id": "ho_neg_1@ml", "text": "എന്റെ അക്കൗണ്ടിൽ ഇപ്പോൾ എത്ര രൂപയുണ്ട് പറയാമോ", "lang": "ml", "expect": "none"}
-{"id": "ho_neg_2@ml", "text": "എന്റെ EMI എത്ര രൂപയാണ് പിടിക്കുന്നത്", "lang": "ml", "expect": "none"}
-{"id": "ho_neg_3@ml", "text": "എന്റെ ലോണിൽ ഇനി എത്ര ബാക്കിയുണ്ട്", "lang": "ml", "expect": "none"}
-{"id": "ho_neg_4@ml", "text": "ഞാൻ അവസാനമായി എപ്പോഴാണ് പേയ്‌മെന്റ് ചെയ്തത്?", "lang": "ml", "expect": "none"}
-{"id": "ho_neg_5@ml", "text": "എന്റെ EMI തീയതി മാസത്തിലെ 10 ആക്കി മാറ്റൂ", "lang": "ml", "expect": "none"}
-{"id": "ho_neg_6@ml", "text": "എന്റെ ബ്രാഞ്ചിന്റെ IFSC കോഡ് എന്താണ്", "lang": "ml", "expect": "none"}
-{"id": "ho_neg_7@ml", "text": "നമസ്കാരം, സുഖമാണോ?", "lang": "ml", "expect": "none"}
-{"id": "ho_neg_8@ml", "text": "എനിക്ക് ഒരു മനുഷ്യനോട് സംസാരിക്കണം, ആരെയെങ്കിലും തരൂ", "lang": "ml", "expect": "none"}
-{"id": "ho_neg_9@ml", "text": "ഇന്ന് കൊച്ചിയിൽ മഴ പെയ്യുമോ?", "lang": "ml", "expect": "none"}
-{"id": "ho_neg_10@ml", "text": "എന്റെ പേരിലുള്ള ലോണിന്റെ പലിശ നിരക്ക് എത്രയാണ്", "lang": "ml", "expect": "none"}
+{"id": "neg_ho_1@ml", "text": "എന്റെ അക്കൗണ്ടിൽ ഇപ്പോൾ എത്ര രൂപയുണ്ട് പറയാമോ", "lang": "ml", "expect": "none"}
+{"id": "neg_ho_2@ml", "text": "എന്റെ EMI എത്ര രൂപയാണ് പിടിക്കുന്നത്", "lang": "ml", "expect": "none"}
+{"id": "neg_ho_3@ml", "text": "എന്റെ ലോണിൽ ഇനി എത്ര ബാക്കിയുണ്ട്", "lang": "ml", "expect": "none"}
+{"id": "neg_ho_4@ml", "text": "ഞാൻ അവസാനമായി എപ്പോഴാണ് പേയ്‌മെന്റ് ചെയ്തത്?", "lang": "ml", "expect": "none"}
+{"id": "neg_ho_5@ml", "text": "എന്റെ EMI തീയതി മാസത്തിലെ 10 ആക്കി മാറ്റൂ", "lang": "ml", "expect": "none"}
+{"id": "neg_ho_6@ml", "text": "എന്റെ ബ്രാഞ്ചിന്റെ IFSC കോഡ് എന്താണ്", "lang": "ml", "expect": "none"}
+{"id": "neg_ho_7@ml", "text": "നമസ്കാരം, സുഖമാണോ?", "lang": "ml", "expect": "none"}
+{"id": "neg_ho_8@ml", "text": "എനിക്ക് ഒരു മനുഷ്യനോട് സംസാരിക്കണം, ആരെയെങ്കിലും തരൂ", "lang": "ml", "expect": "none"}
+{"id": "neg_ho_9@ml", "text": "ഇന്ന് കൊച്ചിയിൽ മഴ പെയ്യുമോ?", "lang": "ml", "expect": "none"}
+{"id": "neg_ho_10@ml", "text": "എന്റെ പേരിലുള്ള ലോണിന്റെ പലിശ നിരക്ക് എത്രയാണ്", "lang": "ml", "expect": "none"}
 {"id": "ho_upi_pin_reset_1@pa", "text": "ਮੈਂ UPI ਪਿੰਨ ਭੁੱਲ ਗਿਆ, ਨਵਾਂ ਕਿਵੇਂ ਸੈੱਟ ਕਰਾਂ?", "lang": "pa", "expect": "upi_pin_reset"}
 {"id": "ho_failed_atm_withdrawal_2@pa", "text": "ਏਟੀਐਮ ਵਿੱਚੋਂ ਪੈਸੇ ਨਹੀਂ ਨਿਕਲੇ ਪਰ ਖਾਤੇ ਵਿੱਚੋਂ ਕੱਟ ਗਏ, ਹੁਣ ਕੀ ਕਰਾਂ", "lang": "pa", "expect": "failed_atm_withdrawal"}
 {"id": "ho_loan_prepayment_3@pa", "text": "ਲੋਨ ਜਲਦੀ ਭਰ ਦੇਵਾਂ ਤਾਂ ਕੋਈ ਚਾਰਜ ਲੱਗਦਾ ਹੈ?", "lang": "pa", "expect": "loan_prepayment"}
@@ -188,16 +188,16 @@
 {"id": "ho_upi_limits_28@pa", "text": "UPI ਨਾਲ ਇੱਕ ਦਿਨ ਵਿੱਚ ਵੱਧ ਤੋਂ ਵੱਧ ਕਿੰਨੇ ਭੇਜ ਸਕਦੇ ਹਾਂ?", "lang": "pa", "expect": "upi_limits"}
 {"id": "ho_statement_request_29@pa", "text": "ਤਿੰਨ ਮਹੀਨੇ ਦੀ ਸਟੇਟਮੈਂਟ ਚਾਹੀਦੀ ਹੈ, ਕਿਵੇਂ ਮਿਲੂ", "lang": "pa", "expect": "statement_request"}
 {"id": "ho_min_balance_30@pa", "text": "ਖਾਤੇ ਵਿੱਚ ਘੱਟੋ-ਘੱਟ ਬੈਲੇਂਸ ਕਿੰਨਾ ਰੱਖਣਾ ਪੈਂਦਾ ਹੈ", "lang": "pa", "expect": "min_balance"}
-{"id": "ho_neg_1@pa", "text": "ਮੇਰੇ ਖਾਤੇ ਵਿੱਚ ਹੁਣ ਕਿੰਨੇ ਪੈਸੇ ਨੇ ਦੱਸੋ", "lang": "pa", "expect": "none"}
-{"id": "ho_neg_2@pa", "text": "ਮੇਰੀ EMI ਕਿੰਨੀ ਕੱਟਦੀ ਹੈ", "lang": "pa", "expect": "none"}
-{"id": "ho_neg_3@pa", "text": "ਮੇਰੇ ਲੋਨ ਦਾ ਕਿੰਨਾ ਬਕਾਇਆ ਹੈ", "lang": "pa", "expect": "none"}
-{"id": "ho_neg_4@pa", "text": "ਮੈਂ ਪਿਛਲੀ ਵਾਰ ਕਦੋਂ ਭੁਗਤਾਨ ਕੀਤਾ ਸੀ?", "lang": "pa", "expect": "none"}
-{"id": "ho_neg_5@pa", "text": "ਮੇਰੀ EMI ਦੀ ਤਾਰੀਖ ਮਹੀਨੇ ਦੀ 10 ਕਰ ਦਿਓ", "lang": "pa", "expect": "none"}
-{"id": "ho_neg_6@pa", "text": "ਮੇਰੀ ਬ੍ਰਾਂਚ ਦਾ IFSC ਕੋਡ ਕੀ ਹੈ", "lang": "pa", "expect": "none"}
-{"id": "ho_neg_7@pa", "text": "ਸਤ ਸ੍ਰੀ ਅਕਾਲ, ਕੀ ਹਾਲ ਹੈ ਤੁਹਾਡਾ?", "lang": "pa", "expect": "none"}
-{"id": "ho_neg_8@pa", "text": "ਮੈਨੂੰ ਕਿਸੇ ਬੰਦੇ ਨਾਲ ਗੱਲ ਕਰਨੀ ਹੈ, ਕਿਸੇ ਨੂੰ ਦਿਓ", "lang": "pa", "expect": "none"}
-{"id": "ho_neg_9@pa", "text": "ਅੱਜ ਲੁਧਿਆਣੇ ਵਿੱਚ ਮੀਂਹ ਪਊ?", "lang": "pa", "expect": "none"}
-{"id": "ho_neg_10@pa", "text": "ਮੇਰੇ ਨਾਂ ਵਾਲੇ ਲੋਨ ਦੀ ਵਿਆਜ ਦਰ ਕਿੰਨੀ ਹੈ", "lang": "pa", "expect": "none"}
+{"id": "neg_ho_1@pa", "text": "ਮੇਰੇ ਖਾਤੇ ਵਿੱਚ ਹੁਣ ਕਿੰਨੇ ਪੈਸੇ ਨੇ ਦੱਸੋ", "lang": "pa", "expect": "none"}
+{"id": "neg_ho_2@pa", "text": "ਮੇਰੀ EMI ਕਿੰਨੀ ਕੱਟਦੀ ਹੈ", "lang": "pa", "expect": "none"}
+{"id": "neg_ho_3@pa", "text": "ਮੇਰੇ ਲੋਨ ਦਾ ਕਿੰਨਾ ਬਕਾਇਆ ਹੈ", "lang": "pa", "expect": "none"}
+{"id": "neg_ho_4@pa", "text": "ਮੈਂ ਪਿਛਲੀ ਵਾਰ ਕਦੋਂ ਭੁਗਤਾਨ ਕੀਤਾ ਸੀ?", "lang": "pa", "expect": "none"}
+{"id": "neg_ho_5@pa", "text": "ਮੇਰੀ EMI ਦੀ ਤਾਰੀਖ ਮਹੀਨੇ ਦੀ 10 ਕਰ ਦਿਓ", "lang": "pa", "expect": "none"}
+{"id": "neg_ho_6@pa", "text": "ਮੇਰੀ ਬ੍ਰਾਂਚ ਦਾ IFSC ਕੋਡ ਕੀ ਹੈ", "lang": "pa", "expect": "none"}
+{"id": "neg_ho_7@pa", "text": "ਸਤ ਸ੍ਰੀ ਅਕਾਲ, ਕੀ ਹਾਲ ਹੈ ਤੁਹਾਡਾ?", "lang": "pa", "expect": "none"}
+{"id": "neg_ho_8@pa", "text": "ਮੈਨੂੰ ਕਿਸੇ ਬੰਦੇ ਨਾਲ ਗੱਲ ਕਰਨੀ ਹੈ, ਕਿਸੇ ਨੂੰ ਦਿਓ", "lang": "pa", "expect": "none"}
+{"id": "neg_ho_9@pa", "text": "ਅੱਜ ਲੁਧਿਆਣੇ ਵਿੱਚ ਮੀਂਹ ਪਊ?", "lang": "pa", "expect": "none"}
+{"id": "neg_ho_10@pa", "text": "ਮੇਰੇ ਨਾਂ ਵਾਲੇ ਲੋਨ ਦੀ ਵਿਆਜ ਦਰ ਕਿੰਨੀ ਹੈ", "lang": "pa", "expect": "none"}
 {"id": "ho_upi_pin_reset_1@ta", "text": "UPI பின் மறந்துவிட்டேன், புதியதை எப்படி செட் செய்வது?", "lang": "ta", "expect": "upi_pin_reset"}
 {"id": "ho_failed_atm_withdrawal_2@ta", "text": "ATM-ல் பணம் வரவில்லை ஆனால் கணக்கில் இருந்து கழிந்துவிட்டது, என்ன செய்வது", "lang": "ta", "expect": "failed_atm_withdrawal"}
 {"id": "ho_loan_prepayment_3@ta", "text": "கடனை முன்கூட்டியே கட்டினால் ஏதாவது கட்டணம் உண்டா?", "lang": "ta", "expect": "loan_prepayment"}
@@ -228,16 +228,16 @@
 {"id": "ho_upi_limits_28@ta", "text": "UPI-ல் ஒரு நாளைக்கு அதிகபட்சம் எவ்வளவு அனுப்பலாம்?", "lang": "ta", "expect": "upi_limits"}
 {"id": "ho_statement_request_29@ta", "text": "மூன்று மாத ஸ்டேட்மெண்ட் வேணும், எப்படி கிடைக்கும்", "lang": "ta", "expect": "statement_request"}
 {"id": "ho_min_balance_30@ta", "text": "கணக்கில் குறைந்தபட்ச இருப்பு எவ்வளவு வைக்கணும்", "lang": "ta", "expect": "min_balance"}
-{"id": "ho_neg_1@ta", "text": "என் கணக்கில் இப்போ எவ்வளவு பணம் இருக்கு சொல்லுங்க", "lang": "ta", "expect": "none"}
-{"id": "ho_neg_2@ta", "text": "என் EMI எவ்வளவு பிடிக்கிறாங்க", "lang": "ta", "expect": "none"}
-{"id": "ho_neg_3@ta", "text": "என் கடனில் இன்னும் எவ்வளவு பாக்கி இருக்கு", "lang": "ta", "expect": "none"}
-{"id": "ho_neg_4@ta", "text": "நான் கடைசியா எப்போ பணம் கட்டினேன்?", "lang": "ta", "expect": "none"}
-{"id": "ho_neg_5@ta", "text": "என் EMI தேதியை மாதம் 10-ஆம் தேதிக்கு மாத்துங்க", "lang": "ta", "expect": "none"}
-{"id": "ho_neg_6@ta", "text": "என் கிளையோட IFSC கோடு என்ன", "lang": "ta", "expect": "none"}
-{"id": "ho_neg_7@ta", "text": "வணக்கம், எப்படி இருக்கீங்க?", "lang": "ta", "expect": "none"}
-{"id": "ho_neg_8@ta", "text": "எனக்கு ஒரு மனிதரிடம் பேசணும், யாரையாவது கொடுங்க", "lang": "ta", "expect": "none"}
-{"id": "ho_neg_9@ta", "text": "இன்னைக்கு சென்னையில மழை பெய்யுமா?", "lang": "ta", "expect": "none"}
-{"id": "ho_neg_10@ta", "text": "என் பெயரில் இருக்கிற கடனுக்கு வட்டி விகிதம் என்ன", "lang": "ta", "expect": "none"}
+{"id": "neg_ho_1@ta", "text": "என் கணக்கில் இப்போ எவ்வளவு பணம் இருக்கு சொல்லுங்க", "lang": "ta", "expect": "none"}
+{"id": "neg_ho_2@ta", "text": "என் EMI எவ்வளவு பிடிக்கிறாங்க", "lang": "ta", "expect": "none"}
+{"id": "neg_ho_3@ta", "text": "என் கடனில் இன்னும் எவ்வளவு பாக்கி இருக்கு", "lang": "ta", "expect": "none"}
+{"id": "neg_ho_4@ta", "text": "நான் கடைசியா எப்போ பணம் கட்டினேன்?", "lang": "ta", "expect": "none"}
+{"id": "neg_ho_5@ta", "text": "என் EMI தேதியை மாதம் 10-ஆம் தேதிக்கு மாத்துங்க", "lang": "ta", "expect": "none"}
+{"id": "neg_ho_6@ta", "text": "என் கிளையோட IFSC கோடு என்ன", "lang": "ta", "expect": "none"}
+{"id": "neg_ho_7@ta", "text": "வணக்கம், எப்படி இருக்கீங்க?", "lang": "ta", "expect": "none"}
+{"id": "neg_ho_8@ta", "text": "எனக்கு ஒரு மனிதரிடம் பேசணும், யாரையாவது கொடுங்க", "lang": "ta", "expect": "none"}
+{"id": "neg_ho_9@ta", "text": "இன்னைக்கு சென்னையில மழை பெய்யுமா?", "lang": "ta", "expect": "none"}
+{"id": "neg_ho_10@ta", "text": "என் பெயரில் இருக்கிற கடனுக்கு வட்டி விகிதம் என்ன", "lang": "ta", "expect": "none"}
 {"id": "ho_upi_pin_reset_1@te", "text": "UPI పిన్ మర్చిపోయాను, కొత్తది ఎలా సెట్ చేయాలి?", "lang": "te", "expect": "upi_pin_reset"}
 {"id": "ho_failed_atm_withdrawal_2@te", "text": "ATM నుంచి డబ్బులు రాలేదు కానీ ఖాతాలో కట్ అయ్యాయి, ఇప్పుడు ఏం చేయాలి", "lang": "te", "expect": "failed_atm_withdrawal"}
 {"id": "ho_loan_prepayment_3@te", "text": "లోన్ ముందే కట్టేస్తే ఏమైనా ఛార్జీలు ఉంటాయా?", "lang": "te", "expect": "loan_prepayment"}
@@ -268,13 +268,13 @@
 {"id": "ho_upi_limits_28@te", "text": "UPI ద్వారా రోజుకి గరిష్ఠంగా ఎంత పంపవచ్చు?", "lang": "te", "expect": "upi_limits"}
 {"id": "ho_statement_request_29@te", "text": "మూడు నెలల స్టేట్‌మెంట్ కావాలి, ఎలా దొరుకుతుంది", "lang": "te", "expect": "statement_request"}
 {"id": "ho_min_balance_30@te", "text": "ఖాతాలో కనీస బ్యాలెన్స్ ఎంత ఉంచాలి", "lang": "te", "expect": "min_balance"}
-{"id": "ho_neg_1@te", "text": "నా ఖాతాలో ఇప్పుడు ఎంత డబ్బు ఉంది చెప్పండి", "lang": "te", "expect": "none"}
-{"id": "ho_neg_2@te", "text": "నా EMI ఎంత కట్ అవుతుంది", "lang": "te", "expect": "none"}
-{"id": "ho_neg_3@te", "text": "నా లోన్‌లో ఇంకా ఎంత బాకీ ఉంది", "lang": "te", "expect": "none"}
-{"id": "ho_neg_4@te", "text": "నేను చివరిసారి ఎప్పుడు చెల్లించాను?", "lang": "te", "expect": "none"}
-{"id": "ho_neg_5@te", "text": "నా EMI తేదీని నెలలో 10కి మార్చండి", "lang": "te", "expect": "none"}
-{"id": "ho_neg_6@te", "text": "నా బ్రాంచ్ IFSC కోడ్ ఏమిటి", "lang": "te", "expect": "none"}
-{"id": "ho_neg_7@te", "text": "నమస్కారం, ఎలా ఉన్నారు?", "lang": "te", "expect": "none"}
-{"id": "ho_neg_8@te", "text": "నాకు ఒక మనిషితో మాట్లాడాలి, ఎవరినైనా ఇవ్వండి", "lang": "te", "expect": "none"}
-{"id": "ho_neg_9@te", "text": "ఈరోజు హైదరాబాద్‌లో వర్షం పడుతుందా?", "lang": "te", "expect": "none"}
-{"id": "ho_neg_10@te", "text": "నా పేరు మీద ఉన్న లోన్ వడ్డీ రేటు ఎంత", "lang": "te", "expect": "none"}
+{"id": "neg_ho_1@te", "text": "నా ఖాతాలో ఇప్పుడు ఎంత డబ్బు ఉంది చెప్పండి", "lang": "te", "expect": "none"}
+{"id": "neg_ho_2@te", "text": "నా EMI ఎంత కట్ అవుతుంది", "lang": "te", "expect": "none"}
+{"id": "neg_ho_3@te", "text": "నా లోన్‌లో ఇంకా ఎంత బాకీ ఉంది", "lang": "te", "expect": "none"}
+{"id": "neg_ho_4@te", "text": "నేను చివరిసారి ఎప్పుడు చెల్లించాను?", "lang": "te", "expect": "none"}
+{"id": "neg_ho_5@te", "text": "నా EMI తేదీని నెలలో 10కి మార్చండి", "lang": "te", "expect": "none"}
+{"id": "neg_ho_6@te", "text": "నా బ్రాంచ్ IFSC కోడ్ ఏమిటి", "lang": "te", "expect": "none"}
+{"id": "neg_ho_7@te", "text": "నమస్కారం, ఎలా ఉన్నారు?", "lang": "te", "expect": "none"}
+{"id": "neg_ho_8@te", "text": "నాకు ఒక మనిషితో మాట్లాడాలి, ఎవరినైనా ఇవ్వండి", "lang": "te", "expect": "none"}
+{"id": "neg_ho_9@te", "text": "ఈరోజు హైదరాబాద్‌లో వర్షం పడుతుందా?", "lang": "te", "expect": "none"}
+{"id": "neg_ho_10@te", "text": "నా పేరు మీద ఉన్న లోన్ వడ్డీ రేటు ఎంత", "lang": "te", "expect": "none"}
