@@ -16,18 +16,26 @@ export default function UserInboxPage() {
   const [approvals, setApprovals] = useState<Approval[]>([]);
   const [smsList, setSmsList] = useState<Sms[]>([]);
   const [loading, setLoading] = useState(true);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | number | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const customerRef = user?.customer_ref ?? "priya";
 
   const loadData = useCallback(async () => {
-    const [apprRes, smsRes] = await Promise.all([
-      fetchUserApprovals(customerRef),
-      fetchUserSms(customerRef),
-    ]);
-    setApprovals(apprRes);
-    setSmsList(smsRes);
-    setLoading(false);
+    try {
+      const [apprRes, smsRes] = await Promise.all([
+        fetchUserApprovals(customerRef),
+        fetchUserSms(customerRef),
+      ]);
+      setApprovals(Array.isArray(apprRes) ? apprRes : []);
+      setSmsList(Array.isArray(smsRes) ? smsRes : []);
+      setLoadError(null);
+    } catch (err) {
+      console.warn("loadData error:", err);
+      setLoadError(err instanceof Error ? err.message : "Failed to load requests");
+    } finally {
+      setLoading(false);
+    }
   }, [customerRef]);
 
   useEffect(() => {
@@ -42,10 +50,10 @@ export default function UserInboxPage() {
     }
   });
 
-  const pendingApprovals = approvals.filter((a) => a.status === "pending");
-  const pastApprovals = approvals.filter((a) => a.status !== "pending");
+  const pendingApprovals = (Array.isArray(approvals) ? approvals : []).filter((a) => a && a.status === "pending");
+  const pastApprovals = (Array.isArray(approvals) ? approvals : []).filter((a) => a && a.status !== "pending");
 
-  const copySms = (text: string, id: string) => {
+  const copySms = (text: string, id: string | number) => {
     navigator.clipboard?.writeText(text);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
@@ -54,6 +62,19 @@ export default function UserInboxPage() {
   return (
     <UserShell activeTab="inbox" title={t.inbox.title}>
       <div className="space-y-6">
+        {loadError && (
+          <div className="p-3 rounded-xl bg-danger-bg text-danger-fg text-xs border border-danger-line flex items-center justify-between">
+            <span>{loadError}</span>
+            <button
+              type="button"
+              onClick={loadData}
+              className="text-[11px] font-bold underline ml-2 cursor-pointer"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
         {/* Approvals Section */}
         <div>
           <div className="flex items-center justify-between mb-3 px-1">
@@ -140,7 +161,9 @@ export default function UserInboxPage() {
                 >
                   <div className="flex items-center justify-between text-[10px] font-mono text-muted mb-1.5">
                     <span className="font-bold text-fg">VK-SAHYADRI</span>
-                    <span>{new Date(sms.created_at).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}</span>
+                    <span suppressHydrationWarning>
+                      {sms.created_at ? new Date(sms.created_at).toLocaleString([], { dateStyle: "short", timeStyle: "short" }) : ""}
+                    </span>
                   </div>
 
                   <p className="text-xs text-fg leading-relaxed font-sans select-text">
@@ -151,7 +174,7 @@ export default function UserInboxPage() {
                     <button
                       type="button"
                       onClick={() => copySms(sms.body, sms.id)}
-                      className="text-[10px] font-semibold text-primary hover:underline inline-flex items-center gap-1"
+                      className="text-[10px] font-semibold text-primary hover:underline inline-flex items-center gap-1 cursor-pointer"
                     >
                       {copiedId === sms.id ? (
                         <>

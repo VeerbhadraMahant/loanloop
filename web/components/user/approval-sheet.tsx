@@ -65,9 +65,13 @@ export function ApprovalCard({ approval, customerRef, onResolved }: ApprovalCard
       </p>
 
       <div className="text-[11px] font-mono text-muted mb-4 flex items-center gap-2">
-        <span>ID: {approval.id.slice(0, 8)}...</span>
+        <span>ID: #{String(approval.id)}</span>
         <span>·</span>
-        <span>{new Date(approval.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+        <span suppressHydrationWarning>
+          {approval.created_at
+            ? new Date(approval.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+            : "Recent"}
+        </span>
       </div>
 
       {error && (
@@ -82,7 +86,7 @@ export function ApprovalCard({ approval, customerRef, onResolved }: ApprovalCard
             type="button"
             disabled={busy}
             onClick={() => handleDecision("approve")}
-            className="flex-1 py-2.5 px-4 rounded-xl font-bold text-xs bg-ok-fg text-white hover:bg-ok-fg/90 active:scale-95 transition-all shadow-sm flex items-center justify-center gap-1.5 disabled:opacity-50"
+            className="flex-1 py-2.5 px-4 rounded-xl font-bold text-xs bg-ok-fg text-white hover:bg-ok-fg/90 active:scale-95 transition-all shadow-sm flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -94,7 +98,7 @@ export function ApprovalCard({ approval, customerRef, onResolved }: ApprovalCard
             type="button"
             disabled={busy}
             onClick={() => handleDecision("deny")}
-            className="py-2.5 px-4 rounded-xl font-bold text-xs bg-surface-container hover:bg-danger-bg hover:text-danger-fg text-fg border border-line active:scale-95 transition-all disabled:opacity-50"
+            className="py-2.5 px-4 rounded-xl font-bold text-xs bg-surface-container hover:bg-danger-bg hover:text-danger-fg text-fg border border-line active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
           >
             {t.inbox.decline}
           </button>
@@ -107,4 +111,3 @@ export function ApprovalCard({ approval, customerRef, onResolved }: ApprovalCard
     </div>
   );
 }
-

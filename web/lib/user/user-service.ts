@@ -35,11 +35,11 @@ export async function fetchUserApprovals(customerRef: string): Promise<Approval[
 
 export async function respondToApproval(
   customerRef: string,
-  approvalId: string,
+  approvalId: string | number,
   decision: "approve" | "deny"
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await post(`/phone/${encodeURIComponent(customerRef)}/approvals/${encodeURIComponent(approvalId)}/${decision}`);
+    await post(`/phone/${encodeURIComponent(customerRef)}/approvals/${encodeURIComponent(String(approvalId))}/${decision}`);
     return { success: true };
   } catch (err) {
     return {

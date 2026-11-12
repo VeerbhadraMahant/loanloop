@@ -18,11 +18,15 @@ export function BottomNav({ activeTab = "home" }: BottomNavProps) {
   useEffect(() => {
     if (!user) return;
     let active = true;
-    fetchUserApprovals(user.customer_ref).then((res) => {
-      if (!active) return;
-      const count = res.filter((a) => a.status === "pending").length;
-      setPendingCount(count);
-    });
+    fetchUserApprovals(user.customer_ref)
+      .then((res) => {
+        if (!active) return;
+        const count = Array.isArray(res) ? res.filter((a) => a && a.status === "pending").length : 0;
+        setPendingCount(count);
+      })
+      .catch(() => {
+        if (active) setPendingCount(0);
+      });
     return () => {
       active = false;
     };
