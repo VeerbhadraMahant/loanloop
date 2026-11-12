@@ -35,3 +35,13 @@ Security wording (never asks OTP/PIN/password/CVV, SMS to registered number only
 - Case endings after placeholders ("{loan} ന്റെ", "{date} ന് ") are written with a space; real values may need different suffixes.
 - 33 FAQ intents have no Malayalam entry (checker warns; callers get the English answer). Not translated in this pass.
 - Romanised word-list forms are guesses at caller typing or STT transliteration; verify against real STT output.
+
+## FAQ additions (machine translation)
+
+33 intents added to `i18n/ml.json` (beta, no native review yet): account_frozen, account_number_ifsc, bank_charges, bank_wrong_transfer, banking_password_reset, branch_locator, car_loan, cash_without_card, dbt_subsidy, debit_card_activate, education_loan, emi_date_tenure_change, fd_maturity, gold_loan, identity_theft_loan, insurance_products, international_transfer, internet_banking_register, investments_demat_mf, joint_account, kyc_basics, loan_status_disbursement, minor_account, mobile_banking_new_phone, other_bank_atm, otp_not_received, pan_aadhaar_link, pension_credit, savings_interest, shared_otp_or_link, standing_instruction, update_personal_details, upi_features.
+
+Doubts for a native speaker:
+- Security intents (shared_otp_or_link, identity_theft_loan, banking_password_reset, otp_not_received, bank_wrong_transfer, account_frozen): confirm wording keeps "bank never asks OTP/PIN/password", no promised refund, and the cyber crime helpline 1930 read digit by digit.
+- Spoken numbers (eleven, five years, three working days, eighteen, star ninety nine hash) are written in words; check they sound natural for TTS.
+- Loan-word spellings (ഇഎംഐ, എഫ്ഡി, ഐഎഫ്എസ്‌സി, ഡിമാറ്റ്, എസ്ഐപി) and the joint-account operating modes (either or survivor etc.) may need local banking phrasing.
+- Keywords were collision-checked against all other intents; "kyc process" and "അക്കൗണ്ട് പലിശ നിരക്ക്" were chosen to avoid overlap with open_account.

@@ -48,3 +48,14 @@ Secrets/security lines were checked back against the English and are intact: OTP
 - `words.verify` includes filler words (is, of, the, and, నా, ఉంది) copied from the source pattern; they match the other languages but are broad.
 - Single-letter question word "ఏ" is kept for the logic; a native check on false positives is worthwhile.
 - The Telugu speech-to-text output spelling (e.g. అవును vs ఔను, -రు vs -ర్ endings for months) may differ from the variants listed.
+
+## FAQ additions (machine translation)
+
+Added 33 FAQ intents to `i18n/te.json` (machine translation, no native review): account_frozen, account_number_ifsc, bank_charges, bank_wrong_transfer, banking_password_reset, branch_locator, car_loan, cash_without_card, dbt_subsidy, debit_card_activate, education_loan, emi_date_tenure_change, fd_maturity, gold_loan, identity_theft_loan, insurance_products, international_transfer, internet_banking_register, investments_demat_mf, joint_account, kyc_basics, loan_status_disbursement, minor_account, mobile_banking_new_phone, other_bank_atm, otp_not_received, pan_aadhaar_link, pension_credit, savings_interest, shared_otp_or_link, standing_instruction, update_personal_details, upi_features.
+
+Doubts for a native speaker:
+- Loan words kept in Telugu script (ఓటిపి, ఎంపిన్, కెవైసి, ఎఫ్‌డి, ఎస్ఐపి, ఐఎఫ్ఎస్‌సి, జీఎస్‌టి); check the spellings callers actually say.
+- Register of the "చెప్పకండి" prohibitions in security answers (otp_not_received, shared_otp_or_link, banking_password_reset): confirm they sound firm but polite.
+- Colloquial keywords such as "ఓటిపి రావడం లేదు", "చెప్పేశాను", "ఖాతా స్తంభించింది" are guesses at spoken phrasing.
+- "జాయింట్లీ", "ఎదర్ ఆర్ సర్వైవర్" in the joint_account SMS are transliterated English terms; a Telugu banking equivalent may be preferred.
+- The helpline "1930" is kept as digits, as in the existing fraud_report answer.

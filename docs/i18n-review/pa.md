@@ -31,3 +31,14 @@ Security meaning (bank never asks OTP/PIN/password/CVV, SMS-only details, secret
 - Whether "ਬੈਲੇਂਸ" vs "ਬਕਾਇਆ" is preferred for savings balance, and "ਹਰਜਾਨਾ" for compensation.
 - Gurmukhi and romanised month/weekday spellings are guesses of what Gnani STT emits.
 - App menu paths in SMS texts are kept as in English and unverified against the real app.
+
+## FAQ additions (machine translation)
+
+Added 33 intents (machine-written, no native review): internet_banking_register, banking_password_reset, otp_not_received, mobile_banking_new_phone, account_frozen, joint_account, minor_account, account_number_ifsc, bank_wrong_transfer, standing_instruction, fd_maturity, car_loan, education_loan, gold_loan, emi_date_tenure_change, loan_status_disbursement, international_transfer, bank_charges, savings_interest, dbt_subsidy, pension_credit, insurance_products, investments_demat_mf, kyc_basics, pan_aadhaar_link, update_personal_details, identity_theft_loan, shared_otp_or_link, branch_locator, cash_without_card, other_bank_atm, debit_card_activate, upi_features.
+
+Doubts for a native speaker:
+- Spoken numbers: helpline "one nine three zero" is written as ਇੱਕ ਨੌਂ ਤਿੰਨ ਜ਼ੀਰੋ and "star ninety nine hash" as ਸਟਾਰ ਨੜਿੰਨਵੇਂ ਹੈਸ਼; check TTS pronunciation.
+- Loan-word choices (ਕਸਟਮਰ ਕੇਅਰ, ਐਮਪਿਨ, ਸ਼ੈਡਿਊਲ, ਡੀਮੈਟ, ਲਾਕ-ਇਨ) versus pure Punjabi terms.
+- Terms: ਮੁੜ ਅਦਾਇਗੀ (repayment), ਜ਼ਮਾਨਤ (collateral), ਰਿਣਦਾਤਾ (lender), ਦੇਣਦਾਰੀ (liability), ਗਿਰਵੀ (pledge).
+- Answers are long for phone use (kyc_basics, debit_card_activate, fd_maturity); consider trimming.
+- Three keywords dropped for collisions with existing intents.

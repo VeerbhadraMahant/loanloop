@@ -45,3 +45,14 @@ Checked and fine: months (12 correct), weekdays (Monday=0 ... Sunday=6 per `voic
 6. The app button label "Approve" is rendered "ಅನುಮೋದಿಸಿ"; it must match the mock app's button text.
 7. Word lists: "ಹಾ" (also an interjection), "ಅಲ್ಲ" in negate/neg_human, "ಆಗಿದೆ"/"ಮಾಡಿದೆ" in approval, "ಎಲ್ಲಾ"/"ಕೂಡ" are broad. Tokens are matched exactly, so inflected forms (agglutination) of human_target, acct_nouns and action verbs are only partly covered.
 8. A caller cannot name another language in Kannada script ("ಹಿಂದಿಯಲ್ಲಿ ಮಾತನಾಡಿ"): the file format has no list for that.
+
+## FAQ additions (machine translation)
+
+Added 33 intents to `i18n/kn.json` (machine translated, not native reviewed): account_frozen, account_number_ifsc, bank_charges, bank_wrong_transfer, banking_password_reset, branch_locator, car_loan, cash_without_card, dbt_subsidy, debit_card_activate, education_loan, emi_date_tenure_change, fd_maturity, gold_loan, identity_theft_loan, insurance_products, international_transfer, internet_banking_register, investments_demat_mf, joint_account, kyc_basics, loan_status_disbursement, minor_account, mobile_banking_new_phone, other_bank_atm, otp_not_received, pan_aadhaar_link, pension_credit, savings_interest, shared_otp_or_link, standing_instruction, update_personal_details, upi_features.
+
+Doubts for a native speaker:
+- Security answers (shared_otp_or_link, identity_theft_loan, banking_password_reset, otp_not_received, bank_wrong_transfer, account_frozen): check the wording is natural and the meaning stays exact (never share OTP/PIN/password, report via customer care and helpline 1930, no promises).
+- Spoken numbers: 1930 as "ಒಂದು ಒಂಬತ್ತು ಮೂರು ಸೊನ್ನೆ", *99# as "ಸ್ಟಾರ್ ತೊಂಬತ್ತೊಂಬತ್ತು ಹ್ಯಾಶ್"; confirm TTS reads them well.
+- Keywords avoid ZWNJ, so conjuncts like ಎಫ್ಡಿ, ಐಎಫ್ಎಸ್ಸಿ, ಎಸ್ಐಪಿ may differ from existing keywords that use ZWNJ; check STT spellings match.
+- Terms to confirm: "ಸ್ಥಿರ ಸೂಚನೆ" (standing instruction), "ಜೀವನ ಪ್ರಮಾಣ" (life certificate), "ಬಾಕಿ ಇಲ್ಲ ಪ್ರಮಾಣಪತ್ರ" (no dues certificate), "ಸೀಡಿಂಗ್" (Aadhaar seeding).
+- 8 keywords were dropped for collisions with other intents (e.g. "ಎಂಪಿನ್ ಮರೆತೆ", "ಉಳಿತಾಯ ಖಾತೆ ಬಡ್ಡಿ", "upi id", "pan link account").
