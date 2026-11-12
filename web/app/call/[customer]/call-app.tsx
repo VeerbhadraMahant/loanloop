@@ -147,13 +147,28 @@ const PERSONAS: Record<
   },
 };
 
+const SCENARIO_TABS = [
+  { key: "priya", name: "Priya", role: "Home Loan" },
+  { key: "ramesh", name: "Ramesh", role: "Collections" },
+  { key: "sunita", name: "Sunita", role: "Hardship" },
+  { key: "vikram", name: "Vikram", role: "Adversary" },
+] as const;
+
 // The adversary spoofs Priya's number, so the sidecar shows the phone the bank would actually message.
 const phoneOf = (c: string) => (c === "vikram" ? "priya" : c);
 
 // Module-level so the react-hooks purity rule does not flag it; only called from event handlers.
 const now = () => performance.now();
 
-export default function CallApp({ customer, caseId }: { customer: string; caseId?: number }) {
+export default function CallApp({
+  customer,
+  caseId,
+  mode = "desk",
+}: {
+  customer: string;
+  caseId?: number;
+  mode?: "desk" | "user";
+}) {
   const normKey = customer.toLowerCase().trim();
   const persona = PERSONAS[normKey] ?? {
     name: customer,
@@ -182,7 +197,6 @@ export default function CallApp({ customer, caseId }: { customer: string; caseId
   const [turns, setTurns] = useState<Turn[]>([]);
   const [devMode, setDevMode] = useState(false);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
-  const [viewMode, setViewMode] = useState<"desk" | "simulation">("desk");
   const [callDuration, setCallDuration] = useState(0);
 
   const turnN = useRef(0);
@@ -538,6 +552,105 @@ export default function CallApp({ customer, caseId }: { customer: string; caseId
   const lastTiming = turns[turns.length - 1]?.timings;
   const totalMs = lastTiming ? Math.round(lastTiming.llm_ms + (lastTiming.tts_ms ?? 0) + (lastTiming.gateway_ms ?? 0) + (lastTiming.stt_ms ?? 0)) : null;
 
+  const simulationProps = {
+    inCall,
+    status,
+    ended,
+    busy,
+    listening,
+    msgs,
+    callDuration,
+    talkProps,
+    start,
+    end,
+    sendTextVal,
+    quickPrompts: persona.quickPrompts,
+    personaName: persona.name,
+    personaPhone: persona.phone,
+    personaLoan: persona.loan,
+    text,
+    setText,
+    sendText,
+  };
+
+  if (mode === "user") {
+    return (
+      <SidebarLayout
+        title="User Console"
+        sub={`${persona.name} · Customer Phone`}
+        status={
+          <div className="flex items-center gap-2">
+            <Pill tone={statusTone[status]}>
+              <span role="status" aria-live="polite">{status}</span>
+            </Pill>
+            {lang && <Pill>{langLabel(lang)}</Pill>}
+          </div>
+        }
+      >
+        <main className="w-full max-w-[960px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col items-center gap-3.5">
+          {/* Compact Customer Persona Selector & Audio Toggle */}
+          <div className="w-full max-w-[400px] flex items-center justify-between gap-2">
+            <div className="inline-flex items-center p-1 rounded-xl bg-sunken gap-1 border border-line" aria-label="Select customer phone">
+              {SCENARIO_TABS.map(({ key, name }) => {
+                const active = normKey === key;
+                return (
+                  <Link
+                    key={key}
+                    href={`/user/${key}`}
+                    className={`px-2.5 py-1 rounded-lg text-xs transition-all cursor-pointer ${
+                      active
+                        ? "bg-primary text-primary-fg font-semibold shadow-xs"
+                        : "text-muted hover:text-fg hover:bg-card/70 font-medium"
+                    }`}
+                  >
+                    {name}
+                  </Link>
+                );
+              })}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => toggleVoice(!voiceReplies)}
+              className={`px-2.5 py-1.5 rounded-xl text-xs font-medium transition-colors border inline-flex items-center gap-1.5 cursor-pointer shrink-0 ${
+                voiceReplies
+                  ? "bg-secondary-container text-primary border-primary/20"
+                  : "bg-card text-muted border-line hover:text-fg"
+              }`}
+              title={voiceReplies ? "Voice replies ON (Edge TTS)" : "Voice replies OFF"}
+            >
+              <Icon name="mic" size={13} />
+              <span>{voiceReplies ? "Audio On" : "Audio Off"}</span>
+            </button>
+          </div>
+
+          {error && (
+            <div
+              role="alert"
+              className="w-full max-w-[400px] rounded-xl border border-danger-line bg-danger-bg px-3.5 py-2 text-xs text-danger-fg flex items-center justify-between gap-2"
+            >
+              <span>{error}</span>
+              <button
+                type="button"
+                onClick={() => setError(null)}
+                className="p-0.5 hover:opacity-75 cursor-pointer"
+                aria-label="Dismiss error"
+              >
+                <Icon name="x" size={13} />
+              </button>
+            </div>
+          )}
+
+          <PhoneHandset
+            customer={phoneOf(customer)}
+            noData={!!caseId}
+            simulationProps={simulationProps}
+          />
+        </main>
+      </SidebarLayout>
+    );
+  }
+
   return (
     <SidebarLayout
       title="Live Calling Desk"
@@ -561,12 +674,7 @@ export default function CallApp({ customer, caseId }: { customer: string; caseId
                 Scenario:
               </span>
               <div className="inline-flex items-center p-1 rounded-xl bg-sunken gap-1" id="scenario-switcher">
-                {[
-                  { key: "priya", name: "Priya", role: "Home Loan" },
-                  { key: "ramesh", name: "Ramesh", role: "Collections" },
-                  { key: "sunita", name: "Sunita", role: "Hardship" },
-                  { key: "vikram", name: "Vikram", role: "Adversary" },
-                ].map(({ key, name, role }) => {
+                {SCENARIO_TABS.map(({ key, name, role }) => {
                   const active = normKey === key;
                   return (
                     <Link
@@ -599,33 +707,18 @@ export default function CallApp({ customer, caseId }: { customer: string; caseId
 
             {/* Mode Switcher, Telemetry, and High-Visibility Primary CTA */}
             <div className="flex flex-wrap items-center gap-2.5">
-              {/* Standalone Call Simulation Button (Out of container & distinctly highlighted) */}
-              <button
-                type="button"
-                onClick={() => setViewMode(viewMode === "simulation" ? "desk" : "simulation")}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border shadow-xs ${
-                  viewMode === "simulation"
-                    ? "bg-primary text-primary-fg border-primary shadow-md ring-2 ring-primary/30"
-                    : "bg-secondary-container hover:bg-accent-soft text-primary border-primary/30 hover:border-primary"
-                }`}
-                title={
-                  viewMode === "simulation"
-                    ? "Phone simulation is active. Click to return to Calling Desk."
-                    : "Open phone simulator with pure customer experience (zero debug latency)."
-                }
+              {/* Open dedicated User Console tab */}
+              <Link
+                href={caseId ? "/user/priya" : `/user/${normKey}`}
+                className="px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border shadow-xs bg-secondary-container hover:bg-accent-soft text-primary border-primary/30 hover:border-primary"
+                title="Open User Console tab with pure customer phone experience"
               >
                 <Icon name="phone" size={15} />
-                <span>Call Simulation</span>
-                {viewMode === "simulation" ? (
-                  <span className="px-1.5 py-0.5 rounded-full bg-emerald-300 text-primary font-mono text-[10px] font-bold animate-pulse">
-                    ACTIVE
-                  </span>
-                ) : (
-                  <span className="px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-mono text-[10px] font-semibold">
-                    Phone View
-                  </span>
-                )}
-              </button>
+                <span>User Console</span>
+                <span className="px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-mono text-[10px] font-semibold">
+                  Phone Tab
+                </span>
+              </Link>
 
               {/* Status Ribbon */}
               <div
@@ -698,70 +791,25 @@ export default function CallApp({ customer, caseId }: { customer: string; caseId
                 <Icon name="mic" size={15} />
               </button>
 
-              {/* Diagnostics toggle (desk mode only) */}
-              {viewMode === "desk" && (
-                <button
-                  type="button"
-                  onClick={() => setShowDiagnostics(!showDiagnostics)}
-                  className={`p-2 rounded-lg text-xs transition-colors border ${
-                    showDiagnostics
-                      ? "bg-secondary-container text-primary border-primary/20"
-                      : "bg-sunken text-muted border-line hover:text-fg"
-                  }`}
-                  title="Toggle Engine Diagnostics"
-                >
-                  <Icon name="speed" size={15} />
-                </button>
-              )}
+              {/* Diagnostics toggle */}
+              <button
+                type="button"
+                onClick={() => setShowDiagnostics(!showDiagnostics)}
+                className={`p-2 rounded-lg text-xs transition-colors border ${
+                  showDiagnostics
+                    ? "bg-secondary-container text-primary border-primary/20"
+                    : "bg-sunken text-muted border-line hover:text-fg"
+                }`}
+                title="Toggle Engine Diagnostics"
+              >
+                <Icon name="speed" size={15} />
+              </button>
             </div>
           </div>
         </section>
 
-        {viewMode === "simulation" ? (
-          /* FULL AREA CALL SIMULATION: END-USER PHONE INTERACTION WITHOUT TELEMETRY */
-          <div className="w-full max-w-[420px] mx-auto py-2 flex flex-col items-center gap-2.5">
-            <div className="w-full flex items-center justify-between px-2 text-xs">
-              <span className="font-mono text-muted text-[11px] flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-ok-fg animate-pulse"></span>
-                <span className="text-fg font-medium">Customer Phone Simulation</span>
-              </span>
-              <button
-                type="button"
-                onClick={() => setViewMode("desk")}
-                className="font-mono text-xs text-primary hover:text-accent-hover font-semibold inline-flex items-center gap-1 cursor-pointer underline"
-              >
-                <Icon name="speed" size={13} />
-                <span>Exit Simulation (Desk View)</span>
-              </button>
-            </div>
-            <PhoneHandset
-              customer={phoneOf(customer)}
-              noData={!!caseId}
-              simulationProps={{
-                inCall,
-                status,
-                ended,
-                busy,
-                listening,
-                msgs,
-                callDuration,
-                talkProps,
-                start,
-                end,
-                sendTextVal,
-                quickPrompts: persona.quickPrompts,
-                personaName: persona.name,
-                personaPhone: persona.phone,
-                personaLoan: persona.loan,
-                text,
-                setText,
-                sendText,
-              }}
-            />
-          </div>
-        ) : (
-          /* 12-COLUMN CALLING DESK & PHONE SIDECAR GRID */
-          <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
+        {/* 12-COLUMN CALLING DESK & PHONE SIDECAR GRID */}
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
           {/* LEFT 8 COLUMNS: Live Calling Desk */}
           <div className="xl:col-span-8 flex flex-col gap-4 min-w-0">
             {/* Caller Ledger Card */}
@@ -1084,7 +1132,6 @@ export default function CallApp({ customer, caseId }: { customer: string; caseId
             </div>
           </div>
         </div>
-      )}
     </main>
     </SidebarLayout>
   );

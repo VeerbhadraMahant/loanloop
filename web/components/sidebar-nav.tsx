@@ -98,6 +98,8 @@ const navSections: NavSection[] = [
     items: [
       { href: "/", label: "Home", icon: "shield" },
       { href: "/call/priya", label: "Calling Desk", icon: "phone_in_talk", badge: "Live", badgeTone: "ok" },
+      { href: "/user/priya", label: "User Console", icon: "phone", badge: "Phone", badgeTone: "primary" },
+      { href: "/bank", label: "Bank app", icon: "support_agent" },
       { href: "/collections", label: "Collections", icon: "database" },
       { href: "/ops", label: "Ops Console", icon: "speed" },
     ],
@@ -219,6 +221,8 @@ export function SidebarNav() {
                       ? path === "/"
                       : item.href === "/call/priya"
                       ? path.startsWith("/call")
+                      : item.href === "/user/priya"
+                      ? path.startsWith("/user")
                       : path.startsWith(item.href);
 
                   return (

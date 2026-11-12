@@ -217,6 +217,11 @@ export function PhoneHandset({
               <div>
                 <h3 className="serif text-xl font-bold text-fg leading-tight">Sahyadri Voice Agent</h3>
                 <p className="font-mono text-xs text-primary font-semibold mt-1">1800-209-4000 · Verified Banking</p>
+                <p className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-0.5 rounded-full bg-sunken border border-line font-mono text-[11px] text-fg">
+                  <span>{simulationProps.personaName}</span>
+                  <span className="text-muted">·</span>
+                  <span className="text-muted">{simulationProps.personaPhone}</span>
+                </p>
                 <p className="text-xs text-muted mt-2 max-w-[260px] leading-relaxed">
                   Interactive phone simulation. Experience speech-to-speech voice banking just like a borrower.
                 </p>
