@@ -23,7 +23,10 @@ _cache: dict = {"mtime": None, "intents": {}}
 
 def _merge_lang_files(intents: dict[str, dict]) -> None:
     """Add each present i18n/<code>.json `faq` section: keywords, answer, sms_text per intent."""
+    stop: list = []
     for code, d in i18n.load_lang_files().items():
+        sw = (d.get("words") or {}).get("stopwords")
+        stop += [x.lower() for x in sw if isinstance(x, str) and (not x.isascii() or len(x) >= 4)] if isinstance(sw, list) else []
         for iid, f in (d.get("faq") or {}).items():
             it = intents.get(iid)
             if it is None or not isinstance(f, dict) or not isinstance(f.get("answer"), str) or not f["answer"].strip():
@@ -32,6 +35,7 @@ def _merge_lang_files(intents: dict[str, dict]) -> None:
             it.setdefault("answer", {})[code] = f["answer"]
             if isinstance(f.get("sms_text"), str) and f["sms_text"].strip():
                 it.setdefault("sms_text", {})[code] = f["sms_text"]
+    faq_score.set_extra_stopwords(stop)
 
 
 def load_faq() -> dict[str, dict]:

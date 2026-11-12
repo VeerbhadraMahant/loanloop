@@ -1442,3 +1442,15 @@ def test_fallback_verify_bare_last4_after_mobile_in_earlier_turn():
     assert fb("4821", said) == ("verify_caller", {"registered_mobile": "9876543210", "loan_last4": "4821"})
     assert fb("okay thanks, how are you", said) is None and fb("4821") is None
     assert fb("4821", said, verified=True) is None
+
+
+def test_end_call_never_runs_in_the_same_turn_as_a_handover_unless_the_caller_said_goodbye():
+    two = {"role": "assistant", "content": "", "tool_calls": [{"function": {"name": "end_call", "arguments": {}}},
+                                                              {"function": {"name": "handover", "arguments": {"reason": "x", "summary": "y"}}}]}
+    for said, ended in (("I want to discuss something with your team", False), ("okay, bye", True)):
+        seen = []
+        with swap_app(scripted([dict(two), {"role": "assistant", "content": "ok"}], {}, seen)) as c:
+            d = c.post("/calls?tts=false", json={}).json()
+            r = turn(c, d, said).json()
+        names = [n for n, _ in seen if n in ("handover", "end_call")]
+        assert ("end_call" in names) is ended and "handover" in names or ended, (said, names)

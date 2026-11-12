@@ -2,7 +2,7 @@
 import json
 import time
 
-from test_voice import dev_env, env, new_call, turn  # noqa: F401  (env is a fixture)
+from test_voice import dev_env, env, new_call, tc, turn  # noqa: F401  (env is a fixture)
 from test_v2 import FAQ, gw_calls
 
 NF = {"ok": False, "speak": "nf", "error_code": "FAQ_NOT_FOUND"}  # the model's own prose fallback finds nothing either
@@ -99,7 +99,7 @@ def test_every_eval_faq_case_reaches_the_faq_through_the_live_turn_handler(env):
     """Real turn path with the caller's exact first line ("English. ..."): never LOW and never blocked by a tool guard.
     Paraphrases with no FAQ keyword are the known failures."""
     from pathlib import Path
-    known_miss = {"faq2_hing_kyc_basics", "faq2_hing_gold_loan", "faq2_hi_bank_wrong_transfer", "faq2_mr_account_frozen", "faq2_en_otp_not_received", "faq2_mr_otp_not_received"}  # no FAQ keyword in the line (0 score)
+    known_miss = {"faq2_hing_kyc_basics", "faq2_hing_gold_loan", "faq2_hi_bank_wrong_transfer", "faq2_mr_account_frozen", "faq2_en_otp_not_received", "faq2_mr_otp_not_received"}  # no FAQ keyword in the line (0 score); account_frozen now has "put hold" (not "hold on my account": the labelled hijack negative d1_8 says that bare hold is ambiguous)
     c, fake = env
     fake.gw["faq_lookup"] = FAQ  # a direct answer = topic call and no LLM; a medium one = the block in the LLM message
     bad = []
@@ -116,3 +116,34 @@ def test_every_eval_faq_case_reaches_the_faq_through_the_live_turn_handler(env):
         if not (direct or block):
             bad.append(case["id"])
     assert not bad, bad  # noqa
+
+
+def test_model_topic_without_keyword_support_is_replaced_by_the_scorer_pick(env):
+    c, fake = env
+    fake.gw["faq_lookup"] = FAQ
+    text = "English. I think I was scammed and money was taken from my account."
+    assert faq_route(text, "en") == ("medium", "fraud_report")
+    d = new_call(c)
+    fake.llm_script = [tc("faq_lookup", topic="bank_charges"), AFTER]
+    turn(c, d, text)
+    assert gw_calls(fake, "faq_lookup")[-1]["topic"] == "fraud_report"
+
+
+def test_beta_account_specific_veto_blocks_only_beta_text():
+    from voice.app import beta_account_specific, load_languages
+    load_languages()
+    assert beta_account_specific("என் கடனின் வட்டி விகிதம் என்ன")  # Tamil "my loan's interest rate": inflected possessive + account noun
+    assert faq_route("என் கடனின் வட்டி விகிதம் என்ன", "ta")[0] == "low"
+    assert not beta_account_specific("என்ன கடன் என்பது")  # "என்ன" (what) must not count as "என்" (my)
+    assert not beta_account_specific("என் கணக்கு மோசடி என்றால் என்ன")  # a general topic (fraud) is exempt
+    import voice.app as va
+    seen = []
+    orig = va.beta_account_specific
+    va.beta_account_specific = lambda t: seen.append(t) or orig(t)
+    try:
+        faq_route("How do I open a savings account?", "en")
+        faq_route("नया खाता कैसे खोलूँ?", "hi")
+    finally:
+        va.beta_account_specific = orig
+    assert seen == []  # core text never reaches the beta veto
+    assert faq_route("Why has my bank account been frozen?", "en")[0] == "high"  # core unaffected

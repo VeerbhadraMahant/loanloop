@@ -1,0 +1,280 @@
+{"id": "ho_upi_pin_reset_1@bn", "text": "আমার UPI পিন ভুলে গেছি, নতুন করে কীভাবে সেট করব?", "lang": "bn", "expect": "upi_pin_reset"}
+{"id": "ho_failed_atm_withdrawal_2@bn", "text": "এটিএম থেকে টাকা বের হয়নি কিন্তু অ্যাকাউন্ট থেকে কেটে নিয়েছে, এখন কী করব", "lang": "bn", "expect": "failed_atm_withdrawal"}
+{"id": "ho_loan_prepayment_3@bn", "text": "লোনটা সময়ের আগে শোধ করে দিলে কি কোনো চার্জ লাগে?", "lang": "bn", "expect": "loan_prepayment"}
+{"id": "ho_emi_missed_4@bn", "text": "এই মাসে ইএমআই দিতে পারিনি, তাহলে কী হবে বলুন তো", "lang": "bn", "expect": "emi_missed"}
+{"id": "ho_fd_premature_5@bn", "text": "এফডি মেয়াদ শেষের আগে ভাঙলে সুদ কম দেবে নাকি?", "lang": "bn", "expect": "fd_premature"}
+{"id": "ho_kyc_update_6@bn", "text": "আমার কেওয়াইসি আপডেট করতে হবে, কী কী কাগজ লাগবে", "lang": "bn", "expect": "kyc_update"}
+{"id": "ho_update_mobile_7@bn", "text": "মোবাইল নম্বরটা বদলেছি, ব্যাংকে নতুন নম্বর কীভাবে দেব?", "lang": "bn", "expect": "update_mobile"}
+{"id": "ho_fraud_report_8@bn", "text": "কেউ আমার অ্যাকাউন্ট থেকে টাকা তুলে নিয়েছে, ফ্রড রিপোর্ট করব কোথায়", "lang": "bn", "expect": "fraud_report"}
+{"id": "ho_cheque_stop_payment_9@bn", "text": "একটা চেক ছাড়া হয়ে গেছে, ওটার পেমেন্ট আটকাতে চাই", "lang": "bn", "expect": "cheque_stop_payment"}
+{"id": "ho_nominee_info_10@bn", "text": "অ্যাকাউন্টে নমিনি যোগ করতে চাই, কীভাবে হবে?", "lang": "bn", "expect": "nominee_info"}
+{"id": "ho_deceased_claim_11@bn", "text": "বাবা মারা গেছেন, ওনার সেভিংস অ্যাকাউন্টের টাকা কীভাবে পাব", "lang": "bn", "expect": "deceased_claim"}
+{"id": "ho_nri_accounts_12@bn", "text": "আমি বিদেশে থাকি, এনআরআই অ্যাকাউন্ট খোলা যায় কি?", "lang": "bn", "expect": "nri_accounts"}
+{"id": "ho_tds_15g_15h_13@bn", "text": "সিনিয়র সিটিজেনদের সুদের উপর টিডিএস কাটা এড়াতে ফর্ম ১৫এইচ কোথায় জমা দেব", "lang": "bn", "expect": "tds_15g_15h"}
+{"id": "ho_otp_not_received_14@bn", "text": "ওটিপি আসছে না, বারবার চেষ্টা করেও পাচ্ছি না", "lang": "bn", "expect": "otp_not_received"}
+{"id": "ho_account_frozen_15@bn", "text": "আমার অ্যাকাউন্ট ফ্রিজ হয়ে গেছে কেন, কীভাবে খুলবে", "lang": "bn", "expect": "account_frozen"}
+{"id": "ho_minor_account_16@bn", "text": "ছেলের জন্য ছোটদের অ্যাকাউন্ট খোলা যায়, বয়স দশ বছর", "lang": "bn", "expect": "minor_account"}
+{"id": "ho_gold_loan_17@bn", "text": "সোনা বন্ধক রেখে লোন নিতে চাই, কত টাকা পর্যন্ত দেবেন?", "lang": "bn", "expect": "gold_loan"}
+{"id": "ho_dormant_account_18@bn", "text": "অনেকদিন লেনদেন করিনি, অ্যাকাউন্ট ডর্ম্যান্ট হয়ে গেছে, চালু করব কী করে", "lang": "bn", "expect": "dormant_account"}
+{"id": "ho_education_loan_19@bn", "text": "বিদেশে পড়তে যাব, এডুকেশন লোনের জন্য কী লাগবে?", "lang": "bn", "expect": "education_loan"}
+{"id": "ho_international_transfer_20@bn", "text": "বিদেশে টাকা পাঠাতে চাই, ইন্টারন্যাশনাল ট্রান্সফার কীভাবে করে", "lang": "bn", "expect": "international_transfer"}
+{"id": "ho_dbt_subsidy_21@bn", "text": "সরকারি ভর্তুকির টাকা অ্যাকাউন্টে আসছে না, আধার লিংক লাগে কি", "lang": "bn", "expect": "dbt_subsidy"}
+{"id": "ho_pension_credit_22@bn", "text": "পেনশনের টাকা এখনো ঢোকেনি, কবে জমা হয়?", "lang": "bn", "expect": "pension_credit"}
+{"id": "ho_pan_aadhaar_link_23@bn", "text": "প্যান আর আধার লিংক করা হয়নি, এখন কী করা যায়", "lang": "bn", "expect": "pan_aadhaar_link"}
+{"id": "ho_shared_otp_or_link_24@bn", "text": "একজন ফোন করে ওটিপি চাইছে, বললাম দেব না, দিলে কী হত?", "lang": "bn", "expect": "bank_never_asks"}
+{"id": "ho_branch_locator_25@bn", "text": "আমার কাছের ব্রাঞ্চটা কোথায় আছে বলতে পারেন?", "lang": "bn", "expect": "branch_locator"}
+{"id": "ho_cash_without_card_26@bn", "text": "কার্ড ছাড়া এটিএম থেকে ক্যাশ তোলা যায় নাকি", "lang": "bn", "expect": "cash_without_card"}
+{"id": "ho_debit_card_activate_27@bn", "text": "নতুন ডেবিট কার্ড পেয়েছি, এটা চালু করব কীভাবে", "lang": "bn", "expect": "debit_card_activate"}
+{"id": "ho_upi_limits_28@bn", "text": "UPI তে একদিনে সর্বোচ্চ কত টাকা পাঠানো যায়?", "lang": "bn", "expect": "upi_limits"}
+{"id": "ho_statement_request_29@bn", "text": "তিন মাসের স্টেটমেন্ট লাগবে, কীভাবে পাব", "lang": "bn", "expect": "statement_request"}
+{"id": "ho_min_balance_30@bn", "text": "অ্যাকাউন্টে মিনিমাম ব্যালেন্স কত রাখতে হয়", "lang": "bn", "expect": "min_balance"}
+{"id": "neg_ho_1@bn", "text": "আমার অ্যাকাউন্টে এখন কত টাকা আছে বলুন", "lang": "bn", "expect": "none"}
+{"id": "neg_ho_2@bn", "text": "আমার ইএমআই কত টাকা করে কাটে", "lang": "bn", "expect": "none"}
+{"id": "neg_ho_3@bn", "text": "আমার লোনের কত বাকি আছে এখন", "lang": "bn", "expect": "none"}
+{"id": "neg_ho_4@bn", "text": "আমি শেষবার কবে পেমেন্ট করেছিলাম?", "lang": "bn", "expect": "none"}
+{"id": "neg_ho_5@bn", "text": "আমার ইএমআইয়ের তারিখটা মাসের ১০ তারিখ করে দিন", "lang": "bn", "expect": "none"}
+{"id": "neg_ho_6@bn", "text": "আমার ব্রাঞ্চের IFSC কোড কত", "lang": "bn", "expect": "none"}
+{"id": "neg_ho_7@bn", "text": "নমস্কার, কেমন আছেন আপনি?", "lang": "bn", "expect": "none"}
+{"id": "neg_ho_8@bn", "text": "আমি একজন মানুষের সাথে কথা বলতে চাই, কাউকে দিন", "lang": "bn", "expect": "none"}
+{"id": "neg_ho_9@bn", "text": "আজ কলকাতায় বৃষ্টি হবে কি?", "lang": "bn", "expect": "none"}
+{"id": "neg_ho_10@bn", "text": "আমার লোনের সুদের হার কত, আমার নামে যেটা চলছে", "lang": "bn", "expect": "none"}
+{"id": "ho_upi_pin_reset_1@gu", "text": "UPI પિન ભૂલી ગયો છું, નવો કેવી રીતે સેટ કરું?", "lang": "gu", "expect": "upi_pin_reset"}
+{"id": "ho_failed_atm_withdrawal_2@gu", "text": "ATM માંથી પૈસા ના નીકળ્યા પણ ખાતામાંથી કપાઈ ગયા, હવે શું કરવું", "lang": "gu", "expect": "failed_atm_withdrawal"}
+{"id": "ho_loan_prepayment_3@gu", "text": "લોન વહેલી ભરી દઉં તો કોઈ ચાર્જ લાગે?", "lang": "gu", "expect": "loan_prepayment"}
+{"id": "ho_emi_missed_4@gu", "text": "આ મહિને EMI ભરી શક્યો નથી, તો શું થશે?", "lang": "gu", "expect": "emi_missed"}
+{"id": "ho_fd_premature_5@gu", "text": "FD પાકતી મુદત પહેલાં તોડું તો વ્યાજ ઓછું મળશે?", "lang": "gu", "expect": "fd_premature"}
+{"id": "ho_kyc_update_6@gu", "text": "મારે KYC અપડેટ કરવું છે, કયા કાગળ જોઈશે", "lang": "gu", "expect": "kyc_update"}
+{"id": "ho_update_mobile_7@gu", "text": "મોબાઈલ નંબર બદલ્યો છે, બેંકમાં નવો નંબર કેવી રીતે આપું", "lang": "gu", "expect": "update_mobile"}
+{"id": "ho_fraud_report_8@gu", "text": "કોઈએ મારા ખાતામાંથી પૈસા ઉપાડી લીધા, ફ્રોડની ફરિયાદ ક્યાં કરવી", "lang": "gu", "expect": "fraud_report"}
+{"id": "ho_cheque_stop_payment_9@gu", "text": "એક ચેક આપી દીધો છે, એનું પેમેન્ટ અટકાવવું છે", "lang": "gu", "expect": "cheque_stop_payment"}
+{"id": "ho_nominee_info_10@gu", "text": "ખાતામાં નોમિની ઉમેરવો છે, કેવી રીતે થશે?", "lang": "gu", "expect": "nominee_info"}
+{"id": "ho_deceased_claim_11@gu", "text": "પપ્પાનું અવસાન થયું છે, એમના ખાતાના પૈસા કેવી રીતે મળે", "lang": "gu", "expect": "deceased_claim"}
+{"id": "ho_credit_card_basics_12@gu", "text": "પોઝિટિવ પે શું છે, મોટા ચેક માટે જરૂરી છે?", "lang": "gu", "expect": "positive_pay"}
+{"id": "ho_rd_basics_13@gu", "text": "ક્રેડિટ કાર્ડ લેવું હોય તો શું શરતો હોય છે", "lang": "gu", "expect": "credit_card_basics"}
+{"id": "ho_otp_not_received_14@gu", "text": "OTP આવતો નથી, વારંવાર પ્રયત્ન કર્યો તોય", "lang": "gu", "expect": "otp_not_received"}
+{"id": "ho_account_frozen_15@gu", "text": "મારું ખાતું ફ્રીઝ કેમ થઈ ગયું, કેવી રીતે ખૂલશે", "lang": "gu", "expect": "account_frozen"}
+{"id": "ho_joint_account_16@gu", "text": "પતિ-પત્નીનું જોઈન્ટ ખાતું ખોલાવી શકાય?", "lang": "gu", "expect": "joint_account"}
+{"id": "ho_car_loan_17@gu", "text": "કાર લોન લેવી છે, ડાઉન પેમેન્ટ કેટલું જોઈએ", "lang": "gu", "expect": "car_loan"}
+{"id": "ho_positive_pay_18@gu", "text": "RD માં દર મહિને કેટલા ભરી શકાય અને વ્યાજ કેટલું", "lang": "gu", "expect": "rd_basics"}
+{"id": "ho_education_loan_19@gu", "text": "વિદેશ ભણવા જવું છે, એજ્યુકેશન લોન માટે શું જોઈએ?", "lang": "gu", "expect": "education_loan"}
+{"id": "ho_international_transfer_20@gu", "text": "વિદેશમાં પૈસા મોકલવા છે, ઇન્ટરનેશનલ ટ્રાન્સફર કેવી રીતે થાય", "lang": "gu", "expect": "international_transfer"}
+{"id": "ho_insurance_products_21@gu", "text": "વીમા પોલિસી બેંકમાંથી લઈ શકાય કે નહીં?", "lang": "gu", "expect": "insurance_products"}
+{"id": "ho_pension_credit_22@gu", "text": "પેન્શનના પૈસા હજી જમા થયા નથી, ક્યારે આવશે", "lang": "gu", "expect": "pension_credit"}
+{"id": "ho_pan_aadhaar_link_23@gu", "text": "PAN અને આધાર લિંક નથી કર્યા, હવે શું કરવું", "lang": "gu", "expect": "pan_aadhaar_link"}
+{"id": "ho_shared_otp_or_link_24@gu", "text": "કોઈ ફોન કરીને OTP માગે છે, આપી દઉં તો?", "lang": "gu", "expect": "bank_never_asks"}
+{"id": "ho_branch_locator_25@gu", "text": "મારી નજીકની બ્રાન્ચ ક્યાં છે એ કહેશો?", "lang": "gu", "expect": "branch_locator"}
+{"id": "ho_cash_without_card_26@gu", "text": "કાર્ડ વગર ATM માંથી રોકડ ઉપાડી શકાય?", "lang": "gu", "expect": "cash_without_card"}
+{"id": "ho_debit_card_activate_27@gu", "text": "નવું ડેબિટ કાર્ડ મળ્યું છે, ચાલુ કેવી રીતે કરવું", "lang": "gu", "expect": "debit_card_activate"}
+{"id": "ho_upi_limits_28@gu", "text": "UPI થી એક દિવસમાં વધુમાં વધુ કેટલા મોકલાય?", "lang": "gu", "expect": "upi_limits"}
+{"id": "ho_statement_request_29@gu", "text": "ત્રણ મહિનાનું સ્ટેટમેન્ટ જોઈએ છે, કેવી રીતે મળશે", "lang": "gu", "expect": "statement_request"}
+{"id": "ho_min_balance_30@gu", "text": "ખાતામાં ઓછામાં ઓછું બેલેન્સ કેટલું રાખવું પડે", "lang": "gu", "expect": "min_balance"}
+{"id": "neg_ho_1@gu", "text": "મારા ખાતામાં અત્યારે કેટલા રૂપિયા છે?", "lang": "gu", "expect": "none"}
+{"id": "neg_ho_2@gu", "text": "મારી EMI કેટલાની કપાય છે", "lang": "gu", "expect": "none"}
+{"id": "neg_ho_3@gu", "text": "મારી લોનના કેટલા બાકી છે અત્યારે", "lang": "gu", "expect": "none"}
+{"id": "neg_ho_4@gu", "text": "છેલ્લું પેમેન્ટ મેં ક્યારે કર્યું હતું?", "lang": "gu", "expect": "none"}
+{"id": "neg_ho_5@gu", "text": "મારી EMI ની તારીખ મહિનાની ૧૦ કરી આપો", "lang": "gu", "expect": "none"}
+{"id": "neg_ho_6@gu", "text": "મારી બ્રાન્ચનો IFSC કોડ શું છે", "lang": "gu", "expect": "none"}
+{"id": "neg_ho_7@gu", "text": "નમસ્તે, કેમ છો તમે?", "lang": "gu", "expect": "none"}
+{"id": "neg_ho_8@gu", "text": "મારે કોઈ માણસ સાથે વાત કરવી છે, કોઈને આપો", "lang": "gu", "expect": "none"}
+{"id": "neg_ho_9@gu", "text": "આજે અમદાવાદમાં વરસાદ પડશે કે?", "lang": "gu", "expect": "none"}
+{"id": "neg_ho_10@gu", "text": "મારા નામે ચાલતી લોનનો વ્યાજ દર કેટલો છે", "lang": "gu", "expect": "none"}
+{"id": "ho_upi_pin_reset_1@kn", "text": "UPI ಪಿನ್ ಮರೆತುಹೋಗಿದೆ, ಹೊಸದನ್ನು ಹೇಗೆ ಸೆಟ್ ಮಾಡಬೇಕು?", "lang": "kn", "expect": "upi_pin_reset"}
+{"id": "ho_failed_atm_withdrawal_2@kn", "text": "ATM ನಿಂದ ಹಣ ಬರಲಿಲ್ಲ ಆದರೆ ಖಾತೆಯಿಂದ ಕಡಿತ ಆಗಿದೆ, ಏನು ಮಾಡಲಿ", "lang": "kn", "expect": "failed_atm_withdrawal"}
+{"id": "ho_loan_prepayment_3@kn", "text": "ಸಾಲವನ್ನು ಬೇಗ ತೀರಿಸಿದರೆ ಏನಾದರೂ ಶುಲ್ಕ ಇದೆಯಾ?", "lang": "kn", "expect": "loan_prepayment"}
+{"id": "ho_emi_missed_4@kn", "text": "ಈ ತಿಂಗಳು EMI ಕಟ್ಟಲು ಆಗಿಲ್ಲ, ಏನಾಗುತ್ತೆ ಹೇಳಿ", "lang": "kn", "expect": "emi_missed"}
+{"id": "ho_fd_premature_5@kn", "text": "ಎಫ್‌ಡಿ ಅವಧಿಗೆ ಮೊದಲೇ ಮುರಿದರೆ ಬಡ್ಡಿ ಕಡಿಮೆ ಕೊಡ್ತಾರಾ?", "lang": "kn", "expect": "fd_premature"}
+{"id": "ho_kyc_update_6@kn", "text": "ನನ್ನ ಕೆವೈಸಿ ಅಪ್‌ಡೇಟ್ ಮಾಡಬೇಕು, ಯಾವ ದಾಖಲೆಗಳು ಬೇಕು", "lang": "kn", "expect": "kyc_update"}
+{"id": "ho_update_mobile_7@kn", "text": "ಮೊಬೈಲ್ ನಂಬರ್ ಬದಲಾಯಿಸಿದ್ದೇನೆ, ಬ್ಯಾಂಕಿಗೆ ಹೊಸ ನಂಬರ್ ಹೇಗೆ ಕೊಡಲಿ", "lang": "kn", "expect": "update_mobile"}
+{"id": "ho_fraud_report_8@kn", "text": "ಯಾರೋ ನನ್ನ ಖಾತೆಯಿಂದ ಹಣ ತೆಗೆದಿದ್ದಾರೆ, ವಂಚನೆ ದೂರು ಎಲ್ಲಿ ಕೊಡಲಿ", "lang": "kn", "expect": "fraud_report"}
+{"id": "ho_cheque_stop_payment_9@kn", "text": "ಒಂದು ಚೆಕ್ ಕೊಟ್ಟಿದ್ದೇನೆ, ಅದರ ಪಾವತಿ ನಿಲ್ಲಿಸಬೇಕು", "lang": "kn", "expect": "cheque_stop_payment"}
+{"id": "ho_nominee_info_10@kn", "text": "ಖಾತೆಗೆ ನಾಮಿನಿ ಸೇರಿಸಬೇಕು, ಹೇಗೆ ಮಾಡುವುದು?", "lang": "kn", "expect": "nominee_info"}
+{"id": "ho_deceased_claim_11@kn", "text": "ತಂದೆ ತೀರಿಕೊಂಡಿದ್ದಾರೆ, ಅವರ ಖಾತೆಯ ಹಣ ಹೇಗೆ ಸಿಗುತ್ತದೆ", "lang": "kn", "expect": "deceased_claim"}
+{"id": "ho_nri_accounts_12@kn", "text": "ನಾನು ವಿದೇಶದಲ್ಲಿ ಇರುತ್ತೇನೆ, ಎನ್‌ಆರ್‌ಐ ಖಾತೆ ತೆರೆಯಬಹುದಾ?", "lang": "kn", "expect": "nri_accounts"}
+{"id": "ho_tds_15g_15h_13@kn", "text": "ಟಿಡಿಎಸ್ ಕಡಿತ ತಪ್ಪಿಸಲು ಫಾರ್ಮ್ 15ಎಚ್ ಎಲ್ಲಿ ಕೊಡಬೇಕು", "lang": "kn", "expect": "tds_15g_15h"}
+{"id": "ho_otp_not_received_14@kn", "text": "OTP ಬರ್ತಾನೇ ಇಲ್ಲ, ಎಷ್ಟು ಸಲ ಪ್ರಯತ್ನಿಸಿದರೂ", "lang": "kn", "expect": "otp_not_received"}
+{"id": "ho_account_frozen_15@kn", "text": "ನನ್ನ ಖಾತೆ ಫ್ರೀಜ್ ಆಗಿದೆ ಯಾಕೆ, ಹೇಗೆ ತೆರೆಯುತ್ತಾರೆ", "lang": "kn", "expect": "account_frozen"}
+{"id": "ho_minor_account_16@kn", "text": "ಮಗನಿಗೆ ಮೈನರ್ ಅಕೌಂಟ್ ಮಾಡಿಸಬಹುದಾ, ಅವನಿಗೆ ಹತ್ತು ವರ್ಷ", "lang": "kn", "expect": "minor_account"}
+{"id": "ho_gold_loan_17@kn", "text": "ಚಿನ್ನ ಅಡವಿಟ್ಟು ಸಾಲ ಬೇಕು, ಎಷ್ಟರವರೆಗೆ ಕೊಡ್ತೀರಿ?", "lang": "kn", "expect": "gold_loan"}
+{"id": "ho_dormant_account_18@kn", "text": "ತುಂಬಾ ದಿನ ವ್ಯವಹಾರ ಮಾಡಿಲ್ಲ, ಖಾತೆ ಡಾರ್ಮೆಂಟ್ ಆಗಿದೆ, ಹೇಗೆ ಸಕ್ರಿಯ ಮಾಡಲಿ", "lang": "kn", "expect": "dormant_account"}
+{"id": "ho_education_loan_19@kn", "text": "ವಿದೇಶದಲ್ಲಿ ಓದಲು ಹೋಗ್ತೀನಿ, ಎಜುಕೇಶನ್ ಲೋನ್‌ಗೆ ಏನು ಬೇಕು?", "lang": "kn", "expect": "education_loan"}
+{"id": "ho_international_transfer_20@kn", "text": "ವಿದೇಶಕ್ಕೆ ಹಣ ಕಳಿಸಬೇಕು, ಇಂಟರ್‌ನ್ಯಾಶನಲ್ ಟ್ರಾನ್ಸ್‌ಫರ್ ಹೇಗೆ", "lang": "kn", "expect": "international_transfer"}
+{"id": "ho_dbt_subsidy_21@kn", "text": "ಸರ್ಕಾರದ ಸಬ್ಸಿಡಿ ಹಣ ಖಾತೆಗೆ ಬರುತ್ತಿಲ್ಲ, ಆಧಾರ್ ಲಿಂಕ್ ಬೇಕಾ", "lang": "kn", "expect": "dbt_subsidy"}
+{"id": "ho_pension_credit_22@kn", "text": "ಪಿಂಚಣಿ ಹಣ ಇನ್ನೂ ಜಮೆ ಆಗಿಲ್ಲ, ಯಾವಾಗ ಬರುತ್ತೆ", "lang": "kn", "expect": "pension_credit"}
+{"id": "ho_pan_aadhaar_link_23@kn", "text": "ಪ್ಯಾನ್ ಮತ್ತು ಆಧಾರ್ ಲಿಂಕ್ ಮಾಡಿಲ್ಲ, ಈಗ ಏನು ಮಾಡಬೇಕು", "lang": "kn", "expect": "pan_aadhaar_link"}
+{"id": "ho_shared_otp_or_link_24@kn", "text": "ಯಾರೋ ಫೋನ್ ಮಾಡಿ OTP ಕೇಳ್ತಿದ್ದಾರೆ, ಕೊಟ್ಟರೆ ಏನಾಗುತ್ತೆ?", "lang": "kn", "expect": "bank_never_asks"}
+{"id": "ho_branch_locator_25@kn", "text": "ನನ್ನ ಹತ್ತಿರದ ಬ್ರಾಂಚ್ ಎಲ್ಲಿದೆ ಹೇಳ್ತೀರಾ?", "lang": "kn", "expect": "branch_locator"}
+{"id": "ho_cash_without_card_26@kn", "text": "ಕಾರ್ಡ್ ಇಲ್ಲದೆ ATM ನಿಂದ ನಗದು ತೆಗೆಯಬಹುದಾ", "lang": "kn", "expect": "cash_without_card"}
+{"id": "ho_debit_card_activate_27@kn", "text": "ಹೊಸ ಡೆಬಿಟ್ ಕಾರ್ಡ್ ಬಂದಿದೆ, ಅದನ್ನು ಆಕ್ಟಿವೇಟ್ ಮಾಡೋದು ಹೇಗೆ", "lang": "kn", "expect": "debit_card_activate"}
+{"id": "ho_upi_limits_28@kn", "text": "UPI ಮೂಲಕ ಒಂದು ದಿನಕ್ಕೆ ಗರಿಷ್ಠ ಎಷ್ಟು ಕಳಿಸಬಹುದು?", "lang": "kn", "expect": "upi_limits"}
+{"id": "ho_statement_request_29@kn", "text": "ಮೂರು ತಿಂಗಳ ಸ್ಟೇಟ್‌ಮೆಂಟ್ ಬೇಕು, ಹೇಗೆ ಸಿಗುತ್ತದೆ", "lang": "kn", "expect": "statement_request"}
+{"id": "ho_min_balance_30@kn", "text": "ಖಾತೆಯಲ್ಲಿ ಕನಿಷ್ಠ ಬ್ಯಾಲೆನ್ಸ್ ಎಷ್ಟು ಇಡಬೇಕು", "lang": "kn", "expect": "min_balance"}
+{"id": "neg_ho_1@kn", "text": "ನನ್ನ ಖಾತೆಯಲ್ಲಿ ಈಗ ಎಷ್ಟು ಹಣ ಇದೆ ಹೇಳಿ", "lang": "kn", "expect": "none"}
+{"id": "neg_ho_2@kn", "text": "ನನ್ನ EMI ಎಷ್ಟು ಕಡಿತ ಆಗುತ್ತೆ", "lang": "kn", "expect": "none"}
+{"id": "neg_ho_3@kn", "text": "ನನ್ನ ಸಾಲದಲ್ಲಿ ಇನ್ನೂ ಎಷ್ಟು ಬಾಕಿ ಇದೆ", "lang": "kn", "expect": "none"}
+{"id": "neg_ho_4@kn", "text": "ನಾನು ಕೊನೆಯ ಬಾರಿ ಯಾವಾಗ ಪಾವತಿ ಮಾಡಿದ್ದೆ?", "lang": "kn", "expect": "none"}
+{"id": "neg_ho_5@kn", "text": "ನನ್ನ EMI ದಿನಾಂಕವನ್ನು ತಿಂಗಳ 10ಕ್ಕೆ ಬದಲಾಯಿಸಿ", "lang": "kn", "expect": "none"}
+{"id": "neg_ho_6@kn", "text": "ನನ್ನ ಬ್ರಾಂಚ್‌ನ IFSC ಕೋಡ್ ಏನು", "lang": "kn", "expect": "none"}
+{"id": "neg_ho_7@kn", "text": "ನಮಸ್ಕಾರ, ಹೇಗಿದ್ದೀರಿ?", "lang": "kn", "expect": "none"}
+{"id": "neg_ho_8@kn", "text": "ನನಗೆ ಒಬ್ಬ ವ್ಯಕ್ತಿ ಜೊತೆ ಮಾತಾಡಬೇಕು, ಯಾರನ್ನಾದ್ರೂ ಕೊಡಿ", "lang": "kn", "expect": "none"}
+{"id": "neg_ho_9@kn", "text": "ಇವತ್ತು ಬೆಂಗಳೂರಲ್ಲಿ ಮಳೆ ಬರುತ್ತಾ?", "lang": "kn", "expect": "none"}
+{"id": "neg_ho_10@kn", "text": "ನನ್ನ ಹೆಸರಲ್ಲಿರುವ ಸಾಲದ ಬಡ್ಡಿ ದರ ಎಷ್ಟು", "lang": "kn", "expect": "none"}
+{"id": "ho_upi_pin_reset_1@ml", "text": "UPI പിൻ മറന്നുപോയി, പുതിയത് എങ്ങനെ സെറ്റ് ചെയ്യാം?", "lang": "ml", "expect": "upi_pin_reset"}
+{"id": "ho_failed_atm_withdrawal_2@ml", "text": "എടിഎമ്മിൽ നിന്ന് പണം വന്നില്ല പക്ഷേ അക്കൗണ്ടിൽ നിന്ന് പോയി, ഇനി എന്ത് ചെയ്യണം", "lang": "ml", "expect": "failed_atm_withdrawal"}
+{"id": "ho_loan_prepayment_3@ml", "text": "ലോൺ നേരത്തെ അടച്ചു തീർത്താൽ എന്തെങ്കിലും ചാർജ് ഉണ്ടോ?", "lang": "ml", "expect": "loan_prepayment"}
+{"id": "ho_emi_missed_4@ml", "text": "ഈ മാസം EMI അടക്കാൻ പറ്റിയില്ല, എന്ത് സംഭവിക്കും", "lang": "ml", "expect": "emi_missed"}
+{"id": "ho_fd_premature_5@ml", "text": "എഫ്ഡി കാലാവധിക്ക് മുമ്പ് പൊളിച്ചാൽ പലിശ കുറയുമോ?", "lang": "ml", "expect": "fd_premature"}
+{"id": "ho_kyc_update_6@ml", "text": "എന്റെ KYC പുതുക്കണം, എന്തൊക്കെ രേഖകൾ വേണം", "lang": "ml", "expect": "kyc_update"}
+{"id": "ho_update_mobile_7@ml", "text": "മൊബൈൽ നമ്പർ മാറ്റി, ബാങ്കിൽ പുതിയ നമ്പർ എങ്ങനെ കൊടുക്കും", "lang": "ml", "expect": "update_mobile"}
+{"id": "ho_fraud_report_8@ml", "text": "ആരോ എന്റെ അക്കൗണ്ടിൽ നിന്ന് പണം എടുത്തു, തട്ടിപ്പ് പരാതി എവിടെ നൽകണം", "lang": "ml", "expect": "fraud_report"}
+{"id": "ho_cheque_stop_payment_9@ml", "text": "ഒരു ചെക്ക് കൊടുത്തുപോയി, അതിന്റെ പേയ്‌മെന്റ് തടയണം", "lang": "ml", "expect": "cheque_stop_payment"}
+{"id": "ho_nominee_info_10@ml", "text": "അക്കൗണ്ടിൽ നോമിനിയെ ചേർക്കണം, എങ്ങനെ ചെയ്യും?", "lang": "ml", "expect": "nominee_info"}
+{"id": "ho_deceased_claim_11@ml", "text": "അച്ഛൻ മരിച്ചു, അദ്ദേഹത്തിന്റെ അക്കൗണ്ടിലെ പണം എങ്ങനെ കിട്ടും", "lang": "ml", "expect": "deceased_claim"}
+{"id": "ho_credit_card_basics_12@ml", "text": "പോസിറ്റീവ് പേ എന്താണ്, വലിയ ചെക്കിന് നിർബന്ധമാണോ?", "lang": "ml", "expect": "positive_pay"}
+{"id": "ho_rd_basics_13@ml", "text": "ക്രെഡിറ്റ് കാർഡ് എടുക്കാൻ എന്തൊക്കെ നിബന്ധനകൾ ഉണ്ട്", "lang": "ml", "expect": "credit_card_basics"}
+{"id": "ho_otp_not_received_14@ml", "text": "OTP വരുന്നില്ല, എത്ര തവണ നോക്കിയിട്ടും", "lang": "ml", "expect": "otp_not_received"}
+{"id": "ho_account_frozen_15@ml", "text": "എന്റെ അക്കൗണ്ട് ഫ്രീസ് ആയത് എന്തുകൊണ്ടാണ്, എങ്ങനെ തുറക്കും", "lang": "ml", "expect": "account_frozen"}
+{"id": "ho_joint_account_16@ml", "text": "ഭാര്യയുമായി ചേർന്ന് ജോയിന്റ് അക്കൗണ്ട് തുടങ്ങാമോ?", "lang": "ml", "expect": "joint_account"}
+{"id": "ho_car_loan_17@ml", "text": "കാർ ലോൺ വേണം, ഡൗൺ പേയ്‌മെന്റ് എത്ര വേണ്ടിവരും", "lang": "ml", "expect": "car_loan"}
+{"id": "ho_positive_pay_18@ml", "text": "ആർഡിയിൽ മാസം എത്ര അടക്കാം, പലിശ എത്രയാണ്", "lang": "ml", "expect": "rd_basics"}
+{"id": "ho_education_loan_19@ml", "text": "വിദേശത്ത് പഠിക്കാൻ പോകുന്നു, എജ്യുക്കേഷൻ ലോണിന് എന്ത് വേണം?", "lang": "ml", "expect": "education_loan"}
+{"id": "ho_international_transfer_20@ml", "text": "വിദേശത്തേക്ക് പണം അയക്കണം, ഇന്റർനാഷണൽ ട്രാൻസ്ഫർ എങ്ങനെയാണ്", "lang": "ml", "expect": "international_transfer"}
+{"id": "ho_insurance_products_21@ml", "text": "ഇൻഷുറൻസ് പോളിസി ബാങ്ക് വഴി എടുക്കാൻ പറ്റുമോ?", "lang": "ml", "expect": "insurance_products"}
+{"id": "ho_pension_credit_22@ml", "text": "പെൻഷൻ പണം ഇതുവരെ വന്നില്ല, എപ്പോൾ വരും", "lang": "ml", "expect": "pension_credit"}
+{"id": "ho_pan_aadhaar_link_23@ml", "text": "പാനും ആധാറും ലിങ്ക് ചെയ്തിട്ടില്ല, ഇനി എന്ത് ചെയ്യണം", "lang": "ml", "expect": "pan_aadhaar_link"}
+{"id": "ho_shared_otp_or_link_24@ml", "text": "ആരോ വിളിച്ച് OTP ചോദിക്കുന്നു, കൊടുത്താൽ എന്താ സംഭവിക്കുക?", "lang": "ml", "expect": "bank_never_asks"}
+{"id": "ho_branch_locator_25@ml", "text": "എന്റെ അടുത്തുള്ള ബ്രാഞ്ച് എവിടെയാണെന്ന് പറയാമോ?", "lang": "ml", "expect": "branch_locator"}
+{"id": "ho_cash_without_card_26@ml", "text": "കാർഡ് ഇല്ലാതെ എടിഎമ്മിൽ നിന്ന് പണം എടുക്കാൻ പറ്റുമോ", "lang": "ml", "expect": "cash_without_card"}
+{"id": "ho_debit_card_activate_27@ml", "text": "പുതിയ ഡെബിറ്റ് കാർഡ് കിട്ടി, ആക്ടിവേറ്റ് ചെയ്യുന്നത് എങ്ങനെ", "lang": "ml", "expect": "debit_card_activate"}
+{"id": "ho_upi_limits_28@ml", "text": "UPI വഴി ഒരു ദിവസം പരമാവധി എത്ര അയക്കാം?", "lang": "ml", "expect": "upi_limits"}
+{"id": "ho_statement_request_29@ml", "text": "മൂന്ന് മാസത്തെ സ്റ്റേറ്റ്‌മെന്റ് വേണം, എങ്ങനെ കിട്ടും", "lang": "ml", "expect": "statement_request"}
+{"id": "ho_min_balance_30@ml", "text": "അക്കൗണ്ടിൽ മിനിമം ബാലൻസ് എത്ര വേണം", "lang": "ml", "expect": "min_balance"}
+{"id": "neg_ho_1@ml", "text": "എന്റെ അക്കൗണ്ടിൽ ഇപ്പോൾ എത്ര രൂപയുണ്ട് പറയാമോ", "lang": "ml", "expect": "none"}
+{"id": "neg_ho_2@ml", "text": "എന്റെ EMI എത്ര രൂപയാണ് പിടിക്കുന്നത്", "lang": "ml", "expect": "none"}
+{"id": "neg_ho_3@ml", "text": "എന്റെ ലോണിൽ ഇനി എത്ര ബാക്കിയുണ്ട്", "lang": "ml", "expect": "none"}
+{"id": "neg_ho_4@ml", "text": "ഞാൻ അവസാനമായി എപ്പോഴാണ് പേയ്‌മെന്റ് ചെയ്തത്?", "lang": "ml", "expect": "none"}
+{"id": "neg_ho_5@ml", "text": "എന്റെ EMI തീയതി മാസത്തിലെ 10 ആക്കി മാറ്റൂ", "lang": "ml", "expect": "none"}
+{"id": "neg_ho_6@ml", "text": "എന്റെ ബ്രാഞ്ചിന്റെ IFSC കോഡ് എന്താണ്", "lang": "ml", "expect": "none"}
+{"id": "neg_ho_7@ml", "text": "നമസ്കാരം, സുഖമാണോ?", "lang": "ml", "expect": "none"}
+{"id": "neg_ho_8@ml", "text": "എനിക്ക് ഒരു മനുഷ്യനോട് സംസാരിക്കണം, ആരെയെങ്കിലും തരൂ", "lang": "ml", "expect": "none"}
+{"id": "neg_ho_9@ml", "text": "ഇന്ന് കൊച്ചിയിൽ മഴ പെയ്യുമോ?", "lang": "ml", "expect": "none"}
+{"id": "neg_ho_10@ml", "text": "എന്റെ പേരിലുള്ള ലോണിന്റെ പലിശ നിരക്ക് എത്രയാണ്", "lang": "ml", "expect": "none"}
+{"id": "ho_upi_pin_reset_1@pa", "text": "ਮੈਂ UPI ਪਿੰਨ ਭੁੱਲ ਗਿਆ, ਨਵਾਂ ਕਿਵੇਂ ਸੈੱਟ ਕਰਾਂ?", "lang": "pa", "expect": "upi_pin_reset"}
+{"id": "ho_failed_atm_withdrawal_2@pa", "text": "ਏਟੀਐਮ ਵਿੱਚੋਂ ਪੈਸੇ ਨਹੀਂ ਨਿਕਲੇ ਪਰ ਖਾਤੇ ਵਿੱਚੋਂ ਕੱਟ ਗਏ, ਹੁਣ ਕੀ ਕਰਾਂ", "lang": "pa", "expect": "failed_atm_withdrawal"}
+{"id": "ho_loan_prepayment_3@pa", "text": "ਲੋਨ ਜਲਦੀ ਭਰ ਦੇਵਾਂ ਤਾਂ ਕੋਈ ਚਾਰਜ ਲੱਗਦਾ ਹੈ?", "lang": "pa", "expect": "loan_prepayment"}
+{"id": "ho_emi_missed_4@pa", "text": "ਇਸ ਮਹੀਨੇ EMI ਨਹੀਂ ਭਰ ਸਕਿਆ, ਹੁਣ ਕੀ ਹੋਊ ਜੀ", "lang": "pa", "expect": "emi_missed"}
+{"id": "ho_fd_premature_5@pa", "text": "ਐਫਡੀ ਮਿਆਦ ਤੋਂ ਪਹਿਲਾਂ ਤੋੜਾਂ ਤਾਂ ਵਿਆਜ ਘੱਟ ਮਿਲੇਗਾ?", "lang": "pa", "expect": "fd_premature"}
+{"id": "ho_kyc_update_6@pa", "text": "ਮੇਰਾ ਕੇਵਾਈਸੀ ਅਪਡੇਟ ਕਰਨਾ ਹੈ, ਕਿਹੜੇ ਕਾਗਜ਼ ਚਾਹੀਦੇ ਨੇ", "lang": "pa", "expect": "kyc_update"}
+{"id": "ho_update_mobile_7@pa", "text": "ਮੋਬਾਈਲ ਨੰਬਰ ਬਦਲ ਲਿਆ ਹੈ, ਬੈਂਕ ਨੂੰ ਨਵਾਂ ਨੰਬਰ ਕਿਵੇਂ ਦੇਵਾਂ", "lang": "pa", "expect": "update_mobile"}
+{"id": "ho_fraud_report_8@pa", "text": "ਕਿਸੇ ਨੇ ਮੇਰੇ ਖਾਤੇ ਵਿੱਚੋਂ ਪੈਸੇ ਕੱਢ ਲਏ, ਧੋਖਾਧੜੀ ਦੀ ਸ਼ਿਕਾਇਤ ਕਿੱਥੇ ਕਰਾਂ", "lang": "pa", "expect": "fraud_report"}
+{"id": "ho_cheque_stop_payment_9@pa", "text": "ਇੱਕ ਚੈੱਕ ਦੇ ਦਿੱਤਾ ਹੈ, ਉਹਦੀ ਅਦਾਇਗੀ ਰੋਕਣੀ ਹੈ", "lang": "pa", "expect": "cheque_stop_payment"}
+{"id": "ho_nominee_info_10@pa", "text": "ਖਾਤੇ ਵਿੱਚ ਨਾਮਿਨੀ ਪਾਉਣਾ ਹੈ, ਕਿਵੇਂ ਹੋਵੇਗਾ?", "lang": "pa", "expect": "nominee_info"}
+{"id": "ho_deceased_claim_11@pa", "text": "ਪਿਤਾ ਜੀ ਗੁਜ਼ਰ ਗਏ ਨੇ, ਉਨ੍ਹਾਂ ਦੇ ਖਾਤੇ ਦੇ ਪੈਸੇ ਕਿਵੇਂ ਮਿਲਣਗੇ", "lang": "pa", "expect": "deceased_claim"}
+{"id": "ho_nri_accounts_12@pa", "text": "ਮੈਂ ਵਿਦੇਸ਼ ਰਹਿੰਦਾ ਹਾਂ, ਐਨਆਰਆਈ ਖਾਤਾ ਖੋਲ੍ਹ ਸਕਦਾ ਹਾਂ?", "lang": "pa", "expect": "nri_accounts"}
+{"id": "ho_tds_15g_15h_13@pa", "text": "ਟੀਡੀਐਸ ਤੋਂ ਬਚਣ ਲਈ ਫਾਰਮ 15ਜੀ ਕਿੱਥੇ ਜਮ੍ਹਾਂ ਕਰਾਂ", "lang": "pa", "expect": "tds_15g_15h"}
+{"id": "ho_otp_not_received_14@pa", "text": "OTP ਆ ਹੀ ਨਹੀਂ ਰਿਹਾ, ਕਈ ਵਾਰ ਕੋਸ਼ਿਸ਼ ਕੀਤੀ", "lang": "pa", "expect": "otp_not_received"}
+{"id": "ho_account_frozen_15@pa", "text": "ਮੇਰਾ ਖਾਤਾ ਫ੍ਰੀਜ਼ ਕਿਉਂ ਹੋ ਗਿਆ, ਕਿਵੇਂ ਖੁੱਲ੍ਹੂ", "lang": "pa", "expect": "account_frozen"}
+{"id": "ho_minor_account_16@pa", "text": "ਪੁੱਤਰ ਦਾ ਮਾਈਨਰ ਖਾਤਾ ਖੁੱਲ੍ਹ ਸਕਦਾ ਹੈ, ਉਹ ਦਸ ਸਾਲ ਦਾ ਹੈ", "lang": "pa", "expect": "minor_account"}
+{"id": "ho_gold_loan_17@pa", "text": "ਸੋਨਾ ਗਹਿਣੇ ਰੱਖ ਕੇ ਲੋਨ ਚਾਹੀਦਾ ਹੈ, ਕਿੰਨਾ ਮਿਲੂ?", "lang": "pa", "expect": "gold_loan"}
+{"id": "ho_dormant_account_18@pa", "text": "ਬਹੁਤ ਚਿਰ ਤੋਂ ਲੈਣ-ਦੇਣ ਨਹੀਂ ਕੀਤਾ, ਖਾਤਾ ਡਾਰਮੈਂਟ ਹੋ ਗਿਆ, ਚਾਲੂ ਕਿਵੇਂ ਕਰਾਂ", "lang": "pa", "expect": "dormant_account"}
+{"id": "ho_education_loan_19@pa", "text": "ਬਾਹਰ ਪੜ੍ਹਨ ਜਾਣਾ ਹੈ, ਐਜੂਕੇਸ਼ਨ ਲੋਨ ਲਈ ਕੀ ਚਾਹੀਦਾ ਹੈ?", "lang": "pa", "expect": "education_loan"}
+{"id": "ho_international_transfer_20@pa", "text": "ਵਿਦੇਸ਼ ਪੈਸੇ ਭੇਜਣੇ ਨੇ, ਇੰਟਰਨੈਸ਼ਨਲ ਟ੍ਰਾਂਸਫਰ ਕਿਵੇਂ ਹੁੰਦਾ ਹੈ", "lang": "pa", "expect": "international_transfer"}
+{"id": "ho_dbt_subsidy_21@pa", "text": "ਸਰਕਾਰੀ ਸਬਸਿਡੀ ਦੇ ਪੈਸੇ ਖਾਤੇ ਵਿੱਚ ਨਹੀਂ ਆ ਰਹੇ, ਆਧਾਰ ਲਿੰਕ ਚਾਹੀਦਾ ਹੈ?", "lang": "pa", "expect": "dbt_subsidy"}
+{"id": "ho_pension_credit_22@pa", "text": "ਪੈਨਸ਼ਨ ਦੇ ਪੈਸੇ ਅਜੇ ਜਮ੍ਹਾਂ ਨਹੀਂ ਹੋਏ, ਕਦੋਂ ਆਉਣਗੇ", "lang": "pa", "expect": "pension_credit"}
+{"id": "ho_pan_aadhaar_link_23@pa", "text": "ਪੈਨ ਤੇ ਆਧਾਰ ਲਿੰਕ ਨਹੀਂ ਕੀਤੇ, ਹੁਣ ਕੀ ਕਰਾਂ", "lang": "pa", "expect": "pan_aadhaar_link"}
+{"id": "ho_shared_otp_or_link_24@pa", "text": "ਕੋਈ ਫ਼ੋਨ ਕਰਕੇ OTP ਮੰਗ ਰਿਹਾ ਹੈ, ਦੇ ਦਿਆਂ ਤਾਂ ਕੀ ਹੋਊ?", "lang": "pa", "expect": "bank_never_asks"}
+{"id": "ho_branch_locator_25@pa", "text": "ਮੇਰੇ ਨੇੜੇ ਦੀ ਬ੍ਰਾਂਚ ਕਿੱਥੇ ਹੈ ਦੱਸ ਸਕਦੇ ਹੋ?", "lang": "pa", "expect": "branch_locator"}
+{"id": "ho_cash_without_card_26@pa", "text": "ਕਾਰਡ ਤੋਂ ਬਿਨਾਂ ਏਟੀਐਮ ਵਿੱਚੋਂ ਕੈਸ਼ ਕਢਵਾ ਸਕਦੇ ਹਾਂ?", "lang": "pa", "expect": "cash_without_card"}
+{"id": "ho_debit_card_activate_27@pa", "text": "ਨਵਾਂ ਡੈਬਿਟ ਕਾਰਡ ਆਇਆ ਹੈ, ਚਾਲੂ ਕਿਵੇਂ ਕਰਾਂ", "lang": "pa", "expect": "debit_card_activate"}
+{"id": "ho_upi_limits_28@pa", "text": "UPI ਨਾਲ ਇੱਕ ਦਿਨ ਵਿੱਚ ਵੱਧ ਤੋਂ ਵੱਧ ਕਿੰਨੇ ਭੇਜ ਸਕਦੇ ਹਾਂ?", "lang": "pa", "expect": "upi_limits"}
+{"id": "ho_statement_request_29@pa", "text": "ਤਿੰਨ ਮਹੀਨੇ ਦੀ ਸਟੇਟਮੈਂਟ ਚਾਹੀਦੀ ਹੈ, ਕਿਵੇਂ ਮਿਲੂ", "lang": "pa", "expect": "statement_request"}
+{"id": "ho_min_balance_30@pa", "text": "ਖਾਤੇ ਵਿੱਚ ਘੱਟੋ-ਘੱਟ ਬੈਲੇਂਸ ਕਿੰਨਾ ਰੱਖਣਾ ਪੈਂਦਾ ਹੈ", "lang": "pa", "expect": "min_balance"}
+{"id": "neg_ho_1@pa", "text": "ਮੇਰੇ ਖਾਤੇ ਵਿੱਚ ਹੁਣ ਕਿੰਨੇ ਪੈਸੇ ਨੇ ਦੱਸੋ", "lang": "pa", "expect": "none"}
+{"id": "neg_ho_2@pa", "text": "ਮੇਰੀ EMI ਕਿੰਨੀ ਕੱਟਦੀ ਹੈ", "lang": "pa", "expect": "none"}
+{"id": "neg_ho_3@pa", "text": "ਮੇਰੇ ਲੋਨ ਦਾ ਕਿੰਨਾ ਬਕਾਇਆ ਹੈ", "lang": "pa", "expect": "none"}
+{"id": "neg_ho_4@pa", "text": "ਮੈਂ ਪਿਛਲੀ ਵਾਰ ਕਦੋਂ ਭੁਗਤਾਨ ਕੀਤਾ ਸੀ?", "lang": "pa", "expect": "none"}
+{"id": "neg_ho_5@pa", "text": "ਮੇਰੀ EMI ਦੀ ਤਾਰੀਖ ਮਹੀਨੇ ਦੀ 10 ਕਰ ਦਿਓ", "lang": "pa", "expect": "none"}
+{"id": "neg_ho_6@pa", "text": "ਮੇਰੀ ਬ੍ਰਾਂਚ ਦਾ IFSC ਕੋਡ ਕੀ ਹੈ", "lang": "pa", "expect": "none"}
+{"id": "neg_ho_7@pa", "text": "ਸਤ ਸ੍ਰੀ ਅਕਾਲ, ਕੀ ਹਾਲ ਹੈ ਤੁਹਾਡਾ?", "lang": "pa", "expect": "none"}
+{"id": "neg_ho_8@pa", "text": "ਮੈਨੂੰ ਕਿਸੇ ਬੰਦੇ ਨਾਲ ਗੱਲ ਕਰਨੀ ਹੈ, ਕਿਸੇ ਨੂੰ ਦਿਓ", "lang": "pa", "expect": "none"}
+{"id": "neg_ho_9@pa", "text": "ਅੱਜ ਲੁਧਿਆਣੇ ਵਿੱਚ ਮੀਂਹ ਪਊ?", "lang": "pa", "expect": "none"}
+{"id": "neg_ho_10@pa", "text": "ਮੇਰੇ ਨਾਂ ਵਾਲੇ ਲੋਨ ਦੀ ਵਿਆਜ ਦਰ ਕਿੰਨੀ ਹੈ", "lang": "pa", "expect": "none"}
+{"id": "ho_upi_pin_reset_1@ta", "text": "UPI பின் மறந்துவிட்டேன், புதியதை எப்படி செட் செய்வது?", "lang": "ta", "expect": "upi_pin_reset"}
+{"id": "ho_failed_atm_withdrawal_2@ta", "text": "ATM-ல் பணம் வரவில்லை ஆனால் கணக்கில் இருந்து கழிந்துவிட்டது, என்ன செய்வது", "lang": "ta", "expect": "failed_atm_withdrawal"}
+{"id": "ho_loan_prepayment_3@ta", "text": "கடனை முன்கூட்டியே கட்டினால் ஏதாவது கட்டணம் உண்டா?", "lang": "ta", "expect": "loan_prepayment"}
+{"id": "ho_emi_missed_4@ta", "text": "இந்த மாசம் EMI கட்ட முடியல, என்ன ஆகும் சொல்லுங்க", "lang": "ta", "expect": "emi_missed"}
+{"id": "ho_fd_premature_5@ta", "text": "எஃப்டியை முதிர்வுக்கு முன்பே உடைத்தால் வட்டி குறையுமா?", "lang": "ta", "expect": "fd_premature"}
+{"id": "ho_kyc_update_6@ta", "text": "என் கேஒய்சி புதுப்பிக்கணும், என்னென்ன ஆவணம் வேணும்", "lang": "ta", "expect": "kyc_update"}
+{"id": "ho_update_mobile_7@ta", "text": "மொபைல் நம்பர் மாத்திட்டேன், வங்கியில் புது நம்பரை எப்படி கொடுப்பது", "lang": "ta", "expect": "update_mobile"}
+{"id": "ho_fraud_report_8@ta", "text": "யாரோ என் கணக்கில் இருந்து பணம் எடுத்துட்டாங்க, மோசடி புகார் எங்கே கொடுப்பது", "lang": "ta", "expect": "fraud_report"}
+{"id": "ho_cheque_stop_payment_9@ta", "text": "ஒரு செக் கொடுத்துட்டேன், அதன் பணம் செலுத்தலை நிறுத்தணும்", "lang": "ta", "expect": "cheque_stop_payment"}
+{"id": "ho_nominee_info_10@ta", "text": "கணக்கில் நாமினி சேர்க்கணும், எப்படி செய்யலாம்?", "lang": "ta", "expect": "nominee_info"}
+{"id": "ho_deceased_claim_11@ta", "text": "அப்பா இறந்துவிட்டார், அவர் கணக்கில் உள்ள பணத்தை எப்படி பெறுவது", "lang": "ta", "expect": "deceased_claim"}
+{"id": "ho_credit_card_basics_12@ta", "text": "பாசிட்டிவ் பே என்றால் என்ன, பெரிய செக்குக்கு கட்டாயமா?", "lang": "ta", "expect": "positive_pay"}
+{"id": "ho_rd_basics_13@ta", "text": "கிரெடிட் கார்டு வாங்க என்ன நிபந்தனைகள் இருக்கு", "lang": "ta", "expect": "credit_card_basics"}
+{"id": "ho_otp_not_received_14@ta", "text": "OTP வரவே இல்லை, எத்தனை முறை முயற்சித்தும்", "lang": "ta", "expect": "otp_not_received"}
+{"id": "ho_account_frozen_15@ta", "text": "என் கணக்கு ஃப்ரீஸ் ஆயிடுச்சு ஏன், எப்படி திறப்பாங்க", "lang": "ta", "expect": "account_frozen"}
+{"id": "ho_joint_account_16@ta", "text": "மனைவியோடு சேர்ந்து கூட்டுக் கணக்கு தொடங்கலாமா?", "lang": "ta", "expect": "joint_account"}
+{"id": "ho_car_loan_17@ta", "text": "கார் லோன் வேணும், டவுன் பேமென்ட் எவ்வளவு கட்டணும்", "lang": "ta", "expect": "car_loan"}
+{"id": "ho_positive_pay_18@ta", "text": "ஆர்டியில் மாதம் எவ்வளவு கட்டலாம், வட்டி எவ்வளவு", "lang": "ta", "expect": "rd_basics"}
+{"id": "ho_education_loan_19@ta", "text": "வெளிநாட்டில் படிக்கப் போறேன், கல்விக் கடனுக்கு என்ன வேணும்?", "lang": "ta", "expect": "education_loan"}
+{"id": "ho_international_transfer_20@ta", "text": "வெளிநாட்டுக்கு பணம் அனுப்பணும், இன்டர்நேஷனல் டிரான்ஸ்பர் எப்படி", "lang": "ta", "expect": "international_transfer"}
+{"id": "ho_insurance_products_21@ta", "text": "இன்சூரன்ஸ் பாலிசியை வங்கி மூலம் எடுக்க முடியுமா?", "lang": "ta", "expect": "insurance_products"}
+{"id": "ho_pension_credit_22@ta", "text": "பென்ஷன் பணம் இன்னும் வரவில்லை, எப்போ வரும்", "lang": "ta", "expect": "pension_credit"}
+{"id": "ho_pan_aadhaar_link_23@ta", "text": "பான் ஆதார் இணைக்கலை, இப்போ என்ன செய்யணும்", "lang": "ta", "expect": "pan_aadhaar_link"}
+{"id": "ho_shared_otp_or_link_24@ta", "text": "யாரோ போன் பண்ணி OTP கேக்கிறாங்க, கொடுத்தா என்ன ஆகும்?", "lang": "ta", "expect": "bank_never_asks"}
+{"id": "ho_branch_locator_25@ta", "text": "எனக்கு பக்கத்தில் இருக்கும் கிளை எங்கே இருக்கு சொல்ல முடியுமா?", "lang": "ta", "expect": "branch_locator"}
+{"id": "ho_cash_without_card_26@ta", "text": "கார்டு இல்லாமல் ATM-ல் பணம் எடுக்க முடியுமா", "lang": "ta", "expect": "cash_without_card"}
+{"id": "ho_debit_card_activate_27@ta", "text": "புது டெபிட் கார்டு வந்திருக்கு, அதை எப்படி ஆக்டிவேட் செய்வது", "lang": "ta", "expect": "debit_card_activate"}
+{"id": "ho_upi_limits_28@ta", "text": "UPI-ல் ஒரு நாளைக்கு அதிகபட்சம் எவ்வளவு அனுப்பலாம்?", "lang": "ta", "expect": "upi_limits"}
+{"id": "ho_statement_request_29@ta", "text": "மூன்று மாத ஸ்டேட்மெண்ட் வேணும், எப்படி கிடைக்கும்", "lang": "ta", "expect": "statement_request"}
+{"id": "ho_min_balance_30@ta", "text": "கணக்கில் குறைந்தபட்ச இருப்பு எவ்வளவு வைக்கணும்", "lang": "ta", "expect": "min_balance"}
+{"id": "neg_ho_1@ta", "text": "என் கணக்கில் இப்போ எவ்வளவு பணம் இருக்கு சொல்லுங்க", "lang": "ta", "expect": "none"}
+{"id": "neg_ho_2@ta", "text": "என் EMI எவ்வளவு பிடிக்கிறாங்க", "lang": "ta", "expect": "none"}
+{"id": "neg_ho_3@ta", "text": "என் கடனில் இன்னும் எவ்வளவு பாக்கி இருக்கு", "lang": "ta", "expect": "none"}
+{"id": "neg_ho_4@ta", "text": "நான் கடைசியா எப்போ பணம் கட்டினேன்?", "lang": "ta", "expect": "none"}
+{"id": "neg_ho_5@ta", "text": "என் EMI தேதியை மாதம் 10-ஆம் தேதிக்கு மாத்துங்க", "lang": "ta", "expect": "none"}
+{"id": "neg_ho_6@ta", "text": "என் கிளையோட IFSC கோடு என்ன", "lang": "ta", "expect": "none"}
+{"id": "neg_ho_7@ta", "text": "வணக்கம், எப்படி இருக்கீங்க?", "lang": "ta", "expect": "none"}
+{"id": "neg_ho_8@ta", "text": "எனக்கு ஒரு மனிதரிடம் பேசணும், யாரையாவது கொடுங்க", "lang": "ta", "expect": "none"}
+{"id": "neg_ho_9@ta", "text": "இன்னைக்கு சென்னையில மழை பெய்யுமா?", "lang": "ta", "expect": "none"}
+{"id": "neg_ho_10@ta", "text": "என் பெயரில் இருக்கிற கடனுக்கு வட்டி விகிதம் என்ன", "lang": "ta", "expect": "none"}
+{"id": "ho_upi_pin_reset_1@te", "text": "UPI పిన్ మర్చిపోయాను, కొత్తది ఎలా సెట్ చేయాలి?", "lang": "te", "expect": "upi_pin_reset"}
+{"id": "ho_failed_atm_withdrawal_2@te", "text": "ATM నుంచి డబ్బులు రాలేదు కానీ ఖాతాలో కట్ అయ్యాయి, ఇప్పుడు ఏం చేయాలి", "lang": "te", "expect": "failed_atm_withdrawal"}
+{"id": "ho_loan_prepayment_3@te", "text": "లోన్ ముందే కట్టేస్తే ఏమైనా ఛార్జీలు ఉంటాయా?", "lang": "te", "expect": "loan_prepayment"}
+{"id": "ho_emi_missed_4@te", "text": "ఈ నెల EMI కట్టలేకపోయాను, ఏమవుతుంది చెప్పండి", "lang": "te", "expect": "emi_missed"}
+{"id": "ho_fd_premature_5@te", "text": "ఎఫ్‌డీని గడువుకు ముందే తీస్తే వడ్డీ తగ్గిస్తారా?", "lang": "te", "expect": "fd_premature"}
+{"id": "ho_kyc_update_6@te", "text": "నా కేవైసీ అప్‌డేట్ చేయాలి, ఏ పత్రాలు కావాలి", "lang": "te", "expect": "kyc_update"}
+{"id": "ho_update_mobile_7@te", "text": "మొబైల్ నంబర్ మార్చాను, బ్యాంకుకి కొత్త నంబర్ ఎలా ఇవ్వాలి", "lang": "te", "expect": "update_mobile"}
+{"id": "ho_fraud_report_8@te", "text": "ఎవరో నా ఖాతా నుంచి డబ్బు తీసేశారు, మోసం ఫిర్యాదు ఎక్కడ ఇవ్వాలి", "lang": "te", "expect": "fraud_report"}
+{"id": "ho_cheque_stop_payment_9@te", "text": "ఒక చెక్ ఇచ్చేశాను, దాని చెల్లింపు ఆపాలి", "lang": "te", "expect": "cheque_stop_payment"}
+{"id": "ho_nominee_info_10@te", "text": "ఖాతాకు నామినీని చేర్చాలి, ఎలా చేయాలి?", "lang": "te", "expect": "nominee_info"}
+{"id": "ho_deceased_claim_11@te", "text": "నాన్న చనిపోయారు, ఆయన ఖాతాలో డబ్బు ఎలా పొందాలి", "lang": "te", "expect": "deceased_claim"}
+{"id": "ho_nri_accounts_12@te", "text": "నేను విదేశాల్లో ఉంటాను, ఎన్నారై ఖాతా తెరవవచ్చా?", "lang": "te", "expect": "nri_accounts"}
+{"id": "ho_tds_15g_15h_13@te", "text": "టీడీఎస్ కట్ కాకుండా ఫారం 15జీ ఎక్కడ ఇవ్వాలి", "lang": "te", "expect": "tds_15g_15h"}
+{"id": "ho_otp_not_received_14@te", "text": "OTP రావడం లేదు, ఎన్నిసార్లు ప్రయత్నించినా", "lang": "te", "expect": "otp_not_received"}
+{"id": "ho_account_frozen_15@te", "text": "నా ఖాతా ఫ్రీజ్ అయింది ఎందుకు, ఎలా తెరుస్తారు", "lang": "te", "expect": "account_frozen"}
+{"id": "ho_minor_account_16@te", "text": "కొడుకు కోసం మైనర్ ఖాతా తెరవవచ్చా, వాడికి పదేళ్లు", "lang": "te", "expect": "minor_account"}
+{"id": "ho_gold_loan_17@te", "text": "బంగారం తాకట్టు పెట్టి లోన్ కావాలి, ఎంత ఇస్తారు?", "lang": "te", "expect": "gold_loan"}
+{"id": "ho_dormant_account_18@te", "text": "చాలా రోజులు లావాదేవీలు చేయలేదు, ఖాతా డార్మెంట్ అయింది, ఎలా యాక్టివ్ చేయాలి", "lang": "te", "expect": "dormant_account"}
+{"id": "ho_education_loan_19@te", "text": "విదేశాల్లో చదవడానికి వెళ్తున్నాను, ఎడ్యుకేషన్ లోన్‌కి ఏం కావాలి?", "lang": "te", "expect": "education_loan"}
+{"id": "ho_international_transfer_20@te", "text": "విదేశాలకు డబ్బు పంపాలి, ఇంటర్నేషనల్ ట్రాన్స్‌ఫర్ ఎలా చేయాలి", "lang": "te", "expect": "international_transfer"}
+{"id": "ho_dbt_subsidy_21@te", "text": "ప్రభుత్వ సబ్సిడీ డబ్బు ఖాతాలో పడటం లేదు, ఆధార్ లింక్ కావాలా", "lang": "te", "expect": "dbt_subsidy"}
+{"id": "ho_pension_credit_22@te", "text": "పెన్షన్ డబ్బు ఇంకా జమ కాలేదు, ఎప్పుడు వస్తుంది", "lang": "te", "expect": "pension_credit"}
+{"id": "ho_pan_aadhaar_link_23@te", "text": "పాన్, ఆధార్ లింక్ చేయలేదు, ఇప్పుడు ఏం చేయాలి", "lang": "te", "expect": "pan_aadhaar_link"}
+{"id": "ho_shared_otp_or_link_24@te", "text": "ఎవరో ఫోన్ చేసి OTP అడుగుతున్నారు, ఇస్తే ఏమవుతుంది?", "lang": "te", "expect": "bank_never_asks"}
+{"id": "ho_branch_locator_25@te", "text": "నాకు దగ్గరలో ఉన్న బ్రాంచ్ ఎక్కడుందో చెప్పగలరా?", "lang": "te", "expect": "branch_locator"}
+{"id": "ho_cash_without_card_26@te", "text": "కార్డ్ లేకుండా ATM నుంచి క్యాష్ తీసుకోవచ్చా", "lang": "te", "expect": "cash_without_card"}
+{"id": "ho_debit_card_activate_27@te", "text": "కొత్త డెబిట్ కార్డ్ వచ్చింది, దాన్ని యాక్టివేట్ ఎలా చేయాలి", "lang": "te", "expect": "debit_card_activate"}
+{"id": "ho_upi_limits_28@te", "text": "UPI ద్వారా రోజుకి గరిష్ఠంగా ఎంత పంపవచ్చు?", "lang": "te", "expect": "upi_limits"}
+{"id": "ho_statement_request_29@te", "text": "మూడు నెలల స్టేట్‌మెంట్ కావాలి, ఎలా దొరుకుతుంది", "lang": "te", "expect": "statement_request"}
+{"id": "ho_min_balance_30@te", "text": "ఖాతాలో కనీస బ్యాలెన్స్ ఎంత ఉంచాలి", "lang": "te", "expect": "min_balance"}
+{"id": "neg_ho_1@te", "text": "నా ఖాతాలో ఇప్పుడు ఎంత డబ్బు ఉంది చెప్పండి", "lang": "te", "expect": "none"}
+{"id": "neg_ho_2@te", "text": "నా EMI ఎంత కట్ అవుతుంది", "lang": "te", "expect": "none"}
+{"id": "neg_ho_3@te", "text": "నా లోన్‌లో ఇంకా ఎంత బాకీ ఉంది", "lang": "te", "expect": "none"}
+{"id": "neg_ho_4@te", "text": "నేను చివరిసారి ఎప్పుడు చెల్లించాను?", "lang": "te", "expect": "none"}
+{"id": "neg_ho_5@te", "text": "నా EMI తేదీని నెలలో 10కి మార్చండి", "lang": "te", "expect": "none"}
+{"id": "neg_ho_6@te", "text": "నా బ్రాంచ్ IFSC కోడ్ ఏమిటి", "lang": "te", "expect": "none"}
+{"id": "neg_ho_7@te", "text": "నమస్కారం, ఎలా ఉన్నారు?", "lang": "te", "expect": "none"}
+{"id": "neg_ho_8@te", "text": "నాకు ఒక మనిషితో మాట్లాడాలి, ఎవరినైనా ఇవ్వండి", "lang": "te", "expect": "none"}
+{"id": "neg_ho_9@te", "text": "ఈరోజు హైదరాబాద్‌లో వర్షం పడుతుందా?", "lang": "te", "expect": "none"}
+{"id": "neg_ho_10@te", "text": "నా పేరు మీద ఉన్న లోన్ వడ్డీ రేటు ఎంత", "lang": "te", "expect": "none"}

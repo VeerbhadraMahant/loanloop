@@ -26,6 +26,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from voice import providers, tts as tts_mod
 
 ROOT = Path(__file__).resolve().parent.parent
+KEYTERMS_DIR = ROOT / "agent" / "keyterms"  # optional <lang>.txt (one term per line) sent before the global list; tests point it elsewhere
 ENV_LOCAL = ROOT / ".env.local"  # module-level so tests can point it at a temp file
 
 def _load_faq_score():
@@ -237,6 +238,10 @@ class Settings(BaseSettings):
     voice_allowed_origins: str = ""  # comma list of extra CORS origins
     llm_fallback: str = ""  # "" = off | ollama | gemini | sarvam: retried once when the primary provider fails
     llm_provider: str = "ollama"  # default per call: ollama | gemini | sarvam
+    # routed attempt budget: Sarvam answers in ~0.2-1 s (p95 ~9 s once seen for Kannada); 8 s keeps normal long answers and bounds dead air
+    llm_route_timeout: float = 8.0
+    llm_route_cooldown: float = 60.0  # after a routed failure, skip routing to that provider this long
+    llm_lang_routing: bool = True  # beta-language turns go to the provider named by languages.json "llm" (LLM_LANG_ROUTING=false: always the default)
     dev: bool = Field(False, validation_alias="VOICE_DEV")  # developer lab: /dev/* routes, per-call settings
     warmup: bool = True  # background Ollama warm-up at startup (tests turn it off)
     gemini_api_key: str = ""
@@ -359,10 +364,10 @@ def _load_scrub():
     spec = importlib.util.spec_from_file_location("ll_scrub", ROOT / "gateway" / "app" / "security" / "scrub.py")
     m = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(m)
-    return m.find_secret, m.redact_secret
+    return m.find_secret, m.redact_secret, m.set_extra_secret_words
 
 
-_find_secret, _redact_secret = _load_scrub()
+_find_secret, _redact_secret, _set_secret_words = _load_scrub()
 
 _DIGITS = re.compile(r"(?P<ifsc>\b[A-Z]{4}0[A-Z0-9]{6}\b)|(?P<d>\d(?:[ -]?\d){5,})")  # IFSC codes are public: exempt
 _ISO_DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
@@ -432,7 +437,7 @@ def trim(msgs: list[dict], keep: int = KEEP_MSGS) -> list[dict]:
     return msgs[:1] + tail
 
 
-_TOKEN = re.compile(r"[A-Za-z0-9'’]+|[\u0900-\u0d7f]+")  # explicit Indic range (Devanagari..Malayalam): matras are not \w, so no \b
+_TOKEN = re.compile(r"[A-Za-z0-9'’]+|[\u0900-\u0963\u0966-\u0d7f]+")  # explicit Indic range (Devanagari..Malayalam) minus the danda, so "हाँ।" is the word हाँ: matras are not \w, so no \b
 AFFIRM_WORDS = {"yes", "yeah", "yep", "yup", "correct", "right", "haan", "han", "haa", "ji", "jee", "sahi", "theek", "thik",
                 "hai", "hain", "ok", "okay", "confirm", "confirmed", "ho", "hoy", "that", "that's", "thats", "is", "it", "its",
                 "हाँ", "हां", "सही", "ठीक", "है", "हैं", "हो", "होय", "बरोबर", "आहे", "हा", "जी"}
@@ -579,12 +584,14 @@ APPROVAL_WORDS = {"approve", "approved", "approval", "tapped", "tap", "done", "k
                   "अप्रूव", "मंजूर", "कर", "दिया", "केले", "केलं", "झाले"}
 
 
+_APPROVAL_DONE = {"diya", "kiya", "done", "दिया", "केले", "केलं"}  # "I did it": with an approval word, claims the tap happened
 _DATE_WORDS = {"date", "tareekh", "tarikh", "tarik", "dinank", "तारीख", "तारिख", "दिनांक"}
 _CHANGE_CUES = {"change", "badal", "badlo", "badalna", "badla", "karaycha", "karna", "karo", "karne", "shift", "move",
                 "करा", "करायचा", "करायची", "बदल", "बदला", "बदलो", "बदलना", "लावा"}
 
 
 _WHY_WORDS = {"why", "kyun", "kyu", "kyon", "kaaran", "karan", "क्यों", "क्यूं", "कारण", "का", "कसा", "का"}
+_EMI_WORDS = {"emi", "ईएमआय", "एमआय"}
 _UP_WORDS = {"badha", "badh", "badhi", "badhgayi", "increase", "increased", "up", "hike", "बढ़ी", "बढ़ा", "वाढली", "वाढला", "वाढले"}
 
 
@@ -649,9 +656,9 @@ def fallback_action(text: str, said: list[str] | None = None, verified: bool = F
         if fb_v:
             return fb_v
     t = set(_tokens(text))
-    if {"emi", "ईएमआय", "एमआय"} & t and _WHY_WORDS & t and _UP_WORDS & t:
+    if _EMI_WORDS & t and _WHY_WORDS & t and _UP_WORDS & t:
         return ("explain_emi_change", {})
-    if not ({"emi", "ईएमआय", "एमआय"} & t and _DATE_WORDS & t and _CHANGE_CUES & t):
+    if not (_EMI_WORDS & t and _DATE_WORDS & t and _CHANGE_CUES & t):
         return None
     days = [int(n) for n in re.findall(r"(?<!\d)\d{1,2}(?!\d)", text.translate(_DEVA_DIGITS)) if 1 <= int(n) <= 31]
     return ("emi_date_change", {"new_day": days[0]}) if len(days) == 1 else None
@@ -660,12 +667,21 @@ def fallback_action(text: str, said: list[str] | None = None, verified: bool = F
 def claims_approved(text: str) -> bool:
     """'Approve kar diya' / 'I approved it': the caller says it is done (a request like 'send the approval' is not)."""
     t = set(_tokens(text))
-    return bool(t & {"approved", "tapped"} or (t & {"approve", "approval", "अप्रूव"} and t & {"diya", "kiya", "done", "दिया", "केले", "केलं"}))
+    nouns = {"approve", "approval", "अप्रूव"} | (APPROVAL_WORDS - _SNAP[0]["approval"])  # + the beta files' approval words
+    return bool(t & {"approved", "tapped"} or (t & nouns and t & _APPROVAL_DONE))
+
+
+_INTENT_GROUP = {"raise_closure": "closure", "foreclosure_quote": "closure", "request_document": "document",
+                 "explain_emi_change": "emi_change", "update_nominee": "nominee", "update_address": "address"}
+_INTENT_EXTRA: dict[str, list[str]] = {}  # words.intent_cues of the loaded language files, by group
 
 
 def intent_ok(name: str, said: list[str]) -> bool:
     keys = INTENT.get(name)
-    return True if not keys else any(k in " ".join(said).lower() for k in keys)
+    if not keys:
+        return True
+    said_ = " ".join(said).lower()
+    return any(k in said_ for k in (*keys, *_INTENT_EXTRA.get(_INTENT_GROUP.get(name, ""), ())))
 
 
 def looks_like_approval_turn(text: str) -> bool:
@@ -709,6 +725,8 @@ _TOPICS = {  # request topics; a tool "covers" some of them (its speak already a
     "f_cheque": r"cheque|check book|चेक",
 }
 _FAQ = {k for k in _TOPICS if k.startswith("f_")}
+_TOPIC_EXTRA: dict[str, list[str]] = {}  # words.topics of the loaded language files, by topic
+_TOPIC_RX: dict[str, re.Pattern] = {}  # _TOPICS + _TOPIC_EXTRA, compiled by _build_regexes
 _COVERS = {"branch_lookup": {"branch"}, "validate_ifsc": {"branch"}, "emi_info": {"emi"}, "explain_emi_change": {"emi"},
            "dues_info": {"dues", "emi"}, "account_balance": {"balance"}, "last_transactions": {"txn", "balance"},
            "send_details_sms": {"sms", "branch"}, "foreclosure_quote": {"dues"}, "record_ptp": {"dues", "emi"},
@@ -725,7 +743,7 @@ def multi_request(text: str, tool: str | None = None) -> bool:
     if tool not in _COVERS:
         return True
     low = text.lower()
-    hit = {k for k, rx in _TOPICS.items() if re.search(rx, low)}
+    hit = {k for k, rx in _TOPIC_RX.items() if rx.search(low)}
     if not hit or not hit <= _COVERS[tool]:
         return True
     return tool == "faq_lookup" and len(hit & _FAQ) > 1
@@ -752,6 +770,8 @@ _SCRIPT_BLOCK = {"Bengali": (0x980, 0x9FF), "Gurmukhi": (0xA00, 0xA7F), "Gujarat
                  "Telugu": (0xC00, 0xC7F), "Kannada": (0xC80, 0xCFF), "Malayalam": (0xD00, 0xD7F)}
 _SCRIPT_LANG = {m["code"]: m["script"] for m in MODES if m.get("script") in _SCRIPT_BLOCK}  # code -> script, from the registry
 _ANY_INDIC_NON_DEVA = re.compile("[\u0980-\u0d7f]")
+ROUTE_DOWN: dict[str, float] = {}  # routed provider -> time.monotonic() until which routing to it is skipped
+LLM_ROUTE: dict[str, str] = {}  # language code -> provider (languages.json "llm"); see create_app route_for
 ACTIVE_LANGS: list[str] = list(BUILTIN_LANGS)  # built-in 4 + every language whose file loaded
 _INACTIVE_NAMES: set[str] = set()  # names of registry languages with no (valid) file: the caller gets the sorry line
 _SWITCH_CUES = {"talk", "speak", "switch", "change", "in", "mein", "me", "madhe", "bolo", "bol", "bolna", "bolu", "kar", "karo", "kara",
@@ -864,18 +884,38 @@ _ACCT_NOUNS = {"emi", "balance", "loan", "payment", "paid", "transaction", "tran
 
 # General-process and safety topics: answered from the FAQ even with "my ... account" (fraud, bereavement, KYC, a missed EMI as a
 # question). Balance / EMI amount / payment lookups stay account-specific and need verification.
-_GENERAL_TOPIC = re.compile(
+_GENERAL_TOPIC_BASE = (
     r"fraud|scam|phishing|unauthori[sz]ed|धोखा|ठगी|फसवणूक|स्कॅम|deceased|passed away|\bdeath\b|मृत|"
     r"dormant|inactive|inoperative|निष्क्रिय|डॉरमेंट|डॉर्मंट|\bkyc\b|केवाईसी|केवायसी|"
     r"\bmiss(?:ed)?\b|bounce|not paid|छूट गई|छूट गया|चुकला|चुकली|"
     r"complaint|grievance|ombudsman|shikayat|शिकायत|तक्रार|लोकपाल|"
     r"(?:block|lost|stolen).{0,12}card|card.{0,12}(?:block|lost|stolen)|कार्ड ब्लॉक|bank.{0,15}(?:asks?|never|maang)")
+_GENERAL_TOPIC = re.compile(_GENERAL_TOPIC_BASE)  # rebuilt with the language files' general_topics by _build_regexes
 
 
 def account_specific(text: str) -> bool:
     low = text.lower()
     t = set(_tokens(low))
     return bool(t & _POSSESSIVE and t & _ACCT_NOUNS and not _GENERAL_TOPIC.search(low))
+
+
+_BETA_PREFIX_MIN = 3  # a beta word of at least this many characters (final virama dropped) also matches inflected tokens that start with it ("கடன்" ~ "கடனின்"); shorter ones only exactly
+_VIRAMA = "্੍્்్್്"
+
+
+def _beta_has(tokens: list[str], words: set[str]) -> bool:
+    """Beta scripts inflect by suffix, so a first-person / account word counts by prefix (a short one like Tamil "என்" only exactly: it prefixes "என்ன" = what; a final virama is dropped: "கடன்" ~ "கடனின்")."""
+    words = {faq_score.norm(w) for w in words}  # tokens are folded (spelling variants), so the words are too
+    pre = [w.rstrip(_VIRAMA) for w in words if not w.isascii() and len(w.rstrip(_VIRAMA)) >= _BETA_PREFIX_MIN]
+    return any(t in words or (not t.isascii() and any(t.startswith(w) for w in pre)) for t in tokens)
+
+
+def beta_account_specific(text: str) -> bool:
+    """Beta-script text about the caller's own loan/account/payment/EMI/transactions ("my loan's rate", "when did I last pay"): never an FAQ answer,
+    unless a general topic (fraud, KYC, missed EMI ...) matches. Wider than account_specific: inflected forms, EMI words and the txn phrases count."""
+    low = text.lower()
+    t = _tokens(faq_score.norm(text))
+    return bool(_beta_has(t, _POSSESSIVE) and (_beta_has(t, _ACCT_NOUNS | _EMI_WORDS) or _TXN.search(low)) and not _GENERAL_TOPIC.search(low))
 
 
 # Questions a TOOL answers (account data, branch/IFSC lookups, requests): never routed to the FAQ even if a FAQ keyword matches.
@@ -900,8 +940,12 @@ _TOOL_OWNED = re.compile(
 _TOOL_OWNED_POSS = re.compile(r"मेरा\s+(?:बैलेंस|ईएमआई|ईएमआय)|माझा\s+(?:बॅलन्स|ईएमआय)|माझे\s+(?:शेवटचे|व्यवहार)")
 
 
+_TOOL_OWNED_EXTRA = re.compile("(?!)")  # words.tool_owned of the language files (rebuilt by _build_regexes)
+
+
 def tool_owned(text: str) -> bool:
-    return bool(_TOOL_OWNED.search(text) or (_TOOL_OWNED_POSS.search(text) and not _GENERAL_TOPIC.search(text.lower())))
+    low = text.lower()
+    return bool(_TOOL_OWNED.search(text) or ((_TOOL_OWNED_POSS.search(text) or _TOOL_OWNED_EXTRA.search(low)) and not _GENERAL_TOPIC.search(low)))
 
 
 def faq_text_ok(text: str, tool_guard: bool = True, acct_guard: bool = True) -> bool:
@@ -910,19 +954,26 @@ def faq_text_ok(text: str, tool_guard: bool = True, acct_guard: bool = True) -> 
                 and not (tool_guard and tool_owned(text)))
 
 
+_FAQ_CUES = {  # words that map a secret-word question to its FAQ topic (faq_args); the language files add to each
+    "ask": {"ask", "asks", "asked", "maang", "maangta", "maangti", "mangta", "मांग", "मांगता", "मांगते", "मागते", "मागतो", "विचारते", "विचारतो", "पूछता"},
+    "bank": {"bank", "बैंक", "बँक"},
+    "upi": {"upi", "यूपीआई", "युपीआय", "यूपीआय"},
+    "collect": {"receive", "collect", "someone", "koi", "कोई", "कोणी", "money", "paisa", "paise", "पैसे", "पैसा", "prapt"},
+    "card": {"card", "atm", "debit", "कार्ड", "एटीएम", "डेबिट"}}
+_FAQ_CUES_BASE = {k: set(v) for k, v in _FAQ_CUES.items()}
+
+
 def faq_args(text: str) -> dict | None:
     """Arguments for faq_lookup. The gateway rejects any input that names a secret ('PIN', 'OTP'), so those questions
     map to their FAQ topic here instead of going as a query (contract change request: exempt faq_lookup.query)."""
     if not _find_secret("user_text", text):
         return {"query": text[:200]}
     t = set(_tokens(text.lower()))
-    asks = t & {"ask", "asks", "asked", "maang", "maangta", "maangti", "mangta", "मांग", "मांगता", "मांगते", "मागते", "मागतो", "विचारते", "विचारतो", "पूछता"}
-    if t & {"bank", "बैंक", "बँक"} and asks:
+    if t & _FAQ_CUES["bank"] and t & _FAQ_CUES["ask"]:
         return {"topic": "bank_never_asks"}
-    if t & {"upi", "यूपीआई", "युपीआय", "यूपीआय"}:
-        collect = {"receive", "collect", "someone", "koi", "कोई", "कोणी", "money", "paisa", "paise", "पैसे", "पैसा", "prapt"}
-        return {"topic": "upi_fraud_collect" if t & collect else "upi_pin_reset"}
-    if t & {"card", "atm", "debit", "कार्ड", "एटीएम", "डेबिट"}:
+    if t & _FAQ_CUES["upi"]:
+        return {"topic": "upi_fraud_collect" if t & _FAQ_CUES["collect"] else "upi_pin_reset"}
+    if t & _FAQ_CUES["card"]:
         return {"topic": "card_pin"}
     return None
 
@@ -978,12 +1029,20 @@ def faq_route(text: str, lang: str, st: dict | None = None) -> tuple[str, str | 
     """('high', id) answer directly, ('medium', id) LLM turn with the FAQ block, ('low', None) plain LLM turn.
     Pure on the text (call-state guards stay in faq_ok); thresholds from the call's settings, else the defaults."""
     text = strip_lang_lead(text)
-    if not faq_text_ok(text, acct_guard=False):
+    beta = bool(faq_score._BETA.search(text))
+    if not faq_text_ok(text, acct_guard=beta) or (beta and beta_account_specific(text)):  # beta scripts: "my loan's rate" is the caller's own account, not an FAQ
         return "low", None
     st = st or {}
     out = faq_score.classify(faq_rank(text, lang), st.get("faq_direct_min", faq_score.HIGH_MIN), st.get("faq_direct_margin", faq_score.HIGH_MARGIN),
                               st.get("faq_ref_min", faq_score.MED_MIN), st.get("faq_direct_cover", faq_score.COVER_MIN))
     return out
+
+
+def faq_topic_check(text: str, lang: str, topic: str) -> str:
+    """The model's faq_lookup topic must have keyword support in the caller's words; a small model picks e.g. bank_charges for
+    "money was taken from my account". Otherwise our scorer's confident (medium or high) pick replaces it."""
+    level, iid = faq_route(text, lang) if text else ("low", None)
+    return topic if level == "low" or iid is None or topic in {i for i, _, _ in faq_rank(text, lang)} else iid
 
 
 def faq_reference(text: str, lang: str, n: int = 3, min_score: float = faq_score.MED_MIN) -> str:
@@ -1040,7 +1099,8 @@ _EN_HUMAN_REQ = re.compile(r"\b(?:speak|talk|connect|transfer)\b(?:\W+\w+){0,3}?
                            + "|".join(w for w in _HUMAN_TARGET if w.isascii()) + r")\b")
 _EN_VERBS = {"speak", "talk", "connect", "transfer"}
 _NEG_HUMAN = {"not", "no", "never", "dont", "don't", "don’t", "nahi", "nahin", "nako", "naka", "नहीं", "नको", "नका", "नाही"}
-_SELF_CLAIM = re.compile(r"\bi(?:'|’)?m\s+(?:the|a|an)\b|\bi\s+am\s+(?:the|a|an)\b")
+_SELF_CLAIM_BASE = r"\bi(?:'|’)?m\s+(?:the|a|an)\b|\bi\s+am\s+(?:the|a|an)\b"
+_SELF_CLAIM = re.compile(_SELF_CLAIM_BASE)
 
 
 def wants_human(text: str) -> bool:
@@ -1048,14 +1108,18 @@ def wants_human(text: str) -> bool:
     no 'I am the manager' self-claim."""
     low = text.lower()
     t = set(_tokens(low))
-    if t & _NEG_HUMAN or _SELF_CLAIM.search(low):
+    nat = [w for w in t if not w.isascii()]
+    if t & _NEG_HUMAN or any(n in w for w in nat for n in _NEG_HUMAN if len(n) >= 3 and not n.isascii()) or _SELF_CLAIM.search(low):
         return False
-    return bool(_EN_HUMAN_REQ.search(low) or (t & _HUMAN_TARGET and t & (_HUMAN_VERB - _EN_VERBS)))
+    stem = lambda words: any(w.startswith(s) for w in nat for s in words if len(s) >= 3 and not s.isascii())  # case endings / verb forms
+    return bool(_EN_HUMAN_REQ.search(low) or ((t & _HUMAN_TARGET or stem(_HUMAN_TARGET)) and (t & (_HUMAN_VERB - _EN_VERBS) or stem(_HUMAN_VERB))))
 
 
-_LEAK = re.compile(r"system\s*prompt|tool\s*list|\b(?:my|the|these|those|above|previous|original)\s+instructions\b|"
-                   r"\bmy\s+prompt\b|सिस्टम\s*प्रॉम्प्ट", re.I)
-_INJECT = re.compile(r"system\s*prompt|tool\s*list|(?:ignore|forget|disregard)\s+(?:all\s+)?(?:the\s+)?(?:previous|above|prior|earlier)\s+instructions", re.I)
+_LEAK_BASE = (r"system\s*prompt|tool\s*list|\b(?:my|the|these|those|above|previous|original)\s+instructions\b|"
+                   r"\bmy\s+prompt\b|सिस्टम\s*प्रॉम्प्ट")
+_INJECT_BASE = (r"system\s*prompt|tool\s*list|(?:ignore|forget|disregard)\s+(?:all\s+)?(?:the\s+)?(?:previous|above|prior|earlier)\s+instructions")
+_LEAK = re.compile(_LEAK_BASE, re.I)  # rebuilt with the language files' prompt_leak by _build_regexes
+_INJECT = re.compile(_INJECT_BASE, re.I)
 SAFE = {"en": "I can only help with banking requests. How can I help you?",
         "hinglish": "Main sirf banking requests mein madad kar sakta hoon. Main aapki kaise madad karun?",
         "hi": "मैं केवल बैंकिंग से जुड़े अनुरोधों में मदद कर सकता हूँ। मैं आपकी कैसे मदद करूँ?",
@@ -1087,6 +1151,10 @@ _WEEKDAYS = {"monday": 0, "tuesday": 1, "wednesday": 2, "thursday": 3, "friday":
              "सोमवारी": 0, "मंगळवार": 1, "गुरुवारी": 3}
 
 
+_TODAY_WORDS = {"today", "aaj", "आज"}
+_TOMORROW_WORDS = {"tomorrow", "kal", "कल", "उद्या"}
+
+
 def parse_spoken_date(text: str, today=None) -> str | None:
     """'15 tarikh', '15 November', 'next Monday', 'kal', 'tomorrow', '2026-11-15' -> YYYY-MM-DD; None if not clear
     (number words like 'pandrah' are not parsed: the caller is asked again)."""
@@ -1098,9 +1166,9 @@ def parse_spoken_date(text: str, today=None) -> str | None:
         if m:
             return dt.date(int(m[1]), int(m[2]), int(m[3])).isoformat()
         toks = set(_tokens(t))
-        if toks & {"today", "aaj", "आज"}:
+        if toks & _TODAY_WORDS:
             return today.isoformat()
-        if toks & {"tomorrow", "kal", "कल", "उद्या"}:
+        if toks & _TOMORROW_WORDS:
             return (today + dt.timedelta(days=1)).isoformat()
         for w, wd in _WEEKDAYS.items():
             if w in toks:
@@ -1132,15 +1200,25 @@ def _alt(words) -> str:
 
 def _build_regexes() -> None:
     """(Re)compile the patterns that embed word lists; called at import and after language files are merged."""
-    global _DATE_SPANS, _DATE_DAY, _PAID
+    global _DATE_SPANS, _DATE_DAY, _PAID, _TXN, _GENERAL_TOPIC, _TOOL_OWNED_EXTRA, _SELF_CLAIM, _LEAK, _INJECT
     _DATE_SPANS = re.compile(  # a bare "on 15" is left in: two figures -> not auto-routed
         r"\d{4}-\d{2}-\d{2}|(?<!\d)\d{1,2}(?:st|nd|rd|th)?\s+(?:" + _alt(_MONTHS_MAP) + r")(?:\s+20\d\d)?(?![a-z" + _INDIC + r"])"
         r"|(?<!\d)\d{1,2}\s*(?:" + _alt(_DATE_WORDS) + ")")
     _DATE_DAY = re.compile(r"(?<!\d)(\d{1,2})(?:st|nd|rd|th)?\s*(?:" + _alt(_DATE_WORDS) + r")|(?:on|by|को|ला)\s+(\d{1,2})(?!\d)")
     _PAID = re.compile(_PAID_BASE + "".join("|" + re.escape(x) for x in _PAID_EXTRA))
+    more = lambda key: ("|" + _alt(_PHRASE_EXTRA[key])) if _PHRASE_EXTRA[key] else ""  # additive: the built-in patterns never change
+    _TXN = re.compile(_TXN_BASE + more("txn"))
+    _GENERAL_TOPIC = re.compile(_GENERAL_TOPIC_BASE + more("general_topics"))
+    _TOOL_OWNED_EXTRA = re.compile(_alt(_PHRASE_EXTRA["tool_owned"]) if _PHRASE_EXTRA["tool_owned"] else "(?!)")
+    _SELF_CLAIM = re.compile(_SELF_CLAIM_BASE + more("self_claim"))
+    _LEAK = re.compile(_LEAK_BASE + more("prompt_leak"), re.I)
+    _INJECT = re.compile(_INJECT_BASE + more("prompt_leak"), re.I)
+    _TOPIC_RX.clear()
+    _TOPIC_RX.update({k: re.compile(rx + (("|" + _alt(_TOPIC_EXTRA[k])) if _TOPIC_EXTRA.get(k) else "")) for k, rx in _TOPICS.items()})
 
 
 _PAID_EXTRA: list[str] = []
+_PHRASE_EXTRA: dict[str, list[str]] = {k: [] for k in ("txn", "general_topics", "tool_owned", "self_claim", "prompt_leak")}  # phrase lists (substring match)
 _BIG_NUMBER_WORDS = {"k", "thousand", "hazaar", "hajar", "lakh", "lac", "हजार", "हज़ार", "लाख", "हजारांचे"}
 _FULL_WORDS = {"full", "pura", "poora", "puri", "poori", "whole", "entire", "saara", "saari", "पूरा", "पूरी", "सारी", "सारा", "संपूर्ण", "पूर्ण"}
 
@@ -1157,7 +1235,8 @@ def parse_amount(text: str, dues: dict | None = None) -> int | None:
     return None
 
 
-_TXN = re.compile(r"(?:last|recent|latest)(?: \d)? transactions?|mini statement|शेवटचे व्यवहार|शेवटचा व्यवहार|(?:आखिरी|पिछले|अंतिम) (?:लेन|ट्रांजैक्शन)|pichle transaction")
+_TXN_BASE = r"(?:last|recent|latest)(?: \d)? transactions?|mini statement|शेवटचे व्यवहार|शेवटचा व्यवहार|(?:आखिरी|पिछले|अंतिम) (?:लेन|ट्रांजैक्शन)|pichle transaction"
+_TXN = re.compile(_TXN_BASE)  # rebuilt with the language files' txn phrases by _build_regexes
 
 
 def last_txn_count(text: str) -> int | None:
@@ -1194,7 +1273,9 @@ _BYE_FILLER_BASE = set(FILLER_WORDS)
 _WORDSETS = {"affirm": AFFIRM_WORDS, "negate": NEGATE_WORDS, "bye": BYE_WORDS, "approval": APPROVAL_WORDS, "switch_cues": _SWITCH_CUES,
              "question": _QUESTION_WORDS, "possessive": _POSSESSIVE, "acct_nouns": _ACCT_NOUNS, "human_target": _HUMAN_TARGET,
              "human_verb": _HUMAN_VERB, "neg_human": _NEG_HUMAN, "full": _FULL_WORDS, "multi": _MULTI_WORDS, "date": _DATE_WORDS,
-             "verify": _VERIFY_WORDS}
+             "verify": _VERIFY_WORDS, "why": _WHY_WORDS, "went_up": _UP_WORDS, "change_cue": _CHANGE_CUES, "emi_words": _EMI_WORDS,
+             "about_secret": _ABOUT_SECRET, "big_number_words": _BIG_NUMBER_WORDS, "approval_done": _APPROVAL_DONE,
+             "today_words": _TODAY_WORDS, "tomorrow_words": _TOMORROW_WORDS}
 _SNAP = ({k: set(v) for k, v in _WORDSETS.items()}, dict(_MONTHS_MAP), dict(_WEEKDAYS))  # the built-in words, to reload from
 
 
@@ -1214,6 +1295,8 @@ def load_languages(base: Path | None = None) -> list[str]:
     STT_LANG.update({m["code"]: m["stt"] for m in MODES})
     _SCRIPT_LANG.clear()
     _SCRIPT_LANG.update({m["code"]: m["script"] for m in MODES if m.get("script") in _SCRIPT_BLOCK})
+    LLM_ROUTE.clear()
+    LLM_ROUTE.update({m["code"]: m["llm"] for m in MODES if m.get("llm") in PROVIDERS})
     for c in [c for c in ACTIVE_LANGS if c not in BUILTIN_LANGS]:  # drop a previous load
         for d in (REPROMPT, LANG_OK, CUSTOMER_Q, SAFE, ASK, FIELD_LABEL, _LANG_WORDS):
             d.pop(c, None)
@@ -1225,6 +1308,15 @@ def load_languages(base: Path | None = None) -> list[str]:
         tbl.clear()
         tbl.update(snap)
     _PAID_EXTRA.clear()
+    for lst in _PHRASE_EXTRA.values():
+        lst.clear()
+    _TOPIC_EXTRA.clear()
+    _INTENT_EXTRA.clear()
+    for k, base_ in _FAQ_CUES_BASE.items():
+        _FAQ_CUES[k].clear()
+        _FAQ_CUES[k].update(base_)
+    stop: set[str] = set()
+    secret: dict[str, list[str]] = {}
     thanks: set[str] = set()
     extra_stems: list[str] = []
     for m in MODES:
@@ -1256,6 +1348,11 @@ def load_languages(base: Path | None = None) -> list[str]:
             x = w.get(key)
             return [i.lower() for i in x if isinstance(i, str) and _beta_token_ok(i)] if isinstance(x, list) else []
 
+        def native(ws: list[str]) -> list[str]:
+            """For the substring/phrase matchers (topics, intent and FAQ cues, phrase lists): native script only. The files' Latin entries are English
+            words ("balance", "close", "my balance", "fraud") that the built-in matchers already cover, with guards a bare substring would bypass."""
+            return [x for x in ws if not x.isascii()]
+
         def table(key: str, ok) -> dict[str, int]:
             x = w.get(key)
             return {k.lower(): n for k, n in x.items() if isinstance(k, str) and _beta_token_ok(k) and isinstance(n, int) and ok(n)} if isinstance(x, dict) else {}
@@ -1267,6 +1364,25 @@ def load_languages(base: Path | None = None) -> list[str]:
         _MONTHS_MAP.update(table("month_words", lambda n: 1 <= n <= 12))
         _WEEKDAYS.update(table("weekdays", lambda n: 0 <= n <= 6))
         _PAID_EXTRA.extend(words("already_paid"))
+        for k in _PHRASE_EXTRA:
+            _PHRASE_EXTRA[k].extend(native(words(k)))
+        stop.update(words("stopwords"))
+
+        def groups(key: str) -> dict[str, list[str]]:  # {name: [word, ...]} sections of the language file
+            x = w.get(key)
+            return {n: [i.lower() for i in v_ if isinstance(i, str) and _beta_token_ok(i)] for n, v_ in x.items() if isinstance(v_, list)} if isinstance(x, dict) else {}
+
+        for n, v_ in groups("topics").items():
+            if n in _TOPICS:
+                _TOPIC_EXTRA.setdefault(n, []).extend(native(v_))
+        for n, v_ in groups("intent_cues").items():
+            if n in _INTENT_GROUP.values():
+                _INTENT_EXTRA.setdefault(n, []).extend(native(v_))
+        for n, v_ in groups("secret_words").items():
+            secret.setdefault(n, []).extend(v_)
+        for n, v_ in groups("faq_cues").items():
+            if n in _FAQ_CUES:
+                _FAQ_CUES[n].update(native(v_))
         thanks.update(words("thanks"))
         extra_stems += words("action_verbs")
         ACTIVE_LANGS.append(code)
@@ -1276,6 +1392,8 @@ def load_languages(base: Path | None = None) -> list[str]:
             _INACTIVE_NAMES.update({m["name"].lower(), m.get("native", "").lower(), *_BETA_NAMES.get(m["code"], ())})
     _INACTIVE_NAMES.discard("")
     _ACTION_STEMS = tuple(dict.fromkeys(_ACTION_STEMS_BASE + tuple(extra_stems)))
+    faq_score.set_extra_stopwords(stop)
+    _set_secret_words(secret)
     FILLER_WORDS.clear()
     FILLER_WORDS.update(_BYE_FILLER_BASE | AFFIRM_WORDS | thanks)
     _build_regexes()
@@ -1302,7 +1420,28 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
     base_prompt = re.sub(r"<!-- OUTBOUND -->.*?<!-- /OUTBOUND -->", "", raw_prompt, flags=re.S).rstrip() + "\n"
     prompt = re.sub(r"[^\n]*\{\{conversation_id\}\}[^\n]*",
                     "2. Pass `call_id` exactly as given in the first user message, and `language`, in every action.", base_prompt)
-    keyterms = [l.strip() for l in (ROOT / "agent" / "keyterms.txt").read_text(encoding="utf-8").splitlines() if l.strip()][:200]
+    def read_terms(p: Path) -> list[str]:
+        try:
+            return [l.strip() for l in p.read_text(encoding="utf-8").splitlines() if l.strip()]
+        except OSError:
+            return []
+
+    global_terms = read_terms(ROOT / "agent" / "keyterms.txt")
+    keyterms = global_terms[:200]
+    terms_cache: dict[str, tuple] = {}
+
+    def keyterms_for(lang: str) -> list[str]:
+        """The call language's own list first (agent/keyterms/<lang>.txt, when present), then the global list; deduped, at most 200 (Prisma's limit)."""
+        if not re.fullmatch(r"[a-z]{2,8}", lang or ""):
+            return keyterms
+        p = KEYTERMS_DIR / f"{lang}.txt"
+        try:
+            sig = p.stat().st_mtime_ns
+        except OSError:
+            return keyterms
+        if terms_cache.get(lang, (None,))[0] != sig:
+            terms_cache[lang] = (sig, list(dict.fromkeys(read_terms(p) + global_terms))[:200])
+        return terms_cache[lang][1]
     calls: dict[str, dict] = {}
     schemas = {t["function"]["name"]: set(t["function"]["parameters"]["properties"]) for t in tools}
     tags_cache: dict = {"t": 0.0, "models": []}
@@ -1368,7 +1507,33 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             raise bad_gateway("gateway", cid)
         return res
 
+    routes_warned: set[str] = set()
+
+    def route_for(c: dict) -> str | None:
+        """Provider for this turn from the call's CURRENT language (languages.json "llm"), or None = the call's own provider.
+        Never for a developer-pinned provider/model, or when the routed provider has no key (one warning)."""
+        p = LLM_ROUTE.get(c.get("language", ""))
+        if not cfg.llm_lang_routing or c.get("pinned") or not p or p == c["llm"]:
+            return None
+        if p != "ollama" and not cfg.llm_key(p):
+            if p not in routes_warned:
+                routes_warned.add(p)
+                log.warning("llm route %s configured for language %s but no %s_API_KEY: using %s", p, c["language"], p.upper(), c["llm"])
+            return None
+        if ROUTE_DOWN.get(p, 0) > time.monotonic():
+            return None
+        return p
+
     async def llm(c: dict) -> dict:
+        if (rp := route_for(c)):
+            try:
+                model = cfg.llm_model(rp)
+                msg = await llm_once(c, rp, model, routed=True)
+                c["used"] = (rp, model)  # timings report the model that actually answered
+                return msg
+            except HTTPException:  # the routed provider failed: the normal default answers this turn (below)
+                ROUTE_DOWN[rp] = time.monotonic() + cfg.llm_route_cooldown
+                log.warning("call=%s lang_route=%s failed, retrying on %s", c["id"], rp, c["llm"])
         try:
             msg = await llm_once(c, c["llm"], c["model"])
             c.pop("used", None)
@@ -1383,7 +1548,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             c["used"] = (fb, model)  # timings report the model that actually answered
             return msg
 
-    async def llm_once(c: dict, p: str, model: str) -> dict:
+    async def llm_once(c: dict, p: str, model: str, routed: bool = False) -> dict:
         t0, st_ = time.perf_counter(), c["set"]
         msgs, tl = trim(c["messages"], st_["keep_msgs"]), tools if st_["tool_hints"] else tools_plain
         if st_["tool_sets"]:
@@ -1395,7 +1560,8 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
                 return await providers.openai_chat(
                     http, base_url=getattr(cfg, f"{p}_base_url"), api_key=cfg.llm_key(p), model=model,
                     messages=msgs, tools=tl, provider=p, temperature=st_["temperature"], max_tokens=st_["max_tokens"],
-                    reasoning=st_["reasoning"])
+                    reasoning=st_["reasoning"],
+                    **({"timeout": cfg.llm_route_timeout, "retry": False} if routed else {}))
             opts = {"num_ctx": st_["num_ctx"]}
             if st_["temperature"] is not None:
                 opts["temperature"] = st_["temperature"]
@@ -1547,6 +1713,8 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             utr = args.get("utr")
             if isinstance(utr, str) and len(re.sub(r"\D", "", utr)) >= 6:
                 c.setdefault("refs", set()).add(re.sub(r"\D", "", utr))  # the caller's own UTR may be read back
+            if name == "faq_lookup" and not internal and isinstance(args.get("topic"), str):
+                args["topic"] = faq_topic_check(c.get("user_text", ""), c["language"], args["topic"])
             args["language"] = c["language"]  # the service owns the call language, never the model's argument
             if name == "record_ptp":  # spoken dates are parsed by us, not trusted from the model
                 # newest utterance first, one at a time: joining them let an earlier date of birth ("17 June 1988") win
@@ -1743,6 +1911,12 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
                 # gateway sentences are trusted as-is; only the model's own words are scrubbed of tool names
                 text = final_text(clean_spoken((msg.get("content") or "").strip(), known), st["speaks"]) or st["last"]
                 return st["rb"] or text, st["done"]
+            if (any(isinstance(tc, dict) and (tc.get("function") or {}).get("name") == "handover" for tc in tcs) or any(a["name"] == "handover" for a in st["done"]))                     and not is_goodbye(c.get("user_text", "")):
+                # a handover is not a farewell: the model must not hang up in the same turn unless the caller said goodbye
+                keep = [(tc, a) for tc, a in zip(tcs, argl) if not (isinstance(tc, dict) and (tc.get("function") or {}).get("name") == "end_call")]
+                tcs[:], argl = [k[0] for k in keep], [k[1] for k in keep]
+                if not tcs:
+                    return st["rb"] or " ".join(dict.fromkeys(x for ok, x in st["speaks"] if ok)) or st["last"], st["done"]
             for tc, args in zip(tcs, argl):
                 fn = tc.get("function") if isinstance(tc, dict) else None
                 name = fn.get("name") if isinstance(fn, dict) else None
@@ -1839,7 +2013,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         data = {"model": "prisma-v3.0", "format": "transcribe", "language_code":
                 STT_LANG.get(lang, STT_LANG["hinglish"]) if s["stt_language"] == "auto" else s["stt_language"]}
         if s["stt_keyterms"]:
-            data["keyterms"] = json.dumps(keyterms, ensure_ascii=False)
+            data["keyterms"] = json.dumps(keyterms_for(lang), ensure_ascii=False)
         t0 = time.perf_counter()
         try:
             r = await http.post(STT_URL, headers={"X-API-Key-ID": cfg.gnani_key()}, data=data,
@@ -1944,6 +2118,8 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         if cfg.is_public():
             return {"ok": True}  # unauthenticated probe: no provider/model/dev details
         return {"ok": True, "model": cfg.ollama_model, "default": cfg.llm_provider, "dev": cfg.dev,
+                "route_cooldown_s": {p: round(t - time.monotonic()) for p, t in ROUTE_DOWN.items() if t > time.monotonic()},
+                "lang_routing": {k: v for k, v in LLM_ROUTE.items() if v != cfg.llm_provider and (v == "ollama" or cfg.llm_key(v))} if cfg.llm_lang_routing else {},
                 "providers": {p: {"model": cfg.llm_model(p), "ready": p == "ollama" or bool(cfg.llm_key(p))} for p in PROVIDERS}}
 
     async def ollama_models() -> list[str]:
@@ -1975,7 +2151,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         return provider, model, validate_settings(body.get("settings") or {}, provider)
 
     async def open_call(provider: str, model: str, sett: dict, want_tts: bool, direction: str = "inbound",
-                        case_id: int | None = None, stream: bool = False) -> dict:
+                        case_id: int | None = None, stream: bool = False, pinned: bool = False) -> dict:
         tm, t_start = {}, time.perf_counter()
         _TM.set(tm)
         now = time.time()
@@ -1988,7 +2164,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         sysmsg = prompt if sett["cache_prompt"] else base_prompt.replace("{{conversation_id}}", cid)
         if direction == "outbound":
             sysmsg += "\n\n" + outbound_block
-        c = {"id": cid, "llm": provider, "model": model, "set": sett, "language": "hinglish", "ended": False, "ts": now, "direction": direction, "lang_set": direction == "outbound",
+        c = {"id": cid, "llm": provider, "model": model, "set": sett, "pinned": pinned, "language": "hinglish", "ended": False, "ts": now, "direction": direction, "lang_set": direction == "outbound",
              "lock": asyncio.Lock(), "turn": 0, "held": None, "appr_checks": 0, "rb_turn": -9, "pending_rb": None,
              "rb_new": None, "rb_active": None, "messages": [{"role": "system", "content": sysmsg}]}
         start_args = {"language": c["language"], "direction": direction, **({"case_id": case_id} if direction == "outbound" else {})}
@@ -2020,7 +2196,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             if case_id is None:
                 raise HTTPException(422, "outbound needs case_id")
         return await open_call(provider, model, sett, tts_q and body.get("tts") is not False, direction, case_id,
-                               stream_q or body.get("stream") is True)
+                               stream_q or body.get("stream") is True, pinned=cfg.dev and bool(body.get("llm") or body.get("model")))
 
     def canned(c: dict, user_text: str, text: str) -> tuple[str, list[dict]]:
         c["messages"] += [{"role": "user", "content": user_text}, {"role": "assistant", "content": text}]
@@ -2194,7 +2370,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
                         for rep_ in range(1, repeat + 1):
                             c = None
                             try:
-                                opened = await open_call(spec["llm"], spec["model"], spec["settings"], want_tts)
+                                opened = await open_call(spec["llm"], spec["model"], spec["settings"], want_tts, pinned=True)
                                 c = calls.get(opened["call_id"])
                             except Exception as e:  # noqa: BLE001
                                 err = f"{type(e).__name__}: {getattr(e, 'detail', '')}"[:80]
