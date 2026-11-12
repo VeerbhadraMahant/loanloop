@@ -1006,7 +1006,7 @@ def faq_route(text: str, lang: str, st: dict | None = None) -> tuple[str, str | 
     """('high', id) answer directly, ('medium', id) LLM turn with the FAQ block, ('low', None) plain LLM turn.
     Pure on the text (call-state guards stay in faq_ok); thresholds from the call's settings, else the defaults."""
     text = strip_lang_lead(text)
-    if not faq_text_ok(text, acct_guard=False):
+    if not faq_text_ok(text, acct_guard=bool(faq_score._BETA.search(text))):  # beta scripts: "my loan's rate" is the caller's own account, not an FAQ
         return "low", None
     st = st or {}
     out = faq_score.classify(faq_rank(text, lang), st.get("faq_direct_min", faq_score.HIGH_MIN), st.get("faq_direct_margin", faq_score.HIGH_MARGIN),

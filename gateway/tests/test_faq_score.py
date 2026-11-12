@@ -57,6 +57,7 @@ def test_beta_folding_variants_and_zwj():
 
 
 def test_extra_stopwords_leave_the_coverage_denominator():
+    fs.set_extra_stopwords([])  # the real language files (loaded by other tests) may already list these words: start from none
     t = fs.Table(GU)
     q = "મિનિમમ બેલેન્સ શું થાય"
     base = t.rank(q, "gu")[0][2]
