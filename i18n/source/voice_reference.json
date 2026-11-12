@@ -1891,5 +1891,264 @@
   "നമ്പർ",
   "മൊബൈൽ",
   "രജിസ്റ്റർ ചെയ്ത"
- ]
+ ],
+ "_WHY_WORDS": [
+  "kaaran",
+  "karan",
+  "kyon",
+  "kyu",
+  "kyun",
+  "why",
+  "कसा",
+  "का",
+  "कारण",
+  "क्यूं",
+  "क्यों"
+ ],
+ "_UP_WORDS": [
+  "badh",
+  "badha",
+  "badhgayi",
+  "badhi",
+  "hike",
+  "increase",
+  "increased",
+  "up",
+  "बढ़ा",
+  "बढ़ी",
+  "वाढला",
+  "वाढली",
+  "वाढले"
+ ],
+ "_CHANGE_CUES": [
+  "badal",
+  "badalna",
+  "badla",
+  "badlo",
+  "change",
+  "karaycha",
+  "karna",
+  "karne",
+  "karo",
+  "move",
+  "shift",
+  "करा",
+  "करायचा",
+  "करायची",
+  "बदल",
+  "बदलना",
+  "बदला",
+  "बदलो",
+  "लावा"
+ ],
+ "_EMI_WORDS": [
+  "emi",
+  "ईएमआय",
+  "एमआय"
+ ],
+ "_ABOUT_SECRET": [
+  "ask",
+  "asked",
+  "asking",
+  "asks",
+  "badal",
+  "bhool",
+  "bhul",
+  "can",
+  "change",
+  "create",
+  "do",
+  "does",
+  "forget",
+  "forgot",
+  "generate",
+  "how",
+  "kab",
+  "kaise",
+  "kaun",
+  "kya",
+  "kyon",
+  "kyu",
+  "maang",
+  "maangta",
+  "never",
+  "poochh",
+  "reset",
+  "safe",
+  "set",
+  "share",
+  "should",
+  "someone",
+  "what",
+  "why",
+  "कसा",
+  "कसे",
+  "का",
+  "काय",
+  "कैसे",
+  "क्या",
+  "क्यों",
+  "पूछ",
+  "बदल",
+  "भूल",
+  "मांग",
+  "मागत",
+  "विचार",
+  "विसर"
+ ],
+ "_BIG_NUMBER_WORDS": [
+  "hajar",
+  "hazaar",
+  "k",
+  "lac",
+  "lakh",
+  "thousand",
+  "लाख",
+  "हज़ार",
+  "हजार",
+  "हजारांचे"
+ ],
+ "_APPROVAL_DONE": [
+  "diya",
+  "done",
+  "kiya",
+  "केलं",
+  "केले",
+  "दिया"
+ ],
+ "_TODAY_WORDS": [
+  "aaj",
+  "today",
+  "आज"
+ ],
+ "_TOMORROW_WORDS": [
+  "kal",
+  "tomorrow",
+  "उद्या",
+  "कल"
+ ],
+ "_FAQ_CUES": {
+  "ask": [
+   "ask",
+   "asked",
+   "asks",
+   "maang",
+   "maangta",
+   "maangti",
+   "mangta",
+   "पूछता",
+   "मांग",
+   "मांगता",
+   "मांगते",
+   "मागते",
+   "मागतो",
+   "विचारते",
+   "विचारतो"
+  ],
+  "bank": [
+   "bank",
+   "बँक",
+   "बैंक"
+  ],
+  "upi": [
+   "upi",
+   "युपीआय",
+   "यूपीआई",
+   "यूपीआय"
+  ],
+  "collect": [
+   "collect",
+   "koi",
+   "money",
+   "paisa",
+   "paise",
+   "prapt",
+   "receive",
+   "someone",
+   "कोई",
+   "कोणी",
+   "पैसा",
+   "पैसे"
+  ],
+  "card": [
+   "atm",
+   "card",
+   "debit",
+   "एटीएम",
+   "कार्ड",
+   "डेबिट"
+  ]
+ },
+ "_TOPICS": {
+  "branch": "branch|ifsc|micr|address|timing|hours|शाखा|पत्ता|पता|वेळ|समय|ब्रांच",
+  "emi": "\\bemi\\b|instal?lment|due date|ईएमआय|एमआय|किस्त|हप्ता",
+  "dues": "overdue|dues|pending amount|outstanding|बकाया|थकबाकी",
+  "balance": "(?<!minimum )(?<!min )\\bbalance|बैलेंस|शिल्लक",
+  "txn": "transaction|ट्रांजैक्शन|व्यवहार",
+  "sms": "\\bsms\\b|\\bmessage\\b|bhej|pathva|भेज|पाठव",
+  "f_open": "\\bopen(?:ing)?\\b.*\\baccount|account.*\\bopen|खाता खोल|खाते उघड|account khol",
+  "f_minbal": "minimum|\\bmin\\b|maintain|न्यूनतम|किमान",
+  "f_kyc": "\\bkyc\\b|केवायसी",
+  "f_upi": "\\bupi\\b|यूपीआई",
+  "f_card": "\\bcard\\b|कार्ड",
+  "f_neft": "neft|rtgs|imps",
+  "f_fraud": "fraud|scam|phishing|धोखा|फसवणूक",
+  "f_cheque": "cheque|check book|चेक"
+ },
+ "INTENT": {
+  "raise_closure": [
+   "clos",
+   "band",
+   "foreclos",
+   "बंद"
+  ],
+  "foreclosure_quote": [
+   "clos",
+   "band",
+   "foreclos",
+   "बंद"
+  ],
+  "request_document": [
+   "statement",
+   "certificate",
+   "certi",
+   "stmt",
+   "प्रमाणपत्र",
+   "स्टेटमेंट",
+   "दस्तावेज"
+  ],
+  "explain_emi_change": [
+   "why",
+   "kyun",
+   "kyu ",
+   "kyon",
+   "badh",
+   "bada",
+   "increas",
+   "went up",
+   "hike",
+   "वाढ",
+   "क्यों",
+   "बढ़"
+  ],
+  "update_nominee": [
+   "nominee",
+   "nominy",
+   "नामांकित",
+   "नॉमिनी"
+  ],
+  "update_address": [
+   "address",
+   "pata",
+   "पता",
+   "पत्ता"
+  ]
+ },
+ "PHRASE_PATTERNS": {
+  "txn": "(?:last|recent|latest)(?: \\d)? transactions?|mini statement|शेवटचे व्यवहार|शेवटचा व्यवहार|(?:आखिरी|पिछले|अंतिम) (?:लेन|ट्रांजैक्शन)|pichle transaction",
+  "general_topics": "fraud|scam|phishing|unauthori[sz]ed|धोखा|ठगी|फसवणूक|स्कॅम|deceased|passed away|\\bdeath\\b|मृत|dormant|inactive|inoperative|निष्क्रिय|डॉरमेंट|डॉर्मंट|\\bkyc\\b|केवाईसी|केवायसी|\\bmiss(?:ed)?\\b|bounce|not paid|छूट गई|छूट गया|चुकला|चुकली|complaint|grievance|ombudsman|shikayat|शिकायत|तक्रार|लोकपाल|(?:block|lost|stolen).{0,12}card|card.{0,12}(?:block|lost|stolen)|कार्ड ब्लॉक|bank.{0,15}(?:asks?|never|maang)",
+  "self_claim": "\\bi(?:'|’)?m\\s+(?:the|a|an)\\b|\\bi\\s+am\\s+(?:the|a|an)\\b",
+  "prompt_leak": "system\\s*prompt|tool\\s*list|\\b(?:my|the|these|those|above|previous|original)\\s+instructions\\b|\\bmy\\s+prompt\\b|सिस्टम\\s*प्रॉम्प्ट|system\\s*prompt|tool\\s*list|(?:ignore|forget|disregard)\\s+(?:all\\s+)?(?:the\\s+)?(?:previous|above|prior|earlier)\\s+instructions",
+  "tool_owned": "\\b(?:my|mera|meri|mere)\\s+(?:branch\\s+)?ifsc\\b|\\bifsc\\b.{0,25}\\b(?:of|for|ka)\\b.{0,20}\\bbranch\\b|\\bbranch\\b.{0,20}\\bifsc\\b|\\b(?:validate|verify|check)\\b.{0,12}\\bifsc\\b|\\bifsc\\b.{0,15}\\b(?:correct|valid|sahi|right)\\b|\\b[a-z]{4}0[a-z0-9]{6}\\b|\\b(?:last|recent|latest|mini)\\b.{0,12}\\b(?:transactions?|txns?|statement)\\b|\\bnext\\s+emi\\b|\\bemi\\b.{0,20}\\b(?:kitna|kab|kiti)\\b|(?:ईएमआई|बैलेंस).{0,15}कितना|\\b(?:what|how much)\\b.{0,25}\\b(?:i owe|do i owe|outstanding|my emi|my balance|dues?)\\b|\\bemi\\b.{0,30}\\b(?:go|went|gone|increase[d]?|hike[d]?|up|badh)\\b|\\b(?:why|kyun|kyu)\\b.{0,25}\\b(?:emi|charges?)\\b.{0,25}\\b(?:more|high|higher|up|badh|increase[d]?)\\b|\\balready\\s+paid\\b|\\bpaid\\s+already\\b|\\bpaid\\s+(?:my\\s+)?emi\\b|pay\\s+kar\\s+diya|भर\\s+दिया|भरले|\\bclose\\s+(?:my|the)\\s+loan\\b|\\bforeclos\\w*\\b.{0,20}\\b(?:my|amount|quote)\\b|\\bloan\\s+(?:band|close)\\b|\\bband\\s+karo\\b|\\bchange\\b.{0,12}\\bemi\\s+date\\b|\\bemi\\s+date\\b.{0,12}\\bchange\\b|\\b(?:sms|message)\\b.{0,20}\\b(?:my|mera)\\b.{0,15}\\b(?:ifsc|customer id|account)\\b|\\bwhich\\b.{0,15}\\b(?:mobile|email|phone)\\b.{0,15}\\b(?:linked|registered)\\b|\\bcustomer\\s+id\\b|\\b(?:what|which)\\s+(?:is|are)\\s+my\\b|\\blost\\s+(?:my\\s+)?job\\b|\\bnaukri\\b|नौकरी|नोकरी|\\bwife|\\bhusband|\\bi\\s+(?:will|promise)\\s+pay\\b|\\bnominee\\b.{0,12}\\bto\\b\\s+my\\b|(?:check|show|tell|know|what(?:'s| is)(?:\\s+my|\\s+the)?|how much)\\s+(?:my\\s+)?(?:(?:current|savings?|available|account)\\s+)*balance|\\b(?:send|give|email|mail)\\s+me\\b.{0,20}\\bstatement\\b|\\b(?:want|need)\\b.{0,12}\\bmy\\b.{0,15}\\bstatement\\b|\\bcheck\\b.{0,25}\\bmy\\b.{0,15}\\baccount\\b|\\brequest\\b.{0,20}\\b(?:status|pending)\\b|\\b(?:status|pending)\\b.{0,20}\\brequest\\b|\\b(?!(?:nearest|nearby|my|your|the|a|any|another|bank|home|this|that|same|other|closest|which|what|near|new|local|our|their|visit\\w*)\\b)[a-z]+\\s+branch\\b"
+ }
 }

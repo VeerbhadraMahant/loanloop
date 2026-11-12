@@ -6,6 +6,22 @@ _KW = re.compile(
     r"पासवर्ड|ओटीपी|पिन(?!\s*कोड)|सीवीवी|पासकोड|पासवर्ड|एमपिन",
     re.I,
 )
+SECRET_TYPES = ("otp", "pin", "cvv", "password")
+_EXTRA: list[tuple[re.Pattern, str]] = []  # words.secret_words of the language files: (pattern, secret type)
+
+
+def set_extra_secret_words(words: dict | None) -> None:
+    """Secret words in other scripts (i18n `words.secret_words`: {type: [word, ...]}), matched as substrings. They are checked only
+    after the built-in keywords and can only ADD detections. Called by the gateway's i18n loader and the voice service."""
+    global _EXTRA
+    out = []
+    for t, ws in (words or {}).items():
+        ws = sorted({w.strip().lower() for w in ws if isinstance(w, str) and w.strip() and (not w.isascii() or len(w.strip()) >= 4)}, key=lambda w: -len(w)) if isinstance(ws, list) else []
+        if t in SECRET_TYPES and ws:
+            out.append((re.compile("|".join(map(re.escape, ws)), re.I), t))
+    _EXTRA = out
+
+
 _FIELD_KW = re.compile(r"password|passcode|(?<![a-z])[mu]?pin(?![a-z])|otp|cvv|secret", re.I)
 _CARD = re.compile(r"(?<![\d])(?:\d[ -]?){16}(?![\d])")
 _DIGITS = re.compile(r"(?<!\d)\d{3,6}(?!\d)")
@@ -36,6 +52,9 @@ def find_secret(field_name: str, value: str) -> str | None:
         if "pin" in t or "पिन" in t:
             return "pin"
         return "password"
+    for rx, t in _EXTRA:
+        if rx.search(value):
+            return t
     if _FIELD_KW.search(field_name) and _DIGITS.search(value):
         return "otp"
     return None

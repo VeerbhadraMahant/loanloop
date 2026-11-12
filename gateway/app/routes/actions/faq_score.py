@@ -36,6 +36,18 @@ STOP = GENERIC | frozenset({
     "kaun", "kaunse", "kyun", "kya", "par", "pe", "aur", "ya", "toh", "to", "bhi", "nahi", "koi", "mujhe", "hum", "aap", "ap", "kitna", "kitni",
     "मैं", "मुझे", "और", "या", "में", "से", "को", "पर", "भी", "नहीं", "कोई", "कितना", "कितनी", "कब", "कहाँ", "कौन", "मला", "आणि", "किंवा", "मध्ये", "नाही", "कोणती", "कुठे", "कधी",
 })
+_extra: frozenset = frozenset()  # words.stopwords of the loaded language files: added to GENERIC and STOP, never replacing them
+
+
+def set_extra_stopwords(words) -> None:
+    """Language files' stopwords (single words). The caller (gateway faq loader / voice load_languages) passes them on every reload."""
+    global _extra
+    new = frozenset(norm(w) for w in words if isinstance(w, str) and w.strip())
+    if new != _extra:
+        _extra = new
+        _tables.clear()
+
+
 SCATTER = 0.7  # a keyword whose words all appear in the question, not next to each other
 
 
@@ -65,11 +77,11 @@ class Table:
         idf = {t: math.log(1 + n / len(s)) for t, s in df.items()}
         self.rows = []
         for iid, lg, kn, toks in raw:
-            w = sum(idf[t] * (GENERIC_W if t in GENERIC else 1.0) for t in toks) * (1 + PHRASE_BONUS * (len(toks) - 1))
+            w = sum(idf[t] * (GENERIC_W if t in GENERIC or t in _extra else 1.0) for t in toks) * (1 + PHRASE_BONUS * (len(toks) - 1))
             ascii_ = bool(_ASCII.match(kn))
             suffix = r"[a-z]*" if len(toks[-1]) >= 4 else r"(?:s|es|ed|d|ing)?(?![a-z0-9])"  # "khol" -> "kholna", "scam" -> "scammed"; short words stay exact
             rx = re.compile(r"(?<![a-z0-9])" + re.escape(kn) + suffix) if ascii_ else None
-            stems = tuple(_stem(t) for t in toks) if ascii_ and sum(t not in GENERIC for t in toks) > 1 else None  # scatter needs 2+ distinctive words
+            stems = tuple(_stem(t) for t in toks) if ascii_ and sum(t not in GENERIC and t not in _extra for t in toks) > 1 else None  # scatter needs 2+ distinctive words
             self.rows.append((iid, lg, kn, w, rx, stems, toks))
 
     def rank(self, query: str, lang: str) -> list[tuple[str, float, float]]:
@@ -90,7 +102,7 @@ class Table:
             m = w * f * (1.0 if lg == lang else OTHER_LANG)
             if m > d.get(kn, (0, 0))[0]:
                 d[kn] = (m, toks)
-        content = [t for t in qt if t not in STOP]
+        content = [t for t in qt if t not in STOP and t not in _extra]
         out = []
         for iid, d in hit.items():
             keep = {kn: v for kn, v in d.items() if not any(kn != o and kn in o for o in d)}
