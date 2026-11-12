@@ -1,0 +1,117 @@
+{
+  "common": {
+    "bank_name": "Sahyadri Finance Bank",
+    "bank_subtitle": "Voice Servicing & Mobile Desk",
+    "continue": "Continue",
+    "verify": "Verify",
+    "cancel": "Cancel",
+    "back": "Back",
+    "close": "Close",
+    "loading": "Loading...",
+    "secure_badge": "100% RBI Compliant · Zero Secrets",
+    "demo_tag": "Demo Persona"
+  },
+  "nav": {
+    "home": "Home",
+    "inbox": "Inbox",
+    "talk": "Talk",
+    "activity": "Activity",
+    "help": "Help"
+  },
+  "welcome": {
+    "hero_title": "Voice Banking Made Effortless",
+    "hero_desc": "Talk naturally in Marathi, Hindi, or English to check your EMI, change payment dates, or request services instantly.",
+    "cta_start": "Get Started",
+    "rbi_note": "Sahyadri Finance Bank adheres strictly to RBI operational guidelines and zero secrets privacy standards."
+  },
+  "language": {
+    "title": "Select Language",
+    "subtitle": "Choose the language you are most comfortable speaking in:",
+    "en": "English",
+    "hi": "हिंदी (Hindi)",
+    "mr": "मराठी (Marathi)",
+    "helper": "You can change your preferred language anytime from Settings."
+  },
+  "mobile": {
+    "title": "Enter Mobile Number",
+    "subtitle": "We will verify your identity with a secure one-time passcode.",
+    "input_label": "Registered Mobile Number",
+    "placeholder": "98765 43210",
+    "cta_send": "Send Verification Code",
+    "demo_heading": "Or tap a seeded demo borrower:",
+    "priya_desc": "Home Loan · Tier 1 Clean",
+    "ramesh_desc": "Vehicle Loan · Tier 2 Collections",
+    "sunita_desc": "Personal Loan · Hardship Review"
+  },
+  "otp": {
+    "title": "Enter Verification Code",
+    "subtitle": "Enter the 6-digit security code sent to",
+    "cta_verify": "Verify & Sign In",
+    "resend": "Resend Code",
+    "demo_hint": "Demo OTP is 123456",
+    "edit_mobile": "Edit number"
+  },
+  "home": {
+    "greeting": "Namaskar",
+    "active_loan": "Active Loan",
+    "emi_due": "Upcoming EMI",
+    "due_on": "Due on",
+    "outstanding": "Outstanding Balance",
+    "pay_now": "Pay EMI",
+    "voice_card_title": "Sahyadri Voice Desk",
+    "voice_card_sub": "Speak naturally to inquire or make updates",
+    "hold_to_talk": "Hold to Speak",
+    "tap_to_talk": "Tap to Speak",
+    "release_to_send": "Release to send audio",
+    "listening": "Listening to your voice...",
+    "tools_heading": "Quick Services",
+    "tool_emi_date": "Change EMI Date",
+    "tool_balance": "Check Balance",
+    "tool_statement": "SMS Statement",
+    "tool_branch": "Branch Timings",
+    "tool_hardship": "Request Moratorium",
+    "tool_officer": "Talk to Human Officer"
+  },
+  "inbox": {
+    "title": "Inbox & Approvals",
+    "pending_approvals": "Action Required (Tier 2)",
+    "no_approvals": "No pending approval requests at this moment.",
+    "sms_heading": "Bank SMS Alerts",
+    "approve": "Approve Request",
+    "decline": "Decline",
+    "expires_in": "Expires in"
+  },
+  "talk": {
+    "title": "Voice Assistant",
+    "step_speak": "Speak",
+    "step_check": "Check",
+    "step_send": "Done",
+    "type_placeholder": "Or type your inquiry here...",
+    "keyboard_mode": "Type instead",
+    "voice_mode": "Voice mode"
+  },
+  "activity": {
+    "title": "Activity & History",
+    "tab_requests": "Service Requests",
+    "tab_calls": "Voice Calls",
+    "no_activity": "No past service requests recorded."
+  },
+  "help": {
+    "title": "Security & Settings",
+    "zero_secrets_title": "Zero Secrets Guarantee",
+    "zero_secrets_body": "Sahyadri Finance Bank will NEVER ask for your debit card PIN, internet banking password, full card number, or OTP over voice or chat.",
+    "mic_mode_title": "Microphone Mode",
+    "mic_hold": "Hold-to-Talk (Best for noisy environments)",
+    "mic_tap": "Tap-to-Talk (Single tap start/stop)",
+    "app_theme": "Theme",
+    "switch_persona": "Switch Demo Borrower",
+    "sign_out": "Sign Out",
+    "other_consoles_title": "Other Consoles (PC / Staff / Dev)",
+    "other_consoles_desc": "Looking for the operations desk, collections queue, or developer sandbox?",
+    "staff_collections": "Staff Collections Desk",
+    "staff_ops": "Live Operations Console",
+    "dev_lab": "Developer Lab & Sandbox",
+    "dev_metrics": "Metrics & SLA Dashboard"
+  }
+}
+

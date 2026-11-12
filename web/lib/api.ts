@@ -51,8 +51,8 @@ export interface Metrics {
   stt_benchmark: { rows: { entity: string; with_keyterms: number; without_keyterms: number; n: number }[] } | null;
   e2e_latency: { p50: number; p95: number; n: number } | null;
 }
-export interface Sms { id: string; body: string; created_at: string }
-export interface Approval { id: string; purpose: string; status: string; created_at: string; expires_at: string }
+export interface Sms { id: string | number; body: string; created_at: string }
+export interface Approval { id: string | number; purpose: string; status: string; created_at: string; expires_at?: string }
 
 const DOWN = "Gateway not reachable — start the backend with start.ps1";
 

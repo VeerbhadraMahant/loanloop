@@ -5,13 +5,13 @@ import { Approval, Sms, useGet, post } from "@/lib/api";
 import { SignOut } from "@/components/auth";
 import { Button, Empty, ErrorBox, Icon, Pill, Skeleton, fmtTime, stagger } from "@/components/ui";
 
-export function CircularCountdown({ from, to }: { from: string; to: string }) {
+export function CircularCountdown({ from, to }: { from: string; to?: string | null }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, []);
-  const end = new Date(to).getTime();
+  const end = to ? new Date(to).getTime() : now;
   const total = Math.max(1000, end - new Date(from).getTime());
   const ms = Math.max(0, end - now);
   const s = Math.floor(ms / 1000);
@@ -34,7 +34,7 @@ export function CircularCountdown({ from, to }: { from: string; to: string }) {
             r={radius}
             stroke={isUrgent ? "var(--danger-fg)" : "var(--warn-fg)"}
             strokeDasharray={circumference}
-            strokeDashoffset={offset}
+            strokeDashoffset={isNaN(offset) ? 0 : offset}
             strokeLinecap="round"
             strokeWidth="4"
           />
@@ -98,7 +98,7 @@ export function PhoneHandset({
   const appr = useGet<Approval[]>(noData ? null : `${base}/approvals`, 3000);
   const [busy, setBusy] = useState(false);
   const [actErr, setActErr] = useState<string | null>(null);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | number | null>(null);
   const [activeTab, setActiveTab] = useState<"call" | "app">(() => (simulationProps ? "call" : "app"));
   const [showKeyboard, setShowKeyboard] = useState(false);
 
@@ -110,11 +110,11 @@ export function PhoneHandset({
   }, [simulationProps?.inCall]);
 
   const pending = (appr.data ?? []).find((a) => a.status === "pending");
-  const act = async (id: string, verb: "approve" | "deny") => {
+  const act = async (id: string | number, verb: "approve" | "deny") => {
     setBusy(true);
     setActErr(null);
     try {
-      await post(`${base}/approvals/${encodeURIComponent(id)}/${verb}`);
+      await post(`${base}/approvals/${encodeURIComponent(String(id))}/${verb}`);
       await appr.reload();
     } catch (e) {
       setActErr(e instanceof Error ? e.message : "failed");
@@ -123,7 +123,7 @@ export function PhoneHandset({
     }
   };
 
-  const copyText = (val: string, key: string) => {
+  const copyText = (val: string, key: string | number) => {
     navigator.clipboard?.writeText(val);
     setCopiedId(key);
     setTimeout(() => setCopiedId(null), 2000);
