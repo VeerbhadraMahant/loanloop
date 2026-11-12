@@ -1,8 +1,9 @@
 "use client";
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEvents } from "@/lib/api";
+import { Button } from "@/components/ui/button";
 
 const NAV = [
   { href: "/bank", label: "Today", d: "M3 12l9-8 9 8M5 10v10h14V10" },
@@ -24,10 +25,19 @@ type Theme = (typeof THEMES)[number];
 
 export function BankShell({ children }: { children: ReactNode }) {
   const path = usePathname();
+  const router = useRouter();
   const live = useEvents(noop);
   const [menu, setMenu] = useState(false);
   const [theme, setTheme] = useState<Theme>("bright");
   const [compact, setCompact] = useState(true);
+
+  const goPrev = () => {
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back();
+    } else {
+      router.push(path === "/bank" ? "/" : "/bank");
+    }
+  };
 
   /* eslint-disable react-hooks/set-state-in-effect -- restore persisted prefs after mount */
   useEffect(() => {
@@ -113,23 +123,32 @@ export function BankShell({ children }: { children: ReactNode }) {
         </aside>
 
         <div className="min-w-0 flex flex-col">
-          {/* Persistent Return-to-LoanLoop Desk instruction & CTA bar */}
-          <div className="border-b border-bank-line bg-bank-accent-soft px-4 py-2 sm:px-6 lg:px-8">
-            <div className="mx-auto flex max-w-[1280px] flex-wrap items-center justify-between gap-2.5">
-              <p className="text-xs text-bank-accent-ink leading-snug">
-                <span className="font-semibold">Bank App Mode</span> — Want to return to the calling console, collections, or metrics?
-              </p>
-              <Link
-                href="/"
-                className="b-pressable inline-flex shrink-0 items-center gap-1.5 rounded-md bg-bank-accent px-3 py-1.5 text-xs font-semibold text-bank-accent-fg hover:opacity-90"
-              >
+          {/* Active Navigation Buttons (styled explicitly as buttons, not a card/banner) */}
+          <div className="mx-auto flex w-full max-w-[1280px] flex-wrap items-center justify-between gap-2 px-4 pt-4 sm:px-6 lg:px-8">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={goPrev}
+              className="border-bank-line-strong bg-bank-surface text-bank-fg hover:bg-bank-sunken"
+            >
+              <Icon d="M15 18l-6-6 6-6" />
+              <span>Back to previous page</span>
+            </Button>
+            <Button
+              asChild
+              variant="default"
+              size="sm"
+              className="bg-bank-accent text-bank-accent-fg hover:opacity-90"
+            >
+              <Link href="/">
                 <Icon d="M15 18l-6-6 6-6" />
                 <span>Return to LoanLoop Desk</span>
               </Link>
-            </div>
+            </Button>
           </div>
 
-          <main id="bank-main" tabIndex={-1} className="mx-auto w-full min-w-0 max-w-[1280px] px-4 py-5 outline-none sm:px-6 lg:px-8">
+          <main id="bank-main" tabIndex={-1} className="mx-auto w-full min-w-0 max-w-[1280px] px-4 py-4 outline-none sm:px-6 lg:px-8">
             {children}
           </main>
         </div>

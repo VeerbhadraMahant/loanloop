@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useEvents, useGet, type CallRow, type Collections, type GwEvent, type Handover } from "@/lib/api";
+import Tooltip from "@/components/ui/tooltip";
 import { PageHeader } from "@/components/bank/page-header";
 import { KpiTile } from "@/components/bank/kpi-tile";
 import { DataTable, type Column } from "@/components/bank/data-table";
@@ -69,21 +70,81 @@ export default function TodayPage() {
       <PageHeader title="Today" description="What needs your attention across calls, handovers, collections and security." />
       {err && <ErrorState message={err} onRetry={retry} />}
       <section aria-label="Key figures" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        <Link href="/bank/conversations" className="block rounded-lg">
-          <KpiTile label="Calls today" value={todays == null ? "–" : capped(todays)} hint={`${live} live now`} loading={calls.loading} />
-        </Link>
-        <Link href="/bank/conversations" className="block rounded-lg">
-          <KpiTile label="Resolved by agent" value={ended.length && handovers.data ? `${Math.round((resolved / ended.length) * 100)}%` : "–"} hint={`${num(resolved)} of ${num(ended.length)} ended calls completed without a handover`} tone="ok" loading={calls.loading || handovers.loading} />
-        </Link>
-        <Link href="/bank/handovers" className="block rounded-lg">
-          <KpiTile label="Handovers (latest 100)" value={handovers.data ? capped(handovers.data.length) : "–"} hint="Calls passed to a person; no resolved state yet" tone="warn" loading={handovers.loading} />
-        </Link>
-        <Link href="/bank/security" className="block rounded-lg">
-          <KpiTile label="Blocked attempts" value={security.data ? capped(security.data.length) : "–"} hint="Secrets, failed checks, unapproved requests" tone="danger" loading={security.loading} />
-        </Link>
-        <Link href="/bank/collections" className="block rounded-lg sm:max-xl:col-span-2">
-          <KpiTile label="Overdue total" value={inrCompact(overdue)} hint={`${num(coll.data?.cases.length)} open cases`} tone="info" loading={coll.loading} />
-        </Link>
+        <Tooltip
+          placement="top"
+          delay={120}
+          triggerClassName="block h-full"
+          content={
+            <span className="flex flex-col gap-0.5">
+              <span className="font-semibold">Opens Conversations →</span>
+              <span className="opacity-80">Full call log, audio status &amp; turn transcripts (/bank/conversations)</span>
+            </span>
+          }
+        >
+          <Link href="/bank/conversations" className="group block h-full rounded-lg focus-visible:outline-none">
+            <KpiTile label="Calls today" value={todays == null ? "–" : capped(todays)} hint={`${live} live now`} loading={calls.loading} />
+          </Link>
+        </Tooltip>
+        <Tooltip
+          placement="top"
+          delay={120}
+          triggerClassName="block h-full"
+          content={
+            <span className="flex flex-col gap-0.5">
+              <span className="font-semibold">Opens Conversations →</span>
+              <span className="opacity-80">Inspect ended calls resolved without human handover (/bank/conversations)</span>
+            </span>
+          }
+        >
+          <Link href="/bank/conversations" className="group block h-full rounded-lg focus-visible:outline-none">
+            <KpiTile label="Resolved by agent" value={ended.length && handovers.data ? `${Math.round((resolved / ended.length) * 100)}%` : "–"} hint={`${num(resolved)} of ${num(ended.length)} ended calls completed without a handover`} tone="ok" loading={calls.loading || handovers.loading} />
+          </Link>
+        </Tooltip>
+        <Tooltip
+          placement="top"
+          delay={120}
+          triggerClassName="block h-full"
+          content={
+            <span className="flex flex-col gap-0.5">
+              <span className="font-semibold">Opens Handovers →</span>
+              <span className="opacity-80">Review calls escalated to human counselors &amp; summaries (/bank/handovers)</span>
+            </span>
+          }
+        >
+          <Link href="/bank/handovers" className="group block h-full rounded-lg focus-visible:outline-none">
+            <KpiTile label="Handovers (latest 100)" value={handovers.data ? capped(handovers.data.length) : "–"} hint="Calls passed to a person; no resolved state yet" tone="warn" loading={handovers.loading} />
+          </Link>
+        </Tooltip>
+        <Tooltip
+          placement="top"
+          delay={120}
+          triggerClassName="block h-full"
+          content={
+            <span className="flex flex-col gap-0.5">
+              <span className="font-semibold">Opens Security →</span>
+              <span className="opacity-80">Inspect Zero Secrets blocks, failed auth &amp; threat logs (/bank/security)</span>
+            </span>
+          }
+        >
+          <Link href="/bank/security" className="group block h-full rounded-lg focus-visible:outline-none">
+            <KpiTile label="Blocked attempts" value={security.data ? capped(security.data.length) : "–"} hint="Secrets, failed checks, unapproved requests" tone="danger" loading={security.loading} />
+          </Link>
+        </Tooltip>
+        <Tooltip
+          placement="top"
+          delay={120}
+          triggerClassName="block h-full sm:max-xl:col-span-2"
+          content={
+            <span className="flex flex-col gap-0.5">
+              <span className="font-semibold">Opens Collections →</span>
+              <span className="opacity-80">Manage overdue cases, promises to pay &amp; call queue (/bank/collections)</span>
+            </span>
+          }
+        >
+          <Link href="/bank/collections" className="group block h-full rounded-lg focus-visible:outline-none">
+            <KpiTile label="Overdue total" value={inrCompact(overdue)} hint={`${num(coll.data?.cases.length)} open cases`} tone="info" loading={coll.loading} />
+          </Link>
+        </Tooltip>
       </section>
 
       <div className="grid gap-6 xl:grid-cols-5">
