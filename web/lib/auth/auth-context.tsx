@@ -3,10 +3,31 @@
 import React, { createContext, useContext, useState } from "react";
 import { AuthContextValue, AuthUser, Session, SupportedLang } from "./auth-types";
 import { DEMO_PERSONAS, DUMMY_OTP, resolvePersonaByMobile } from "./dummy-auth-provider";
+import { SESSION_COOKIE_NAMES, SESSION_TIMEOUTS_MS } from "./auth-config";
 
 const STORAGE_KEY = "loanloop.user_session";
 const LANG_KEY = "loanloop.user_lang";
 const MIC_MODE_KEY = "loanloop.user_mic_mode";
+
+function syncUserCookie(persona: AuthUser | null) {
+  if (typeof window === "undefined") return;
+  if (!persona) {
+    document.cookie = `${SESSION_COOKIE_NAMES.user}=; path=/; max-age=0; SameSite=Lax`;
+    return;
+  }
+  const now = Date.now();
+  const session = {
+    role: "user",
+    identifier: persona.mobile,
+    name: persona.name,
+    customerId: persona.customer_ref,
+    createdAt: now,
+    expiresAt: now + SESSION_TIMEOUTS_MS.user,
+  };
+  const payload = encodeURIComponent(JSON.stringify(session));
+  const maxAge = Math.floor(SESSION_TIMEOUTS_MS.user / 1000);
+  document.cookie = `${SESSION_COOKIE_NAMES.user}=${payload}; path=/; max-age=${maxAge}; SameSite=Lax`;
+}
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
@@ -24,6 +45,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {}
     return null;
   });
+
+  React.useEffect(() => {
+    if (user) {
+      syncUserCookie(user);
+    }
+  }, [user]);
 
   const [language, setLanguageState] = useState<SupportedLang>(() => {
     if (typeof window === "undefined") return "en";
@@ -81,6 +108,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     const resolvedUser = resolvePersonaByMobile(mobile);
     setUser(resolvedUser);
+    syncUserCookie(resolvedUser);
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ customer_ref: resolvedUser.customer_ref }));
     } catch {}
@@ -91,6 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const target = DEMO_PERSONAS[customerRef];
     if (target) {
       setUser(target);
+      syncUserCookie(target);
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify({ customer_ref: target.customer_ref }));
       } catch {}
@@ -99,6 +128,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = () => {
     setUser(null);
+    syncUserCookie(null);
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch {}
