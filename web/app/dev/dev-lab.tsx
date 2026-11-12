@@ -49,48 +49,95 @@ export default function DevLab() {
   };
 
   return (
-    <Shell title="Developer lab" sub="Developer lab - dev only, synthetic data"
-      status={dev && (
-        <ul className="flex flex-wrap gap-1" aria-label="Provider readiness">
-          {Object.entries(dev.providers).map(([id, p]) => <li key={id}><Pill tone={p.ready ? "ok" : "neutral"} icon={p.ready ? "check" : undefined}>{id}: {p.ready ? "ready" : "not configured"}</Pill></li>)}
-        </ul>
-      )}>
-      {off && <p role="alert" className="rounded-lg border border-warn-line bg-warn-bg px-3 py-2 text-sm text-warn-fg">{off}</p>}
-      {!dev && !off && <p className="text-muted">Loading…</p>}
+    <Shell
+      title="Developer lab"
+      sub="Model parameter tuning, warm-up control, live bench, and multi-config comparison."
+      status={
+        dev && (
+          <ul className="flex flex-wrap gap-1.5" aria-label="Provider readiness">
+            {Object.entries(dev.providers).map(([id, p]) => (
+              <li key={id}>
+                <Pill tone={p.ready ? "ok" : "neutral"} icon={p.ready ? "check" : undefined}>
+                  {id}: {p.ready ? "ready" : "not configured"}
+                </Pill>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+    >
+      {off && (
+        <p role="alert" className="rounded-lg border border-warn-border bg-warn-bg px-3 py-2 text-xs text-warn-fg">
+          {off}
+        </p>
+      )}
+      {!dev && !off && <p className="text-xs text-muted">Loading…</p>}
       {dev && (
-        <div className="space-y-6">
-          <Card className="space-y-1 p-4 text-sm text-muted">
-            <h2 className="font-medium text-fg">How to read this</h2>
-            <p>Total is what the caller waits for. Check which component dominates (STT, LLM, gateway, TTS or server other) to know what to tune. A typed benchmark has no STT or TTS time, so it compares the LLM and gateway only. A star marks the best value per column.</p>
-            <p>There is no customer selector: the voice service ignores it, and caller identity comes from the script or the verify line you type.</p>
-          </Card>
+        <div className="space-y-5">
+          <details className="rounded-lg border border-line bg-card px-3.5 py-2.5 text-xs text-muted">
+            <summary className="cursor-pointer font-medium text-fg">
+              How to read benchmark timings &amp; caller selection
+            </summary>
+            <div className="mt-2 space-y-1 leading-relaxed">
+              <p>
+                Total is what the caller waits for. Check which component dominates (STT, LLM, gateway, TTS or server other) to know what to tune. A typed benchmark has no STT or TTS time, so it compares the LLM and gateway only. A star marks the best value per column.
+              </p>
+              <p>
+                There is no customer selector: the voice service ignores it, and caller identity comes from the script or the verify line you type.
+              </p>
+            </div>
+          </details>
 
           <ConfigBuilder dev={dev} cfg={cfg} setCfg={setCfg} editing={editing !== null} onSave={save} />
-          {note && <p role="alert" className="text-sm text-danger-fg">{note}</p>}
-          <div className="flex flex-wrap items-center gap-3">
-            <Button small variant="secondary" onClick={async () => {
-              setWarm("Warming up…");
-              try {
-                const w = await postJson<{ llm_ms?: number }>("/dev/warmup", { llm: cfg.llm, ...(cfg.model ? { model: cfg.model } : {}) });
-                setWarm(`Warm-up done: LLM ${w.llm_ms ?? "?"} ms`);
-              } catch (e) { setWarm(`Warm-up failed (${e instanceof Error ? e.message : "error"})`); }
-            }}>Warm up</Button>
-            <span role="status" className="text-sm text-muted">{warm ?? "Loads the selected model so the first measured turn is not a cold start."}</span>
+          {note && <p role="alert" className="text-xs font-medium text-danger-fg">{note}</p>}
+
+          <div className="flex flex-wrap items-center gap-3 rounded-lg border border-line bg-card px-3.5 py-2.5">
+            <Button
+              small
+              variant="secondary"
+              onClick={async () => {
+                setWarm("Warming up…");
+                try {
+                  const w = await postJson<{ llm_ms?: number }>("/dev/warmup", {
+                    llm: cfg.llm,
+                    ...(cfg.model ? { model: cfg.model } : {}),
+                  });
+                  setWarm(`Warm-up done: LLM ${w.llm_ms ?? "?"} ms`);
+                } catch (e) {
+                  setWarm(`Warm-up failed (${e instanceof Error ? e.message : "error"})`);
+                }
+              }}
+            >
+              Warm up
+            </Button>
+            <span role="status" className="font-mono text-xs text-muted">
+              {warm ?? "Loads the selected model so the first measured turn is not a cold start."}
+            </span>
           </div>
 
           <section aria-label="Configs to compare" className="space-y-2">
-            <h2 className="serif text-2xl">Configs to compare ({saved.length}/{MAX})</h2>
-            {!saved.length && <p className="text-sm text-muted">None yet. Use Add to comparison above.</p>}
+            <h2 className="text-sm font-semibold text-fg">Configs to compare ({saved.length}/{MAX})</h2>
+            {!saved.length && <p className="text-xs text-muted">None yet. Use Add to comparison above.</p>}
             <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {saved.map((c, i) => (
-                <Card as="li" key={c.name} className="space-y-2 p-3 text-sm">
-                  <p className="font-medium">{c.name}</p>
-                  <p className="text-xs text-muted">{c.llm} / {c.model || "default model"}</p>
-                  <p className="break-words text-xs text-muted">{Object.keys(c.settings).length ? JSON.stringify(c.settings) : "default settings"}</p>
-                  <div className="flex flex-wrap gap-1">
-                    <Button small variant="secondary" onClick={() => { setCfg({ ...c, settings: { ...c.settings } }); setEditing(i); }}>Edit</Button>
-                    <Button small variant="secondary" disabled={saved.length >= MAX} onClick={() => persist([...saved, { ...c, name: uniqueName(`${c.name} copy`, null), settings: { ...c.settings } }])}>Duplicate</Button>
-                    <Button small variant="secondary" onClick={() => { persist(saved.filter((_, j) => j !== i)); setEditing(null); }}>Remove</Button>
+                <Card as="li" key={c.name} className="space-y-2 p-3 text-xs">
+                  <p className="font-semibold text-fg">{c.name}</p>
+                  <p className="font-mono text-[11px] text-muted">
+                    {c.llm} / {c.model || dev.providers[c.llm]?.default_model || `${c.llm} default`}
+                  </p>
+                  <p className="break-words font-mono text-[11px] text-muted">
+                    {Object.keys(c.settings).length ? JSON.stringify(c.settings) : "effective runtime defaults"}
+                  </p>
+                  <div className="flex flex-wrap gap-1 pt-1">
+                    <Button small variant="secondary" onClick={() => { setCfg({ ...c, settings: { ...c.settings } }); setEditing(i); }}>
+                      Edit
+                    </Button>
+                    <Button small variant="secondary" disabled={saved.length >= MAX} onClick={() => persist([...saved, { ...c, name: uniqueName(`${c.name} copy`, null), settings: { ...c.settings } }])}>
+                      Duplicate
+                    </Button>
+                    <Button small variant="secondary" onClick={() => { persist(saved.filter((_, j) => j !== i)); setEditing(null); }}>
+                      Remove
+                    </Button>
                   </div>
                 </Card>
               ))}

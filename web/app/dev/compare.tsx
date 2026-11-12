@@ -45,24 +45,24 @@ export function Compare({ runs }: { runs: BenchRun[] }) {
   return (
     <Card className="space-y-4 p-4">
       <div className="flex flex-wrap items-center gap-2">
-        <h2 className="serif text-2xl">Comparison</h2>
+        <h2 className="text-sm font-semibold text-fg">Comparison</h2>
         <Button small variant="secondary" onClick={() => save("loanloop-bench.json", "application/json", JSON.stringify(runs, null, 2))}>Export JSON</Button>
         <Button small variant="secondary" onClick={() => save("loanloop-bench.csv", "text/csv", toCsv(runs))}>Export CSV</Button>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[640px] text-left text-sm">
+        <table className="num w-full min-w-[640px] text-left text-xs">
           <caption className="sr-only">Benchmark results per config. A star marks the best (lowest) value in each column.</caption>
-          <thead className="text-xs text-muted">
-            <tr><th scope="col" className="py-1 pr-3 font-medium">Config</th>{COLS.map((c) => <th key={c.label} scope="col" className="px-2 py-1 font-medium">{c.label}</th>)}</tr>
+          <thead className="border-b border-line bg-sunken text-[11px] uppercase tracking-wider text-muted">
+            <tr><th scope="col" className="px-2 py-2 font-medium">Config</th>{COLS.map((c) => <th key={c.label} scope="col" className="px-2 py-2 font-medium">{c.label}</th>)}</tr>
           </thead>
           <tbody>
             {runs.map((r) => (
               <tr key={r.name} className="border-t border-line">
-                <th scope="row" className="py-2 pr-3 font-medium">{r.name}<span className="block text-xs font-normal text-muted">{r.llm} / {r.model}</span></th>
+                <th scope="row" className="px-2 py-2 font-sans font-medium text-fg">{r.name}<span className="block font-mono text-[11px] font-normal text-muted">{r.llm} / {r.model}</span></th>
                 {COLS.map((c, i) => {
                   const v = c.get(r), isBest = multi && v === best[i];
                   return (
-                    <td key={c.label} className={`px-2 py-2 tabular-nums ${isBest ? "bg-sunken font-semibold" : ""}`}>
+                    <td key={c.label} className={`px-2 py-2 ${isBest ? "bg-sunken font-semibold text-primary" : "text-fg"}`}>
                       {isBest && <><span aria-hidden>★ </span><span className="sr-only">best: </span></>}{c.fmt(v)}
                     </td>
                   );
@@ -73,14 +73,14 @@ export function Compare({ runs }: { runs: BenchRun[] }) {
         </table>
       </div>
       <div className="space-y-2">
-        <p className="text-sm font-medium">Average breakdown per turn</p>
+        <p className="text-xs font-semibold text-fg">Average breakdown per turn</p>
         {runs.map((r) => (
           <div key={r.name} className="text-xs">
-            <p>{r.name}</p>
-            <div aria-hidden className="mt-0.5 flex h-3 overflow-hidden rounded-full bg-sunken" style={{ width: `${(100 * BAR.reduce((s, k) => s + r.summary.avg[`${k}_ms` as const], 0)) / maxTotal}%` }}>
+            <p className="font-medium text-fg">{r.name}</p>
+            <div aria-hidden className="mt-1 flex h-2.5 overflow-hidden rounded-sm bg-sunken" style={{ width: `${(100 * BAR.reduce((s, k) => s + r.summary.avg[`${k}_ms` as const], 0)) / maxTotal}%` }}>
               {BAR.map((k) => <div key={k} className={SEG[k].c} style={{ flex: `${r.summary.avg[`${k}_ms` as const]} 1 0` }} />)}
             </div>
-            <ul className="mt-0.5 flex flex-wrap gap-x-3 text-muted" aria-label={`${r.name} average breakdown`}>
+            <ul className="mt-1 flex flex-wrap gap-x-3 font-mono text-[11px] text-muted" aria-label={`${r.name} average breakdown`}>
               {BAR.map((k) => <li key={k} className="flex items-center gap-1"><span aria-hidden className={`h-2 w-2 rounded-full ${SEG[k].c}`} />{SEG[k].k} {Math.round(r.summary.avg[`${k}_ms` as const])} ms</li>)}
             </ul>
           </div>
@@ -88,17 +88,17 @@ export function Compare({ runs }: { runs: BenchRun[] }) {
       </div>
       <div className="space-y-2">
         {runs.map((r) => (
-          <details key={r.name} className="rounded-lg border border-line bg-bg px-3 py-2 text-xs">
-            <summary className="cursor-pointer font-medium">{r.name}: per-turn detail ({r.turns.length} turns)</summary>
+          <details key={r.name} className="rounded-md border border-line bg-bg px-3 py-2 text-xs">
+            <summary className="cursor-pointer font-medium text-fg">{r.name}: per-turn detail ({r.turns.length} turns)</summary>
             <div className="mt-2 overflow-x-auto">
-              <table className="w-full min-w-[560px] text-left">
-                <thead className="text-muted"><tr>{["Rep", "Line", "OK", "Total", "STT", "LLM", "LLM calls", "Gateway", "TTS", "Other", "Actions"].map((h) => <th key={h} className="pr-2 font-medium">{h}</th>)}</tr></thead>
+              <table className="num w-full min-w-[560px] text-left">
+                <thead className="text-[11px] uppercase text-muted"><tr>{["Rep", "Line", "OK", "Total", "STT", "LLM", "LLM calls", "Gateway", "TTS", "Other", "Actions"].map((h) => <th key={h} className="py-1 pr-2 font-medium">{h}</th>)}</tr></thead>
                 <tbody>
                   {r.turns.map((t, i) => (
                     <tr key={i} className="border-t border-line align-top">
-                      <td>{t.rep}</td><td>{t.index}</td><td>{t.ok ? "yes" : `no${t.error ? `: ${t.error}` : ""}`}</td>
-                      <td>{t.timings?.total_ms ?? "-"}</td><td>{t.timings?.stt_ms ?? "-"}</td><td>{t.timings?.llm_ms ?? "-"}</td><td>{t.timings?.llm_calls === 0 ? <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] bg-ok-bg text-ok-fg font-semibold border border-ok-border">⚡ 0 (FAQ)</span> : t.timings?.llm_calls ?? "-"}</td>
-                      <td>{t.timings?.gateway_ms ?? "-"}</td><td>{t.timings?.tts_ms ?? "-"}</td><td>{t.timings?.other_ms ?? "-"}</td><td>{t.actions.join(", ")}</td>
+                      <td className="py-1 pr-2">{t.rep}</td><td className="py-1 pr-2">{t.index}</td><td className="py-1 pr-2">{t.ok ? "yes" : `no${t.error ? `: ${t.error}` : ""}`}</td>
+                      <td className="py-1 pr-2">{t.timings?.total_ms ?? "-"}</td><td className="py-1 pr-2">{t.timings?.stt_ms ?? "-"}</td><td className="py-1 pr-2">{t.timings?.llm_ms ?? "-"}</td><td className="py-1 pr-2">{t.timings?.llm_calls === 0 ? <span className="inline-flex items-center gap-0.5 rounded border border-ok-border bg-ok-bg px-1.5 py-0.5 font-mono text-[10px] font-semibold text-ok-fg">0 (FAQ)</span> : t.timings?.llm_calls ?? "-"}</td>
+                      <td className="py-1 pr-2">{t.timings?.gateway_ms ?? "-"}</td><td className="py-1 pr-2">{t.timings?.tts_ms ?? "-"}</td><td className="py-1 pr-2">{t.timings?.other_ms ?? "-"}</td><td className="py-1 pr-2 font-mono">{t.actions.join(", ")}</td>
                     </tr>
                   ))}
                 </tbody>

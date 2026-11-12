@@ -67,41 +67,77 @@ export function LiveCall({ cfg, customer }: { cfg: Cfg; customer: string }) {
 
   return (
     <Card className="space-y-3 p-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <h2 className="serif text-2xl">Live call</h2>
-        <Pill tone={inCall ? "accent" : "neutral"}><span role="status">{status}</span></Pill>
-        <span className="text-sm text-muted">Uses the config above ({cfg.llm}{cfg.model ? ` / ${cfg.model}` : ""}) as {customer}.</span>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="text-sm font-semibold text-fg">Live call</h2>
+          <Pill tone={inCall ? "accent" : "neutral"}><span role="status">{status}</span></Pill>
+          <span className="font-mono text-xs text-muted">
+            {cfg.llm}{cfg.model ? ` / ${cfg.model}` : ""} · {customer}
+          </span>
+        </div>
+
+        <label className="flex cursor-pointer items-center gap-2 text-xs text-muted">
+          <span>Voice replies (Gnani TTS)</span>
+          <span className="relative inline-flex items-center">
+            <input
+              type="checkbox"
+              checked={tts}
+              onChange={(e) => setTts(e.target.checked)}
+              disabled={inCall}
+              className="peer sr-only"
+            />
+            <span className="h-5 w-9 rounded-full border border-line bg-sunken transition-colors peer-checked:border-primary peer-checked:bg-primary peer-disabled:opacity-50 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--ring)]" />
+            <span className="pointer-events-none absolute left-0.5 h-3.5 w-3.5 rounded-full border border-line bg-card transition-transform peer-checked:translate-x-4 peer-checked:border-transparent" />
+          </span>
+        </label>
       </div>
-      <label className="flex min-h-11 items-center gap-2 text-sm text-muted">
-        <input type="checkbox" checked={tts} onChange={(e) => setTts(e.target.checked)} disabled={inCall} className="h-5 w-5" />
-        Voice replies (spends Gnani TTS credits)
-      </label>
-      {!inCall && <Button onClick={start} disabled={status === "connecting"}>{status === "ended" ? "Start a new call" : "Start call with this config"}</Button>}
+
+      {!inCall && (
+        <Button small onClick={start} disabled={status === "connecting"}>
+          {status === "ended" ? "Start a new call" : "Start call with this config"}
+        </Button>
+      )}
       {inCall && (
         <>
-          <button type="button" {...props} disabled={status !== "live"} aria-pressed={talking}
-            className={`btn flex h-16 w-full select-none items-center justify-center rounded-full text-base font-medium touch-none ${talking ? "btn-primary ring-4 ring-accent" : "btn-secondary"} disabled:opacity-50`}>
+          <button
+            type="button"
+            {...props}
+            disabled={status !== "live"}
+            aria-pressed={talking}
+            className={`btn flex h-12 w-full select-none items-center justify-center rounded-md text-xs font-semibold touch-none ${
+              talking ? "btn-primary ring-2 ring-accent" : "btn-secondary"
+            } disabled:opacity-50`}
+          >
             {talking ? "Listening… release to send" : status === "thinking" ? "Thinking…" : "Hold to talk"}
           </button>
           <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); sendText(); }}>
-            <input value={text} onChange={(e) => setText(e.target.value)} aria-label="Type instead of speaking" placeholder="Type instead of speaking"
-              className="min-h-11 min-w-0 flex-1 rounded-lg border border-line bg-bg px-3 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]" />
+            <input
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              aria-label="Type instead of speaking"
+              placeholder="Type instead of speaking"
+              className="h-9 min-w-0 flex-1 rounded-md border border-line bg-bg px-3 text-xs focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--ring)]"
+            />
             <Button type="submit" small disabled={status !== "live" || !text.trim()}>Send</Button>
+            <Button small variant="secondary" onClick={end}>End call</Button>
           </form>
-          <Button small variant="secondary" onClick={end}>End call</Button>
         </>
       )}
-      {error && <p role="alert" className="rounded-lg border border-danger-line bg-danger-bg px-3 py-2 text-sm text-danger-fg">Something went wrong ({error}).</p>}
+      {error && (
+        <p role="alert" className="rounded-md border border-danger-line bg-danger-bg px-3 py-2 text-xs text-danger-fg">
+          Something went wrong ({error}).
+        </p>
+      )}
       {eff && (
         <details className="text-xs text-muted">
-          <summary className="cursor-pointer">Effective settings</summary>
-          <pre className="mt-1 overflow-x-auto rounded-lg bg-sunken p-2">{JSON.stringify(eff, null, 2)}</pre>
+          <summary className="cursor-pointer font-medium">Effective settings</summary>
+          <pre className="mt-1 overflow-x-auto rounded-md border border-line bg-sunken p-2 font-mono text-[11px]">{JSON.stringify(eff, null, 2)}</pre>
         </details>
       )}
-      <div role="log" aria-live="polite" aria-label="Call transcript" className="max-h-96 space-y-3 overflow-y-auto">
+      <div role="log" aria-live="polite" aria-label="Call transcript" className="max-h-96 space-y-2.5 overflow-y-auto">
         {msgs.map((m, i) => (
           <div key={i} className={`flex flex-col ${m.who === "caller" ? "items-end" : "items-start"}`}>
-            <p className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${m.who === "caller" ? "bg-primary text-primary-fg" : "border border-line bg-card"}`}>
+            <p className={`max-w-[85%] rounded-md px-3 py-2 text-xs leading-relaxed ${m.who === "caller" ? "bg-primary text-primary-fg" : "border border-line bg-surface-container-low text-fg"}`}>
               <span className="sr-only">{m.who === "caller" ? "You: " : "Agent: "}</span>{m.text}
             </p>
             {m.stat && <TurnStat s={m.stat} />}
