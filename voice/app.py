@@ -1018,6 +1018,13 @@ def faq_route(text: str, lang: str, st: dict | None = None) -> tuple[str, str | 
     return out
 
 
+def faq_topic_check(text: str, lang: str, topic: str) -> str:
+    """The model's faq_lookup topic must have keyword support in the caller's words; a small model picks e.g. bank_charges for
+    "money was taken from my account". Otherwise our scorer's confident (medium or high) pick replaces it."""
+    level, iid = faq_route(text, lang) if text else ("low", None)
+    return topic if level == "low" or iid is None or topic in {i for i, _, _ in faq_rank(text, lang)} else iid
+
+
 def faq_reference(text: str, lang: str, n: int = 3, min_score: float = faq_score.MED_MIN) -> str:
     """Top-n FAQ answers by the weighted scorer, as a short block; "" if none score above min_score."""
     by_id, top = _faq_cache["by_id"] if _faq_intents() else {}, []
@@ -1686,6 +1693,8 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             utr = args.get("utr")
             if isinstance(utr, str) and len(re.sub(r"\D", "", utr)) >= 6:
                 c.setdefault("refs", set()).add(re.sub(r"\D", "", utr))  # the caller's own UTR may be read back
+            if name == "faq_lookup" and not internal and isinstance(args.get("topic"), str):
+                args["topic"] = faq_topic_check(c.get("user_text", ""), c["language"], args["topic"])
             args["language"] = c["language"]  # the service owns the call language, never the model's argument
             if name == "record_ptp":  # spoken dates are parsed by us, not trusted from the model
                 # newest utterance first, one at a time: joining them let an earlier date of birth ("17 June 1988") win

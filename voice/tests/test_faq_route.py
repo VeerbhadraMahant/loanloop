@@ -2,7 +2,7 @@
 import json
 import time
 
-from test_voice import dev_env, env, new_call, turn  # noqa: F401  (env is a fixture)
+from test_voice import dev_env, env, new_call, tc, turn  # noqa: F401  (env is a fixture)
 from test_v2 import FAQ, gw_calls
 
 NF = {"ok": False, "speak": "nf", "error_code": "FAQ_NOT_FOUND"}  # the model's own prose fallback finds nothing either
@@ -116,3 +116,14 @@ def test_every_eval_faq_case_reaches_the_faq_through_the_live_turn_handler(env):
         if not (direct or block):
             bad.append(case["id"])
     assert not bad, bad  # noqa
+
+
+def test_model_topic_without_keyword_support_is_replaced_by_the_scorer_pick(env):
+    c, fake = env
+    fake.gw["faq_lookup"] = FAQ
+    text = "English. I think I was scammed and money was taken from my account."
+    assert faq_route(text, "en") == ("medium", "fraud_report")
+    d = new_call(c)
+    fake.llm_script = [tc("faq_lookup", topic="bank_charges"), AFTER]
+    turn(c, d, text)
+    assert gw_calls(fake, "faq_lookup")[-1]["topic"] == "fraud_report"
