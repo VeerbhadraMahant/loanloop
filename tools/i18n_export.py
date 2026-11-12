@@ -24,7 +24,8 @@ import voice.app as va  # noqa: E402
 names = ["REPROMPT", "LANG_OK", "CUSTOMER_Q", "SAFE", "ASK", "FIELD_LABEL", "PURPOSE", "AFFIRM_WORDS", "NEGATE_WORDS",
          "BYE_WORDS", "APPROVAL_WORDS", "_LANG_WORDS", "_SWITCH_CUES", "_MONTHS_MAP", "_WEEKDAYS", "_QUESTION_WORDS",
          "_POSSESSIVE", "_ACCT_NOUNS", "_HUMAN_TARGET", "_HUMAN_VERB", "_NEG_HUMAN", "_FULL_WORDS", "_MULTI_WORDS",
-         "_DATE_WORDS", "_VERIFY_WORDS"]
+         "_DATE_WORDS", "_VERIFY_WORDS", "_WHY_WORDS", "_UP_WORDS", "_CHANGE_CUES", "_EMI_WORDS", "_ABOUT_SECRET",
+         "_BIG_NUMBER_WORDS", "_APPROVAL_DONE", "_TODAY_WORDS", "_TOMORROW_WORDS", "_FAQ_CUES", "_TOPICS", "INTENT"]
 dump = {}
 for n in names:
     v = getattr(va, n, None)

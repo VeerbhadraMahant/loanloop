@@ -118,6 +118,9 @@ def test_validator_accepts_complete_file_and_rejects_broken_ones():
                       "FIELD_LABEL": {k: "l" for k in src["voice"]["FIELD_LABEL"]["en"]}},
             "words": {**{k: ["w"] for k in chk.LIST_WORDS}, "month_words": {f"m{i}": i for i in range(1, 13)},
                       "weekdays": {f"d{i}": i for i in range(7)}}}
+    assert [p for p in chk.check_file("ta", full, src) if not chk.is_warning(p)] == []  # the newer words keys only warn when missing
+    full["words"].update({k: ["w"] for k in chk.NEW_TOKEN_WORDS + chk.NEW_PHRASE_WORDS})
+    full["words"].update({k: {n: ["w"] for n in names[:1]} for k, (names, _) in chk.NEW_GROUPS.items()})
     assert chk.check_file("ta", full, src) == []
     k = next(k for k, v in src["gateway"].items() if "{" in v["en"])
     bad = json.loads(json.dumps(full))
