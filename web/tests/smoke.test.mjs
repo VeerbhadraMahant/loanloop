@@ -26,6 +26,13 @@ test("login pages are public", async () => {
   for (const p of ["/login", "/staff/login"]) assert.equal((await get(p)).status, 200, p);
 });
 
+test("landing page is public and links to both doors", async () => {
+  const res = await get("/");
+  assert.equal(res.status, 200);
+  const html = await res.text();
+  for (const h of ['href="/login"', 'href="/staff/login"']) assert.ok(html.includes(h), h);
+});
+
 test("signed-out visitors are redirected to the right door", async () => {
   for (const p of ["/bank", "/ops", "/dev"]) {
     const res = await get(p);

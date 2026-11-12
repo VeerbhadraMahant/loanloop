@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useState } from "react";
 import { Wordmark } from "@/components/ui";
 
@@ -68,6 +69,7 @@ export function LoginForm({ door }: { door: "staff" | "customer" }) {
         <button type="submit" disabled={busy} className="h-11 w-full cursor-pointer rounded-xl bg-primary text-sm font-semibold text-primary-fg disabled:opacity-50">
           {busy ? "Signing in…" : "Sign in"}
         </button>
+        <Link href="/" className="flex h-11 items-center justify-center rounded-lg text-sm text-muted transition-colors duration-150 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary motion-reduce:transition-none">Back to home</Link>
       </form>
     </main>
   );

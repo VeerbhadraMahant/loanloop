@@ -11,6 +11,7 @@ Passwords, passcodes, mobiles and session ids are never printed.
 import argparse
 import asyncio
 import os
+import re
 import secrets
 import sys
 from pathlib import Path
@@ -137,9 +138,23 @@ def g_pages(st: Stack, ctx: dict):
     for p in ["/bank", "/ops", "/collections", "/dev", "/metrics", "/test-cases"]:
         r = st.w("GET", p)
         check(f"no cookies {p} -> redirect /staff/login", redirects_to(r, "/staff/login"), f"{r.status_code} {r.headers.get('location')}")
-    for p in ["/phone", "/call", "/"]:
+    for p in ["/phone", "/call"]:
         r = st.w("GET", p)
         check(f"no cookies {p} -> redirect /login", redirects_to(r, "/login"), f"{r.status_code} {r.headers.get('location')}")
+    r = st.w("GET", "/")
+    body = r.text
+    check("no cookies / -> 200 landing with both door links", r.status_code == 200 and 'href="/login"' in body and 'href="/staff/login"' in body, str(r.status_code))
+    leaks = [x for x in ("Priya", "Ramesh", "Sunita", "Vikram", "9000014417", "9000023158", "9000030912", "9000200201") if x in body]
+    leaks += re.findall(r"9000\d{6}", body)
+    check("landing shows no customer data", not leaks, f"found {sorted(set(leaks))}")
+    for door in ("/login", "/staff/login"):
+        b = st.w("GET", door).text
+        check(f"{door} links to / and not to the other door", 'href="/"' in b and ('href="/staff/login"' not in b if door == "/login" else 'href="/login"' not in b), "")
+    for role, to in (("bank_manager", "/bank"), ("engineer", "/dev"), ("admin", "/bank")):
+        r = st.w("GET", "/", {"ll_staff": S[role]})
+        check(f"{role} session / -> redirect {to}", redirects_to(r, to), f"{r.status_code} {r.headers.get('location')}")
+    r = st.w("GET", "/", {"ll_cust": C["a"]})
+    check("customer session / -> redirect /phone", redirects_to(r, "/phone"), f"{r.status_code} {r.headers.get('location')}")
     cc = {"ll_cust": C["a"]}
     for p in ["/bank", "/bank/conversations", "/ops", "/collections", "/dev", "/metrics", "/test-cases", "/call/outbound/1"]:
         r = st.w("GET", p, cc)

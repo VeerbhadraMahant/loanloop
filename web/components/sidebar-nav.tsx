@@ -205,7 +205,7 @@ export function ThemeSelector() {
   );
 }
 
-function UserSettingsMenu({ align = "up", name }: { align?: "up" | "down"; name?: string }) {
+function UserSettingsMenu({ align = "up", name, signOut = false }: { align?: "up" | "down"; name?: string; signOut?: boolean }) {
   const [open, setOpen] = useState(false);
   const { theme } = useThemePreference();
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -263,6 +263,7 @@ function UserSettingsMenu({ align = "up", name }: { align?: "up" | "down"; name?
             <span className="font-mono text-[10px] text-muted">Cmd+B nav</span>
           </div>
           <ThemeSelector />
+          {signOut && <SignOut door="staff" className="mt-3 w-full rounded-lg border border-line px-2 py-1.5 text-xs font-medium text-muted hover:text-fg" />}
         </div>
       )}
     </div>
@@ -287,6 +288,8 @@ export function SidebarNav() {
 
       <aside
         aria-label="Sidebar navigation"
+        inert={!isOpen} // hidden = out of tab order and clicks (it stays mounted for the slide transition)
+        aria-hidden={!isOpen}
         className={`fixed md:sticky top-0 left-0 z-40 h-screen bg-card border-r border-line flex flex-col transition-all duration-200 ease-out ${
           isOpen
             ? "w-60 translate-x-0"
@@ -410,7 +413,7 @@ export function AppHeader({
         {status}
         {(door === "customer" || !isOpen) && (
           <div className="hidden md:block">
-            <UserSettingsMenu align="down" name={me?.name} />
+            <UserSettingsMenu align="down" name={me?.name} signOut={door === "staff"} />
           </div>
         )}
         {door === "customer" && <SignOut door="customer" className="text-xs font-medium text-fg px-3 py-1.5 rounded-lg border border-line bg-sunken" />}
