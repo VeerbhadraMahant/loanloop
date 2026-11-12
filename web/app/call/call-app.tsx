@@ -179,7 +179,6 @@ export default function CallApp({ customer, name, caseId }: { customer: string; 
   const [turns, setTurns] = useState<Turn[]>([]);
   const [devMode, setDevMode] = useState(false);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
-  const [viewMode, setViewMode] = useState<"desk" | "simulation">("desk");
   const [callDuration, setCallDuration] = useState(0);
 
   const turnN = useRef(0);
@@ -550,62 +549,36 @@ export default function CallApp({ customer, name, caseId }: { customer: string; 
       }
     >
       <main className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
-        {/* TOP UTILITY BAR: Concise Scenario Switcher & High-Visibility Controls */}
-        <section className="w-full mb-4">
-          <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 p-3.5 sm:p-4 rounded-xl bg-card border border-line shadow-xs">
-            <div className="font-mono text-[11px] uppercase tracking-wider text-muted font-semibold">
+        {/* TOP UTILITY BAR: Signed-in context & Call Controls */}
+        <section className="w-full mb-2.5">
+          <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-2.5 px-3 py-2.5 rounded-lg bg-card border border-line">
+            <div className="font-mono text-[10px] uppercase tracking-wider text-muted font-medium">
               {caseId ? `Outbound case ${caseId}` : `Signed in as ${persona.name}`}
             </div>
 
-            {/* Mode Switcher, Telemetry, and High-Visibility Primary CTA */}
-            <div className="flex flex-wrap items-center gap-2.5">
-              {/* Standalone Call Simulation Button (Out of container & distinctly highlighted) */}
-              <button
-                type="button"
-                onClick={() => setViewMode(viewMode === "simulation" ? "desk" : "simulation")}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border shadow-xs ${
-                  viewMode === "simulation"
-                    ? "bg-primary text-primary-fg border-primary shadow-md ring-2 ring-primary/30"
-                    : "bg-secondary-container hover:bg-accent-soft text-primary border-primary/30 hover:border-primary"
-                }`}
-                title={
-                  viewMode === "simulation"
-                    ? "Phone simulation is active. Click to return to Calling Desk."
-                    : "Open phone simulator with pure customer experience (zero debug latency)."
-                }
-              >
-                <Icon name="phone" size={15} />
-                <span>Call Simulation</span>
-                {viewMode === "simulation" ? (
-                  <span className="px-1.5 py-0.5 rounded-full bg-emerald-300 text-primary font-mono text-[10px] font-bold animate-pulse">
-                    ACTIVE
-                  </span>
-                ) : (
-                  <span className="px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-mono text-[10px] font-semibold">
-                    Phone View
-                  </span>
-                )}
-              </button>
-
+            {/* Mode Switcher, Status, and Call Controls */}
+            <div className="flex flex-wrap items-center gap-2">
               {/* Status Ribbon */}
               <div
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-medium ${
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-mono tabular-nums font-medium border ${
                   status === "thinking" || status === "connecting"
-                    ? "bg-warn-bg text-warn-fg border border-warn-border"
+                    ? "bg-warn-bg text-warn-fg border-warn-border"
                     : inCall
-                    ? "bg-ok-bg text-ok-fg border border-ok-border"
-                    : "bg-sunken text-muted border border-line"
+                    ? "bg-ok-bg text-ok-fg border-ok-border"
+                    : "bg-sunken text-muted border-line"
                 }`}
               >
                 <span className="relative flex h-2 w-2">
-                  <span
-                    className={`animate-ping absolute inline-flex h-full w-full rounded-full ${
-                      inCall ? "bg-ok-fg" : "bg-muted"
-                    } opacity-75`}
-                  ></span>
+                  {inCall && (
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-ok-fg opacity-75"></span>
+                  )}
                   <span
                     className={`relative inline-flex rounded-full h-2 w-2 ${
-                      inCall ? "bg-ok-fg" : "bg-muted"
+                      status === "thinking" || status === "connecting"
+                        ? "bg-warn-fg"
+                        : inCall
+                        ? "bg-ok-fg"
+                        : "bg-muted"
                     }`}
                   ></span>
                 </span>
@@ -622,14 +595,14 @@ export default function CallApp({ customer, name, caseId }: { customer: string; 
                 </span>
               </div>
 
-              {/* HIGH-VISIBILITY PRIMARY CTA BUTTON */}
+              {/* PRIMARY CALL CTA */}
               {inCall ? (
                 <button
                   type="button"
                   onClick={end}
-                  className="px-5 py-2 rounded-xl bg-danger-fg hover:bg-red-700 text-white font-bold text-xs shadow-md hover:shadow-lg transition-all flex items-center gap-1.5 ring-2 ring-danger-line/40 cursor-pointer animate-pulse"
+                  className="px-3.5 py-1.5 rounded-md bg-danger-fg hover:bg-danger-fg/90 text-white font-semibold text-xs transition-colors flex items-center gap-1.5 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-fg"
                 >
-                  <Icon name="x" size={14} />
+                  <Icon name="x" size={13} />
                   <span>End Call</span>
                 </button>
               ) : (
@@ -637,9 +610,9 @@ export default function CallApp({ customer, name, caseId }: { customer: string; 
                   type="button"
                   onClick={start}
                   disabled={status === "connecting"}
-                  className="px-5 py-2 rounded-xl bg-ok-fg hover:bg-emerald-700 text-white font-bold text-xs shadow-md hover:shadow-lg transition-all flex items-center gap-1.5 ring-2 ring-ok-border/50 cursor-pointer disabled:opacity-50"
+                  className="px-3.5 py-1.5 rounded-md bg-ok-fg hover:bg-ok-fg/90 text-white font-semibold text-xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ok-fg"
                 >
-                  <Icon name="phone_in_talk" size={14} />
+                  <Icon name="phone_in_talk" size={13} />
                   <span>{ended ? "Start New Call" : "Start Call"}</span>
                 </button>
               )}
@@ -648,123 +621,90 @@ export default function CallApp({ customer, name, caseId }: { customer: string; 
               <button
                 type="button"
                 onClick={() => toggleVoice(!voiceReplies)}
-                className={`p-2 rounded-lg text-xs transition-colors border ${
+                aria-pressed={voiceReplies}
+                className={`p-1.5 rounded-md text-xs transition-colors border cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                   voiceReplies
-                    ? "bg-secondary-container text-primary border-primary/20"
+                    ? "bg-accent-soft text-primary border-primary/25"
                     : "bg-sunken text-muted border-line hover:text-fg"
                 }`}
                 title={voiceReplies ? "Voice replies ON (Edge TTS)" : "Voice replies OFF"}
               >
-                <Icon name="mic" size={15} />
+                <Icon name="mic" size={14} />
               </button>
 
-              {/* Diagnostics toggle (desk mode only) */}
-              {viewMode === "desk" && (
-                <button
-                  type="button"
-                  onClick={() => setShowDiagnostics(!showDiagnostics)}
-                  className={`p-2 rounded-lg text-xs transition-colors border ${
-                    showDiagnostics
-                      ? "bg-secondary-container text-primary border-primary/20"
-                      : "bg-sunken text-muted border-line hover:text-fg"
-                  }`}
-                  title="Toggle Engine Diagnostics"
-                >
-                  <Icon name="speed" size={15} />
-                </button>
-              )}
+              {/* Diagnostics toggle */}
+              <button
+                type="button"
+                onClick={() => setShowDiagnostics(!showDiagnostics)}
+                aria-pressed={showDiagnostics}
+                className={`p-1.5 rounded-md text-xs transition-colors border cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                  showDiagnostics
+                    ? "bg-accent-soft text-primary border-primary/25"
+                    : "bg-sunken text-muted border-line hover:text-fg"
+                }`}
+                title="Toggle Engine Diagnostics"
+              >
+                <Icon name="speed" size={14} />
+              </button>
             </div>
           </div>
         </section>
 
-        {viewMode === "simulation" ? (
-          /* FULL AREA CALL SIMULATION: END-USER PHONE INTERACTION WITHOUT TELEMETRY */
-          <div className="w-full max-w-[420px] mx-auto py-2 flex flex-col items-center gap-2.5">
-            <div className="w-full flex items-center justify-between px-2 text-xs">
-              <span className="font-mono text-muted text-[11px] flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-ok-fg animate-pulse"></span>
-                <span className="text-fg font-medium">Customer Phone Simulation</span>
-              </span>
-              <button
-                type="button"
-                onClick={() => setViewMode("desk")}
-                className="font-mono text-xs text-primary hover:text-accent-hover font-semibold inline-flex items-center gap-1 cursor-pointer underline"
-              >
-                <Icon name="speed" size={13} />
-                <span>Exit Simulation (Desk View)</span>
-              </button>
-            </div>
-            <PhoneHandset
-              noData={!!caseId}
-              simulationProps={{
-                inCall,
-                status,
-                ended,
-                busy,
-                listening,
-                msgs,
-                callDuration,
-                talkProps,
-                start,
-                end,
-                sendTextVal,
-                quickPrompts: persona.quickPrompts,
-                personaName: persona.name,
-                personaPhone: persona.phone,
-                personaLoan: persona.loan,
-                text,
-                setText,
-                sendText,
-              }}
-            />
+        {/* SLIM PERSISTENT ZERO SECRETS POLICY STRIP */}
+        <div className="w-full mb-3 px-3 py-1.5 rounded-md bg-sunken/70 border border-line flex items-center justify-between gap-3 text-[11px] text-muted">
+          <div className="flex items-center gap-2 min-w-0">
+            <Icon name="verified" size={13} className="text-ok-fg shrink-0" />
+            <span className="font-semibold text-fg shrink-0">Zero Secrets Policy</span>
+            <span className="truncate">
+              Agent never queries, logs, or reads aloud MPINs, passwords, or OTP codes. Verification runs out-of-band on the customer handset.
+            </span>
           </div>
-        ) : (
-          /* 12-COLUMN CALLING DESK & PHONE SIDECAR GRID */
-          <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
-          {/* LEFT 8 COLUMNS: Live Calling Desk */}
-          <div className="xl:col-span-8 flex flex-col gap-4 min-w-0">
-            {/* Caller Ledger Card */}
-            <Card className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-secondary-container text-primary flex items-center justify-center font-bold text-lg shrink-0">
+          <span className="font-mono text-[10px] text-muted shrink-0 hidden sm:inline">
+            RBI 08:00–19:00 IST
+          </span>
+        </div>
+
+        {/* PRIMARY TRANSCRIPT WORKSPACE + SECONDARY PHONE SIDECAR */}
+        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_350px] gap-4 items-start">
+          {/* PRIMARY WORKSPACE: Caller Ledger + Live Transcript */}
+          <div className="flex flex-col gap-3 min-w-0">
+            {/* Compact Caller Ledger Bar */}
+            <div className="px-3.5 py-2.5 rounded-lg bg-card border border-line flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-md bg-accent-soft text-primary flex items-center justify-center font-semibold text-sm shrink-0">
                   {persona.initials}
                 </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="serif text-xl font-semibold text-fg tracking-tight">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h2 className="text-sm font-semibold text-fg tracking-tight">
                       {persona.name}
                     </h2>
-                    <span className="px-2 py-0.5 rounded-full bg-ok-bg text-ok-fg font-mono text-[11px] border border-ok-border">
+                    <span className="px-1.5 py-0.5 rounded bg-ok-bg text-ok-fg font-mono text-[10px] border border-ok-border">
                       {persona.status}
                     </span>
                   </div>
-                  <p className="font-mono text-xs text-muted mt-0.5">
+                  <p className="font-mono text-[11px] text-muted mt-0.5 truncate">
                     {persona.phone} · {persona.loan}
                   </p>
                 </div>
               </div>
 
-              <div className="flex sm:flex-col items-end justify-between sm:justify-center border-t sm:border-t-0 pt-2 sm:pt-0 border-line">
-                <span className="text-xs text-muted">Ledger Balance</span>
-                <span className="font-mono text-xl sm:text-2xl text-primary font-bold">
+              <div className="flex sm:flex-col items-baseline sm:items-end justify-between border-t sm:border-t-0 pt-2 sm:pt-0 border-line shrink-0">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-muted">Ledger Balance</span>
+                <span className="font-mono tabular-nums text-base sm:text-lg text-fg font-semibold">
                   {persona.balance}
                 </span>
               </div>
-            </Card>
+            </div>
 
-            {/* Conversation Feed Card */}
-            <Card className="flex flex-col overflow-hidden">
-              {/* Zero Secrets Banner */}
-              <div className="bg-surface-container-low px-4 py-2.5 border-b border-line flex items-center justify-between gap-2 text-xs text-muted">
-                <div className="flex items-center gap-2">
-                  <Icon name="verified" size={15} />
-                  <span className="font-semibold text-fg">Zero Secrets Policy</span>
-                  <span>
-                    — Voice agent never queries, transcribes, or verbalizes MPINs, Passwords, or OTP strings.
-                  </span>
-                </div>
-                <span className="font-mono text-[10px] text-muted hidden md:inline">
-                  Demo · synthetic data
+            {/* Conversation Transcript Workspace */}
+            <Card className="flex flex-col overflow-hidden p-0">
+              <div className="px-3.5 py-2 border-b border-line bg-sunken/40 flex items-center justify-between text-[11px] text-muted">
+                <span className="font-mono uppercase tracking-wider font-medium text-fg">
+                  Live Transcript
+                </span>
+                <span className="font-mono tabular-nums">
+                  {turns.length > 0 ? `${turns.length} turn${turns.length === 1 ? "" : "s"}` : "Session idle"}
                 </span>
               </div>
 
@@ -773,19 +713,19 @@ export default function CallApp({ customer, name, caseId }: { customer: string; 
                 role="log"
                 aria-live="polite"
                 aria-label="Call transcript"
-                className="p-4 sm:p-5 flex flex-col gap-3.5 h-[360px] xl:h-[calc(100vh-420px)] min-h-[280px] max-h-[460px] overflow-y-auto bg-surface-bright/50"
+                className="p-4 flex flex-col gap-3 h-[400px] xl:h-[calc(100vh-370px)] min-h-[300px] max-h-[540px] overflow-y-auto bg-canvas/50"
                 id="transcript-stream"
               >
                 {msgs.length === 0 ? (
-                  <div className="my-auto text-center py-12 text-muted text-sm">
-                    <p className="serif text-lg text-fg mb-1">
+                  <div className="my-auto text-center py-10 text-muted text-sm">
+                    <p className="text-base font-semibold text-fg mb-1">
                       {status === "idle"
                         ? `Ready to connect with ${persona.name}`
                         : "Connecting to Sahyadri Voice Desk…"}
                     </p>
-                    <p className="text-xs">
+                    <p className="text-xs text-muted">
                       {status === "idle"
-                        ? "Click 'Start Call' above or use the Talk button below to begin."
+                        ? "Click Start Call above or use the Talk button below to begin."
                         : "Establishing secure bilateral audio session…"}
                     </p>
                   </div>
@@ -797,19 +737,19 @@ export default function CallApp({ customer, name, caseId }: { customer: string; 
                         m.who === "caller" ? "items-end self-end" : "items-start"
                       }`}
                     >
-                      <div className="flex items-center gap-2 text-xs text-muted">
+                      <div className="flex items-center gap-2 text-[11px] text-muted">
                         {m.who === "agent" && <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>}
                         <span className="font-medium text-fg">
                           {m.who === "caller" ? persona.name : "Sahyadri Voice Agent"}
                         </span>
-                        <span className="font-mono text-[11px]">Turn #{i + 1}</span>
+                        <span className="font-mono tabular-nums text-[10px]">#{i + 1}</span>
                       </div>
 
                       <div
-                        className={`p-3.5 rounded-xl shadow-xs text-sm leading-relaxed ${
+                        className={`px-3.5 py-2.5 rounded-lg text-sm leading-[1.6] ${
                           m.who === "caller"
-                            ? "rounded-tr-xs bg-primary text-primary-fg"
-                            : "rounded-tl-xs bg-card border border-line text-fg"
+                            ? "bg-primary text-primary-fg"
+                            : "bg-card border border-line text-fg"
                         }`}
                       >
                         {m.text}
@@ -818,16 +758,16 @@ export default function CallApp({ customer, name, caseId }: { customer: string; 
                       {/* Action Chips for this turn */}
                       <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
                         {m.stat?.timings && m.stat.timings.llm_calls === 0 && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono font-medium bg-ok-bg text-ok-fg border border-ok-border">
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-mono font-medium bg-ok-bg text-ok-fg border border-ok-border">
                             <Icon name="check" size={11} />
-                            <span>⚡ Instant FAQ Match (0ms LLM)</span>
+                            <span>Instant FAQ Match (0ms LLM)</span>
                           </span>
                         )}
                         {!!m.actions?.length && (
                           m.actions.map((a, j) => (
                             <span
                               key={j}
-                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono font-medium ${
+                              className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-mono font-medium ${
                                 a.ok
                                   ? "bg-ok-bg text-ok-fg border border-ok-border"
                                   : "bg-danger-bg text-danger-fg border border-danger-line"
@@ -853,17 +793,17 @@ export default function CallApp({ customer, name, caseId }: { customer: string; 
               </div>
 
               {/* Voice Interaction Deck (Bottom controls) */}
-              <div className="p-4 bg-card border-t border-line flex flex-col gap-3">
+              <div className="p-3.5 bg-card border-t border-line flex flex-col gap-2.5">
                 {/* Context Quick Actions Bar */}
                 <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
-                  <span className="text-muted shrink-0 mr-1 font-medium">Quick Prompts:</span>
+                  <span className="text-muted shrink-0 mr-1 font-medium text-[11px]">Quick Prompts:</span>
                   {persona.quickPrompts.map((q, idx) => (
                     <button
                       key={idx}
                       type="button"
                       disabled={!inCall || busy}
                       onClick={() => sendTextVal(q)}
-                      className="shrink-0 px-3 py-1 rounded-full bg-sunken hover:bg-surface-variant text-fg text-xs transition-colors border border-line disabled:opacity-50 cursor-pointer"
+                      className="shrink-0 px-2.5 py-1 rounded-md bg-sunken hover:bg-card text-fg text-xs transition-colors border border-line disabled:opacity-50 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                     >
                       {q}
                     </button>
@@ -871,43 +811,43 @@ export default function CallApp({ customer, name, caseId }: { customer: string; 
                 </div>
 
                 {/* Centered Circular Talk Button in the Middle */}
-                <div className="flex flex-col items-center justify-center py-2 gap-2 border-b border-line/60">
+                <div className="flex items-center justify-center gap-4 py-1.5 border-b border-line/60">
                   {status === "idle" || ended ? (
                     <button
                       type="button"
                       onClick={start}
-                      className="w-18 h-18 sm:w-20 sm:h-20 rounded-full bg-ok-fg hover:bg-emerald-700 text-white shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all flex flex-col items-center justify-center gap-1 cursor-pointer ring-4 ring-ok-border/30 disabled:opacity-50"
+                      className="w-14 h-14 rounded-full bg-ok-fg hover:bg-ok-fg/90 text-white active:scale-95 transition-all flex flex-col items-center justify-center gap-0.5 cursor-pointer ring-2 ring-ok-border/60 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ok-fg"
                       title="Start Call"
                     >
-                      <Icon name="phone_in_talk" size={26} />
-                      <span className="text-[10px] font-bold tracking-tight uppercase">Start</span>
+                      <Icon name="phone_in_talk" size={20} />
+                      <span className="text-[9px] font-bold tracking-wide uppercase">Start</span>
                     </button>
                   ) : (
                     <div className="relative flex flex-col items-center">
                       {listening && (
-                        <span className="absolute -inset-2.5 rounded-full bg-primary/20 animate-ping pointer-events-none"></span>
+                        <span className="absolute -inset-2 rounded-full bg-primary/20 animate-ping pointer-events-none"></span>
                       )}
                       <button
                         type="button"
                         {...talkProps}
                         disabled={!inCall || busy}
                         aria-pressed={listening}
-                        className={`w-18 h-18 sm:w-20 sm:h-20 rounded-full flex flex-col items-center justify-center transition-all cursor-pointer shadow-md select-none ${
+                        className={`w-14 h-14 rounded-full flex flex-col items-center justify-center transition-all cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                           listening
-                            ? "bg-accent text-primary-fg ring-4 ring-primary scale-110 shadow-primary/30"
+                            ? "bg-primary text-primary-fg ring-4 ring-primary/30 scale-105"
                             : busy
-                            ? "bg-sunken text-muted border-2 border-line cursor-wait"
-                            : "bg-primary hover:bg-accent-hover text-primary-fg ring-4 ring-primary/20 hover:scale-105 active:scale-95"
+                            ? "bg-sunken text-muted border border-line cursor-wait"
+                            : "bg-primary hover:bg-accent-hover text-primary-fg ring-2 ring-primary/20 active:scale-95"
                         } disabled:opacity-50`}
                         title="Hold to Talk (or hold Spacebar)"
                       >
-                        <Icon name={listening ? "mic" : busy ? "speed" : "mic"} size={28} />
+                        <Icon name={listening ? "mic" : busy ? "speed" : "mic"} size={22} />
                       </button>
                     </div>
                   )}
 
-                  {/* Status / Instructions below circular button */}
-                  <div className="text-center">
+                  {/* Status / Instructions alongside talk button */}
+                  <div className="text-left min-w-[160px]">
                     <div className="text-xs font-semibold text-fg">
                       {status === "idle" || ended
                         ? "Click to begin voice session"
@@ -918,18 +858,18 @@ export default function CallApp({ customer, name, caseId }: { customer: string; 
                         : "Hold to Talk"}
                     </div>
                     <div className="text-[11px] text-muted font-mono mt-0.5">
-                      {inCall && !busy && "or press and hold Spacebar"}
+                      {inCall && !busy ? "or press and hold Spacebar" : "PTT + Edge TTS ready"}
                     </div>
                   </div>
                 </div>
 
-                {/* Text Input Fallback Bar (Centered below) */}
+                {/* Text Input Fallback Bar */}
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
                     sendText();
                   }}
-                  className="relative w-full max-w-xl mx-auto flex items-center pt-1"
+                  className="relative w-full flex items-center"
                 >
                   <input
                     type="text"
@@ -939,15 +879,15 @@ export default function CallApp({ customer, name, caseId }: { customer: string; 
                     disabled={!inCall}
                     placeholder={
                       inCall
-                        ? "Type Hinglish / English message if audio is muted..."
+                        ? "Type Hinglish / Marathi / Hindi / English message..."
                         : "Start call to speak or type..."
                     }
-                    className="w-full pl-3.5 pr-20 py-2.5 rounded-xl bg-sunken text-fg text-sm border border-line placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
+                    className="w-full pl-3 pr-20 py-2 rounded-md bg-sunken text-fg text-sm border border-line placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
                   />
                   <button
                     type="submit"
                     disabled={!inCall || busy || !text.trim()}
-                    className="absolute right-1 px-3 py-1.5 rounded-lg bg-card hover:bg-surface-variant text-fg text-xs font-semibold border border-line transition-colors disabled:opacity-40 cursor-pointer"
+                    className="absolute right-1 px-2.5 py-1 rounded bg-card hover:bg-sunken text-fg text-xs font-semibold border border-line transition-colors disabled:opacity-40 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   >
                     Send
                   </button>
@@ -959,7 +899,7 @@ export default function CallApp({ customer, name, caseId }: { customer: string; 
             {error && (
               <p
                 role="alert"
-                className="rounded-xl border border-danger-line bg-danger-bg px-4 py-3 text-sm text-danger-fg shadow-xs"
+                className="rounded-md border border-danger-line bg-danger-bg px-3.5 py-2.5 text-xs text-danger-fg"
               >
                 {error}
               </p>
@@ -967,18 +907,18 @@ export default function CallApp({ customer, name, caseId }: { customer: string; 
 
             {/* Diagnostics Accordion */}
             {showDiagnostics && (
-              <Card className="overflow-hidden enter">
-                <div className="bg-surface-container-low p-4 flex flex-col gap-3">
+              <Card className="overflow-hidden enter p-0">
+                <div className="bg-sunken/50 p-3.5 flex flex-col gap-2.5">
                   <div className="flex items-center justify-between text-xs text-muted font-mono">
                     <span>Pipeline: Deepgram / Whisper STT → Qwen (Ollama) → Gateway → Edge TTS</span>
-                    <span className="font-semibold text-fg">
+                    <span className="font-semibold tabular-nums text-fg">
                       {totalMs ? `${totalMs} ms Total` : "Awaiting Turn Data"}
                     </span>
                   </div>
 
                   {/* Segmented bar */}
                   {lastTiming && (
-                    <div className="w-full h-2.5 rounded-full bg-sunken overflow-hidden flex border border-line">
+                    <div className="w-full h-2 rounded-full bg-sunken overflow-hidden flex border border-line">
                       <div
                         className="bg-[#3B82C4] h-full"
                         style={{ width: `${Math.max(5, (lastTiming.stt_ms / (totalMs || 1)) * 100)}%` }}
@@ -1003,19 +943,19 @@ export default function CallApp({ customer, name, caseId }: { customer: string; 
                   )}
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-2 font-mono text-xs">
-                    <div className="bg-card p-2.5 rounded-lg border border-line">
+                    <div className="bg-card p-2.5 rounded-md border border-line">
                       <span className="text-muted block text-[10px]">Active Inference Model</span>
                       <span className="text-fg font-semibold">
                         {turns[turns.length - 1]?.model || "qwen3:8b (Ollama Metal)"}
                       </span>
                     </div>
-                    <div className="bg-card p-2.5 rounded-lg border border-line">
+                    <div className="bg-card p-2.5 rounded-md border border-line">
                       <span className="text-muted block text-[10px]">Configured Provider</span>
                       <span className="text-ok-fg font-semibold">{llm}</span>
                     </div>
-                    <div className="bg-card p-2.5 rounded-lg border border-line">
+                    <div className="bg-card p-2.5 rounded-md border border-line">
                       <span className="text-muted block text-[10px]">Session Turns</span>
-                      <span className="text-fg font-semibold">{turns.length} turns recorded</span>
+                      <span className="text-fg font-semibold tabular-nums">{turns.length} turns recorded</span>
                     </div>
                   </div>
                 </div>
@@ -1024,26 +964,24 @@ export default function CallApp({ customer, name, caseId }: { customer: string; 
 
             {/* Session Summary Drawer / Details */}
             {turns.length > 0 && (
-              <Card className="p-4">
+              <Card className="p-3.5">
                 <SessionSummary turns={turns} />
               </Card>
             )}
           </div>
 
-          {/* RIGHT 4 COLUMNS: Borrower Phone Sidecar */}
-          <div className="xl:col-span-4 xl:sticky xl:top-3 self-start flex flex-col gap-2.5">
-            {!caseId && <PhoneHandset isSidecar />}
-
-            {/* Sidecar Explainer Note */}
-            <div className="p-2.5 rounded-xl bg-surface-container-low border border-line text-[11px] text-muted flex items-start gap-2">
-              <Icon name="phone" size={14} />
-              <div>
-                <span className="font-semibold text-fg">Sidecar Synchronizer:</span> Demonstrates real-time out-of-band mobile verification without requiring caller speech verification of confidential keys.
-              </div>
+          {/* SECONDARY COLUMN: Borrower Phone Sidecar */}
+          <aside className="xl:sticky xl:top-3 self-start flex flex-col gap-2 w-full max-w-[360px] mx-auto xl:mx-0">
+            <div className="flex items-center justify-between px-1 text-[11px] font-mono text-muted">
+              <span className="uppercase tracking-wider">Customer Phone (Sidecar)</span>
+              <span>Out-of-band</span>
             </div>
-          </div>
+            {!caseId && <PhoneHandset isSidecar />}
+            <p className="px-1 text-[11px] text-muted leading-snug">
+              Synced SMS inbox and in-app verification requests without speaking secrets aloud.
+            </p>
+          </aside>
         </div>
-      )}
     </main>
     </SidebarLayout>
   );

@@ -40,18 +40,18 @@ function parts(s: Stat) {
 export function TurnStat({ s }: { s: Stat }) {
   const p = parts(s);
   return (
-    <div className="mt-1 w-full max-w-[85%] text-xs text-muted">
-      <p><span className="font-medium text-fg">Response time {sec(s.clientMs)} s</span>
-        {s.timings && <> · {s.timings.provider} / {s.timings.model}</>}</p>
+    <div className="mt-1 w-full max-w-[85%] text-[11px] text-muted tabular-nums">
+      <p><span className="font-mono font-medium text-fg">Response {sec(s.clientMs)} s</span>
+        {s.timings && <> · <span className="font-mono">{s.timings.provider} / {s.timings.model}</span></>}</p>
       {p.length > 0 && (
         <>
-          <div aria-hidden className="mt-1 flex h-2 w-full overflow-hidden rounded-full bg-sunken">
+          <div aria-hidden className="mt-1 flex h-1.5 w-full overflow-hidden rounded-full bg-sunken">
             {p.filter((x) => x.ms > 0).map((x) => <div key={x.k} className={x.c} style={{ flex: `${x.ms} 1 0` }} />)}
           </div>
-          <ul className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5" aria-label="Where the time went">
+          <ul className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 font-mono" aria-label="Where the time went">
             {p.map((x) => (
               <li key={x.k} className="flex items-center gap-1">
-                <span aria-hidden className={`h-2 w-2 rounded-full ${x.c}`} />{x.k} {sec(x.ms)} s
+                <span aria-hidden className={`h-1.5 w-1.5 rounded-full ${x.c}`} />{x.k} {sec(x.ms)} s
               </li>
             ))}
           </ul>
@@ -77,14 +77,14 @@ export function SessionSummary({ turns }: { turns: Turn[] }) {
     try { await navigator.clipboard.writeText(JSON.stringify(rows, null, 2)); setCopied("ok"); } catch { setCopied("fail"); }
   };
   return (
-    <details className="rounded-lg border border-line bg-bg px-3 py-2 text-xs">
-      <summary className="cursor-pointer font-medium">Session stats ({turns.length} turn{turns.length === 1 ? "" : "s"})</summary>
-      <table className="mt-2 w-full text-left">
-        <thead className="text-muted"><tr><th className="font-medium">Provider</th><th className="font-medium">Turns</th><th className="font-medium">Median</th><th className="font-medium">Max</th></tr></thead>
-        <tbody>
+    <details className="rounded-md border border-line bg-sunken/50 px-3 py-2 text-xs">
+      <summary className="cursor-pointer font-medium text-fg">Session stats ({turns.length} turn{turns.length === 1 ? "" : "s"})</summary>
+      <table className="mt-2 w-full text-left font-mono tabular-nums">
+        <thead className="text-[11px] text-muted border-b border-line"><tr><th className="py-1 font-medium">Provider</th><th className="py-1 font-medium">Turns</th><th className="py-1 font-medium">Median</th><th className="py-1 font-medium">Max</th></tr></thead>
+        <tbody className="divide-y divide-line">
           {[...byProv].map(([p, ts]) => {
             const ms = ts.map((t) => t.clientMs);
-            return <tr key={p}><td>{p}</td><td>{ts.length}</td><td>{sec(median(ms))} s</td><td>{sec(Math.max(...ms))} s</td></tr>;
+            return <tr key={p}><td className="py-1 text-fg">{p}</td><td className="py-1">{ts.length}</td><td className="py-1">{sec(median(ms))} s</td><td className="py-1">{sec(Math.max(...ms))} s</td></tr>;
           })}
         </tbody>
       </table>
