@@ -86,15 +86,8 @@ export function BankShell({ children }: { children: ReactNode }) {
         <aside
           className={`fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col border-r border-bank-line bg-bank-surface transition-[transform,visibility] duration-200 ease-out lg:sticky lg:top-0 lg:h-dvh lg:w-auto lg:translate-x-0 lg:visible ${menu ? "" : "max-lg:invisible max-lg:-translate-x-full"}`}
         >
-          <div className="border-b border-bank-line px-3.5 py-3">
-            <Link
-              href="/"
-              className="b-pressable mb-2.5 flex w-full items-center justify-center gap-1.5 rounded-md border border-bank-line-strong bg-bank-sunken px-3 py-1.5 text-xs font-semibold text-bank-fg hover:bg-bank-accent-soft hover:text-bank-accent-ink"
-            >
-              <Icon d="M15 18l-6-6 6-6" />
-              <span>Return to LoanLoop Desk</span>
-            </Link>
-            <p className="b-title text-base leading-5 px-0.5">Sahyadri Finance Bank</p>
+          <div className="border-b border-bank-line px-4 py-3.5">
+            <p className="b-title text-base leading-5">Sahyadri Finance Bank</p>
           </div>
           <nav aria-label="Bank sections" className="flex-1 space-y-0.5 p-2.5">
             {NAV.map((n) => (
