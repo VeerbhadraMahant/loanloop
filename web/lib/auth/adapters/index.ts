@@ -24,3 +24,4 @@ export function getAuthAdapter(role: ConsoleRole): ConsoleAuthAdapter {
       throw new Error(`Unknown role adapter requested: ${role}`);
   }
 }
+

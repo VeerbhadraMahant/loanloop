@@ -29,3 +29,4 @@ export interface ConsoleAuthAdapter {
   signIn(credentials: SignInCredentials): Promise<SignInResult>;
   signOut(): Promise<void> | void;
 }
+

@@ -116,3 +116,4 @@ test("6. Expired session cookie redirects with error=expired", async () => {
   const loc = res.headers.get("location");
   assert.ok(loc && loc.includes("error=expired"), `Expired cookie must redirect to error=expired (got ${loc})`);
 });
+

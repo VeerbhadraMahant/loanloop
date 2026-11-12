@@ -116,3 +116,4 @@ export function getRouteAccess(pathname: string): {
 
   return { type: "public" };
 }
+
