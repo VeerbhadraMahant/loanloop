@@ -36,3 +36,4 @@ export interface AuthContextValue extends Session {
   switchDemoUser: (customerRef: "priya" | "ramesh" | "sunita") => void;
   signOut: () => void;
 }
+

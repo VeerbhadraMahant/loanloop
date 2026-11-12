@@ -22,3 +22,4 @@ export function useI18n() {
     lang: language,
   };
 }
+

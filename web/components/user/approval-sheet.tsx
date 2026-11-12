@@ -107,3 +107,4 @@ export function ApprovalCard({ approval, customerRef, onResolved }: ApprovalCard
     </div>
   );
 }
+

@@ -87,3 +87,4 @@ export function LanguageSelector({ layout = "segmented", onSelect }: LanguageSel
     </div>
   );
 }
+

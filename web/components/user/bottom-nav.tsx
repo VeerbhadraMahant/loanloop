@@ -132,3 +132,4 @@ export function BottomNav({ activeTab = "home" }: BottomNavProps) {
     </nav>
   );
 }
+

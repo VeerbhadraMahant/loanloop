@@ -123,3 +123,4 @@ export function QuickActionsGrid({ onSelectAction }: QuickActionsGridProps) {
     </div>
   );
 }
+
