@@ -1,22 +1,6 @@
-// Same-origin proxy to the gateway: the browser never sees the token and the gateway keeps CORS closed.
+// Same-origin proxy to the gateway: forwards the session cookies as headers (the gateway decides who may do what) and keeps CORS closed.
+import { GATEWAY, originOk, sessionHeaders } from "@/lib/server";
 export const maxDuration = 300; // SSE stream
-const GATEWAY = process.env.GATEWAY_URL ?? "http://localhost:8000";
-const DASHBOARD_TOKEN = process.env.DASHBOARD_TOKEN ?? "";
-const PHONE_TOKEN = process.env.PHONE_TOKEN ?? "";
-
-// Fixed allowlist, never derived from Host (a DNS-rebinding page would control Host and Origin alike).
-// WEB_ALLOWED_ORIGINS (comma-separated) adds origins when the app is served elsewhere.
-const ORIGIN_ALLOW = new Set([
-  "http://localhost:3000",
-  "http://127.0.0.1:3000",
-  ...(process.env.WEB_ALLOWED_ORIGINS ?? "").split(",").map((s) => s.trim()).filter(Boolean),
-]);
-
-// Fail closed: a POST must carry an allowlisted Origin.
-function originOk(req: Request) {
-  const origin = req.headers.get("origin");
-  return !!origin && ORIGIN_ALLOW.has(origin);
-}
 
 async function proxy(req: Request, ctx: { params: Promise<{ path: string[] }> }) {
   const { path } = await ctx.params;
@@ -30,8 +14,10 @@ async function proxy(req: Request, ctx: { params: Promise<{ path: string[] }> })
   if (req.method === "POST" && !originOk(req)) {
     return new Response("Forbidden", { status: 403 });
   }
+  const fwd = sessionHeaders(req);
+  if (!Object.keys(fwd).length) return Response.json({ detail: "unauthorized" }, { status: 401 });
   const url = new URL(`${GATEWAY}/${path.map(encodeURIComponent).join("/")}`);
-  const fwd: Record<string, string> = { Authorization: `Bearer ${joined.startsWith("phone/") ? PHONE_TOKEN : DASHBOARD_TOKEN}` };
+  if (req.method === "GET") url.search = new URL(req.url).search; // filters (?status=&type=); path is already allowlisted
   const lastId = req.headers.get("last-event-id");
   if (lastId) fwd["Last-Event-ID"] = lastId;
   try {

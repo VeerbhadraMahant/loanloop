@@ -1,15 +1,14 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { Card, Icon, Pill } from "@/components/ui";
 import { downsample, encodeWav } from "@/lib/wav";
 import { PcmPlayer } from "@/lib/pcm-player";
 import { langLabel } from "@/lib/languages";
 import { LLMS, SessionSummary, TurnStat, type LlmId, type Stat, type Timings, type Turn } from "@/components/turn-stats";
-import { PhoneHandset } from "@/app/phone/[customer]/phone-app";
+import { PhoneHandset } from "@/app/phone/phone-app";
 import { SidebarLayout } from "@/components/sidebar-nav";
 
-const VOICE = process.env.NEXT_PUBLIC_VOICE_URL ?? "/vx";
+const VOICE = "/vx";
 const MIN_SECONDS = 0.3;
 const MAX_SECONDS = 25;
 
@@ -147,17 +146,15 @@ const PERSONAS: Record<
   },
 };
 
-// The adversary spoofs Priya's number, so the sidecar shows the phone the bank would actually message.
-const phoneOf = (c: string) => (c === "vikram" ? "priya" : c);
-
 // Module-level so the react-hooks purity rule does not flag it; only called from event handlers.
 const now = () => performance.now();
 
-export default function CallApp({ customer, caseId }: { customer: string; caseId?: number }) {
+// `customer` is the signed-in customer_key (customer door) or a label (staff outbound, caseId set).
+export default function CallApp({ customer, name, caseId }: { customer: string; name?: string; caseId?: number }) {
   const normKey = customer.toLowerCase().trim();
   const persona = PERSONAS[normKey] ?? {
-    name: customer,
-    initials: customer.slice(0, 2).toUpperCase(),
+    name: name ?? customer,
+    initials: (name ?? customer).slice(0, 2).toUpperCase(),
     phone: "+91 9XXXX XXXXX",
     loan: caseId ? `Outbound Case #${caseId}` : "Sahyadri Retail Loan Facility",
     balance: "₹15,40,200",
@@ -540,6 +537,7 @@ export default function CallApp({ customer, caseId }: { customer: string; caseId
 
   return (
     <SidebarLayout
+      door={caseId ? "staff" : "customer"}
       title="Live Calling Desk"
       sub={`${persona.name} · ${persona.loan}`}
       status={
@@ -555,46 +553,8 @@ export default function CallApp({ customer, caseId }: { customer: string; caseId
         {/* TOP UTILITY BAR: Concise Scenario Switcher & High-Visibility Controls */}
         <section className="w-full mb-4">
           <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 p-3.5 sm:p-4 rounded-xl bg-card border border-line shadow-xs">
-            {/* Scenario Switcher: Active Highlighted & Rest Subdued */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-mono text-[11px] uppercase tracking-wider text-muted font-semibold mr-1 hidden sm:inline">
-                Scenario:
-              </span>
-              <div className="inline-flex items-center p-1 rounded-xl bg-sunken gap-1" id="scenario-switcher">
-                {[
-                  { key: "priya", name: "Priya", role: "Home Loan" },
-                  { key: "ramesh", name: "Ramesh", role: "Collections" },
-                  { key: "sunita", name: "Sunita", role: "Hardship" },
-                  { key: "vikram", name: "Vikram", role: "Adversary" },
-                ].map(({ key, name, role }) => {
-                  const active = normKey === key;
-                  return (
-                    <Link
-                      key={key}
-                      href={`/call/${key}`}
-                      className={`px-3 py-1.5 rounded-lg text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
-                        active
-                          ? "bg-primary text-primary-fg font-bold shadow-xs ring-1 ring-primary/40"
-                          : "text-muted hover:text-fg hover:bg-card/70 font-medium opacity-70 hover:opacity-100"
-                      }`}
-                    >
-                      {active && <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse"></span>}
-                      <span>{name}</span>
-                      <span className={`text-[10px] hidden md:inline ${active ? "text-primary-fg/80" : "text-muted"}`}>
-                        ({role})
-                      </span>
-                    </Link>
-                  );
-                })}
-                <Link
-                  href="/test-cases"
-                  className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-muted hover:text-fg hover:bg-card/70 inline-flex items-center gap-1 opacity-70 hover:opacity-100"
-                  title="View all deterministic test scenarios"
-                >
-                  <Icon name="tune" size={12} />
-                  <span>All</span>
-                </Link>
-              </div>
+            <div className="font-mono text-[11px] uppercase tracking-wider text-muted font-semibold">
+              {caseId ? `Outbound case ${caseId}` : `Signed in as ${persona.name}`}
             </div>
 
             {/* Mode Switcher, Telemetry, and High-Visibility Primary CTA */}
@@ -735,7 +695,6 @@ export default function CallApp({ customer, caseId }: { customer: string; caseId
               </button>
             </div>
             <PhoneHandset
-              customer={phoneOf(customer)}
               noData={!!caseId}
               simulationProps={{
                 inCall,
@@ -1073,7 +1032,7 @@ export default function CallApp({ customer, caseId }: { customer: string; caseId
 
           {/* RIGHT 4 COLUMNS: Borrower Phone Sidecar */}
           <div className="xl:col-span-4 xl:sticky xl:top-3 self-start flex flex-col gap-2.5">
-            {!caseId && <PhoneHandset customer={phoneOf(customer)} isSidecar />}
+            {!caseId && <PhoneHandset isSidecar />}
 
             {/* Sidecar Explainer Note */}
             <div className="p-2.5 rounded-xl bg-surface-container-low border border-line text-[11px] text-muted flex items-start gap-2">

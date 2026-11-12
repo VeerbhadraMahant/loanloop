@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Wordmark, Icon, type IconName } from "@/components/ui";
+import { SignOut, useMe } from "@/components/auth";
 
 type SidebarContextType = {
   isOpen: boolean;
@@ -92,18 +93,20 @@ type NavSection = {
   items: NavItem[];
 };
 
-const navSections: NavSection[] = [
+// `area` decides who sees it: bank_manager -> bank, engineer -> dev, admin -> both.
+const navSections: (NavSection & { area: "bank" | "dev" })[] = [
   {
     title: "Banking Operations",
+    area: "bank",
     items: [
-      { href: "/", label: "Home", icon: "shield" },
-      { href: "/call/priya", label: "Calling Desk", icon: "phone_in_talk", badge: "Live", badgeTone: "ok" },
+      { href: "/bank", label: "Bank App", icon: "shield" },
       { href: "/collections", label: "Collections", icon: "database" },
       { href: "/ops", label: "Ops Console", icon: "speed" },
     ],
   },
   {
     title: "Developer & Testing",
+    area: "dev",
     items: [
       {
         href: "/dev",
@@ -135,6 +138,8 @@ const navSections: NavSection[] = [
 export function SidebarNav() {
   const path = usePathname();
   const { isOpen, toggle } = useSidebar();
+  const me = useMe("staff");
+  const sections = navSections.filter((x) => me && (me.role === "admin" || (me.role === "bank_manager" ? "bank" : "dev") === x.area));
 
   return (
     <>
@@ -199,7 +204,7 @@ export function SidebarNav() {
 
         {/* Vertical Navigation Items grouped by section */}
         <nav className="flex-1 p-3 space-y-4 overflow-y-auto" aria-label="Main menu">
-          {navSections.map((section) => (
+          {sections.map((section) => (
             <div key={section.title} className="space-y-1">
               <div className="px-3 pt-1 pb-1 flex items-center justify-between">
                 <span className="font-mono text-[10px] uppercase tracking-wider text-muted font-bold">
@@ -214,12 +219,7 @@ export function SidebarNav() {
 
               <div className="space-y-1">
                 {section.items.map((item) => {
-                  const active =
-                    item.href === "/"
-                      ? path === "/"
-                      : item.href === "/call/priya"
-                      ? path.startsWith("/call")
-                      : path.startsWith(item.href);
+                  const active = path.startsWith(item.href);
 
                   return (
                     <Link
@@ -273,10 +273,11 @@ export function SidebarNav() {
               SFB
             </div>
             <div>
-              <div className="text-xs font-semibold text-fg leading-tight">SFB Voice Desk</div>
-              <div className="text-[10px] font-mono text-muted">Demo operator desk</div>
+              <div className="text-xs font-semibold text-fg leading-tight">{me?.name ?? "SFB Voice Desk"}</div>
+              <div className="text-[10px] font-mono text-muted">{me?.role ?? "Demo operator desk"}</div>
             </div>
           </div>
+          <SignOut door="staff" className="text-xs font-medium text-muted hover:text-fg px-2 py-1 rounded-lg border border-line" />
         </div>
       </aside>
     </>
@@ -374,18 +375,20 @@ export function AppHeader({
   title,
   sub,
   status,
+  door = "staff",
 }: {
   title?: string;
   sub?: string;
   status?: React.ReactNode;
+  door?: "staff" | "customer";
 }) {
   const { isOpen, toggle } = useSidebar();
 
   return (
     <header className="sticky top-0 z-30 h-14 bg-card/90 backdrop-blur-md border-b border-line px-4 sm:px-6 flex items-center justify-between gap-4 shadow-[0_1px_3px_rgba(31,42,36,0.03)]">
       <div className="flex items-center gap-3 min-w-0">
-        {/* Toggle button to show or hide the vertical navbar */}
-        <button
+        {/* Toggle button to show or hide the vertical navbar (staff only: customers have no sidebar) */}
+        {door === "staff" && <button
           type="button"
           onClick={toggle}
           className="p-2 rounded-lg border border-line bg-sunken hover:bg-card text-fg transition-colors flex items-center gap-1.5 text-xs font-medium shadow-xs cursor-pointer"
@@ -408,7 +411,7 @@ export function AppHeader({
           <span className="hidden sm:inline font-mono text-[11px]">
             {isOpen ? "Hide Nav" : "Show Nav"}
           </span>
-        </button>
+        </button>}
 
         {title && (
           <div className="flex items-baseline gap-2 truncate">
@@ -421,6 +424,7 @@ export function AppHeader({
       <div className="flex items-center gap-3 shrink-0">
         {status}
         <ThemeSelector />
+        {door === "customer" && <SignOut door="customer" className="text-xs font-medium text-fg px-3 py-1.5 rounded-lg border border-line bg-sunken" />}
         <div className="hidden lg:flex items-center px-2.5 py-1 rounded-md bg-sunken text-muted text-xs font-mono border border-line">
           Demo · synthetic data
         </div>
@@ -433,19 +437,21 @@ export function SidebarLayout({
   title,
   sub,
   status,
+  door = "staff",
   children,
 }: {
   title?: string;
   sub?: string;
   status?: React.ReactNode;
+  door?: "staff" | "customer";
   children: React.ReactNode;
 }) {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex bg-bg">
-        <SidebarNav />
+        {door === "staff" && <SidebarNav />}
         <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">
-          <AppHeader title={title} sub={sub} status={status} />
+          <AppHeader title={title} sub={sub} status={status} door={door} />
           <div className="flex-1">{children}</div>
         </div>
       </div>

@@ -1,7 +1,7 @@
 from datetime import date, datetime, timezone
 from typing import Any
 
-from sqlalchemy import JSON, BigInteger, Date, DateTime, ForeignKey, Integer, Numeric, String, Text
+from sqlalchemy import JSON, BigInteger, Boolean, Date, DateTime, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -255,3 +255,21 @@ class JobRun(Base):
     started_at: Mapped[datetime] = mapped_column(TS, default=now)
     finished_at: Mapped[datetime | None] = mapped_column(TS, nullable=True)
     stats: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+
+
+class StaffUser(Base):
+    __tablename__ = "staff_users"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    email: Mapped[str] = mapped_column(String(200), unique=True)
+    name: Mapped[str] = mapped_column(String(100))
+    role: Mapped[str] = mapped_column(String(20))  # bank_manager|engineer|admin
+    password_hash: Mapped[str] = mapped_column(Text)
+    disabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(TS, default=now)
+
+
+class CustomerLogin(Base):
+    __tablename__ = "customer_logins"
+    customer_id: Mapped[int] = mapped_column(ForeignKey("customers.id"), primary_key=True)
+    passcode_hash: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(TS, default=now)

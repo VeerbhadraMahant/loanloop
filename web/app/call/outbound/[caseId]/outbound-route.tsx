@@ -1,6 +1,6 @@
 "use client";
 import { notFound, useParams } from "next/navigation";
-import CallApp from "../../[customer]/call-app";
+import CallApp from "../../call-app";
 
 export default function OutboundRoute() {
   const { caseId } = useParams<{ caseId: string }>();

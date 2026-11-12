@@ -72,8 +72,8 @@ def env(name: str, path: Path | None) -> str | None:
 
 
 class Run:
-    def __init__(self, voice: str, gateway: str, token: str, name: str, approve: bool):
-        self.v = httpx.Client(base_url=voice, timeout=180)
+    def __init__(self, voice: str, gateway: str, token: str, name: str, approve: bool, voice_token: str = ""):
+        self.v = httpx.Client(base_url=voice, timeout=180, headers={"Authorization": "Bearer " + voice_token})
         self.g = httpx.Client(base_url=gateway, timeout=10, headers={"Authorization": "Bearer " + token})
         self.name, self.approve, self.log, self.lat = name, approve, [], []
         self.by_label: dict[str, list[str]] = {}
@@ -142,16 +142,17 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--voice", default="http://127.0.0.1:8100")
     ap.add_argument("--gateway", default="http://127.0.0.1:8000")
-    ap.add_argument("--env", type=Path, help="gateway .env file holding PHONE_TOKEN (default gateway/.env)")
+    ap.add_argument("--env", type=Path, help="gateway .env file holding PHONE_TOKEN and DASHBOARD_TOKEN (default gateway/.env)")
     ap.add_argument("--scenario", choices=["priya", "browser", "attacker", "all"], default="all")
     ap.add_argument("--no-reseed", action="store_true",
                     help="accepted for clarity: this script NEVER reseeds (seed_data.py is a separate manual step)")
     a = ap.parse_args(argv)
     token = env("PHONE_TOKEN", a.env) or "dev-phone-token-change-me"
+    vtoken = env("DASHBOARD_TOKEN", a.env) or "dev-dashboard-token-change-me"  # voice service bearer
     fails, lat, lines = 0, [], []
 
     if a.scenario in ("priya", "all"):
-        r = Run(a.voice, a.gateway, token, "Priya (Hinglish -> Marathi)", approve=True)
+        r = Run(a.voice, a.gateway, token, "Priya (Hinglish -> Marathi)", approve=True, voice_token=vtoken)
         sms0 = len(r.g.get("/phone/priya/sms").json())
         r.play(PRIYA)
         n = lambda name: r.oks.count(name)
@@ -174,7 +175,7 @@ def main(argv=None) -> int:
         lines += r.log
 
     if a.scenario in ("browser", "all"):
-        r = Run(a.voice, a.gateway, token, "Priya (browser phrasings)", approve=True)
+        r = Run(a.voice, a.gateway, token, "Priya (browser phrasings)", approve=True, voice_token=vtoken)
         r.play(BROWSER)
         n = lambda name: r.oks.count(name)
         first = lambda name: r.oks.index(name) if name in r.oks else 10**6
@@ -196,7 +197,7 @@ def main(argv=None) -> int:
         lines += r.log
 
     if a.scenario in ("attacker", "all"):
-        r = Run(a.voice, a.gateway, token, "Attacker (spoofed number, knows DOB)", approve=False)
+        r = Run(a.voice, a.gateway, token, "Attacker (spoofed number, knows DOB)", approve=False, voice_token=vtoken)
         sms0 = len(r.g.get("/phone/priya/sms").json())
         r.play(ATTACKER)
         tier2 = {"explain_emi_change", "check_payment", "foreclosure_quote", "emi_date_change", "raise_closure",

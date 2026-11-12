@@ -3,6 +3,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEvents } from "@/lib/api";
+import { SignOut } from "@/components/auth";
 
 const NAV = [
   { href: "/bank", label: "Today", d: "M3 12l9-8 9 8M5 10v10h14V10" },
@@ -94,6 +95,7 @@ export function BankShell({ children }: { children: ReactNode }) {
               <button type="button" onClick={toggleTheme} aria-pressed={dark} className={`${ctl} flex-1 justify-center`}>{dark ? "Dark" : "Light"}</button>
               <button type="button" onClick={toggleDensity} aria-pressed={compact} className={`${ctl} flex-1 justify-center`}>{compact ? "Compact" : "Comfortable"}</button>
             </div>
+            <SignOut door="staff" className={`${ctl} w-full justify-center`} />
           </div>
         </aside>
 

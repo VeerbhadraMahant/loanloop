@@ -27,14 +27,14 @@ Every request ends with an action completed in the bank's system, and the agent 
 
 ```mermaid
 flowchart LR
-  C["Caller (browser /call/[customer])"] -->|"WAV"| VS["Voice service (FastAPI :8100)"]
+  C["Caller (browser /call)"] -->|"WAV"| VS["Voice service (FastAPI :8100)"]
   VS -->|audio| STT["Gnani Prisma STT"]
   VS <-->|"tool calls"| LLM["Local LLM: Ollama qwen3:8b<br/>(not Gnani)"]
   VS -->|text| TTS["Gnani Timbre TTS"]
   VS -->|"23 actions (HTTP, shared secret)"| GW["Secure Bank Gateway (FastAPI :8000)<br/>auth, secret scrub, tiers, masking, audit"]
   GW --> PG[(Postgres: synthetic bank data, audit log)]
   GW --> RD[(Redis: sessions, rate limits, event stream)]
-  GW -.->|"SMS / push (background)"| PH["Mock bank app<br/>/phone/[customer]"]
+  GW -.->|"SMS / push (background)"| PH["Mock bank app<br/>/phone"]
   GW -->|SSE, redacted| OPS["Ops dashboard<br/>/ops, /metrics (Next.js)"]
   PH -->|"tap Approve"| GW
 ```
@@ -89,13 +89,13 @@ Prereqs: Docker Desktop, `uv`, Node, Ollama with `qwen3:8b` (`$env:OLLAMA_MODELS
 .\stop.ps1
 ```
 
-Then open `http://127.0.0.1:3000/call/priya` (hold to talk; typed fallback and a voice-replies toggle on the page), `/phone/priya`, `/ops`, `/metrics`. Gnani credits are limited, so use the typed mode for casual testing.
+Then sign in (see "Signing in" below). Customers open `/call` (hold to talk; typed fallback and a voice-replies toggle on the page) and `/phone`. Staff open `/bank`, `/ops`, `/dev`, `/metrics`. Gnani credits are limited, so use the typed mode for casual testing.
 
 Manual steps:
 
 ```
 cp .env.example gateway/.env          # then set ENCRYPTION_KEY (command in the file)
-cp web/.env.example web/.env.local    # same DASHBOARD_TOKEN and PHONE_TOKEN as gateway/.env
+cp web/.env.example web/.env.local    # the web app needs no tokens; people sign in
 docker compose up -d                  # Postgres :55432, Redis :56379
 cd gateway && uv sync
 uv run python ../tools/seed_data.py   # 200 synthetic customers (drops and recreates the dev DB)
@@ -112,7 +112,37 @@ cd gateway && uv run python ../tools/loadtest/fixtures.py --export && cd ..
 LL_THINK=8,16 uv run --project tools python tools/loadtest/run.py --host http://127.0.0.1:8000
 ```
 
-Use `127.0.0.1`, not `localhost`, on Windows. Pages: `/call/priya` (caller), `/phone/priya` (mock bank app), `/ops`, `/metrics`.
+Use one host name for every page (`localhost` or `127.0.0.1`), because the sign-in cookie does not cross between them. Pages: `/call` (caller), `/phone` (mock bank app), `/ops`, `/metrics`.
+
+## Signing in
+
+There are two doors. The staff page never links to the customer page, and the other way round.
+
+| Door | URL | Who |
+|---|---|---|
+| Staff | `http://localhost:3000/staff/login` | email and password |
+| Customer | `http://localhost:3000/login` | registered mobile and a 6-digit passcode |
+
+Staff roles:
+
+- `bank_manager`: `/bank`, `/ops`, `/collections`, outbound calls.
+- `engineer`: `/dev`, `/metrics`, `/test-cases`.
+- `admin`: everything above.
+
+A customer sees only their own `/phone` and `/call` pages. A customer cannot open a staff page.
+
+Demo logins are created by `.\start.ps1 -Seed`. Staff emails are `manager@`, `engineer@` and `admin@loanloop.demo`. Customers use their registered mobile (for example Priya, `9000014417`). The passwords are the `DEMO_STAFF_PASSWORD` and `DEMO_CUSTOMER_PASSCODE` values in `gateway/.env`. You choose them (none ship in the repo); with them empty the seed creates no demo logins.
+
+To create or change an account (the password is asked twice and is never printed; or set `LL_NEW_PASSWORD` for scripts):
+
+```
+cd gateway
+uv run python -m app.db.create_user staff --email a@bank.example --name "A Name" --role bank_manager   # password: 12+ characters
+uv run python -m app.db.create_user staff --email a@bank.example --disable                              # or --enable
+uv run python -m app.db.create_user customer --mobile 9000014417                                        # passcode: exactly 6 digits
+```
+
+Sessions end after 30 minutes idle for staff and 15 minutes idle for customers, and after 8 hours in any case. After 5 wrong tries the account is locked for 15 minutes. There is no password reset or sign-up page.
 
 ## Why not Agent Builder
 

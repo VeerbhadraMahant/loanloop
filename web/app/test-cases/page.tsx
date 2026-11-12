@@ -14,7 +14,6 @@ const testCases = [
     dialect: "Hinglish / Marathi Hybrid",
     validation: "Out-of-band SMS & in-app approval",
     desc: "Customer calls to check EMI, due dates, explain interest rate adjustments, and shift auto-debit dates via in-app authorization.",
-    href: "/call/priya",
     color: "border-primary",
     avatar: "PD",
   },
@@ -29,7 +28,6 @@ const testCases = [
     dialect: "Hindi (North Maharashtra)",
     validation: "DOB verification & PTP record",
     desc: "Automated dialer outreach within RBI 08:00–19:00 window for overdue ₹13,500 EMI with Promise to Pay (PTP) negotiation.",
-    href: "/call/ramesh",
     color: "border-warn-border",
     avatar: "RP",
   },
@@ -44,7 +42,6 @@ const testCases = [
     dialect: "Marathi (Pune Region)",
     validation: "Empathetic Human Counselor",
     desc: "Borrower faces medical distress, requesting EMI restructuring or waiver. Tests empathetic boundaries and warm human handover.",
-    href: "/call/sunita",
     color: "border-ok-fg",
     avatar: "SK",
   },
@@ -59,7 +56,6 @@ const testCases = [
     dialect: "English / Hinglish Injection",
     validation: "Automatic Redaction Enforced",
     desc: "Spoofed caller ID and prompt injection trying to force the bot to speak full account numbers, OTPs, or bypass auth.",
-    href: "/call/vikram",
     color: "border-danger-fg",
     avatar: "VM",
   },
@@ -74,7 +70,6 @@ const testCases = [
     dialect: "Multilingual (Hinglish/Marathi/English)",
     validation: "Confidence routing (~100ms)",
     desc: "Tests hybrid FAQ classification. High-confidence general queries bypass LLM token generation for instant audio responses; medium-confidence turns ground the prompt with verified bank facts.",
-    href: "/call/priya",
     color: "border-secondary",
     avatar: "KB",
   },
@@ -235,10 +230,6 @@ export default function TestCasesPage() {
                     <span className="w-2 h-2 rounded-full bg-ok-fg"></span>
                     Verified Ledger
                   </span>
-                  <Button href={tc.href} small className="font-semibold text-xs">
-                    <Icon name="phone_in_talk" size={14} />
-                    <span>Start Test</span>
-                  </Button>
                 </div>
               </Card>
             ))}
@@ -304,10 +295,6 @@ export default function TestCasesPage() {
                 <div className="flex items-center gap-2">
                   <Button href="/dev" variant="secondary" small className="font-medium text-xs">
                     Edit Parameters
-                  </Button>
-                  <Button href="/call/priya" small className="font-semibold text-xs">
-                    <Icon name="tune" size={14} />
-                    <span>Launch Desk</span>
                   </Button>
                 </div>
               </div>

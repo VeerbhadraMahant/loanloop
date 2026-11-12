@@ -4,6 +4,7 @@ import base64
 import contextlib
 import contextvars
 import email
+import hashlib
 import hmac
 import importlib.util
 import json
@@ -17,7 +18,7 @@ import uuid
 from pathlib import Path
 
 import httpx
-from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import AliasChoices, Field
@@ -1464,7 +1465,8 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         if task:
             task.cancel()
 
-    app = FastAPI(title="LoanLoop voice agent", lifespan=lifespan)
+    app = FastAPI(title="LoanLoop voice agent", lifespan=lifespan,
+                  **({"docs_url": None, "redoc_url": None, "openapi_url": None} if cfg.is_public() else {}))
     app.state.calls = calls
     app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", *cfg._csv(cfg.voice_allowed_origins)],
                        allow_methods=["GET", "POST"], allow_headers=["*"])
@@ -1483,6 +1485,45 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
     def bad_gateway(what: str, cid: str = "-", status: int | None = None):
         log.warning("call=%s upstream_error=%s status=%s", cid, what, status)
         return HTTPException(502, "upstream service error")
+
+    async def identities(request: Request) -> list[dict]:
+        """Who is calling: the service bearer, or the gateway-validated staff/customer sessions (customer first). 401 if none, 502 if the gateway is down."""
+        if hmac.compare_digest(request.headers.get("authorization", "").encode(), f"Bearer {cfg.dashboard_token}".encode()):
+            return [{"kind": "service", "role": "service", "h": "service"}]
+        found = []
+        for hdr in ("x-ll-customer-session", "x-ll-staff-session"):
+            sid = request.headers.get(hdr)
+            if not sid:
+                continue
+            try:
+                r = await http.get(f"{cfg.gateway_url}/auth/session", headers={"X-LL-Session": sid}, timeout=5)
+            except httpx.HTTPError:
+                raise HTTPException(502, "auth service unavailable") from None
+            if r.status_code >= 500:
+                raise HTTPException(502, "auth service unavailable")
+            if r.status_code == 200:
+                try:
+                    j = r.json()
+                except ValueError:
+                    raise HTTPException(502, "auth service unavailable") from None
+                found.append({"kind": j.get("kind"), "role": j.get("role"), "h": hashlib.sha256(sid.encode()).hexdigest()})  # never keep the raw id
+        if not found:
+            raise HTTPException(401, "unauthorized")
+        return found
+
+    def allow(ids: list[dict], staff: tuple[str, ...] = (), customer: bool = False) -> dict:
+        """The first identity the route accepts (service always does), else 403."""
+        for i in ids:
+            if i["kind"] == "service" or (customer and i["kind"] == "customer") or (i["kind"] == "staff" and i["role"] in staff):
+                return i
+        raise HTTPException(403, "forbidden")
+
+    def owns(ids: list[dict], c: dict) -> None:
+        if not any(i["kind"] == "service" or i["h"] == c.get("owner") for i in ids):
+            raise HTTPException(403, "forbidden")
+
+    async def dev_auth(request: Request) -> None:
+        allow(await identities(request), ("engineer", "admin"))
 
     async def gateway(cid: str, name: str, args: dict) -> dict:
         props = schemas.get(name)
@@ -2052,9 +2093,12 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         return {"audio_url": f"/calls/{c['id']}/audio/{t}", "audio_rate": tts_mod.RATE}
 
     @app.get("/calls/{call_id}/audio/{token}")
-    async def audio_stream(call_id: str, token: str):
-        job = tokens.take(call_id, token)
+    async def audio_stream(call_id: str, token: str, request: Request):
+        ids = await identities(request)
         c = calls.get(call_id)
+        if c:
+            owns(ids, c)  # checked before the one-shot token is consumed
+        job = tokens.take(call_id, token)
         if not job or not c:
             raise HTTPException(404, "unknown audio")
         key, payload = job["key"], job["payload"]
@@ -2183,20 +2227,26 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
     @app.post("/calls")
     @app.post("/start")
     async def start(request: Request, tts_q: bool = Query(True, alias="tts"), stream_q: bool = Query(False, alias="stream")):
+        ids = await identities(request)
         raw = await read_body(request)
         body = json_body(request, raw) if raw.strip() else {}
-        provider, model, sett = await resolve_opts(body)
         direction, case_id = body.get("direction", "inbound"), body.get("case_id")
         if direction not in ("inbound", "outbound") or (case_id is not None and (not isinstance(case_id, int) or isinstance(case_id, bool))):
             raise HTTPException(422, "direction must be inbound or outbound; case_id an integer")
         if direction == "outbound":  # DOB-only verification is tied to the case, so only ops may pick a case
-            auth = request.headers.get("authorization", "")
-            if not hmac.compare_digest(auth.encode(), f"Bearer {cfg.dashboard_token}".encode()):
-                raise HTTPException(403, "outbound calls are started from ops only")
-            if case_id is None:
-                raise HTTPException(422, "outbound needs case_id")
-        return await open_call(provider, model, sett, tts_q and body.get("tts") is not False, direction, case_id,
-                               stream_q or body.get("stream") is True, pinned=cfg.dev and bool(body.get("llm") or body.get("model")))
+            who = allow(ids, ("bank_manager", "admin"))
+        else:
+            who = allow(ids, ("engineer", "admin"), customer=True)
+        if body.get("settings") or body.get("model") or body.get("llm", cfg.llm_provider) != cfg.llm_provider:
+            dev_who = allow(ids, ("engineer", "admin"))  # dev overrides: engineer/admin/service only
+            who = who if direction == "outbound" else dev_who
+        provider, model, sett = await resolve_opts(body)
+        if direction == "outbound" and case_id is None:
+            raise HTTPException(422, "outbound needs case_id")
+        res = await open_call(provider, model, sett, tts_q and body.get("tts") is not False, direction, case_id,
+                              stream_q or body.get("stream") is True, pinned=cfg.dev and bool(body.get("llm") or body.get("model")))
+        calls[res["call_id"]]["owner"] = who["h"]
+        return res
 
     def canned(c: dict, user_text: str, text: str) -> tuple[str, list[dict]]:
         c["messages"] += [{"role": "user", "content": user_text}, {"role": "assistant", "content": text}]
@@ -2314,12 +2364,14 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
 
     @app.post("/calls/{call_id}/turn")
     async def turn(call_id: str, request: Request, tts_q: bool = Query(True, alias="tts"), stream_q: bool = Query(False, alias="stream")):
+        ids = await identities(request)
         c = calls.get(call_id)
         if c and time.time() - c["ts"] > TTL_S:
             calls.pop(call_id, None)
             c = None
         if not c:
             raise HTTPException(404, "unknown call")
+        owns(ids, c)
         raw = await read_body(request)
         ctype = request.headers.get("content-type", "")
         want_tts, stream = tts_q, stream_q
@@ -2347,13 +2399,13 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
                     for p, m in (("ollama", None), ("gemini", ["gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-3.1-flash-lite"]),
                                  ("sarvam", ["sarvam-105b-conversations", "sarvam-105b"]))}
 
-        @app.get("/dev/config")
+        @app.get("/dev/config", dependencies=[Depends(dev_auth)])
         async def dev_config():
             info = providers_info()
             info["ollama"]["models"] = await ollama_models()
             return {"dev": True, "knobs": KNOBS, "providers": info, "presets": PRESETS, "scripts": SCRIPTS}
 
-        @app.post("/dev/warmup")
+        @app.post("/dev/warmup", dependencies=[Depends(dev_auth)])
         async def dev_warmup(request: Request):
             body = json_body(request, await read_body(request))
             provider, model, sett = await resolve_opts({k: body.get(k) for k in ("llm", "model") if body.get(k)})
@@ -2396,7 +2448,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             except Exception as e:  # noqa: BLE001
                 job["status"], job["error"] = "error", type(e).__name__
 
-        @app.post("/dev/bench")
+        @app.post("/dev/bench", dependencies=[Depends(dev_auth)])
         async def dev_bench(request: Request):
             body = json_body(request, await read_body(request))
             now = time.time()
@@ -2428,7 +2480,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             job["task"] = asyncio.create_task(run_job(job, specs, script, repeat, body.get("tts", False)))
             return {"job_id": jid}
 
-        @app.get("/dev/bench/{job_id}")
+        @app.get("/dev/bench/{job_id}", dependencies=[Depends(dev_auth)])
         async def dev_bench_get(job_id: str):
             job = jobs.get(job_id)
             if not job or time.time() - job["ts"] > 3600:

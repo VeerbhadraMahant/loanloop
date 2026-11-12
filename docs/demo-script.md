@@ -1,7 +1,7 @@
 # LoanLoop Demo Video Script
 
 **Target Duration:** 3:30 to 4:00 minutes  
-**Format:** Split screen showing live voice call, borrower mock phone (`/phone/priya`), and Ops Dashboard (`/ops`).
+**Format:** Split screen showing live voice call, borrower mock phone (`/phone`), and Ops Dashboard (`/ops`).
 
 ---
 
@@ -19,7 +19,7 @@
 ---
 
 ## 2. Demo Call 1: Priya — Servicing & Spoken Secret Interception (0:45 – 2:15)
-**Visual:** Live call audio running with `/phone/priya` (mock phone app) and `/ops` (real-time timeline) side by side.
+**Visual:** Live call audio running with `/phone` (mock phone app) and `/ops` (real-time timeline) side by side.
 - **Step 1: Spoken Secret Interception**
   - *Caller (Hinglish):* "Namaste, mujhe apna IFSC aur customer ID yaad nahi hai. Mera password Priya1234 hai."
   - *Agent:* Interrupts immediately. "Bank kabhi bhi call par password nahi poochta. Aapka password save nahi hua hai."
@@ -29,11 +29,11 @@
   - *Agent:* Verifies caller (Tier 1 achieved).
   - *Caller:* "Mujhe mere account details bhej do."
   - *Agent:* "Maine aapke registered mobile ending 4417 par SMS bhej diya hai."
-  - *Highlight on screen:* Full account number and IFSC appear live on the `/phone/priya` SMS inbox. They are never spoken aloud by the voice agent.
+  - *Highlight on screen:* Full account number and IFSC appear live on the `/phone` SMS inbox. They are never spoken aloud by the voice agent.
 - **Step 3: "I Already Paid" & Tier 2 In-App Tap Approval**
   - *Caller:* "Maine is mahine ki EMI pehle hi bhar di hai."
   - *Agent:* Requests read-back of payment date, amount, and UTR. "Aapke app par approval bheja hai. Kripya approve karein."
-  - *Highlight on screen:* An approval card pops up on `/phone/priya`. Priya taps **Approve**.
+  - *Highlight on screen:* An approval card pops up on `/phone`. Priya taps **Approve**.
   - *Agent:* Validates Tier 2 approval, matches the UTR against the core ledger, creates a reconciliation ticket, and pauses recovery reminders.
 - **Step 4: Mid-Call Language Switch & EMI Date Change**
   - *Caller switches to Marathi:* "आता मराठीत बोला. माझी EMI ची तारीख 10 करा."

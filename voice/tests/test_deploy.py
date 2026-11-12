@@ -18,7 +18,7 @@ def client(fake=None, **kw):
 
 def test_host_allowlist_and_health_exempt():
     c, _ = client(**PUB)
-    h = {"X-Voice-Edge-Token": "edge"}
+    h = {"X-Voice-Edge-Token": "edge", "Authorization": "Bearer d4sh"}
     with c:
         assert c.get("/health", headers={"Host": "railway-probe"}).status_code == 200
         assert c.post("/calls?tts=false", json={}, headers={**h, "Host": "evil.com"}).status_code == 400

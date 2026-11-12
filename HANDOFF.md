@@ -20,7 +20,7 @@ Prereqs: Docker Desktop, `uv`, Node 20+, Ollama with `qwen3:8b` (`ollama pull qw
 ```powershell
 git clone https://github.com/VeerbhadraMahant/loanloop; cd loanloop
 copy .env.example gateway\.env          # set GNANI_SPEECH_API_KEY and fresh tokens (below)
-copy web\.env.example web\.env.local    # same DASHBOARD_TOKEN and PHONE_TOKEN as gateway\.env
+copy web\.env.example web\.env.local    # no tokens needed; people sign in (README "Signing in")
 cd gateway; uv sync; cd ..\web; npm ci; cd ..
 .\start.ps1 -Seed                       # needs Docker Desktop and Ollama running
 ```
@@ -29,7 +29,7 @@ Fresh tokens (run in `gateway\`):
 - `GATEWAY_SHARED_SECRET`, `DASHBOARD_TOKEN`, `PHONE_TOKEN`: `uv run python -c "import secrets; print(secrets.token_urlsafe(32))"`
 - `ENCRYPTION_KEY`: `uv run python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`
 
-Then open `http://127.0.0.1:3000/call/priya`, `/phone/priya`, `/ops` and `/metrics`.
+Then open `http://127.0.0.1:3000/call`, `/phone`, `/ops` and `/metrics`.
 Smoke test with `python tools/voice_e2e.py --scenario all`. It types each turn instead of speaking, so it spends no Gnani credits, and it should end in `ALL PASS`.
 
 ## Status (6 Nov)
@@ -41,10 +41,10 @@ Smoke test with `python tools/voice_e2e.py --scenario all`. It types each turn i
 ## Remaining
 
 Must do:
-1. [ ] Mic test at `/call/priya`: hold to talk, in Hinglish and Marathi.
+1. [ ] Mic test at `/call`: hold to talk, in Hinglish and Marathi.
 2. [ ] Live Gnani check: turn on "Voice replies" for 1-2 turns only, to confirm Prisma STT and Timbre TTS work. Credits are limited.
 3. [ ] Write `docs/demo-script.md` (3-4 min): the problem, the Priya call, the attacker blocked, `/ops`, `/metrics`.
-4. [ ] Record the video: the Priya call with `/phone/priya` and `/ops` side by side, the attacker call, and `/metrics`. Reseed before each take, and also record a typed fallback take.
+4. [ ] Record the video: the Priya call with `/phone` and `/ops` side by side, the attacker call, and `/metrics`. Reseed before each take, and also record a typed fallback take.
 5. [ ] Put the video link in the README and check its numbers.
 6. [ ] Upload the video unlisted (YouTube or Drive, view access).
 7. [ ] Submit on the portal (repo link, video link, description) and screenshot the confirmation.

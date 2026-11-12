@@ -132,7 +132,7 @@ Gateway: Python 3.11+, FastAPI, Uvicorn, Pydantic v2, SQLAlchemy 2 async + async
 
 Layout:
 - `gateway/app/main.py`, `config.py`; `routes/actions/{verify,details,loans,requests,handover,approvals}.py`; `security/{scrub,mask,auth,tiers}.py`; `speak/` (templates en/hi/hinglish/mr + number formatting); `db/` (models, session, seed); `events.py` (Redis stream + SSE); `tests/`
-- `web/`: `/phone/[customer]`, `/ops`, `/metrics`, `/call/[customer]` (hold-to-talk caller page)
+- `web/`: `/phone`, `/ops`, `/metrics`, `/call` (hold-to-talk caller page); sign-in pages `/login` (customer) and `/staff/login` (staff)
 - `voice/`: voice agent service (STT -> Ollama LLM tool loop -> gateway -> TTS), `voice.app:app` on :8100
 - `start.ps1` / `stop.ps1`: launch and stop everything on Windows
 - `agent/`: system prompt, action definitions, keyterms, apply script (Platform API)
@@ -174,7 +174,7 @@ Latency: p95 < 50 ms per action at 1,000 simulated concurrent calls (~50-125 rps
 System prompt: polite, patient, brief; follow language switches (en/hi/hinglish/mr); never ask for or repeat secrets; if caller says one, call `report_secret_spoken` and warn; speak gateway `speak` text exactly; never invent numbers; offer handover when unsure; keep a list of caller requests and work through them. One action per gateway action with filler text and timeout. Prisma keyterms: IFSC, MICR, UTR, EMI, NOC, foreclosure, nominee, Sahyadri, branch names, months, Hindi/Marathi banking words. Apply via Platform API script.
 
 ## 10. Frontend
-- `/phone/[customer]`: phone-shaped; live SMS inbox; approval card Approve/Deny; recent activity; labelled "Demo app, synthetic data".
+- `/phone` (own customer only; sign-in pages `/login` and `/staff/login`): phone-shaped; live SMS inbox; approval card Approve/Deny; recent activity; labelled "Demo app, synthetic data".
 - `/ops`: live calls (language, tier, current request); per-call timeline (action, latency, outcome, security events); handover queue; attack view (blocked requests, unapproved approvals). Only redacted data to the browser.
 - `/metrics`: gateway latency p50/p95/p99 per action, task completion, handover rate, secrets detected, load-test results, STT benchmark, end-to-end latency.
 - Tailwind only.
