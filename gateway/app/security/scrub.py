@@ -7,6 +7,7 @@ _KW = re.compile(
     re.I,
 )
 SECRET_TYPES = ("otp", "pin", "cvv", "password")
+_NOT_PIN_CODE = r"(?![\s\-]*(?:code|कोड|কোড|ਕੋਡ|કોડ|கோட்|కోడ్|ಕೋಡ್|കോഡ്))"
 _EXTRA: list[tuple[re.Pattern, str]] = []  # words.secret_words of the language files: (pattern, secret type)
 
 
@@ -18,7 +19,8 @@ def set_extra_secret_words(words: dict | None) -> None:
     for t, ws in (words or {}).items():
         ws = sorted({w.strip().lower() for w in ws if isinstance(w, str) and w.strip() and (not w.isascii() or len(w.strip()) >= 4)}, key=lambda w: -len(w)) if isinstance(ws, list) else []
         if t in SECRET_TYPES and ws:
-            out.append((re.compile("|".join(map(re.escape, ws)), re.I), t))
+            not_code = _NOT_PIN_CODE if t == "pin" else ""  # "PIN code" is a postal code, like the built-in \bpin\b(?!code)
+            out.append((re.compile("(?:" + "|".join(map(re.escape, ws)) + ")" + not_code, re.I), t))
     _EXTRA = out
 
 

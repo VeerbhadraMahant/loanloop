@@ -42,6 +42,12 @@ def test_secret_words_in_native_script_are_scrubbed(use):
     assert out and "ஓடிபி" not in out[0] and out[1] == "otp"
 
 
+def test_native_pin_code_is_a_postal_code_not_a_secret(use):
+    use({"secret_words": {"pin": ["பின்"]}})
+    assert find_secret("note", "என் பின் 4321") == "pin"
+    assert find_secret("address", "சென்னை பின் கோட் 600001") is None  # postal PIN code, like the built-in rule
+
+
 def test_secret_scrubbing_only_gains_words(use):
     use({"secret_words": SECRET})
     assert find_secret("note", "my pin is 4321") == "pin" and find_secret("note", "मेरा पासवर्ड abc") == "password"
