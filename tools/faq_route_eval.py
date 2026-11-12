@@ -1,10 +1,13 @@
 """Offline eval of FAQ routing: OLD keyword scorer (main's faq.py, any hit answers directly) vs NEW weighted scorer (HIGH answers directly).
 
-    cd gateway && uv run python ../tools/faq_route_eval.py [--tune]      (exit 1 if the NEW HIGH precision targets are missed)
+    cd gateway && uv run python ../tools/faq_route_eval.py [--tune] [--set PATH] [--lang CODE]      (exit 1 if the NEW HIGH precision targets are missed)
+
+--set PATH reads another labelled file (e.g. ../tools/faq_route_set_beta.jsonl) and adds a per-language table; --lang keeps only that language (comma list ok).
 
 Labelled set: tools/faq_route_set.jsonl (id, text, lang, expect = intent id or "none"). Ids starting `neg_` are the hijack negatives.
 Both sides get the same voice guards (OLD without the new tool-owned guard), so the table shows what the scorer itself changes.
 """
+import argparse
 import importlib
 import json
 import statistics
@@ -68,16 +71,7 @@ def summarize(rows, t_old, t_new):
     }
 
 
-def main() -> int:
-    sys.stdout.reconfigure(encoding="utf-8")
-    cases = [json.loads(line) for line in (ROOT / "tools" / "faq_route_set.jsonl").read_text(encoding="utf-8").splitlines() if line.strip()]
-    # the live path sees what the caller says first: every row also runs behind its language-choice prefix ("English. ...")
-    pre = {"en": "English.", "hinglish": "Hinglish.", "hi": "हिंदी में बताइए.", "mr": "मराठी."}
-    cases += [{**c, "id": c["id"] + "@p", "text": f"{pre[c['lang']]} {c['text']}"} for c in cases]
-    intents = new_faq.load_faq()
-    old = load_old()
-    rows, t_old, t_new = evaluate(cases, intents, lambda i, q, lg: old["match"](i, q, lg))
-    s = summarize(rows, t_old, t_new)
+def print_table(s):
     o, n = s["old"], s["new"]
     print(f"{s['n']} cases ({s['n_pos']} with an FAQ intent, {s['n_neg']} hijack negatives); thresholds high>={vapp.faq_score.HIGH_MIN} margin>={vapp.faq_score.HIGH_MARGIN} med>={vapp.faq_score.MED_MIN}")
     print(f"{'':28}{'OLD':>10}{'NEW':>10}")
@@ -89,6 +83,35 @@ def main() -> int:
     print(f"{'MEDIUM % (LLM + FAQ block)':28}{'-':>10}{n['medium']:>10.1f}")
     print(f"{'LOW % (plain LLM)':28}{'-':>10}{n['low']:>10.1f}")
     print(f"{'mean match ms':28}{o['ms']:>10.2f}{n['ms']:>10.2f}")
+
+
+def main() -> int:
+    sys.stdout.reconfigure(encoding="utf-8")
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--set", type=Path, default=ROOT / "tools" / "faq_route_set.jsonl")
+    ap.add_argument("--lang", help="only these language codes (comma list)")
+    ap.add_argument("--tune", action="store_true")
+    ap.add_argument("--show", action="store_true")
+    a = ap.parse_args()
+    cases = [json.loads(line) for line in a.set.read_text(encoding="utf-8").splitlines() if line.strip()]
+    if a.lang:
+        keep = set(a.lang.split(","))
+        cases = [c for c in cases if c["lang"] in keep]
+    # the live path sees what the caller says first: every row also runs behind its language-choice prefix ("English. ...")
+    pre = {"en": "English.", "hinglish": "Hinglish.", "hi": "हिंदी में बताइए.", "mr": "मराठी."}
+    pre.update({m["code"]: m["native"] + "." for m in json.loads((ROOT / "i18n" / "languages.json").read_text(encoding="utf-8"))["modes"]} | pre)
+    cases += [{**c, "id": c["id"] + "@p", "text": f"{pre[c['lang']]} {c['text']}"} for c in cases]
+    intents = new_faq.load_faq()
+    old = load_old()
+    rows, t_old, t_new = evaluate(cases, intents, lambda i, q, lg: old["match"](i, q, lg))
+    s = summarize(rows, t_old, t_new)
+    n = s["new"]
+    print_table(s)
+    if a.set != ROOT / "tools" / "faq_route_set.jsonl":  # per-language breakdown for the other sets
+        for lg in dict.fromkeys(r["c"]["lang"] for r in rows):
+            ix = [i for i, r in enumerate(rows) if r["c"]["lang"] == lg]
+            print(f"\n== {lg} ==")
+            print_table(summarize([rows[i] for i in ix], [t_old[i] for i in ix], [t_new[i] for i in ix]))
     for w in s["wrong_new"]:
         print("NEW WRONG DIRECT:", w)
     if "--show" in sys.argv:
