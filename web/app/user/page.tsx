@@ -1,24 +1,37 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import React, { Suspense, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth/auth-context";
+import { UnifiedUserShell, type UserShellTab } from "@/components/user/unified-user-shell";
 
-export default function UserConsoleIndexPage() {
+function UserPageContent() {
   const { isAuthenticated } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const tabParam = searchParams.get("tab") as UserShellTab | null;
+  const qParam = searchParams.get("q") || undefined;
 
   useEffect(() => {
-    if (isAuthenticated) {
-      router.replace("/user/home");
-    } else {
+    if (!isAuthenticated) {
       router.replace("/user/welcome");
     }
   }, [isAuthenticated, router]);
 
+  return <UnifiedUserShell initialTab={tabParam ?? "console"} initialUtterance={qParam} />;
+}
+
+export default function UserIndexPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-bg text-xs text-muted font-sans">
-      Loading Sahyadri Voice Banking...
-    </div>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-bg text-xs text-muted">
+          Loading Sahyadri Voice Banking...
+        </div>
+      }
+    >
+      <UserPageContent />
+    </Suspense>
   );
 }
