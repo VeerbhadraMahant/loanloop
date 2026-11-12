@@ -116,11 +116,11 @@ Pages and who may open them (`web/proxy.ts` validates the cookie against the gat
 
 | Paths | Needs |
 |---|---|
-| `/staff/login`, `/login`, `/auth/*`, Next static assets | public |
+| `/` (when no valid session), `/staff/login`, `/login`, `/auth/*`, Next static assets | public |
 | `/bank`, `/bank/*`, `/ops`, `/collections`, `/call/outbound/*` | staff `bank_manager` or `admin` |
 | `/dev`, `/metrics`, `/test-cases` | staff `engineer` or `admin` |
 | `/phone`, `/call` (exactly; the old `/phone/[customer]` and `/call/[customer]` routes are deleted) | customer |
-| `/` | redirect: valid staff session -> its landing; else valid customer session -> `/phone`; else `/login` |
+| `/` | valid staff session -> redirect to its landing; else valid customer session -> redirect to `/phone`; else the public landing page (200) |
 | `/gw/*`, `/vx/*`, `/voice-out` | not page-gated; the handlers forward session headers and the backends decide. No relevant cookie -> 401 |
 
 Outcomes on a gated page:
@@ -133,6 +133,7 @@ Outcomes on a gated page:
 
 Other web rules:
 - No link, button or redirect leads from a customer page to a staff page or the other way, and neither login page mentions the other.
+- `/` is a public landing page (no data, no API calls, no credentials shown) that links to both `/login` and `/staff/login`. The login pages link only back to `/`.
 - Navigation shows only what the signed-in role can open, plus a sign-out control.
 - Customer pages read the customer from `GET /auth/me?door=customer` and call the gateway as `/gw/phone/me/...`. They must not
   call `/gw/events/stream` or `/gw/dashboard/*` (the phone screen keeps its existing 3 s polling).

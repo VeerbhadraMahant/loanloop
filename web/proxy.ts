@@ -59,13 +59,13 @@ export async function proxy(req: NextRequest) {
     if (p === "/" || staffPage || staffLogin) staff = await validate(staffSid);
     if (p === "/" || customerPage || custLogin) cust = await validate(custSid);
   } catch {
-    if (staffLogin || custLogin) return NextResponse.next(); // the sign-in forms render without the gateway
+    if (staffLogin || custLogin || p === "/") return NextResponse.next(); // the sign-in forms and the public landing render without the gateway
     return new Response("Service unavailable", { status: 503 });
   }
   if (staff && staff.kind !== "staff") staff = null;
   if (cust && cust.kind !== "customer") cust = null;
 
-  if (p === "/") return go(staff ? landingOf(staff.role) : cust ? "/phone" : "/login");
+  if (p === "/") return staff ? go(landingOf(staff.role)) : cust ? go("/phone") : NextResponse.next(); // no session: public landing
   if (staffLogin) return staff ? go(landingOf(staff.role)) : NextResponse.next();
   if (custLogin) return cust ? go("/phone") : NextResponse.next();
   if (customerPage) return cust ? NextResponse.next() : go("/login");

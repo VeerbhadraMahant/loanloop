@@ -9,6 +9,7 @@ Customer mobiles: --mobile-a/--mobile-b, else read from the DB (customers id 1 a
 Passwords, passcodes, mobiles and session ids are never printed.
 """
 import argparse
+import re
 import asyncio
 import os
 import secrets
@@ -137,9 +138,20 @@ def g_pages(st: Stack, ctx: dict):
     for p in ["/bank", "/ops", "/collections", "/dev", "/metrics", "/test-cases"]:
         r = st.w("GET", p)
         check(f"no cookies {p} -> redirect /staff/login", redirects_to(r, "/staff/login"), f"{r.status_code} {r.headers.get('location')}")
-    for p in ["/phone", "/call", "/"]:
+    for p in ["/phone", "/call"]:
         r = st.w("GET", p)
         check(f"no cookies {p} -> redirect /login", redirects_to(r, "/login"), f"{r.status_code} {r.headers.get('location')}")
+    r = st.w("GET", "/")
+    body = r.text
+    check("no cookies / -> 200 landing with both door links", r.status_code == 200 and 'href="/login"' in body and 'href="/staff/login"' in body, str(r.status_code))
+    check("landing shows no customer data", "Priya" not in body and "Ramesh" not in body and not re.search(r"\d{10}", body), "")
+    for door in ("/login", "/staff/login"):
+        b = st.w("GET", door).text
+        check(f"{door} links to / and not to the other door", 'href="/"' in b and ('href="/staff/login"' not in b if door == "/login" else 'href="/login"' not in b), "")
+    r = st.w("GET", "/", {"ll_staff": S["admin"]})
+    check("admin session / -> redirect to its landing", r.status_code in REDIRECTS and not redirects_to(r, "/login"), f"{r.status_code} {r.headers.get('location')}")
+    r = st.w("GET", "/", {"ll_cust": C["a"]})
+    check("customer session / -> redirect /phone", redirects_to(r, "/phone"), f"{r.status_code} {r.headers.get('location')}")
     cc = {"ll_cust": C["a"]}
     for p in ["/bank", "/bank/conversations", "/ops", "/collections", "/dev", "/metrics", "/test-cases", "/call/outbound/1"]:
         r = st.w("GET", p, cc)
