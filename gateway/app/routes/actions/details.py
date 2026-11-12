@@ -15,14 +15,14 @@ from app.routes.actions._runner import action
 from app.security import mask
 from app.sms import send_sms
 from app.speak import digits, t
-from app.speak.templates.details import LABELS, ending, spell_ifsc
+from app.speak.templates.details import ending, spell_ifsc
 
 router = APIRouter(prefix="/actions")
 IFSC_RE = re.compile(r"^[A-Z]{4}0[A-Z0-9]{6}$")
 
 
 def _branch_speak(key: str, b: Branch, lang: str) -> str:
-    return t(key, lang, name=b.name, address=b.address, ifsc=spell_ifsc(b.ifsc), micr=digits(b.micr, 3), hours=b.hours)
+    return t(key, lang, name=b.name, address=b.address, ifsc=spell_ifsc(b.ifsc, lang), micr=digits(b.micr, 3), hours=b.hours)
 
 
 def _score(q: str, b: Branch) -> float:
@@ -76,9 +76,9 @@ async def validate_ifsc(inp: IfscIn, session, db: AsyncSession, bg: BackgroundTa
         if b is None:
             return ActionResponse(ok=False, speak=t("not_found", inp.language), error_code="NOT_FOUND",
                                   data={"valid_format": True, "sahyadri": False})
-        return ActionResponse(ok=True, speak=t("ifsc_sahyadri", inp.language, ifsc=spell_ifsc(code), name=b.name, address=b.address),
+        return ActionResponse(ok=True, speak=t("ifsc_sahyadri", inp.language, ifsc=spell_ifsc(code, inp.language), name=b.name, address=b.address),
                               data={"valid_format": True, "sahyadri": True, "name": b.name})
-    return ActionResponse(ok=True, speak=t("ifsc_other", inp.language, ifsc=spell_ifsc(code)),
+    return ActionResponse(ok=True, speak=t("ifsc_other", inp.language, ifsc=spell_ifsc(code, inp.language)),
                           data={"valid_format": True, "sahyadri": False})
 
 
@@ -113,8 +113,7 @@ async def get_masked_profile(inp: ProfileIn, session, db: AsyncSession, bg: Back
     parts, shown = [], []
     for f in dict.fromkeys(alias.get(x, x) for x in inp.fields):
         v = values[f]
-        label = LABELS[f].get(lang, LABELS[f]["en"])
-        parts.append(t("mp_line", lang, label=label, v=v) if v else t("mp_none", lang))
+        parts.append(t("mp_line", lang, label=t(f"label_{f}", lang), v=v) if v else t("mp_none", lang))
         if v:
             shown.append(f)
     return ActionResponse(ok=True, speak=" ".join(parts), data={"fields": shown})

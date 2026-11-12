@@ -24,7 +24,7 @@ New languages are **beta**: machine-written, no native review yet.
   },
   "words": {
     "lang_names": ["how a caller names this language: native script + romanised, e.g. tamil, தமிழ், tamizh"],
-    "affirm": ["yes / correct / right / ok words"], "negate": ["no / wrong / cancel words"], "bye": ["goodbye words"],
+    "affirm": ["yes / correct / right / ok words"], "negate": ["no / wrong / cancel words"], "bye": ["goodbye words"], "thanks": ["thank-you words: single words, native script + romanised"],
     "approval": ["approved / done / I tapped it"], "switch_cues": ["speak / talk / in (as in 'speak in Tamil')"],
     "month_words": {"<month word as spoken>": 1}, "weekdays": {"<weekday word>": 0},
     "question": ["how / what / why / when / can / does"], "possessive": ["my / mine"],

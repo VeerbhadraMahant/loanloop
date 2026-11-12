@@ -2,13 +2,14 @@
 import hashlib
 import re
 from datetime import date
+from functools import lru_cache
 
 from fastapi import APIRouter, BackgroundTasks
 from pydantic import Field, field_validator, model_validator
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app import events, sessions
+from app import events, i18n, sessions
 from app.contract import ActionIn, ActionResponse
 from app.db.models import CollectionCase, Customer, Loan
 from app.routes.actions._runner import action
@@ -34,10 +35,24 @@ MONTHS_MAP = {
 }
 
 
+@lru_cache
+def _months(i18n_dir) -> dict[str, int]:
+    """Built-in month words plus every present language file's words.month_words (keyed by dir so tests can swap it)."""
+    out = dict(MONTHS_MAP)
+    for d in i18n.load_lang_files().values():
+        mw = (d.get("words") or {}).get("month_words")
+        if isinstance(mw, dict):
+            for k, n in mw.items():
+                if isinstance(k, str) and isinstance(n, int) and 1 <= n <= 12:
+                    out.setdefault(k.lower(), n)  # a language file never overrides a built-in or earlier month word
+    return out
+
+
 def parse_dob(v: str) -> str | None:
     if not v or not isinstance(v, str):
         return None
-    v = v.strip().lower()
+    v = re.sub(r"\d", lambda m: str(int(m.group())), v.strip().lower())  # Indic digits -> ASCII
+    months = _months(i18n.I18N_DIR)
     if re.match(r"^\d{4}-\d{2}-\d{2}$", v):
         return v
     m = re.match(r"^(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{4})$", v)
@@ -46,12 +61,12 @@ def parse_dob(v: str) -> str | None:
     m = re.match(r"^(\d{4})[/\-.](\d{1,2})[/\-.](\d{1,2})$", v)
     if m:
         return f"{m.group(1)}-{int(m.group(2)):02d}-{int(m.group(3)):02d}"
-    m = re.search(r"(\d{1,2})(?:st|nd|rd|th)?\s+([a-zA-Z\u0900-\u097f]+)[,\s]+(\d{4})", v)
-    if m and m.group(2).lower() in MONTHS_MAP:
-        return f"{m.group(3)}-{MONTHS_MAP[m.group(2).lower()]:02d}-{int(m.group(1)):02d}"
-    m = re.search(r"([a-zA-Z\u0900-\u097f]+)\s+(\d{1,2})(?:st|nd|rd|th)?[,\s]+(\d{4})", v)
-    if m and m.group(1).lower() in MONTHS_MAP:
-        return f"{m.group(3)}-{MONTHS_MAP[m.group(1).lower()]:02d}-{int(m.group(2)):02d}"
+    m = re.search(r"(\d{1,2})(?:st|nd|rd|th)?\s+([a-zA-Z\u0900-\u0d7f]+)[,\s]+(\d{4})", v)
+    if m and m.group(2).lower() in months:
+        return f"{m.group(3)}-{months[m.group(2).lower()]:02d}-{int(m.group(1)):02d}"
+    m = re.search(r"([a-zA-Z\u0900-\u0d7f]+)\s+(\d{1,2})(?:st|nd|rd|th)?[,\s]+(\d{4})", v)
+    if m and m.group(1).lower() in months:
+        return f"{m.group(3)}-{months[m.group(1).lower()]:02d}-{int(m.group(2)):02d}"
     return v
 
 

@@ -124,3 +124,13 @@ def test_beta_romanised_short_words_do_not_hijack_core_turns():
     assert va.detect_language("Telugu", True)[0] == "te"
     assert va.wants_human("manager se baat karwao na")
     assert va.is_action_request("mera address badal do ki naya ye hai")
+
+
+def test_beta_dob_digits_and_goodbye_from_the_real_files():
+    va.load_languages()
+    assert va._parse_dob("14 ஆகஸ்ட் 1991") == "1991-08-14" and va._parse_dob("১৪ আগস্ট ১৯৯১") == "1991-08-14"
+    assert va._parse_dob("௧௪ ஆகஸ்ட் ௧௯௯௧") == "1991-08-14"  # Tamil digits
+    assert va._extract_verify("என் எண் 9000014417 பிறந்த தேதி 14 ஆகஸ்ட் 1991") == ("verify_caller", {"registered_mobile": "9000014417", "dob": "1991-08-14"})
+    assert va._extract_verify("৯০০০০১৪৪১৭ জন্মতারিখ ১৪ আগস্ট ১৯৯১") == ("verify_caller", {"registered_mobile": "9000014417", "dob": "1991-08-14"})
+    assert va.is_goodbye("சரி, நன்றி, பை") and va.is_goodbye("ধন্যবাদ, বাই") and va.is_goodbye("nandri bye")
+    assert not va.is_goodbye("வணக்கம்") and not va.is_goodbye("நன்றி, என் இஎம்ஐ தேதியை மாற்று") and not va.is_goodbye("நன்றி")  # thanks alone is not a farewell

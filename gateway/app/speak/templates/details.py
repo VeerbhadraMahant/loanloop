@@ -7,22 +7,27 @@ LABELS = {
     "ifsc": {"en": "branch IFSC", "hi": "ब्रांच का आईएफएससी", "hinglish": "branch ka IFSC", "mr": "शाखेचा आयएफएससी"},
     "branch": {"en": "branch", "hi": "ब्रांच", "hinglish": "branch", "mr": "शाखा"},
 }
-ENDING = {"en": "ending {d}", "hi": "{d} पर समाप्त होने वाला", "hinglish": "{d} se khatam hone wala", "mr": "{d} ने संपणारा"}
 
 
 def ending(last4: str, lang: str = "en") -> str:
     """Localised 'ending 44 17' (digits grouped for speech). Speech only: data fields use security.mask."""
-    from app.speak.format import digits  # local: avoid import cycle at template load
+    from app.speak import t  # local: avoid import cycle at template load
+    from app.speak.format import digits
 
-    return ENDING.get(lang, ENDING["en"]).format(d=digits(last4, 2))
+    return t("ending", lang, d=digits(last4, 2))
 
 
-def spell_ifsc(ifsc: str) -> str:
+def spell_ifsc(ifsc: str, lang: str = "en") -> str:
     """'SAHY0000101' -> 'S A H Y zero, 0 0 0 1 0 1': bank code spelled, then the 6-char branch code spaced."""
-    return f"{' '.join(ifsc[:4])} zero, {' '.join(ifsc[5:])}"
+    from app.speak import t  # local: avoid import cycle at template load
+
+    return f"{' '.join(ifsc[:4])} {t('ifsc_zero', lang)}, {' '.join(ifsc[5:])}"
 
 
 T = {
+    "ending": {"en": "ending {d}", "hi": "{d} पर समाप्त होने वाला", "hinglish": "{d} se khatam hone wala", "mr": "{d} ने संपणारा"},
+    "ifsc_zero": {"en": "zero", "hi": "zero", "hinglish": "zero", "mr": "zero"},
+    **{f"label_{k}": v for k, v in LABELS.items()},  # spoken field names (get_masked_profile); beta languages via the files' gateway section
     "branch_found": {
         "en": "{name}, {address}. IFSC: {ifsc}. MICR: {micr}. Open {hours}.",
         "hi": "{name}, {address}। आईएफएससी: {ifsc}। एमआईसीआर: {micr}। समय: {hours}।",
