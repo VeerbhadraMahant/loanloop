@@ -6,17 +6,17 @@ const BASE = process.env.SMOKE_URL ?? "http://localhost:3000";
 const ROUTES = [
   { path: "/", mustInclude: ["Sahyadri", "Calling Desk", "Bank app", "User Console"] },
   { path: "/call/priya", mustInclude: ["Live Calling Desk", "Priya", "Zero Secrets Policy", "User Console"] },
-  { path: "/call/aarav", mustInclude: ["Live Calling Desk", "Aarav", "Zero Secrets Policy"] },
+  { path: "/call/ramesh", mustInclude: ["Live Calling Desk", "Ramesh", "Zero Secrets Policy"] },
   { path: "/call/sunita", mustInclude: ["Live Calling Desk", "Sunita", "Zero Secrets Policy"] },
-  { path: "/call/meena", mustInclude: ["Live Calling Desk", "Meena", "Zero Secrets Policy"] },
+  { path: "/call/vikram", mustInclude: ["Live Calling Desk", "Vikram", "Zero Secrets Policy"] },
   { path: "/user/priya", mustInclude: ["User Console", "Sahyadri Voice Agent"] },
-  { path: "/user/aarav", mustInclude: ["User Console", "Aarav"] },
+  { path: "/user/ramesh", mustInclude: ["User Console", "Ramesh"] },
   { path: "/bank", mustInclude: ["Sahyadri Finance Bank"] },
   { path: "/phone/priya", mustInclude: ["Sahyadri Mobile"] },
   { path: "/collections", mustInclude: ["Collections"] },
   { path: "/ops", mustInclude: ["Live Operations"] },
   { path: "/dev", mustInclude: ["Developer lab"] },
-  { path: "/test-cases", mustInclude: ["Test Cases", "TC-8801", "TC-8802", "TC-8803", "TC-8804", "TC-8805"] },
+  { path: "/test-cases", mustInclude: ["Test Cases", "TC-8801", "TC-8802", "TC-8803", "TC-9904", "TC-8805"] },
   { path: "/metrics", mustInclude: ["Metrics"] },
 ];
 
@@ -33,11 +33,11 @@ test("all primary UI routes and scenarios render HTTP 200 without Next error bou
 });
 
 test("bank routes preserve SSR customer data and Devanagari scripts", async () => {
-  const res = await fetch(`${BASE}/call/sunita`);
+  const res = await fetch(`${BASE}/call/priya`);
   assert.equal(res.status, 200);
   const html = await res.text();
   // Ensure Devanagari script renders cleanly without escaping corruption
-  assert.equal(html.includes("माझा EMI") || html.includes("Sunita"), true);
+  assert.equal(html.includes("मेरा IFSC code") && html.includes("Priya Deshmukh"), true);
 });
 
 test("gateway proxy and voice dev endpoints respond with expected JSON structures", async () => {
