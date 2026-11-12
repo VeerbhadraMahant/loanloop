@@ -99,7 +99,7 @@ def test_every_eval_faq_case_reaches_the_faq_through_the_live_turn_handler(env):
     """Real turn path with the caller's exact first line ("English. ..."): never LOW and never blocked by a tool guard.
     Paraphrases with no FAQ keyword are the known failures."""
     from pathlib import Path
-    known_miss = {"faq2_hing_kyc_basics", "faq2_hing_gold_loan", "faq2_hi_bank_wrong_transfer", "faq2_mr_account_frozen", "faq2_en_otp_not_received", "faq2_mr_otp_not_received", "faq2_en_account_frozen"}  # no FAQ keyword in the line (0 score); faq2_en_account_frozen ("hold on my account") has no account_frozen keyword and only passed before by hitting the wrong intent (balance_hold, medium)
+    known_miss = {"faq2_hing_kyc_basics", "faq2_hing_gold_loan", "faq2_hi_bank_wrong_transfer", "faq2_mr_account_frozen", "faq2_en_otp_not_received", "faq2_mr_otp_not_received"}  # no FAQ keyword in the line (0 score); account_frozen now has "put hold" (not "hold on my account": the labelled hijack negative d1_8 says that bare hold is ambiguous)
     c, fake = env
     fake.gw["faq_lookup"] = FAQ  # a direct answer = topic call and no LLM; a medium one = the block in the LLM message
     bad = []

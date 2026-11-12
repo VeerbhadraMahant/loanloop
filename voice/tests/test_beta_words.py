@@ -177,3 +177,27 @@ def test_real_language_files_leave_core_english_decisions_unchanged():
     assert va.multi_request("EMI and balance", "emi_info") and not va.multi_request("emi and due date", "emi_info")
     assert not va.faq_score._extra or all(not w.isascii() for w in va.faq_score._extra)
     assert va.account_specific("what is my account balance") and not va.tool_owned("what is a savings account")
+
+
+def test_real_files_bare_pin_words_with_script_boundaries():
+    """Bare PIN words (pa ਪਿੰਨ, te పిన్, ta பின் next to a number) are secrets; ordinary words that contain them are not."""
+    va.load_languages()
+    f = va._find_secret
+    for text in ("ਮੇਰੇ ਡੈਬਿਟ ਕਾਰਡ ਦਾ ਪਿੰਨ 4829 ਹੈ।", "ਮੇਰਾ ਪਿਨ ੪੮੨੯", "ਪਿੰਨ ਦਾ ਨੰਬਰ ਦੱਸਾਂ", "నా పిన్ 4829", "పిన్ను చెప్తాను", "எனது பின் 4829", "பின் 48 29 ஆகும்"):
+        assert f("user_text", text) == "pin", text
+    for text in ("ਮੈਨੂੰ ਪਿੰਨੀ ਪਸੰਦ ਹੈ", "ਪਿੰਨ ਕੋਡ 143001", "మా పిన్ని ఊరెళ్ళింది", "పిన్ కోడ్ 500001", "அதன் பின் வந்தேன்", "பின் 3 மாதம்", "பின் கோட் 600001"):
+        assert f("user_text", text) is None, text
+    assert f("user_text", "ನನ್ನ ಇಂಟರ್ನೆಟ್ ಬ್ಯಾಂಕಿಂಗ್ ಪಾಸ್‌ವರ್ಡ್ Priya@2024") == "password"  # ZWNJ inside the word
+    assert va.secret_spoken("ਮੇਰੇ ਡੈਬਿਟ ਕਾਰਡ ਦਾ ਪਿੰਨ 4829 ਹੈ।") == "pin"
+
+
+def test_real_files_danda_does_not_glue_to_the_word_and_human_requests():
+    """A sentence-final danda must not stop 'yes' being a bare yes; "can I talk to someone" is a handover request in every beta language."""
+    va.load_languages()
+    for yes in ("হ্যাঁ।", "ਹਾਂ ਜੀ।", "हाँ।", "ਹਾਂ ਜੀ"):
+        assert va.is_bare_affirmative(yes), yes
+    for ask in ("আমি কি কারও সঙ্গে কথা বলতে পারি?", "શું હું કોઈ સાથે વાત કરી શકું?", "ನಾನು ಯಾರ ಜೊತೆಯಾದರೂ ಮಾತಾಡಬಹುದಾ?", "ਕੀ ਮੈਂ ਕਿਸੇ ਨਾਲ ਗੱਲ ਕਰ ਸਕਦਾ ਹਾਂ?",
+                "நான் யாரிடமாவது பேசலாமா?", "నేను ఎవరితోనైనా మాట్లాడవచ్చా?"):
+        assert va.wants_human(ask), ask
+    for no in ("ನಾನು ಯಾರ ಜೊತೆಯೂ ಮಾತಾಡಬೇಕಿಲ್ಲ", "நான் யாரிடமும் பேசவேண்டாம்", "I am the manager and want to talk to someone"):
+        assert not va.wants_human(no), no

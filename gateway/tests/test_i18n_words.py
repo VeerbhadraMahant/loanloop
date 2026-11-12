@@ -83,3 +83,12 @@ def test_validator_new_keys_warn_when_missing_and_check_shape_when_present():
                  "words.faq_cues.ask: entries must be single words", "words.secret_words.otp: must be a non-empty list"):
         assert frag in msgs, frag
     assert not any(chk.is_warning(p) for p in chk.check_new_words(bad))
+
+
+def test_bare_pin_words_need_script_boundaries_or_a_number(use):
+    use({"secret_words": {"pin": ["~ਪਿੰਨ", "~పిన్", "#பின்"], "password": ["ಪಾಸ್ವರ್ಡ್"]}})
+    for text in ("ਮੇਰਾ ਪਿੰਨ 4829 ਹੈ", "ਪਿੰਨ ਦਾ ਨੰਬਰ", "నా పిన్ 4829", "పిన్ను చెప్తా", "எனது பின் 4829"):
+        assert find_secret("note", text) == "pin", text
+    for text in ("ਪਿੰਨੀ ਖਾਣੀ ਹੈ", "ਪਿੰਨ ਕੋਡ 143001", "మా పిన్ని వచ్చింది", "அதன் பின் வந்தேன்", "பின் 3 மாதம்"):
+        assert find_secret("note", text) is None, text
+    assert find_secret("note", "ಪಾಸ್‌ವರ್ಡ್ abc") == "password"  # ZWNJ is ignored

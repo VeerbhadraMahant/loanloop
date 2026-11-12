@@ -434,7 +434,7 @@ def trim(msgs: list[dict], keep: int = KEEP_MSGS) -> list[dict]:
     return msgs[:1] + tail
 
 
-_TOKEN = re.compile(r"[A-Za-z0-9'’]+|[\u0900-\u0d7f]+")  # explicit Indic range (Devanagari..Malayalam): matras are not \w, so no \b
+_TOKEN = re.compile(r"[A-Za-z0-9'’]+|[\u0900-\u0963\u0966-\u0d7f]+")  # explicit Indic range (Devanagari..Malayalam) minus the danda, so "हाँ।" is the word हाँ: matras are not \w, so no \b
 AFFIRM_WORDS = {"yes", "yeah", "yep", "yup", "correct", "right", "haan", "han", "haa", "ji", "jee", "sahi", "theek", "thik",
                 "hai", "hain", "ok", "okay", "confirm", "confirmed", "ho", "hoy", "that", "that's", "thats", "is", "it", "its",
                 "हाँ", "हां", "सही", "ठीक", "है", "हैं", "हो", "होय", "बरोबर", "आहे", "हा", "जी"}
@@ -1077,9 +1077,11 @@ def wants_human(text: str) -> bool:
     no 'I am the manager' self-claim."""
     low = text.lower()
     t = set(_tokens(low))
-    if t & _NEG_HUMAN or _SELF_CLAIM.search(low):
+    nat = [w for w in t if not w.isascii()]
+    if t & _NEG_HUMAN or any(n in w for w in nat for n in _NEG_HUMAN if len(n) >= 3 and not n.isascii()) or _SELF_CLAIM.search(low):
         return False
-    return bool(_EN_HUMAN_REQ.search(low) or (t & _HUMAN_TARGET and t & (_HUMAN_VERB - _EN_VERBS)))
+    stem = lambda words: any(w.startswith(s) for w in nat for s in words if len(s) >= 3 and not s.isascii())  # case endings / verb forms
+    return bool(_EN_HUMAN_REQ.search(low) or ((t & _HUMAN_TARGET or stem(_HUMAN_TARGET)) and (t & (_HUMAN_VERB - _EN_VERBS) or stem(_HUMAN_VERB))))
 
 
 _LEAK_BASE = (r"system\s*prompt|tool\s*list|\b(?:my|the|these|those|above|previous|original)\s+instructions\b|"
@@ -1872,6 +1874,12 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
                 # gateway sentences are trusted as-is; only the model's own words are scrubbed of tool names
                 text = final_text(clean_spoken((msg.get("content") or "").strip(), known), st["speaks"]) or st["last"]
                 return st["rb"] or text, st["done"]
+            if (any(isinstance(tc, dict) and (tc.get("function") or {}).get("name") == "handover" for tc in tcs) or any(a["name"] == "handover" for a in st["done"]))                     and not is_goodbye(c.get("user_text", "")):
+                # a handover is not a farewell: the model must not hang up in the same turn unless the caller said goodbye
+                keep = [(tc, a) for tc, a in zip(tcs, argl) if not (isinstance(tc, dict) and (tc.get("function") or {}).get("name") == "end_call")]
+                tcs[:], argl = [k[0] for k in keep], [k[1] for k in keep]
+                if not tcs:
+                    return st["rb"] or " ".join(dict.fromkeys(x for ok, x in st["speaks"] if ok)) or st["last"], st["done"]
             for tc, args in zip(tcs, argl):
                 fn = tc.get("function") if isinstance(tc, dict) else None
                 name = fn.get("name") if isinstance(fn, dict) else None
