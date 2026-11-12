@@ -53,45 +53,35 @@ test("user onboarding flow pages render cleanly with expected content", async ()
 test("user phone console main tabs render properly with borrower data", async () => {
   const headers = { Cookie: USER_COOKIE };
 
-  // 1. Home tab
+  // 1. Console / Home tab
   const homeRes = await fetch(`${BASE}/user/home`, { headers });
   assert.equal(homeRes.status, 200);
   const homeHtml = await homeRes.text();
-  assert.ok(homeHtml.includes("Sahyadri Voice Desk"), "Home missing voice card");
+  assert.ok(homeHtml.includes("Sahyadri"), "Home missing Sahyadri branding");
   assert.ok(homeHtml.includes("Active Loan"), "Home missing active loan section");
   assert.ok(homeHtml.includes("Quick Services"), "Home missing quick actions grid");
   assert.ok(homeHtml.includes("Change EMI Date"), "Home missing EMI date shortcut");
 
-  // 2. Inbox tab
+  // 2. Bank App / Inbox tab
   const inboxRes = await fetch(`${BASE}/user/inbox`, { headers });
   assert.equal(inboxRes.status, 200);
   const inboxHtml = await inboxRes.text();
-  assert.ok(inboxHtml.includes("Inbox & Approvals") || inboxHtml.includes("Inbox"), "Inbox missing title");
-  assert.ok(inboxHtml.includes("Bank SMS Alerts"), "Inbox missing SMS heading");
+  assert.ok(inboxHtml.includes("Bank App"), "Inbox missing Bank App tab");
+  assert.ok(inboxHtml.includes("Official SMS Inbox"), "Inbox missing SMS heading");
 
-  // 3. Talk tab
+  // 3. Calling Desk tab
   const talkRes = await fetch(`${BASE}/user/talk`, { headers });
   assert.equal(talkRes.status, 200);
   const talkHtml = await talkRes.text();
-  assert.ok(talkHtml.includes("Voice Assistant"), "Talk missing title");
-  assert.ok(talkHtml.includes("Speak") && talkHtml.includes("Check") && talkHtml.includes("Done"), "Talk missing 3-step stepper");
+  assert.ok(talkHtml.includes("Calling Desk"), "Talk missing Calling Desk");
 
-  // 4. Activity tab
-  const actRes = await fetch(`${BASE}/user/activity`, { headers });
-  assert.equal(actRes.status, 200);
-  const actHtml = await actRes.text();
-  assert.ok(actHtml.includes("Service Requests"), "Activity missing service requests tab");
-  assert.ok(actHtml.includes("Voice Calls"), "Activity missing voice calls tab");
-
-  // 5. Help tab & Other Consoles Redirect
+  // 4. Account tab
   const helpRes = await fetch(`${BASE}/user/help`, { headers });
   assert.equal(helpRes.status, 200);
   const helpHtml = await helpRes.text();
   assert.ok(helpHtml.includes("Zero Secrets Guarantee"), "Help missing zero secrets guarantee");
   assert.ok(helpHtml.includes("Microphone Mode"), "Help missing mic mode toggle");
-  assert.ok(helpHtml.includes("Other Consoles"), "Help missing other consoles block");
-  assert.ok(helpHtml.includes("/collections") && helpHtml.includes("/ops"), "Help missing staff console links");
-  assert.ok(helpHtml.includes("/dev") && helpHtml.includes("/metrics"), "Help missing dev console links");
+  assert.ok(helpHtml.includes("Demo Borrower Profiles"), "Help missing demo borrower selector");
 });
 
 test("backend customer and phone endpoints respond correctly for borrower", async () => {

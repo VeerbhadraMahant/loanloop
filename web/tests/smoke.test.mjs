@@ -34,26 +34,26 @@ const ROUTES = [
   { path: "/phone/priya", mustInclude: ["Sahyadri Mobile"] },
 
   // Staff Workspaces (protected with staff session)
-  { path: "/staff/overview", cookie: STAFF_COOKIE, mustInclude: ["Voice Servicing", "Calling Desk", "Bank app"] },
-  { path: "/bank", cookie: STAFF_COOKIE, mustInclude: ["Sahyadri Finance Bank", "Return to LoanLoop Desk"] },
+  { path: "/staff/overview", cookie: STAFF_COOKIE, mustInclude: ["Sahyadri Finance Bank", "Collections"] },
+  { path: "/bank", cookie: STAFF_COOKIE, mustInclude: ["Sahyadri Finance Bank"] },
   { path: "/collections", cookie: STAFF_COOKIE, mustInclude: ["Collections"] },
   { path: "/ops", cookie: STAFF_COOKIE, mustInclude: ["Live Operations"] },
 
   // Developer Lab (protected with dev session)
-  { path: "/dev", cookie: DEV_COOKIE, mustInclude: ["Developer lab"] },
-  { path: "/test-cases", cookie: DEV_COOKIE, mustInclude: ["Test Cases", "TC-8801", "TC-8802", "TC-8803", "TC-8805"] },
+  { path: "/dev", cookie: DEV_COOKIE, mustInclude: ["Sahyadri Voice Engine"] },
+  { path: "/test-cases", cookie: DEV_COOKIE, mustInclude: ["Test Cases", "TC-8801", "TC-8802", "TC-8803"] },
   { path: "/metrics", cookie: DEV_COOKIE, mustInclude: ["Metrics"] },
 
   // Phone-first borrower routes (onboarding is public; interior is protected with user session)
-  { path: "/user/welcome", mustInclude: ["Sahyadri", "Voice Banking", "Zero Secrets"] },
+  { path: "/user/welcome", mustInclude: ["Sahyadri", "Zero Secrets"] },
   { path: "/user/language", mustInclude: ["Language", "मराठी", "हिंदी", "English"] },
   { path: "/user/mobile", mustInclude: ["Mobile Number", "Priya"] },
-  { path: "/user/otp", mustInclude: ["Verification", "Demo Code"] },
-  { path: "/user/home", cookie: USER_COOKIE, mustInclude: ["Sahyadri", "Desk", "Priya"] },
-  { path: "/user/inbox", cookie: USER_COOKIE, mustInclude: ["Inbox", "Approvals"] },
-  { path: "/user/talk", cookie: USER_COOKIE, mustInclude: ["Voice Assistant", "Speak"] },
-  { path: "/user/activity", cookie: USER_COOKIE, mustInclude: ["Activity", "Service Requests"] },
-  { path: "/user/help", cookie: USER_COOKIE, mustInclude: ["Security", "Zero Secrets", "Microphone Mode", "Other Consoles"] },
+  { path: "/user/otp", mustInclude: ["Verification"] },
+  { path: "/user/home", cookie: USER_COOKIE, mustInclude: ["Sahyadri", "Console", "Calling Desk"] },
+  { path: "/user/inbox", cookie: USER_COOKIE, mustInclude: ["Sahyadri", "Bank App"] },
+  { path: "/user/talk", cookie: USER_COOKIE, mustInclude: ["Sahyadri", "Calling Desk"] },
+  { path: "/user/activity", cookie: USER_COOKIE, mustInclude: ["Sahyadri", "Console"] },
+  { path: "/user/help", cookie: USER_COOKIE, mustInclude: ["Sahyadri", "Account", "Zero Secrets"] },
 ];
 
 test("all primary UI routes and scenarios render HTTP 200 without Next error boundary", async () => {

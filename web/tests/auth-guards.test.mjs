@@ -63,7 +63,7 @@ test("3. Staff session grants access to staff routes but isolates from dev route
   });
   assert.equal(staffRes.status, 200, `/staff/overview should return 200 with staff cookie`);
   const staffHtml = await staffRes.text();
-  assert.ok(staffHtml.includes("Voice Servicing"), "Missing staff overview content");
+  assert.ok(staffHtml.includes("Sahyadri Finance Bank"), "Missing staff overview content");
 
   // Cannot access dev routes -> redirects to /dev/login with error=unauthorized
   const devRes = await fetch(`${BASE}/dev`, {
