@@ -78,6 +78,8 @@ export default function Ops() {
   const [sel, setSel] = useState<string | null>(null);
   const [density, setDensity] = useState<"comfortable" | "compact">("compact");
   const [filter, setFilter] = useState<"all" | "attention" | "verified" | "outbound">("all");
+  const [groupFilter, setGroupFilter] = useState<string>("all");
+  const [sortOrder, setSortOrder] = useState<"attention-first" | "completed-first" | "newest" | "oldest">("attention-first");
   const [hubTab, setHubTab] = useState<"all" | "handovers" | "threats">("all");
   const timeline = useGet<GwEvent[]>(sel ? `/dashboard/calls/${encodeURIComponent(sel)}/timeline` : null, 0);
 
@@ -112,12 +114,64 @@ export default function Ops() {
     return true;
   });
 
-  const liveOrAttention = filteredCalls.filter((c) => !c.ended_at || c.blocked_count > 0);
-  const completedRows = filteredCalls.filter((c) => c.ended_at && c.blocked_count === 0);
-  const sessionGroups = [
-    { label: "Live & Needs Attention", rows: liveOrAttention },
-    { label: "Completed", rows: completedRows },
-  ].filter((g) => g.rows.length > 0);
+  const classifyGroup = (c: CallRow): { key: string; label: string; order: number } => {
+    if (!c.ended_at || c.blocked_count > 0) {
+      return { key: "attention", label: "Live & Needs Attention", order: 0 };
+    }
+    if (!c.outcome || c.outcome === "completed" || c.outcome === "resolved") {
+      return { key: "completed", label: "Completed", order: 1 };
+    }
+    return {
+      key: c.outcome,
+      label: c.outcome.replace(/_/g, " ").replace(/^\w/, (ch) => ch.toUpperCase()),
+      order: 2,
+    };
+  };
+
+  const groupMap = new Map<string, { key: string; label: string; order: number; rows: CallRow[] }>([
+    ["attention", { key: "attention", label: "Live & Needs Attention", order: 0, rows: [] }],
+    ["completed", { key: "completed", label: "Completed", order: 1, rows: [] }],
+  ]);
+
+  for (const c of filteredCalls) {
+    const meta = classifyGroup(c);
+    const existing = groupMap.get(meta.key);
+    if (existing) {
+      existing.rows.push(c);
+    } else {
+      groupMap.set(meta.key, { ...meta, rows: [c] });
+    }
+  }
+
+  const availableGroups = [...groupMap.values()].filter((g) => g.rows.length > 0);
+  const activeGroupFilter =
+    groupFilter !== "all" && availableGroups.some((g) => g.key === groupFilter) ? groupFilter : "all";
+
+  const byStartDesc = (a: CallRow, b: CallRow) => b.started_at.localeCompare(a.started_at);
+  const byStartAsc = (a: CallRow, b: CallRow) => a.started_at.localeCompare(b.started_at);
+
+  const sessionGroups = (() => {
+    const chosen = availableGroups.filter((g) => activeGroupFilter === "all" || g.key === activeGroupFilter);
+    if (sortOrder === "newest" || sortOrder === "oldest") {
+      const merged = chosen.flatMap((g) => g.rows).sort(sortOrder === "newest" ? byStartDesc : byStartAsc);
+      return merged.length
+        ? [{ key: "chronological", label: sortOrder === "newest" ? "Newest first" : "Oldest first", rows: merged }]
+        : [];
+    }
+    const sortedGroups = [...chosen].sort((a, b) => {
+      if (sortOrder === "completed-first") {
+        const rank = (k: string) => (k === "completed" ? 0 : k === "attention" ? 1 : 2);
+        return rank(a.key) - rank(b.key) || a.order - b.order;
+      }
+      return a.order - b.order;
+    });
+    return sortedGroups.map((g) => ({
+      ...g,
+      rows: [...g.rows].sort(byStartDesc),
+    }));
+  })();
+
+  const visibleSessionCount = sessionGroups.reduce((sum, g) => sum + g.rows.length, 0);
 
   const selectedCall = callList.find((c) => c.call_id === sel);
 
@@ -256,23 +310,78 @@ export default function Ops() {
 
       {/* SECTION 1: Grouped Sessions Table */}
       <section aria-labelledby="lc" className="mb-6">
-        <div className="mb-2 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
+        <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <h2 id="lc" className="text-sm font-semibold text-fg">
               Sessions
             </h2>
-            <span className="rounded border border-line bg-sunken px-1.5 py-0.5 font-mono text-[11px] text-muted">
-              {filteredCalls.length}
+            <span className="rounded border border-line bg-sunken px-1.5 py-0.5 font-mono text-[11px] tabular-nums text-muted">
+              {visibleSessionCount}
+            </span>
+
+            {/* Status Group Filter Pills */}
+            <div
+              role="group"
+              aria-label="Filter sessions by status group"
+              className="inline-flex flex-wrap items-center gap-1 rounded-md border border-line bg-sunken p-0.5"
+            >
+              <button
+                type="button"
+                onClick={() => setGroupFilter("all")}
+                aria-pressed={activeGroupFilter === "all"}
+                className={`rounded px-2 py-0.5 text-[11px] font-medium transition-colors cursor-pointer ${
+                  activeGroupFilter === "all"
+                    ? "bg-card text-fg border border-line"
+                    : "text-muted hover:text-fg border border-transparent"
+                }`}
+              >
+                All groups ({filteredCalls.length})
+              </button>
+              {availableGroups.map((g) => (
+                <button
+                  key={g.key}
+                  type="button"
+                  onClick={() => setGroupFilter(activeGroupFilter === g.key ? "all" : g.key)}
+                  aria-pressed={activeGroupFilter === g.key}
+                  className={`rounded px-2 py-0.5 text-[11px] font-medium transition-colors cursor-pointer ${
+                    activeGroupFilter === g.key
+                      ? g.key === "attention"
+                        ? "bg-warn-bg text-warn-fg border border-warn-border font-semibold"
+                        : "bg-card text-fg border border-line font-semibold"
+                      : "text-muted hover:text-fg border border-transparent"
+                  }`}
+                >
+                  {g.label} ({g.rows.length})
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <label className="inline-flex items-center gap-1.5 text-[11px] text-muted">
+              <Icon name="arrow_up_down" size={12} />
+              <span className="sr-only">Sort session rows</span>
+              <select
+                aria-label="Sort session rows"
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value as typeof sortOrder)}
+                className="rounded-md border border-line bg-card px-2 py-1 text-xs font-medium text-fg focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
+              >
+                <option value="attention-first">Sort: Live &amp; attention first</option>
+                <option value="completed-first">Sort: Completed first</option>
+                <option value="newest">Sort: Newest started</option>
+                <option value="oldest">Sort: Oldest started</option>
+              </select>
+            </label>
+            <span className="hidden font-mono text-[11px] text-muted sm:inline">
+              Click a row to inspect timeline
             </span>
           </div>
-          <span className="font-mono text-[11px] text-muted">
-            Click a row to inspect timeline &amp; raw action IDs
-          </span>
         </div>
 
         {calls.loading ? (
           <Skeleton rows={4} />
-        ) : !filteredCalls.length ? (
+        ) : !visibleSessionCount ? (
           <Empty>No calls matching filter.</Empty>
         ) : (
           <Card className="overflow-hidden">
@@ -292,8 +401,8 @@ export default function Ops() {
                 </thead>
                 <tbody className="divide-y divide-line">
                   {sessionGroups.map((group) => (
-                    <Fragment key={group.label}>
-                      {sessionGroups.length > 1 && (
+                    <Fragment key={group.key}>
+                      {(sessionGroups.length > 1 || activeGroupFilter !== "all") && (
                         <tr className="bg-surface-container-low">
                           <td
                             colSpan={8}
