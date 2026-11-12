@@ -18,4 +18,4 @@ def test_holdout_set():
         assert len(pos) == 30 and len({r["expect"] for r in pos}) >= 25
         assert sum(r["id"].startswith("neg_ho_") for r in mine) == 10
     assert all(r["expect"] == "none" or r["expect"] in intents for r in rows)
-    assert all(r["text"].strip() and r["id"].startswith("ho_") for r in rows)
+    assert all(r["text"].strip() and r["id"].startswith(("ho_", "neg_ho_")) for r in rows)
