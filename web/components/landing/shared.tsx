@@ -1,5 +1,3 @@
-import Link from "next/link";
-import type { ReactNode } from "react";
 import s from "./landing.module.css";
 
 export const NAV = [
@@ -10,34 +8,20 @@ export const NAV = [
   ["#about", "About"],
 ] as const;
 
-const focus = "outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg";
-const btn = `${s.btn} inline-flex h-11 items-center justify-center rounded-xl px-5 text-base font-semibold ${focus}`;
-export const primaryBtn = `${btn} bg-primary text-primary-fg`;
-export const secondaryBtn = `${btn} border border-line bg-card text-fg`;
-export const navLink = `${s.btn} inline-flex h-11 items-center rounded-lg px-2 text-base text-muted hover:text-fg ${focus}`;
+export const wrap = "mx-auto w-full max-w-[1200px] px-5 sm:px-8";
+export const btnPrimary = `${s.btn} ${s.primary}`;
+export const btnSecondary = `${s.btn} ${s.secondary}`;
+export const btnGhostDark = `${s.btn} ${s.ghostDark}`;
+export const link = `${s.link} inline-flex min-h-11 items-center gap-1 font-medium`;
 
-export function Section({ id, alt, title, lead, aside, children }: { id: string; alt?: boolean; title: string; lead?: string; aside?: ReactNode; children?: ReactNode }) {
-  const head = (
-    <div>
-      <h2 className="serif max-w-3xl text-4xl text-fg lg:text-5xl">{title}</h2>
-      {lead && <p className="mt-5 max-w-[65ch] text-lg text-muted">{lead}</p>}
-      {children}
-    </div>
-  );
+export function Arrow({ className = "", down = false }: { className?: string; down?: boolean }) {
   return (
-    <section id={id} className={`scroll-mt-16 ${alt ? "border-y border-line bg-card" : "bg-sunken"}`}>
-      <div className="mx-auto flex max-w-6xl flex-col justify-center px-5 py-16 sm:px-8 lg:min-h-[min(900px,100dvh)]">
-        {aside ? <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">{head}{aside}</div> : head}
-      </div>
-    </section>
+    <svg aria-hidden width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className={`shrink-0 ${down ? "rotate-90" : ""} ${className}`}>
+      <path d="M5 12h14M13 6l6 6-6 6" />
+    </svg>
   );
 }
 
-export function SignInLinks({ className = "" }: { className?: string }) {
-  return (
-    <div className={`flex items-center gap-2 ${className}`}>
-      <Link href="/staff/login" className={`${navLink} hidden whitespace-nowrap sm:inline-flex`}>Staff sign in</Link>
-      <Link href="/login" className={`${primaryBtn} whitespace-nowrap px-3 text-sm sm:px-4 sm:text-base`}>Customer sign in</Link>
-    </div>
-  );
+export function Wordmark({ className = "" }: { className?: string }) {
+  return <span className={`text-[19px] font-semibold tracking-tight ${className}`}>LoanLoop</span>;
 }

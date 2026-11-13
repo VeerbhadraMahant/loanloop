@@ -1,22 +1,34 @@
 import Link from "next/link";
-import { Icon, Pill, Wordmark } from "@/components/ui";
+import { Icon } from "@/components/ui";
 import s from "./landing.module.css";
-import { NAV, SignInLinks, primaryBtn, secondaryBtn } from "./shared";
+import { Arrow, NAV, Wordmark, btnPrimary, btnSecondary, wrap } from "./shared";
+
+export function Announcement() {
+  return (
+    <div className={`${s.bgWine} ${s.white}`}>
+      <div className={`${wrap} flex flex-wrap items-center justify-center gap-x-4 gap-y-1 py-2 text-sm`}>
+        <p className="flex items-center gap-2"><Icon name="shield" size={14} />Demo with synthetic data. Sahyadri Finance Bank is a fictional lender.</p>
+        <a href="#how" className="inline-flex min-h-8 items-center rounded-lg border border-white/60 px-3 font-medium">How it works</a>
+      </div>
+    </div>
+  );
+}
 
 export function TopNav() {
   return (
-    <header className="sticky top-0 z-20 border-b border-line bg-bg">
-      <a href="#main" className="sr-only rounded-lg bg-primary px-4 py-2 text-primary-fg focus:not-sr-only focus:absolute focus:left-4 focus:top-2">Skip to content</a>
-      <nav aria-label="Main" className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-5 sm:px-8">
-        <div className="flex items-center gap-8">
-          <a href="#home" className="inline-flex h-11 items-center rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-primary"><Wordmark /></a>
-          <ul className="hidden items-center gap-1 lg:flex">
-            {NAV.map(([h, l]) => (
-              <li key={h}><a href={h} className="inline-flex h-11 items-center rounded-lg px-3 text-base text-muted outline-none hover:text-fg focus-visible:ring-2 focus-visible:ring-primary">{l}</a></li>
-            ))}
-          </ul>
+    <header className={s.header}>
+      <a href="#main" className={`sr-only rounded-lg px-4 py-2 focus:not-sr-only focus:absolute focus:left-4 focus:top-2 ${s.bgWine} ${s.white}`}>Skip to content</a>
+      <nav aria-label="Main" className={`${wrap} flex h-16 items-center justify-between gap-4`}>
+        <a href="#home" className={`${s.ink} inline-flex h-11 items-center`}><Wordmark /></a>
+        <ul className="hidden items-center gap-1 lg:flex">
+          {NAV.map(([h, l]) => (
+            <li key={h}><a href={h} className={`${s.navLink} inline-flex h-11 items-center px-3`}>{l}</a></li>
+          ))}
+        </ul>
+        <div className="flex items-center gap-2">
+          <Link href="/staff/login" className={`${s.navLink} hidden h-11 items-center px-3 sm:inline-flex`}>Staff sign in</Link>
+          <Link href="/login" className={`${btnSecondary} !px-4`}>Customer sign in</Link>
         </div>
-        <SignInLinks />
       </nav>
     </header>
   );
@@ -24,34 +36,39 @@ export function TopNav() {
 
 const d = (i: number) => ({ animationDelay: `${i * 50}ms` });
 
-function CallMock() {
+function Cards() {
   return (
-    <div className="mx-auto w-full max-w-[520px] overflow-hidden rounded-2xl border border-line bg-card shadow-sm lg:ml-auto lg:mr-0">
-      <div className="flex items-center justify-between border-b border-line px-4 py-3">
-        <span className="flex items-center gap-2 text-sm font-semibold text-fg"><Icon name="phone_in_talk" size={16} className="text-primary" />Voice desk call</span>
-        <span className="font-mono text-xs text-muted">02:14</span>
+    <div className="flex flex-col gap-4">
+      <div className={`${s.glass} flex items-center gap-2 self-end px-4 py-3 ${s.ink}`}>
+        <span className="flex items-center gap-2 text-sm font-semibold"><Icon name="verified" size={16} />Tier 1 verified</span>
+        <span className={`${s.bgLilac} rounded-lg px-2 py-0.5 text-xs font-semibold`}>Hinglish</span>
       </div>
-      <div className="space-y-4 p-5 text-base">
-        <div className="ml-auto max-w-[85%] rounded-2xl rounded-br-md bg-surface-container-high px-4 py-3 text-fg">
-          <p className="mb-1 font-mono text-xs text-muted">Caller</p>
-          <p>Maine is mahine ki EMI already pay kar di hai.</p>
+      <div className={`${s.glass} ${s.ink} overflow-hidden lg:ml-4`}>
+        <div className="flex items-center justify-between px-4 py-3">
+          <span className="flex items-center gap-2 text-sm font-semibold"><Icon name="phone_in_talk" size={16} />Voice desk call</span>
+          <span className={`${s.mono} text-xs`}>02:14</span>
         </div>
-        <div className="max-w-[92%] rounded-2xl rounded-bl-md border border-line bg-accent-soft px-4 py-3 text-fg">
-          <p className="mb-1 font-mono text-xs text-muted">Agent</p>
-          <p>Thank you. I can see a payment of ₹12,450 received on 5 Nov against your loan ending 2046. I have raised a reconciliation ticket and paused reminders.</p>
+        <div className="space-y-3 px-4 pb-4 text-[15px]">
+          <div className={`${s.bgCard} ml-auto max-w-[88%] rounded-2xl rounded-br-md px-4 py-3`}>
+            <p className={`${s.mono} mb-1 text-xs ${s.stone}`}>Caller</p>
+            <p>Maine is mahine ki EMI already pay kar di hai.</p>
+          </div>
+          <div className={`${s.tint} max-w-[94%] rounded-2xl rounded-bl-md px-4 py-3`}>
+            <p className={`${s.mono} mb-1 text-xs ${s.stone}`}>Agent</p>
+            <p>Thank you. I can see a payment of ₹12,450 received on 5 Nov against your loan ending 2046. I have raised a reconciliation ticket and paused reminders.</p>
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2 pt-1">
-          <Pill tone="ok" icon="verified">Tier 1 verified</Pill>
-          <Pill>Hinglish</Pill>
-        </div>
-        <p className="flex items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm text-muted"><Icon name="inbox" size={14} />SMS sent to registered mobile ••••7310</p>
       </div>
-      <div className="flex items-center gap-4 border-t border-line bg-sunken px-4 py-3">
+      <div className={`${s.glass} ${s.ink} p-4 sm:w-[88%] lg:w-[86%]`}>
+        <p className={`flex items-center gap-2 text-xs font-semibold ${s.stone}`}><Icon name="inbox" size={14} />SMS · Sahyadri Finance Bank</p>
+        <p className="mt-2 text-[15px]">Your account details were requested on a call. Full details: sent to your registered mobile ••••7310.</p>
+      </div>
+      <div className={`${s.glass} ${s.ink} flex items-center gap-4 self-end px-4 py-3 sm:w-[62%]`}>
         <span className="relative inline-flex size-11 shrink-0 items-center justify-center">
-          <span aria-hidden className={`${s.ring} absolute inset-0 rounded-full bg-primary`} />
-          <span className="relative inline-flex size-11 items-center justify-center rounded-full bg-primary text-primary-fg"><Icon name="mic" size={18} /></span>
+          <span aria-hidden className={`${s.ring} ${s.bgWine} absolute inset-0 rounded-full`} />
+          <span className={`${s.bgWine} ${s.white} relative inline-flex size-11 items-center justify-center rounded-full`}><Icon name="mic" size={18} /></span>
         </span>
-        <span className="text-sm text-muted">Hold to talk</span>
+        <span className="text-sm font-medium">Hold to talk</span>
       </div>
     </div>
   );
@@ -59,20 +76,52 @@ function CallMock() {
 
 export function Hero() {
   return (
-    <section id="home" className="bg-sunken">
-      <div className="mx-auto grid min-h-[min(900px,calc(100dvh-4rem))] max-w-6xl items-center gap-12 px-5 py-16 sm:px-8 lg:grid-cols-2">
-        <div>
-          <p className={`${s.rise} font-mono text-sm text-muted`} style={d(0)}>Demo · synthetic data</p>
-          <h1 className={`${s.rise} serif mt-4 text-5xl text-fg lg:text-6xl`} style={d(1)}>Voice service desk for loan borrowers</h1>
-          <p className={`${s.rise} mt-6 max-w-[52ch] text-lg text-muted`} style={d(2)}>
-            Borrowers call, speak in any of 11 Indian languages, and finish the request on the same call. The agent never takes a password, PIN or OTP.
-          </p>
-          <div className={`${s.rise} mt-8 flex flex-wrap gap-3`} style={d(3)}>
-            <Link href="/login" className={primaryBtn}>Customer sign in</Link>
-            <Link href="/staff/login" className={secondaryBtn}>Staff sign in</Link>
+    <section id="home" className="pt-4 sm:pt-6">
+      <div className={wrap}>
+        <div className={s.hero}>
+          <div aria-hidden className={`${s.glow} ${s.amber}`} />
+          <div aria-hidden className={`${s.glow} ${s.rose}`} />
+          <div aria-hidden className={`${s.glow} ${s.lilacGlow}`} />
+          <div className="grid gap-10 px-5 py-12 sm:px-10 lg:min-h-[680px] lg:grid-cols-[1.08fr_0.92fr] lg:items-center lg:gap-8 lg:px-12 lg:py-16">
+            <div>
+              <p className={`${s.rise} ${s.eyebrow} ${s.ink}`} style={d(0)}>Demo · synthetic data</p>
+              <h1 className={`${s.rise} ${s.display} ${s.ink} mt-5`} style={d(1)}>Voice service desk for loan borrowers</h1>
+              <p className={`${s.rise} ${s.ink} mt-6 max-w-[48ch] text-lg sm:text-xl`} style={d(2)}>
+                Borrowers call, speak in any of 11 Indian languages, and finish the request on the same call. The agent never takes a password, PIN or OTP.
+              </p>
+              <div className={`${s.rise} mt-8 flex flex-wrap gap-3`} style={d(3)}>
+                <Link href="/login" className={btnPrimary}>Customer sign in<Arrow /></Link>
+                <Link href="/staff/login" className={`${btnSecondary} !h-12`}>Staff sign in</Link>
+              </div>
+            </div>
+            <div className={s.rise} style={d(4)}><Cards /></div>
           </div>
         </div>
-        <div className={s.rise} style={d(4)}><CallMock /></div>
+      </div>
+    </section>
+  );
+}
+
+export function Facts() {
+  const cells = [
+    ["11", "Indian languages"],
+    ["23", "gateway actions"],
+    ["4", "security tiers"],
+    ["33 ms", "gateway p95 per action"],
+    ["Tier 3", "OTP, PIN and password never asked"],
+    ["Gnani", "Prisma speech-to-text and Timbre voices"],
+  ];
+  return (
+    <section aria-label="Key facts" className={`${s.bgCard} ${s.bBottom} mt-6 sm:mt-8 ${s.bTop}`}>
+      <div className={`${wrap} py-8`}>
+      <ul className={`${s.gridLines} ${s.bLine} grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6`}>
+        {cells.map(([f, l]) => (
+          <li key={f} className={`${s.bgCard} px-4 py-6`}>
+            <p className={`${s.mono} ${s.ink} text-[28px] font-medium leading-none`}>{f}</p>
+            <p className={`${s.stone} mt-2 text-sm`}>{l}</p>
+          </li>
+        ))}
+      </ul>
       </div>
     </section>
   );
