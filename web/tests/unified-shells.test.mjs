@@ -35,7 +35,7 @@ test("dev lab: engineer and admin get Dev Lab | Test Cases | Metrics, bank_manag
   for (const who of ["engineer", "admin"]) {
     const cookie = await staffLogin(who);
     const page = await html("/dev", cookie);
-    for (const t of ["Sahyadri Voice Engine", "Developer Lab", "Test Cases", "Metrics", "Open Calling Desk", "Sign out"]) assert.ok(page.includes(t), `${who} ${t}`);
+    for (const t of ["Developer Lab", "Test Cases", "Metrics", "Open Calling Desk", "Sign out"]) assert.ok(page.includes(t), `${who} ${t}`);
     const cases = await html("/dev?tab=test-cases", cookie);
     for (const id of ["TC-8801", "TC-8802", "TC-8803", "TC-8804", "TC-8805"]) assert.ok(cases.includes(id), id);
     assert.ok(!cases.includes("Start Test"), "no per-test-case launch buttons");

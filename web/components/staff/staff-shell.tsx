@@ -1,19 +1,16 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { CollectionsView } from "./collections-view";
 import { OpsView } from "./ops-view";
 import { SlideOver } from "@/components/calling-desk/slide-over";
 import CallApp from "@/app/call/call-app";
-import { ThemeSelector } from "@/components/sidebar-nav";
-import { SignOut, useMe } from "@/components/auth";
+import { SidebarLayout } from "@/components/sidebar-nav";
 
 type StaffTab = "collections" | "ops";
 
 export function StaffShell({ initialTab = "collections" }: { initialTab?: StaffTab }) {
-  const me = useMe("staff");
   const tabParam = useSearchParams().get("tab");
   const [activeTab, setActiveTab] = useState<StaffTab>(tabParam === "ops" || tabParam === "collections" ? tabParam : initialTab);
   // Staff calls go through the outbound case path (/voice-out), never "as" a customer picked by name.
@@ -21,49 +18,9 @@ export function StaffShell({ initialTab = "collections" }: { initialTab?: StaffT
   const closeCallingDesk = () => setCaseId(null);
 
   return (
-    <div className="min-h-screen bg-bg flex flex-col justify-between selection:bg-primary/20">
-      {/* Top Application Header */}
-      <header className="border-b border-line bg-card/95 backdrop-blur-md sticky top-0 z-30">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-fg font-extrabold text-xs shadow-xs">
-                SFB
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5 truncate">
-                  <span className="text-xs font-bold text-fg tracking-tight">Sahyadri Finance Bank</span>
-                  <span className="hidden md:inline font-normal text-muted text-[11px]">| सह्याद्री फायनान्स बँक</span>
-                </div>
-                <div className="text-[10px] font-mono text-muted truncate">
-                  Bank Staff Operations Desk · RBI Recovery Standard
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 shrink-0">
-            {/* Operator Badge */}
-            <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-md border border-line bg-sunken text-xs font-mono">
-              <span className="w-1.5 h-1.5 rounded-full bg-ok-fg" />
-              <span className="font-semibold text-fg">{me?.name ?? "…"}</span>
-              {me && <span className="text-muted">· {me.role.replace("_", " ")}</span>}
-            </div>
-
-            <div className="w-36 hidden lg:block">
-              <ThemeSelector />
-            </div>
-
-            <Link href="/bank" className="px-2.5 py-1.5 rounded-md text-xs font-semibold border border-line bg-card hover:bg-sunken text-fg transition-colors">
-              Bank app
-            </Link>
-            <SignOut
-              door="staff"
-              className="px-2.5 py-1.5 rounded-md text-xs font-semibold border border-danger-border bg-danger-bg text-danger-fg hover:opacity-90 transition-opacity"
-            />
-          </div>
-        </div>
-
+    <SidebarLayout title="Staff desk" sub="Collections and live operations">
+    <div className="flex min-h-full flex-col justify-between selection:bg-primary/20">
+      <div className="border-b border-line bg-card">
         {/* Console Top Tab Navigation */}
         <div className="border-t border-line/60 bg-sunken/40">
           <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-2">
@@ -99,7 +56,7 @@ export function StaffShell({ initialTab = "collections" }: { initialTab?: StaffT
             </button>
           </div>
         </div>
-      </header>
+      </div>
 
       {/* Main Tab Workspace */}
       <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full">
@@ -135,6 +92,7 @@ export function StaffShell({ initialTab = "collections" }: { initialTab?: StaffT
         </div>
       </footer>
     </div>
+    </SidebarLayout>
   );
 }
 

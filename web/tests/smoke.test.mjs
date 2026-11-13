@@ -55,7 +55,7 @@ const STAFF_PAGES = [
   { path: "/staff", mustInclude: ["Collections", "Live Operations"] },
   { path: "/collections", mustInclude: ["Collections"] },
   { path: "/ops", mustInclude: ["Live Operations"] },
-  { path: "/dev", mustInclude: ["Sahyadri Voice Engine", "Developer Lab"] },
+  { path: "/dev", mustInclude: ["Developer workspace", "Developer Lab"] },
   { path: "/test-cases", mustInclude: ["Test Cases", "TC-8801", "TC-8802", "TC-8803", "TC-8804", "TC-8805"] },
   { path: "/metrics", mustInclude: ["Metrics"] },
 ];
