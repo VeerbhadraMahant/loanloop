@@ -1,0 +1,25 @@
+@keyframes rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes ring {
+  0% { opacity: 0.45; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.7); }
+}
+.rise { opacity: 0; animation: rise 420ms var(--ease-out) forwards; }
+.ring { animation: ring 1800ms var(--ease-out) infinite; }
+.lift { transition: transform 160ms var(--ease-out), border-color 160ms var(--ease-out); }
+.btn { transition: transform 160ms var(--ease-out), background-color 160ms var(--ease-out), border-color 160ms var(--ease-out); }
+.btn:active { transform: scale(0.97); }
+.lift:active { transform: scale(0.98); }
+@media (hover: hover) and (pointer: fine) {
+  .lift:hover { transform: translateY(-2px); border-color: var(--primary); }
+  .lift:active:hover { transform: scale(0.98); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rise { opacity: 1; animation: none; }
+  .ring { animation: none; opacity: 0; }
+  .lift, .btn { transition: none; }
+  .btn:active, .lift:active { transform: none; }
+  .lift:hover { transform: none; }
+}
