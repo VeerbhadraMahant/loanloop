@@ -1,4 +1,3 @@
-import s from "./landing.module.css";
 
 export const NAV = [
   ["#how", "How it works"],
@@ -9,10 +8,10 @@ export const NAV = [
 ] as const;
 
 export const wrap = "mx-auto w-full max-w-[1200px] px-5 sm:px-8";
-export const btnPrimary = `${s.btn} ${s.primary}`;
-export const btnSecondary = `${s.btn} ${s.secondary}`;
-export const btnGhostDark = `${s.btn} ${s.ghostDark}`;
-export const link = `${s.link} inline-flex min-h-11 items-center gap-1 font-medium`;
+export const btnPrimary = `${"ll-btn"} ${"ll-primary"}`;
+export const btnSecondary = `${"ll-btn"} ${"ll-secondary"}`;
+export const btnGhostDark = `${"ll-btn"} ${"ll-ghostDark"}`;
+export const link = `${"ll-link"} inline-flex min-h-11 items-center gap-1 font-medium`;
 
 export function Arrow({ className = "", down = false }: { className?: string; down?: boolean }) {
   return (

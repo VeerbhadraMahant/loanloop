@@ -1,0 +1,120 @@
+/* Landing is a fixed light page: its own tokens, independent of the app's data-theme. */
+.ll-root {
+  --ll-canvas: #f2f0eb;
+  --ll-card: #ffffff;
+  --ll-ink: #292827;
+  --ll-stone: #666666;
+  --ll-line: #e3e3e2;
+  --ll-wine: #421d24;
+  --ll-violet: #714cb6;
+  --ll-lilac: #d4c7ff;
+  --ll-lagoon: #0c4243;
+  --ll-focus: var(--ll-ink);
+  background: var(--ll-canvas);
+  color: var(--ll-ink);
+  font-size: 16px;
+  line-height: 1.5;
+  overflow-x: clip;
+}
+.ll-dark { --ll-focus: #ffffff; }
+.ll-root :focus-visible { outline: 2px solid var(--ll-focus); outline-offset: 2px; border-radius: 8px; }
+
+/* colour utilities (kept here so Tailwind never has to guess width vs colour) */
+.ll-bgCanvas { background: var(--ll-canvas); }
+.ll-bgCard { background: var(--ll-card); }
+.ll-bgWine { background: var(--ll-wine); }
+.ll-bgLagoon { background: var(--ll-lagoon); }
+.ll-bgLilac { background: var(--ll-lilac); }
+.ll-tint { background: color-mix(in srgb, var(--ll-lilac) 35%, var(--ll-card)); }
+.ll-ink { color: var(--ll-ink); }
+.ll-stone { color: var(--ll-stone); }
+.ll-white { color: #ffffff; }
+.ll-white70 { color: rgba(255, 255, 255, 0.7); }
+.ll-white80 { color: rgba(255, 255, 255, 0.8); }
+.ll-bLine { border: 1px solid var(--ll-line); }
+.ll-bTop { border-top: 1px solid var(--ll-line); }
+.ll-bBottom { border-bottom: 1px solid var(--ll-line); }
+.ll-bInk { border: 1px solid var(--ll-ink); }
+.ll-card { background: var(--ll-card); border: 1px solid var(--ll-line); border-radius: 16px; }
+.ll-divide > * + * { border-top: 1px solid var(--ll-line); }
+.ll-hairline { background: var(--ll-line); }
+.ll-gridLines { background: var(--ll-line); gap: 1px; }
+
+/* stat tiles: top hairline on each, vertical hairlines on desktop */
+@media (min-width: 1024px) {
+  .ll-stats > li { border-top: 0; border-left: 1px solid var(--ll-line); padding-left: 24px; }
+  .ll-stats > li:first-child { border-left: 0; padding-left: 0; }
+}
+
+/* type */
+.ll-display { font-weight: 500; font-size: clamp(40px, 6vw, 64px); line-height: 0.96; letter-spacing: -0.028em; }
+.ll-h2 { font-weight: 500; font-size: clamp(32px, 4.4vw, 48px); line-height: 1.05; letter-spacing: -0.027em; }
+.ll-sub { font-weight: 500; font-size: 26px; line-height: 1.2; letter-spacing: -0.015em; }
+.ll-figure { font-weight: 500; letter-spacing: -0.028em; line-height: 1; white-space: nowrap; }
+.ll-mono { font-family: var(--font-mono); }
+.ll-eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
+
+/* buttons and links */
+.ll-btn { transition: transform 160ms var(--ease-out), background-color 160ms var(--ease-out), border-color 160ms var(--ease-out); }
+.ll-btn:active { transform: scale(0.97); }
+.ll-primary { background: var(--ll-wine); color: #ffffff; border-radius: 16px; height: 48px; padding: 0 24px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; }
+.ll-secondary { background: var(--ll-lilac); color: var(--ll-ink); border: 1px solid var(--ll-ink); border-radius: 8px; height: 44px; padding: 0 20px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; }
+.ll-ghostDark { color: #ffffff; border: 1px solid #ffffff; border-radius: 8px; height: 44px; padding: 0 20px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; }
+.ll-link { color: var(--ll-violet); text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px; transition: text-decoration-color 200ms var(--ease-out); }
+.ll-navLink { color: var(--ll-ink); font-weight: 500; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 6px; transition: text-decoration-color 200ms var(--ease-out); }
+.ll-footLink { color: rgba(255, 255, 255, 0.7); text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 4px; transition: text-decoration-color 200ms var(--ease-out), color 200ms var(--ease-out); }
+.ll-lift { transition: transform 160ms var(--ease-out); }
+.ll-lift:active { transform: scale(0.98); }
+@media (hover: hover) and (pointer: fine) {
+  .ll-link:hover, .ll-navLink:hover, .ll-footLink:hover { text-decoration-color: currentColor; }
+  .ll-footLink:hover { color: #ffffff; }
+  .ll-lift:hover { transform: translateY(-2px); }
+  .ll-lift:active:hover { transform: scale(0.98); }
+}
+
+/* header */
+.ll-header { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--ll-canvas) 75%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-bottom: 1px solid var(--ll-line); }
+
+/* atmosphere: decorative gradient glows */
+.ll-hero { position: relative; overflow: hidden; border-radius: 24px; background: #f7efe6; isolation: isolate; }
+.ll-glow { position: absolute; border-radius: 50%; filter: blur(70px); pointer-events: none; z-index: -1; }
+.ll-amber { left: -10%; bottom: -25%; width: 65%; height: 75%; background: radial-gradient(circle, #f2b07c, transparent 70%); opacity: 0.6; }
+.ll-rose { right: -8%; top: 5%; width: 55%; height: 75%; background: radial-gradient(circle, #c4606f, transparent 70%); opacity: 0.45; }
+.ll-lilacGlow { left: 22%; top: -35%; width: 55%; height: 65%; background: radial-gradient(circle, #d4c7ff, transparent 70%); opacity: 0.6; }
+.ll-banner { position: relative; overflow: hidden; isolation: isolate; }
+.ll-violetGlow { left: -8%; top: -20%; width: 55%; height: 90%; background: radial-gradient(circle, #8a63d2, transparent 70%); opacity: 0.4; }
+.ll-blueGlow { right: 10%; bottom: -30%; width: 50%; height: 80%; background: radial-gradient(circle, #8fb0ff, transparent 70%); opacity: 0.5; }
+.ll-pinkGlow { right: -8%; top: -25%; width: 40%; height: 80%; background: radial-gradient(circle, #f29ac0, transparent 70%); opacity: 0.45; }
+
+.ll-glass { background: rgba(255, 255, 255, 0.85); border: 1px solid rgba(255, 255, 255, 0.4); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-radius: 16px; }
+
+/* security band decorative rectangles and glass rows */
+.ll-rect { position: absolute; border-radius: 16px; opacity: 0.45; pointer-events: none; }
+.ll-rectLilac { background: var(--ll-lilac); }
+.ll-rectBlue { background: #8fb0ff; }
+.ll-rectRose { background: #e58aa0; }
+.ll-tier { background: rgba(12, 66, 67, 0.82); border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 16px; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); color: #ffffff; }
+.ll-tierNever { background: rgba(12, 66, 67, 0.9); border: 2px solid #ffffff; }
+
+/* faq */
+.ll-chev { transition: transform 180ms var(--ease-out); }
+.ll-faq[open] .ll-chev { transform: rotate(180deg); }
+.ll-faq summary::-webkit-details-marker { display: none; }
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes ring {
+  0% { opacity: 0.45; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.7); }
+}
+.ll-rise { opacity: 0; animation: rise 420ms var(--ease-out) forwards; }
+.ll-ring { animation: ring 1800ms var(--ease-out) infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ll-rise { opacity: 1; animation: none; }
+  .ll-ring { animation: none; opacity: 0; }
+  .ll-btn, .ll-lift, .ll-link, .ll-navLink, .ll-footLink, .ll-chev { transition: none; }
+  .ll-btn:active, .ll-lift:active, .ll-lift:hover { transform: none; }
+}
