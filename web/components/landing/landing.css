@@ -15,6 +15,7 @@
   font-size: 16px;
   line-height: 1.5;
   overflow-x: clip;
+  isolation: isolate; /* glows sit at z-index -1, above this background and below all content */
   padding-bottom: 12px;
 }
 .ll-dark { --ll-focus: #ffffff; }
@@ -66,24 +67,21 @@
 .ll-header { background: rgba(242, 240, 235, 0.78); border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 16px; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
 
 /* panels: rounded gradient surface, glows clipped inside */
-.ll-panel { position: relative; overflow: hidden; isolation: isolate; border-radius: 20px; }
-@media (min-width: 640px) { .ll-panel { border-radius: 24px; } }
+/* full-bleed: light sections are transparent so their glows blend into one page background; only the dark bands clip */
+.ll-panel { position: relative; }
+.ll-dark { overflow: hidden; isolation: isolate; }
 .ll-glow { position: absolute; border-radius: 50%; filter: blur(70px); pointer-events: none; z-index: -1; }
 
 /* tones: warm base plus three glows each (g1 lower left, g2 right, g3 top) */
-.ll-tone-dawn { background: #f7efe6; }
 .ll-tone-dawn .ll-g1 { left: -10%; bottom: -25%; width: 65%; height: 75%; background: radial-gradient(circle, #f2b07c, transparent 70%); opacity: 0.55; }
 .ll-tone-dawn .ll-g2 { right: -8%; top: 5%; width: 55%; height: 75%; background: radial-gradient(circle, #c4606f, transparent 70%); opacity: 0.42; }
 .ll-tone-dawn .ll-g3 { left: 22%; top: -35%; width: 55%; height: 65%; background: radial-gradient(circle, #d4c7ff, transparent 70%); opacity: 0.6; }
-.ll-tone-blush { background: #f9ece8; }
 .ll-tone-blush .ll-g1 { right: -10%; top: -25%; width: 55%; height: 70%; background: radial-gradient(circle, #e58aa0, transparent 70%); opacity: 0.4; }
 .ll-tone-blush .ll-g2 { left: -10%; bottom: -30%; width: 60%; height: 70%; background: radial-gradient(circle, #f6b99a, transparent 70%); opacity: 0.5; }
 .ll-tone-blush .ll-g3 { left: 35%; bottom: -35%; width: 40%; height: 55%; background: radial-gradient(circle, #f4c6cf, transparent 70%); opacity: 0.45; }
-.ll-tone-mist { background: #f1eef4; }
 .ll-tone-mist .ll-g1 { left: -10%; top: -25%; width: 55%; height: 70%; background: radial-gradient(circle, #d4c7ff, transparent 70%); opacity: 0.6; }
 .ll-tone-mist .ll-g2 { right: -10%; bottom: -30%; width: 55%; height: 75%; background: radial-gradient(circle, #a9c2ff, transparent 70%); opacity: 0.45; }
 .ll-tone-mist .ll-g3 { right: 15%; top: -35%; width: 35%; height: 50%; background: radial-gradient(circle, #c9b8f5, transparent 70%); opacity: 0.35; }
-.ll-tone-sand { background: #f6f0e3; }
 .ll-tone-sand .ll-g1 { left: -10%; bottom: -30%; width: 55%; height: 70%; background: radial-gradient(circle, #f2c58a, transparent 70%); opacity: 0.4; }
 .ll-tone-sand .ll-g2 { right: -5%; top: -25%; width: 50%; height: 65%; background: radial-gradient(circle, #f1dc9a, transparent 70%); opacity: 0.5; }
 .ll-tone-sand .ll-g3 { right: 20%; bottom: -35%; width: 35%; height: 50%; background: radial-gradient(circle, #f1dc9a, transparent 70%); opacity: 0.35; }
