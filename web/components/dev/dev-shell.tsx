@@ -21,8 +21,8 @@ export function DevShell({ initialTab = "lab" }: { initialTab?: DevTab }) {
   const me = useMe("staff");
   const tabParam = useSearchParams().get("tab");
   const [activeTab, setActiveTab] = useState<DevTab>(tabParam === "lab" || tabParam === "test-cases" || tabParam === "metrics" ? tabParam : initialTab);
-  const [scenario, setScenario] = useState<{ customer: string; id?: string } | null>(null);
-  const closeCallingDesk = () => setScenario(null);
+  const [deskOpen, setDeskOpen] = useState(false);
+  const closeCallingDesk = () => setDeskOpen(false);
 
   return (
     <div className="min-h-screen bg-bg flex flex-col justify-between selection:bg-primary/20">
@@ -50,7 +50,7 @@ export function DevShell({ initialTab = "lab" }: { initialTab?: DevTab }) {
             {/* Open Calling Desk Shortcut */}
             <button
               type="button"
-              onClick={() => setScenario({ customer: "priya" })}
+              onClick={() => setDeskOpen(true)}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-primary text-primary-fg hover:opacity-90 active:scale-95 transition-all shadow-xs cursor-pointer"
             >
               <Icon name="support_agent" size={13} />
@@ -133,7 +133,7 @@ export function DevShell({ initialTab = "lab" }: { initialTab?: DevTab }) {
         )}
 
         {activeTab === "test-cases" && (
-          <TestCasesView onStartTest={(customer, id) => setScenario({ customer, id })} />
+          <TestCasesView />
         )}
 
         {activeTab === "metrics" && (
@@ -142,15 +142,15 @@ export function DevShell({ initialTab = "lab" }: { initialTab?: DevTab }) {
       </main>
 
       <SlideOver
-        open={scenario !== null}
+        open={deskOpen}
         onClose={closeCallingDesk}
-        title={scenario?.id ? `Calling Desk · ${scenario.id}` : "Calling Desk"}
+        title="Calling Desk"
         sub="Voice pipeline inspector and per-turn latency"
         width="wide"
       >
-        {scenario && (
+        {deskOpen && (
           <div className="p-4">
-            <LiveCall cfg={DESK_CFG} customer={scenario.customer} />
+            <LiveCall cfg={DESK_CFG} customer="priya" />
           </div>
         )}
       </SlideOver>

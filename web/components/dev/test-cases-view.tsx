@@ -1,12 +1,11 @@
 "use client";
 
 import React from "react";
-import { Card, Icon, Pill } from "@/components/ui";
+import { Card, Pill } from "@/components/ui";
 
 const testCases = [
   {
     id: "TC-8801",
-    customerKey: "priya",
     name: "Priya Deshmukh",
     subtitle: "Inbound Home Loan Servicing",
     badge: "Inbound",
@@ -21,7 +20,6 @@ const testCases = [
   },
   {
     id: "TC-8802",
-    customerKey: "ramesh",
     name: "Ramesh Patil",
     subtitle: "Outbound Collections & PTP",
     badge: "Outbound",
@@ -36,7 +34,6 @@ const testCases = [
   },
   {
     id: "TC-8803",
-    customerKey: "sunita",
     name: "Sunita Kulkarni",
     subtitle: "Financial Hardship Review",
     badge: "Inbound",
@@ -51,7 +48,6 @@ const testCases = [
   },
   {
     id: "TC-8804",
-    customerKey: "vikram",
     name: "Vikram Malhotra",
     subtitle: "Spoofed Identity & Red-Team Probe",
     badge: "Adversary",
@@ -66,7 +62,6 @@ const testCases = [
   },
   {
     id: "TC-8805",
-    customerKey: "priya",
     name: "Foreclosure & Statement Inquiry",
     subtitle: "Prepayment & Payoff Quote",
     badge: "Servicing",
@@ -81,11 +76,7 @@ const testCases = [
   },
 ];
 
-export function TestCasesView({
-  onStartTest,
-}: {
-  onStartTest?: (customerKey: string, scenarioId: string) => void;
-}) {
+export function TestCasesView() {
   return (
     <div className="space-y-6">
       {/* Intro Header */}
@@ -148,14 +139,6 @@ export function TestCasesView({
 
             <div className="mt-4 flex items-center justify-between border-t border-line pt-3">
               <span className="font-mono text-[11px] text-muted">Seeded ledger state</span>
-              <button
-                type="button"
-                onClick={() => onStartTest?.(tc.customerKey, tc.id)}
-                className="px-3 py-1.5 rounded-lg text-xs font-bold bg-primary text-primary-fg hover:opacity-90 active:scale-95 transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
-              >
-                <Icon name="support_agent" size={13} />
-                <span>Start Test</span>
-              </button>
             </div>
           </Card>
         ))}
