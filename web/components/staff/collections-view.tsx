@@ -167,79 +167,129 @@ export function CollectionsView({ onLaunchCall }: { onLaunchCall: (caseId: numbe
             />
           </div>
 
-          {/* DPD Bucket Distribution Bar */}
-          <Card className="p-4">
-            <div className="mb-2 flex items-center justify-between text-xs">
-              <span className="font-medium text-fg">DPD Bucket Distribution</span>
-              <span className="font-mono text-muted">Total Overdue: {inr(cases.reduce((s, c) => s + c.overdue_amount, 0))}</span>
-            </div>
-            <div className="grid grid-cols-5 gap-2">
-              {bucket.map(({ b, n, amt }) => (
-                <div key={b} className="space-y-1">
-                  <div className="h-10 rounded bg-sunken p-1 flex flex-col justify-end">
-                    <div
-                      className="rounded bg-primary/70 transition-all"
-                      style={{ height: `${Math.round((amt / maxAmt) * 100)}%`, minHeight: amt > 0 ? "4px" : "0" }}
-                    />
-                  </div>
-                  <div className="flex justify-between text-[11px] font-mono">
-                    <span className="text-muted">{b}</span>
-                    <span className="font-medium text-fg">{n}</span>
-                  </div>
-                  <div className="text-[10px] font-mono text-muted truncate">{inr(amt)}</div>
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          {/* Automated Dialer Queue */}
-          <section className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-semibold text-fg">Dialer Queue ({sortedQueue.length})</h3>
-                <p className="text-[11px] text-muted">
-                  Click column headers to sort · hover or focus a row to launch call
-                </p>
+          {/* Bucket Distribution + RTP Breakdown */}
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+            <section aria-labelledby="bk" className="lg:col-span-8">
+              <div className="mb-2 flex items-center justify-between">
+                <h2 id="bk" className="text-sm font-semibold text-fg">
+                  Overdue by DPD Bucket
+                </h2>
+                <span className="font-mono text-[11px] text-muted">
+                  {bucket.filter((x) => x.n > 0).length} of {bucket.length} buckets active
+                </span>
               </div>
+              <Card className="divide-y divide-line">
+                {bucket.map(({ b, n, amt }) => {
+                  const pctWidth = n === 0 ? 0 : Math.max(4, (amt / maxAmt) * 100);
+                  return (
+                    <div
+                      key={b}
+                      className={`grid grid-cols-[4.5rem_1fr_11rem] items-center gap-3 px-3.5 py-2 font-mono text-xs ${
+                        n === 0 ? "text-muted/60" : "text-fg"
+                      }`}
+                    >
+                      <span className="font-semibold">DPD {b}</span>
+                      <div className="h-2 w-full overflow-hidden rounded-sm bg-sunken">
+                        {pctWidth > 0 && (
+                          <div
+                            className="h-full bg-primary transition-all duration-300"
+                            style={{ width: `${pctWidth}%` }}
+                          />
+                        )}
+                      </div>
+                      <span className="text-right">
+                        {n === 0 ? (
+                          <span className="text-[11px] text-muted">0 cases</span>
+                        ) : (
+                          <>
+                            <span className="text-muted">{n} cases · </span>
+                            <strong className="font-semibold text-fg">{inr(amt)}</strong>
+                          </>
+                        )}
+                      </span>
+                    </div>
+                  );
+                })}
+              </Card>
+            </section>
+
+            <section aria-labelledby="rtp-reasons" className="lg:col-span-4 flex flex-col">
+              <h2 id="rtp-reasons" className="mb-2 text-sm font-semibold text-fg">
+                RTPs by Reason
+              </h2>
+              {Object.keys(byReason).length === 0 ? (
+                <Empty icon="inbox">No refusals recorded across open cases.</Empty>
+              ) : (
+                <Card className="p-3.5 flex-1">
+                  <ul className="flex flex-wrap gap-1.5">
+                    {Object.entries(byReason).map(([k, n]) => (
+                      <li key={k}>
+                        <Pill tone="warn">
+                          {k.replace(/_/g, " ")}: {n}
+                        </Pill>
+                      </li>
+                    ))}
+                  </ul>
+                </Card>
+              )}
+            </section>
+          </div>
+
+          {/* Sortable, Sticky-Header Automated Call Queue */}
+          <section aria-labelledby="q">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <h2 id="q" className="text-sm font-semibold text-fg">
+                  Recovery Dialer Call Queue
+                </h2>
+                <span className="rounded border border-line bg-sunken px-1.5 py-0.5 font-mono text-[11px] text-muted">
+                  {queue.length}
+                </span>
+              </div>
+              <span className="text-[11px] text-muted">
+                Click column headers to sort
+              </span>
             </div>
-            {!sortedQueue.length ? (
-              <Empty>Dialer queue is clear. No calls pending.</Empty>
+
+            {!queue.length ? (
+              <Empty>Queue is empty. Run jobs to rebuild it from open cases.</Empty>
             ) : (
               <Card className="overflow-hidden">
                 <div className="max-h-[480px] overflow-auto">
-                  <table className="num w-full min-w-[720px] border-collapse text-left text-xs">
+                  <table className="num w-full min-w-[840px] border-collapse text-left text-xs">
                     <thead className="sticky top-0 z-10 border-b border-line bg-sunken">
                       <tr>
-                        <SortHeader label="Pri" k="priority" sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+                        <SortHeader label="Priority" k="priority" sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
                         <SortHeader label="Customer" k="customer" sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+                        <th className={th}>Loan ID</th>
                         <SortHeader label="DPD" k="dpd" sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
                         <th className={th}>Bucket</th>
                         <SortHeader label="Overdue" k="overdue_amount" sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
                         <SortHeader label="Attempts" k="attempts" sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
                         <SortHeader label="Next Action" k="next_action_at" sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
-                        <th className={`${th} text-right`}></th>
+                        <th className={`${th} text-right`}>Launch</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-line">
                       {sortedQueue.map((c) => (
-                        <tr key={c.id} className="group hover:bg-sunken/70 transition-colors">
-                          <td className={`${td} font-mono font-semibold text-muted`}>#{c.priority}</td>
-                          <td className={`${td} font-sans font-medium text-fg`}>
-                            <div className="truncate max-w-[140px]">{c.customer}</div>
-                            <div className="font-mono text-[10px] text-muted">{c.loan}</div>
-                          </td>
-                          <td className={`${td} font-mono font-semibold ${c.dpd > 60 ? "text-danger-fg" : "text-fg"}`}>{c.dpd}d</td>
+                        <tr key={c.id} className="group hover:bg-sunken/70 focus-within:bg-sunken/70 transition-colors">
+                          <td className={`${td} font-semibold text-fg`}>{c.priority}</td>
+                          <td className={`${td} font-sans font-medium text-fg`}>{c.customer}</td>
+                          <td className={`${td} font-mono text-muted`}>{c.loan}</td>
                           <td className={td}>
-                            <Pill tone={c.bucket === "90+" ? "danger" : c.bucket === "61-90" ? "warn" : "neutral"}>
-                              {c.bucket}
-                            </Pill>
+                            <span className="rounded border border-line bg-sunken px-1.5 py-0.5 font-mono">
+                              {c.dpd} d
+                            </span>
+                          </td>
+                          <td className={td}>
+                            <Pill tone="warn">{c.bucket}</Pill>
                           </td>
                           <td className={`${td} font-semibold text-fg`}>{inr(c.overdue_amount)}</td>
-                          <td className={`${td} font-mono text-muted`}>{c.attempts}</td>
-                          <td className={`${td} font-mono text-muted`}>{when(c.next_action_at)}</td>
+                          <td className={`${td} text-muted`}>{c.attempts}</td>
+                          <td className={`${td} text-muted`}>{when(c.next_action_at)}</td>
                           <td className={`${td} text-right`}>
-                            <Button small className="font-semibold cursor-pointer" onClick={() => onLaunchCall(c.id)}>
-                              <Icon name="support_agent" size={13} />
+                            <Button small variant="secondary" className="text-xs font-medium cursor-pointer" onClick={() => onLaunchCall(c.id)}>
+                              <Icon name="phone_forwarded" size={12} />
                               <span>Call</span>
                             </Button>
                           </td>
@@ -252,36 +302,40 @@ export function CollectionsView({ onLaunchCall }: { onLaunchCall: (caseId: numbe
             )}
           </section>
 
-          {/* Bottom Split: PTPs & RTPs */}
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <section className="space-y-2">
-              <h3 className="text-sm font-semibold text-fg">Promises to Pay ({ptps.length})</h3>
+          {/* Promises to Pay & Refusals to Pay */}
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+            <section aria-labelledby="p">
+              <h2 id="p" className="mb-2 text-sm font-semibold text-fg">
+                Promises to Pay (PTP)
+              </h2>
               {!ptps.length ? (
-                <Empty>No promises to pay recorded yet.</Empty>
+                <Empty>No promises recorded yet.</Empty>
               ) : (
-                <Table head={["Customer", "Amount", "Promised Date", "Status", "Recorded"]} min={480}>
+                <Table head={["Customer", "Loan", "Amount", "Promised", "Type", "Status", "Paid", "Dir"]} min={560}>
                   {ptps.map((p) => (
                     <tr key={p.id} className="hover:bg-sunken/70 transition-colors">
                       <td className={`${td} font-sans font-medium text-fg`}>{p.customer}</td>
+                      <td className={`${td} font-mono text-muted`}>{p.loan}</td>
                       <td className={`${td} font-semibold text-fg`}>{inr(p.amount)}</td>
-                      <td className={`${td} font-mono text-fg`}>{day(p.promised_date)}</td>
+                      <td className={td}>{day(p.promised_date)}</td>
                       <td className={td}>
-                        <Pill tone={ptpTone[p.status]}>{p.status.toUpperCase()}</Pill>
+                        <Pill tone={p.amount_tag === "full" ? "ok" : "warn"}>{p.amount_tag}</Pill>
                       </td>
-                      <td className={td}>{when(p.created_at)}</td>
+                      <td className={td}>
+                        <Pill tone={ptpTone[p.status]}>{p.status}</Pill>
+                      </td>
+                      <td className={`${td} text-muted`}>{p.paid_amount == null ? "-" : inr(p.paid_amount)}</td>
+                      <td className={`${td} font-mono text-[11px] uppercase`}>{p.direction}</td>
                     </tr>
                   ))}
                 </Table>
               )}
             </section>
 
-            <section className="space-y-2">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-fg">Refusals to Pay ({rtps.length})</h3>
-                <span className="font-mono text-[11px] text-muted">
-                  Reasons: {Object.entries(byReason).map(([k, v]) => `${k}=${v}`).join(", ") || "none"}
-                </span>
-              </div>
+            <section aria-labelledby="r">
+              <h2 id="r" className="mb-2 text-sm font-semibold text-fg">
+                Refusals to Pay (RTP)
+              </h2>
               {!rtps.length ? (
                 <Empty>No refusals recorded yet.</Empty>
               ) : (
