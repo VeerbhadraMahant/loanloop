@@ -1,8 +1,8 @@
 "use client";
 
 import React from "react";
-import { useSession } from "@/lib/auth/auth-context";
-import { SupportedLang } from "@/lib/auth/auth-types";
+import { useSession } from "@/lib/user/session";
+import { SupportedLang } from "@/lib/user/session";
 
 interface LanguageSelectorProps {
   layout?: "segmented" | "cards";

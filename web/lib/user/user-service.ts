@@ -2,7 +2,7 @@
 
 import { get, post, Approval, Sms } from "@/lib/api";
 
-const VOICE_BASE = process.env.NEXT_PUBLIC_VOICE_URL ?? "/vx";
+const VOICE_BASE = "/vx"; // same proxy /call uses: it forwards the ll_cust session cookie
 
 export interface VoiceTurnResponse {
   user_text?: string;
@@ -15,18 +15,18 @@ export interface VoiceTurnResponse {
   ended?: boolean;
 }
 
-export async function fetchUserSms(customerRef: string): Promise<Sms[]> {
+export async function fetchUserSms(): Promise<Sms[]> {
   try {
-    return await get<Sms[]>(`/phone/${encodeURIComponent(customerRef)}/sms`);
+    return await get<Sms[]>("/phone/me/sms");
   } catch (err) {
     console.warn("fetchUserSms error:", err);
     return [];
   }
 }
 
-export async function fetchUserApprovals(customerRef: string): Promise<Approval[]> {
+export async function fetchUserApprovals(): Promise<Approval[]> {
   try {
-    return await get<Approval[]>(`/phone/${encodeURIComponent(customerRef)}/approvals`);
+    return await get<Approval[]>("/phone/me/approvals");
   } catch (err) {
     console.warn("fetchUserApprovals error:", err);
     return [];
@@ -34,12 +34,11 @@ export async function fetchUserApprovals(customerRef: string): Promise<Approval[
 }
 
 export async function respondToApproval(
-  customerRef: string,
   approvalId: string | number,
   decision: "approve" | "deny"
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await post(`/phone/${encodeURIComponent(customerRef)}/approvals/${encodeURIComponent(String(approvalId))}/${decision}`);
+    await post(`/phone/me/approvals/${encodeURIComponent(String(approvalId))}/${decision}`);
     return { success: true };
   } catch (err) {
     return {
@@ -50,18 +49,13 @@ export async function respondToApproval(
 }
 
 export async function startVoiceSession(
-  customerRef: string,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _language?: string
+  customerKey: string
 ): Promise<{ call_id: string; greeting: string; audio_b64?: string }> {
   const res = await fetch(`${VOICE_BASE}/calls?stream=1`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Origin: window.location.origin,
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      customer: customerRef,
+      customer: customerKey,
       tts: true,
     }),
   });
@@ -79,20 +73,13 @@ export async function startVoiceSession(
 
 export async function sendVoiceTurn(params: {
   call_id: string;
-  customerRef: string;
-  language?: string;
   user_text?: string;
   wavBlob?: Blob;
 }): Promise<VoiceTurnResponse> {
   const isAudio = Boolean(params.wavBlob);
   const init: RequestInit = {
     method: "POST",
-    headers: {
-      Origin: window.location.origin,
-      ...(isAudio
-        ? { "Content-Type": "audio/wav" }
-        : { "Content-Type": "application/json" }),
-    },
+    headers: { "Content-Type": isAudio ? "audio/wav" : "application/json" },
     body: isAudio
       ? params.wavBlob
       : JSON.stringify({ text: params.user_text, tts: true }),

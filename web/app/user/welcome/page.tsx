@@ -9,7 +9,7 @@ export default function WelcomePage() {
   const { t } = useI18n();
 
   return (
-    <UserShell showNav={false} showDemoSwitcher={false} title="Sahyadri Finance Bank">
+    <UserShell showNav={false} title="Sahyadri Finance Bank">
       <div className="flex flex-col min-h-[calc(100vh-120px)] sm:min-h-[740px] justify-between py-4">
         {/* Top brand hero */}
         <div className="space-y-6 pt-4">

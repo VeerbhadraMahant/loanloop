@@ -17,19 +17,6 @@ const workspaces: {
   primary?: boolean;
 }[] = [
   {
-    href: "/call/priya",
-    title: "Calling Desk",
-    role: "Live voice & typed agent session with ledger grounding and phone sidecar",
-    icon: "support_agent",
-    primary: true,
-  },
-  {
-    href: "/user/home",
-    title: "User Console",
-    role: "Customer-facing smartphone view with call audio, SMS inbox, and Tier-2 approvals",
-    icon: "phone",
-  },
-  {
     href: "/ops",
     title: "Ops Console",
     role: "Live SSE call stream, session timeline, handover queue, and blocked threats",
@@ -46,24 +33,6 @@ const workspaces: {
     title: "Bank app",
     role: "Sahyadri Bank servicing & compliance console across calls, handovers, and requests",
     icon: "landmark",
-  },
-  {
-    href: "/metrics",
-    title: "Metrics & SLA",
-    role: "Gateway p50/p95/p99 latency targets (< 50 ms), load test telemetry, and STT accuracy",
-    icon: "gauge",
-  },
-  {
-    href: "/test-cases",
-    title: "Test Cases",
-    role: "Scenario presets for servicing, recovery, hardship escalation, and red-team probes",
-    icon: "list_checks",
-  },
-  {
-    href: "/dev",
-    title: "Developer Lab",
-    role: "Model/provider parameters, live call bench, and typed latency comparison",
-    icon: "sliders",
   },
 ];
 
@@ -101,13 +70,9 @@ export default function StaffOverview() {
               </p>
             </div>
             <div className="flex shrink-0 flex-wrap items-center gap-2">
-              <Button href="/call/priya" className="font-semibold">
+              <Button href="/collections" className="font-semibold">
                 <Icon name="support_agent" size={15} />
-                <span>Launch Calling Desk</span>
-              </Button>
-              <Button href="/test-cases" variant="secondary">
-                <Icon name="list_checks" size={15} />
-                <span>Test Cases</span>
+                <span>Outbound Calling</span>
               </Button>
               <Button href="/ops" variant="secondary">
                 <Icon name="activity" size={15} />
@@ -189,27 +154,7 @@ export default function StaffOverview() {
 
         {/* Quick Handset Shortcuts & Footer */}
         <footer className="flex flex-col gap-3 border-t border-line pt-4 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap items-center gap-2">
-            <span>Standalone simulated handsets:</span>
-            <Link
-              href="/phone/priya"
-              className="rounded-md border border-line bg-card px-2.5 py-1 font-mono text-[11px] text-fg hover:bg-sunken transition-colors"
-            >
-              Priya&apos;s Phone
-            </Link>
-            <Link
-              href="/phone/ramesh"
-              className="rounded-md border border-line bg-card px-2.5 py-1 font-mono text-[11px] text-fg hover:bg-sunken transition-colors"
-            >
-              Ramesh&apos;s Phone
-            </Link>
-            <Link
-              href="/phone/sunita"
-              className="rounded-md border border-line bg-card px-2.5 py-1 font-mono text-[11px] text-fg hover:bg-sunken transition-colors"
-            >
-              Sunita&apos;s Phone
-            </Link>
-          </div>
+          <span>Sahyadri Finance Bank · staff overview</span>
           <p className="font-mono text-[11px]">
             Sahyadri Finance Bank ·{" "}
             <Link href="/bank" className="underline underline-offset-2 hover:text-fg">

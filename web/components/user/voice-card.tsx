@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
-import { useSession } from "@/lib/auth/auth-context";
+import { useSession } from "@/lib/user/session";
 
 interface VoiceCardProps {
   onStartTalk?: (presetUtterance?: string) => void;

@@ -2,15 +2,13 @@
 
 import React from "react";
 import { BottomNav } from "./bottom-nav";
-import { DemoUserChip } from "./demo-user-chip";
-import { useSession } from "@/lib/auth/auth-context";
+import { useSession } from "@/lib/user/session";
 
 interface UserShellProps {
   children: React.ReactNode;
   showNav?: boolean;
-  activeTab?: "home" | "inbox" | "talk" | "activity" | "help";
+  activeTab?: "home" | "inbox" | "talk" | "help";
   title?: string;
-  showDemoSwitcher?: boolean;
 }
 
 export function UserShell({
@@ -18,7 +16,6 @@ export function UserShell({
   showNav = true,
   activeTab = "home",
   title,
-  showDemoSwitcher = true,
 }: UserShellProps) {
   const { user } = useSession();
 
@@ -36,19 +33,12 @@ export function UserShell({
             <div>
               <div className="text-xs font-bold tracking-tight text-fg flex items-center gap-1.5">
                 <span>{title ?? "Sahyadri Finance Bank"}</span>
-                {user && (
-                  <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-mono font-medium bg-ok-bg text-ok-fg border border-ok-border">
-                    {user.tier_label.split(":")[0]}
-                  </span>
-                )}
               </div>
               <p className="text-[10px] text-muted font-medium">
-                {user ? `${user.branch} · ${user.account_masked}` : "Voice Servicing & Mobile Desk"}
+                {user ? [user.name, user.mobileMasked].filter(Boolean).join(" · ") : "Voice Servicing & Mobile Desk"}
               </p>
             </div>
           </div>
-
-          {showDemoSwitcher && <DemoUserChip />}
         </header>
 
         {/* Scrollable Viewport Content */}

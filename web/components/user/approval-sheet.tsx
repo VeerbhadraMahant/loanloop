@@ -8,11 +8,10 @@ import { useI18n } from "@/lib/i18n";
 
 interface ApprovalCardProps {
   approval: Approval;
-  customerRef: string;
   onResolved?: () => void;
 }
 
-export function ApprovalCard({ approval, customerRef, onResolved }: ApprovalCardProps) {
+export function ApprovalCard({ approval, onResolved }: ApprovalCardProps) {
   const { t } = useI18n();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +19,7 @@ export function ApprovalCard({ approval, customerRef, onResolved }: ApprovalCard
   const handleDecision = async (verb: "approve" | "deny") => {
     setBusy(true);
     setError(null);
-    const res = await respondToApproval(customerRef, approval.id, verb);
+    const res = await respondToApproval(approval.id, verb);
     setBusy(false);
     if (res.success) {
       onResolved?.();

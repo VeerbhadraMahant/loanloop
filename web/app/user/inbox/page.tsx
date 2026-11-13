@@ -5,13 +5,11 @@ import React, { useState, useEffect, useCallback } from "react";
 import { UserShell } from "@/components/user/user-shell";
 import { ApprovalCard } from "@/components/user/approval-sheet";
 import { useI18n } from "@/lib/i18n";
-import { useSession } from "@/lib/auth/auth-context";
 import { fetchUserApprovals, fetchUserSms } from "@/lib/user/user-service";
-import { Approval, Sms, useEvents, GwEvent } from "@/lib/api";
+import { Approval, Sms } from "@/lib/api";
 
 export default function UserInboxPage() {
   const { t } = useI18n();
-  const { user } = useSession();
 
   const [approvals, setApprovals] = useState<Approval[]>([]);
   const [smsList, setSmsList] = useState<Sms[]>([]);
@@ -19,13 +17,11 @@ export default function UserInboxPage() {
   const [copiedId, setCopiedId] = useState<string | number | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  const customerRef = user?.customer_ref ?? "priya";
-
   const loadData = useCallback(async () => {
     try {
       const [apprRes, smsRes] = await Promise.all([
-        fetchUserApprovals(customerRef),
-        fetchUserSms(customerRef),
+        fetchUserApprovals(),
+        fetchUserSms(),
       ]);
       setApprovals(Array.isArray(apprRes) ? apprRes : []);
       setSmsList(Array.isArray(smsRes) ? smsRes : []);
@@ -36,19 +32,13 @@ export default function UserInboxPage() {
     } finally {
       setLoading(false);
     }
-  }, [customerRef]);
+  }, []);
 
   useEffect(() => {
     loadData();
     const interval = setInterval(loadData, 3000);
     return () => clearInterval(interval);
   }, [loadData]);
-
-  useEvents((e: GwEvent) => {
-    if (e.customer_key === customerRef && (e.type === "sms" || e.type === "approval")) {
-      loadData();
-    }
-  });
 
   const pendingApprovals = (Array.isArray(approvals) ? approvals : []).filter((a) => a && a.status === "pending");
   const pastApprovals = (Array.isArray(approvals) ? approvals : []).filter((a) => a && a.status !== "pending");
@@ -99,7 +89,6 @@ export default function UserInboxPage() {
                 <ApprovalCard
                   key={appr.id}
                   approval={appr}
-                  customerRef={customerRef}
                   onResolved={loadData}
                 />
               ))}
@@ -129,7 +118,6 @@ export default function UserInboxPage() {
                 <ApprovalCard
                   key={appr.id}
                   approval={appr}
-                  customerRef={customerRef}
                 />
               ))}
             </div>

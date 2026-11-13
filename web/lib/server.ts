@@ -40,7 +40,7 @@ export function sessionHeaders(req: Request): Record<string, string> {
   return h;
 }
 
-export const landingOf = (role: string) => (role === "engineer" ? "/dev" : role === "customer" ? "/phone" : "/bank");
+export const landingOf = (role: string) => (role === "engineer" ? "/dev" : role === "customer" ? "/user/home" : "/bank");
 
 /** Ask the gateway about a session id. null = no such session; throws when the gateway is unreachable. */
 export async function validate(sid: string): Promise<Session | null> {

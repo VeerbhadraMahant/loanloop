@@ -15,7 +15,6 @@
     "home": "Home",
     "inbox": "Inbox",
     "talk": "Talk",
-    "activity": "Activity",
     "help": "Help"
   },
   "welcome": {
@@ -34,21 +33,15 @@
   },
   "mobile": {
     "title": "Enter Mobile Number",
-    "subtitle": "We will verify your identity with a secure one-time passcode.",
+    "subtitle": "Enter your registered mobile number to sign in.",
     "input_label": "Registered Mobile Number",
     "placeholder": "98765 43210",
-    "cta_send": "Send Verification Code",
-    "demo_heading": "Or tap a seeded demo borrower:",
-    "priya_desc": "Home Loan · Tier 1 Clean",
-    "ramesh_desc": "Vehicle Loan · Tier 2 Collections",
-    "sunita_desc": "Personal Loan · Hardship Review"
+    "cta_send": "Continue"
   },
   "otp": {
-    "title": "Enter Verification Code",
-    "subtitle": "Enter the 6-digit security code sent to",
-    "cta_verify": "Verify & Sign In",
-    "resend": "Resend Code",
-    "demo_hint": "Demo OTP is 123456",
+    "title": "Enter Passcode",
+    "subtitle": "Enter your 6-digit passcode for",
+    "cta_verify": "Sign In",
     "edit_mobile": "Edit number"
   },
   "home": {
@@ -104,7 +97,6 @@
     "mic_hold": "Hold-to-Talk (Best for noisy environments)",
     "mic_tap": "Tap-to-Talk (Single tap start/stop)",
     "app_theme": "Theme",
-    "switch_persona": "Switch Demo Borrower",
     "sign_out": "Sign Out",
     "other_consoles_title": "Other Consoles (PC / Staff / Dev)",
     "other_consoles_desc": "Looking for the operations desk, collections queue, or developer sandbox?",
@@ -114,4 +106,3 @@
     "dev_metrics": "Metrics & SLA Dashboard"
   }
 }
-

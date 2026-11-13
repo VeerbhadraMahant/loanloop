@@ -3,22 +3,19 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
-import { useSession } from "@/lib/auth/auth-context";
 import { fetchUserApprovals } from "@/lib/user/user-service";
 
 interface BottomNavProps {
-  activeTab?: "home" | "inbox" | "talk" | "activity" | "help";
+  activeTab?: "home" | "inbox" | "talk" | "help";
 }
 
 export function BottomNav({ activeTab = "home" }: BottomNavProps) {
   const { t } = useI18n();
-  const { user } = useSession();
   const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
-    if (!user) return;
     let active = true;
-    fetchUserApprovals(user.customer_ref)
+    fetchUserApprovals()
       .then((res) => {
         if (!active) return;
         const count = Array.isArray(res) ? res.filter((a) => a && a.status === "pending").length : 0;
@@ -30,7 +27,7 @@ export function BottomNav({ activeTab = "home" }: BottomNavProps) {
     return () => {
       active = false;
     };
-  }, [user]);
+  }, []);
 
   const navItems = [
     {
@@ -62,16 +59,6 @@ export function BottomNav({ activeTab = "home" }: BottomNavProps) {
       icon: (
         <svg className="w-6 h-6 text-primary-fg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-        </svg>
-      ),
-    },
-    {
-      id: "activity",
-      href: "/user/activity",
-      label: t.nav.activity,
-      icon: (
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       ),
     },

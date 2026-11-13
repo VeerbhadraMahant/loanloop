@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession } from "../auth/auth-context";
+import { useSession } from "../user/session";
 import en from "./dictionaries/en.json";
 import hi from "./dictionaries/hi.json";
 import mr from "./dictionaries/mr.json";

@@ -1,18 +1,15 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
 import { UserShell } from "@/components/user/user-shell";
 import { LanguageSelector } from "@/components/user/language-selector";
-import { OtherConsolesCard } from "@/components/user/other-consoles-card";
+import { SignOut } from "@/components/auth";
 import { useI18n } from "@/lib/i18n";
-import { useSession } from "@/lib/auth/auth-context";
-import { DEMO_PERSONAS } from "@/lib/auth/dummy-auth-provider";
+import { useSession } from "@/lib/user/session";
 
 export default function UserHelpPage() {
   const { t } = useI18n();
-  const { user, micMode, setMicMode, switchDemoUser, signOut } = useSession();
-  const router = useRouter();
+  const { micMode, setMicMode } = useSession();
 
   const [currentTheme, setCurrentTheme] = useState<"bright" | "classic" | "dark">(() => {
     if (typeof window !== "undefined") {
@@ -33,11 +30,6 @@ export default function UserHelpPage() {
         document.documentElement.classList.remove("dark");
       }
     } catch {}
-  };
-
-  const handleSignOut = () => {
-    signOut();
-    router.push("/user/welcome");
   };
 
   return (
@@ -149,54 +141,8 @@ export default function UserHelpPage() {
           </div>
         </div>
 
-        {/* Demo Persona Switcher */}
-        <div className="bg-card rounded-2xl p-4 border border-line shadow-xs">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-muted mb-2.5">
-            {t.help.switch_persona}
-          </h4>
-
-          <div className="space-y-1.5">
-            {(["priya", "ramesh", "sunita"] as const).map((key) => {
-              const p = DEMO_PERSONAS[key];
-              const isSelected = user?.customer_ref === key;
-
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => switchDemoUser(key)}
-                  className={`w-full p-2.5 rounded-xl border text-left flex items-center justify-between transition-all ${
-                    isSelected
-                      ? "bg-secondary-container text-on-secondary-fixed border-primary/40 font-semibold"
-                      : "bg-surface-container/60 hover:bg-surface-container border-line text-fg"
-                  }`}
-                >
-                  <div>
-                    <div className="text-xs font-bold">{p.name}</div>
-                    <div className="text-[10px] text-muted">{p.loan_type}</div>
-                  </div>
-                  <span className="text-[10px] font-mono text-muted">{p.tier_label.split(":")[0]}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Isolated Other Consoles Redirect Block */}
-        <OtherConsolesCard />
-
-        {/* Sign Out */}
         <div className="pt-2">
-          <button
-            type="button"
-            onClick={handleSignOut}
-            className="w-full py-3 px-4 rounded-xl text-xs font-bold text-danger-fg bg-danger-bg hover:bg-danger-bg/80 border border-danger-line transition-all flex items-center justify-center gap-1.5"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            <span>{t.help.sign_out}</span>
-          </button>
+          <SignOut door="customer" className="w-full py-3 px-4 rounded-xl text-xs font-bold text-danger-fg bg-danger-bg hover:bg-danger-bg/80 border border-danger-line transition-all" />
         </div>
       </div>
     </UserShell>

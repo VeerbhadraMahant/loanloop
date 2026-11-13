@@ -14,12 +14,14 @@ function safeEqual(a: string, b: string): boolean {
 const under = (p: string, base: string) => p === base || p.startsWith(base + "/");
 const PUBLIC = ["/auth", "/gw", "/vx", "/voice-out", "/_next"]; // handlers behind them check the session themselves
 const PUBLIC_FILES = new Set(["/favicon.ico", "/file.svg", "/globe.svg", "/next.svg", "/vercel.svg", "/window.svg"]); // web/public + app icon
+const ONBOARDING = ["/user/welcome", "/user/language", "/user/mobile", "/user/otp"]; // public pre-sign-in screens of the borrower app
+const USER_PAGES = ["/user", "/user/home", "/user/inbox", "/user/talk", "/user/help"]; // the borrower app, signed in
 const BANK = ["bank_manager", "admin"];
 const DEV = ["engineer", "admin"];
 
 /** Roles allowed on a staff page, or null when the path is not a staff page. */
 function staffRoles(p: string): string[] | null {
-  if (["/bank", "/ops", "/collections", "/call/outbound"].some((b) => under(p, b))) return BANK;
+  if (["/bank", "/ops", "/collections", "/call/outbound", "/staff/overview"].some((b) => under(p, b))) return BANK;
   if (["/dev", "/metrics", "/test-cases"].some((b) => under(p, b))) return DEV;
   return null;
 }
@@ -44,10 +46,11 @@ export async function proxy(req: NextRequest) {
   const custSid = req.cookies.get(CUSTOMER_COOKIE)?.value ?? "";
 
   const staffPage = staffRoles(p);
-  const customerPage = p === "/phone" || p === "/call";
+  const onboarding = ONBOARDING.includes(p);
+  const customerPage = p === "/phone" || p === "/call" || USER_PAGES.includes(p);
   const staffLogin = p === "/staff/login";
   const custLogin = p === "/login";
-  if (!staffPage && !customerPage && !staffLogin && !custLogin && p !== "/") {
+  if (!staffPage && !customerPage && !staffLogin && !custLogin && !onboarding && p !== "/") {
     // Deny by default: only these are public. Anything else (typos, .rsc / .txt variants, unknown paths) is a plain 404.
     return PUBLIC.some((b) => under(p, b)) || PUBLIC_FILES.has(p) ? NextResponse.next() : notFound();
   }
@@ -57,17 +60,17 @@ export async function proxy(req: NextRequest) {
   let cust: Session | null = null;
   try {
     if (p === "/" || staffPage || staffLogin) staff = await validate(staffSid);
-    if (p === "/" || customerPage || custLogin) cust = await validate(custSid);
+    if (p === "/" || customerPage || custLogin || onboarding) cust = await validate(custSid);
   } catch {
-    if (staffLogin || custLogin || p === "/") return NextResponse.next(); // the sign-in forms and the public landing render without the gateway
+    if (staffLogin || custLogin || onboarding || p === "/") return NextResponse.next(); // the sign-in forms and the public landing render without the gateway
     return new Response("Service unavailable", { status: 503 });
   }
   if (staff && staff.kind !== "staff") staff = null;
   if (cust && cust.kind !== "customer") cust = null;
 
-  if (p === "/") return staff ? go(landingOf(staff.role)) : cust ? go("/phone") : NextResponse.next(); // no session: public landing
+  if (p === "/") return staff ? go(landingOf(staff.role)) : cust ? go(landingOf("customer")) : NextResponse.next(); // no session: public landing
   if (staffLogin) return staff ? go(landingOf(staff.role)) : NextResponse.next();
-  if (custLogin) return cust ? go("/phone") : NextResponse.next();
+  if (custLogin || onboarding) return cust ? go(landingOf("customer")) : NextResponse.next();
   if (customerPage) return cust ? NextResponse.next() : go("/login");
   // staff page
   if (staff) return staffPage!.includes(staff.role) ? NextResponse.next() : notFound();

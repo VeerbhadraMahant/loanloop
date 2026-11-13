@@ -127,6 +127,7 @@ const navSections: (NavSection & { area: "bank" | "dev" })[] = [
     title: "Operations",
     area: "bank",
     items: [
+      { href: "/staff/overview", label: "Overview", icon: "gauge" },
       { href: "/bank", label: "Bank app", icon: "landmark" },
       { href: "/collections", label: "Collections", icon: "wallet" },
       { href: "/ops", label: "Ops Console", icon: "activity" },

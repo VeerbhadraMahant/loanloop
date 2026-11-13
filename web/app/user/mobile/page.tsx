@@ -5,43 +5,21 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { UserShell } from "@/components/user/user-shell";
 import { useI18n } from "@/lib/i18n";
-import { useSession } from "@/lib/auth/auth-context";
-import { DEMO_PERSONAS } from "@/lib/auth/dummy-auth-provider";
 
 export default function MobileInputPage() {
   const { t } = useI18n();
-  const { sendOtp } = useSession();
   const router = useRouter();
 
-  const [mobile, setMobile] = useState("9000014417");
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [mobile, setMobile] = useState("");
 
-  const handleSubmit = async (e?: React.FormEvent) => {
+  const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
-    setError(null);
-    setLoading(true);
-    const res = await sendOtp(mobile);
-    setLoading(false);
-    if (res.success) {
-      router.push(`/user/otp?m=${encodeURIComponent(mobile)}`);
-    } else {
-      setError(res.error ?? "Failed to send code");
-    }
-  };
-
-  const handleSelectDemoPersona = async (num: string) => {
-    setMobile(num);
-    setLoading(true);
-    const res = await sendOtp(num);
-    setLoading(false);
-    if (res.success) {
-      router.push(`/user/otp?m=${encodeURIComponent(num)}`);
-    }
+    try { sessionStorage.setItem("loanloop.signin_mobile", mobile); } catch {} // handed to the passcode step; kept out of the URL
+    router.push("/user/otp");
   };
 
   return (
-    <UserShell showNav={false} showDemoSwitcher={false} title="Sign In">
+    <UserShell showNav={false} title="Sign In">
       <div className="flex flex-col min-h-[calc(100vh-120px)] sm:min-h-[740px] justify-between py-4">
         {/* Top form */}
         <div className="space-y-4">
@@ -82,77 +60,20 @@ export default function MobileInputPage() {
                   autoFocus
                 />
               </div>
-              {error && <p className="text-xs text-danger-fg mt-1.5">{error}</p>}
             </div>
 
             <button
               type="submit"
-              disabled={loading || mobile.length < 10}
+              disabled={mobile.length < 10}
               className="w-full py-3.5 px-4 rounded-2xl font-bold text-sm bg-primary text-primary-fg hover:bg-accent-hover active:scale-[0.99] transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              <span>{loading ? t.common.loading : t.mobile.cta_send}</span>
+              <span>{t.mobile.cta_send}</span>
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
               </svg>
             </button>
           </form>
 
-          {/* Seeded Demo Borrower Pickers */}
-          <div className="pt-4 border-t border-line mt-6">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-muted mb-2.5">
-              {t.mobile.demo_heading}
-            </h3>
-
-            <div className="space-y-2">
-              <button
-                type="button"
-                onClick={() => handleSelectDemoPersona(DEMO_PERSONAS.priya.mobile)}
-                className="w-full p-3 rounded-xl bg-card border border-line hover:border-primary/40 text-left flex items-center justify-between group transition-all"
-              >
-                <div>
-                  <div className="text-xs font-bold text-fg group-hover:text-primary transition-colors">
-                    {DEMO_PERSONAS.priya.name}
-                  </div>
-                  <div className="text-[10px] text-muted">{t.mobile.priya_desc}</div>
-                </div>
-                <span className="text-xs font-mono font-semibold text-muted group-hover:text-primary">
-                  +91 {DEMO_PERSONAS.priya.mobile}
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleSelectDemoPersona(DEMO_PERSONAS.ramesh.mobile)}
-                className="w-full p-3 rounded-xl bg-card border border-line hover:border-primary/40 text-left flex items-center justify-between group transition-all"
-              >
-                <div>
-                  <div className="text-xs font-bold text-fg group-hover:text-primary transition-colors">
-                    {DEMO_PERSONAS.ramesh.name}
-                  </div>
-                  <div className="text-[10px] text-muted">{t.mobile.ramesh_desc}</div>
-                </div>
-                <span className="text-xs font-mono font-semibold text-muted group-hover:text-primary">
-                  +91 {DEMO_PERSONAS.ramesh.mobile}
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleSelectDemoPersona(DEMO_PERSONAS.sunita.mobile)}
-                className="w-full p-3 rounded-xl bg-card border border-line hover:border-primary/40 text-left flex items-center justify-between group transition-all"
-              >
-                <div>
-                  <div className="text-xs font-bold text-fg group-hover:text-primary transition-colors">
-                    {DEMO_PERSONAS.sunita.name}
-                  </div>
-                  <div className="text-[10px] text-muted">{t.mobile.sunita_desc}</div>
-                </div>
-                <span className="text-xs font-mono font-semibold text-muted group-hover:text-primary">
-                  +91 {DEMO_PERSONAS.sunita.mobile}
-                </span>
-              </button>
-            </div>
-          </div>
         </div>
 
         {/* Security badge */}

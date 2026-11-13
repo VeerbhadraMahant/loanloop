@@ -1,9 +1,8 @@
 "use client";
 
 import React from "react";
-import { AuthProvider } from "@/lib/auth/auth-context";
+import { UserProvider } from "@/lib/user/session";
 
 export default function UserLayout({ children }: { children: React.ReactNode }) {
-  return <AuthProvider>{children}</AuthProvider>;
+  return <UserProvider>{children}</UserProvider>;
 }
-

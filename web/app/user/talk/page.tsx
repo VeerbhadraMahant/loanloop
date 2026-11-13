@@ -5,7 +5,7 @@ import React, { Suspense, useCallback, useEffect, useRef, useState } from "react
 import { useSearchParams } from "next/navigation";
 import { UserShell } from "@/components/user/user-shell";
 import { useI18n } from "@/lib/i18n";
-import { useSession } from "@/lib/auth/auth-context";
+import { useSession } from "@/lib/user/session";
 import { useHoldToTalk } from "@/lib/use-hold-to-talk";
 import { sendVoiceTurn, startVoiceSession } from "@/lib/user/user-service";
 import { BottomSheet } from "@/components/user/bottom-sheet";
@@ -22,11 +22,11 @@ interface Message {
 }
 
 function TalkContent() {
-  const { t, lang } = useI18n();
+  const { t } = useI18n();
   const { user, micMode } = useSession();
   const searchParams = useSearchParams();
 
-  const customerRef = user?.customer_ref ?? "priya";
+  const customerKey = user?.customerKey; // from the signed-in session; undefined until /auth/me answers
   const initialQuery = searchParams.get("q");
 
   const [callId, setCallId] = useState<string | null>(null);
@@ -64,8 +64,9 @@ function TalkContent() {
 
   // Initialize voice session on mount
   useEffect(() => {
+    if (!customerKey) return;
     let active = true;
-    startVoiceSession(customerRef, lang)
+    startVoiceSession(customerKey)
       .then((session) => {
         if (!active) return;
         setCallId(session.call_id);
@@ -84,8 +85,7 @@ function TalkContent() {
         }
       })
       .catch((err) => {
-        console.warn("Could not start session:", err);
-        setCallId(`call_${Date.now()}`);
+        if (active) setErrorMsg(err instanceof Error ? err.message : "Could not start the voice session");
       });
 
     return () => {
@@ -95,7 +95,7 @@ function TalkContent() {
         audioRef.current = null;
       }
     };
-  }, [customerRef, lang, playAudioBase64]);
+  }, [customerKey, playAudioBase64]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -122,10 +122,9 @@ function TalkContent() {
       ]);
 
       try {
+        if (!callId) throw new Error("Voice session is not ready yet");
         const reply = await sendVoiceTurn({
-          call_id: callId ?? `call_${Date.now()}`,
-          customerRef,
-          language: lang,
+          call_id: callId,
           user_text: text,
           wavBlob: wav,
         });
@@ -151,7 +150,7 @@ function TalkContent() {
         setCurrentStep(3);
 
         if (reply.actions?.some((a) => a.name.toLowerCase().includes("approval") || !a.ok)) {
-          fetchUserApprovals(customerRef).then((apprs) => {
+          fetchUserApprovals().then((apprs) => {
             const pending = apprs.find((a) => a.status === "pending");
             if (pending) setActiveApproval(pending);
           });
@@ -167,7 +166,7 @@ function TalkContent() {
         setErrorMsg(err instanceof Error ? err.message : "Voice processing error");
       }
     },
-    [callId, customerRef, lang, playAudioBase64]
+    [callId, playAudioBase64]
   );
 
   const initialSentRef = useRef(false);
@@ -430,7 +429,6 @@ function TalkContent() {
           {activeApproval && (
             <ApprovalCard
               approval={activeApproval}
-              customerRef={customerRef}
               onResolved={() => setActiveApproval(null)}
             />
           )}

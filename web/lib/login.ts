@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { COOKIE, GATEWAY, LOGIN, cookieOf, originOk, validate, type Door } from "@/lib/server";
+import { COOKIE, GATEWAY, LOGIN, cookieOf, landingOf, originOk, validate, type Door } from "@/lib/server";
 
 const FIELDS = { staff: ["email", "password"], customer: ["mobile", "passcode"] } as const;
 const bad = (status: number, detail: string) => NextResponse.json({ detail }, { status });
@@ -24,7 +24,7 @@ export async function loginHandler(req: Request, door: Door) {
   const j = await r.json().catch(() => ({}));
   if (r.status === 401 || r.status === 429) return bad(r.status, j.detail ?? "unauthorized");
   if (!r.ok || typeof j.session_id !== "string") return bad(502, "gateway error");
-  const res = NextResponse.json({ ok: true, landing: j.landing });
+  const res = NextResponse.json({ ok: true, landing: door === "customer" ? landingOf("customer") : j.landing });
   res.cookies.set(COOKIE[door], j.session_id, { httpOnly: true, sameSite: "strict", path: "/", secure: secure() });
   return res;
 }

@@ -10,7 +10,7 @@ export default function LanguagePage() {
   const { t } = useI18n();
 
   return (
-    <UserShell showNav={false} showDemoSwitcher={false} title="Language Selection">
+    <UserShell showNav={false} title="Language Selection">
       <div className="flex flex-col min-h-[calc(100vh-120px)] sm:min-h-[740px] justify-between py-4">
         {/* Header */}
         <div className="space-y-4">

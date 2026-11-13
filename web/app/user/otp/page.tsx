@@ -1,21 +1,18 @@
 "use client";
 
-import React, { Suspense, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
 import { UserShell } from "@/components/user/user-shell";
 import { OtpPinInput } from "@/components/user/otp-pin-input";
 import { useI18n } from "@/lib/i18n";
-import { useSession } from "@/lib/auth/auth-context";
-import { DUMMY_OTP } from "@/lib/auth/dummy-auth-provider";
 
-function OtpContent() {
+export default function OtpPage() {
   const { t } = useI18n();
-  const { verifyOtp } = useSession();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
-  const mobile = searchParams.get("m") ?? "9000014417";
+  const [mobile, setMobile] = useState("");
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time read of the number typed on the previous screen
+    try { setMobile(sessionStorage.getItem("loanloop.signin_mobile") ?? ""); } catch {}
+  }, []);
   const [otp, setOtp] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -26,21 +23,28 @@ function OtpContent() {
 
     setError(null);
     setLoading(true);
-    const res = await verifyOtp(mobile, code);
-    setLoading(false);
-    if (res.success) {
-      router.push("/user/home");
-    } else {
-      setError(res.error ?? "Invalid passcode");
+    // The real customer sign-in (same endpoint as /login): the server sets the HttpOnly ll_cust cookie.
+    try {
+      const r = await fetch("/auth/customer/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mobile, passcode: code }),
+      });
+      if (r.ok) {
+        try { sessionStorage.removeItem("loanloop.signin_mobile"); } catch {}
+        window.location.assign((await r.json()).landing);
+        return;
+      }
+      setError(r.status === 429 ? "Too many attempts. Try again in 15 minutes." : r.status === 401 ? "Wrong details. Try again." : "Sign-in is unavailable right now. Try again shortly.");
+    } catch {
+      setError("Sign-in is unavailable right now. Try again shortly.");
     }
-  };
-
-  const handleAutoFillDemo = () => {
-    setOtp(DUMMY_OTP);
-    handleVerify(DUMMY_OTP);
+    setOtp("");
+    setLoading(false);
   };
 
   return (
+    <UserShell showNav={false} title="Verification">
     <div className="flex flex-col min-h-[calc(100vh-120px)] sm:min-h-[740px] justify-between py-4">
       {/* Top Section */}
       <div className="space-y-4">
@@ -76,17 +80,6 @@ function OtpContent() {
           {error && <p className="text-xs text-danger-fg mt-2 text-center font-medium">{error}</p>}
         </div>
 
-        {/* Demo Fast-Track Pill */}
-        <div className="pt-2 flex justify-center">
-          <button
-            type="button"
-            onClick={handleAutoFillDemo}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-secondary-container text-on-secondary-fixed hover:bg-primary hover:text-primary-fg transition-colors active:scale-95 shadow-xs"
-          >
-            <span className="w-2 h-2 rounded-full bg-ok-fg" />
-            <span>Auto-fill Demo Code ({DUMMY_OTP})</span>
-          </button>
-        </div>
       </div>
 
       {/* Bottom CTA */}
@@ -102,29 +95,8 @@ function OtpContent() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
           </svg>
         </button>
-
-        <p className="text-[11px] text-muted text-center">
-          Didn&apos;t receive code?{" "}
-          <button
-            type="button"
-            onClick={handleAutoFillDemo}
-            className="text-primary font-semibold hover:underline"
-          >
-            {t.otp.resend}
-          </button>
-        </p>
       </div>
     </div>
-  );
-}
-
-export default function OtpPage() {
-  return (
-    <UserShell showNav={false} showDemoSwitcher={false} title="Verification">
-      <Suspense fallback={<div className="p-8 text-center text-xs text-muted">Loading verification...</div>}>
-        <OtpContent />
-      </Suspense>
     </UserShell>
   );
 }
-
