@@ -1,46 +1,11 @@
 import Link from "next/link";
 import type { ButtonHTMLAttributes } from "react";
-import { SidebarLayout } from "@/components/sidebar-nav";
 
 export function Wordmark() {
   return (
     <span className="text-[17px] font-semibold tracking-tight text-fg">
       LoanLoop
     </span>
-  );
-}
-
-/** Page chrome: vertical sidebar + compact control-room content wrapper. */
-export function Shell({
-  title,
-  sub,
-  status,
-  children,
-}: {
-  title: string;
-  sub?: string;
-  status?: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <SidebarLayout>
-      <div className="mx-auto max-w-[1440px] px-4 pb-12 pt-4 sm:px-6 lg:px-8">
-        <div className="mb-4 flex flex-col gap-2 border-b border-line pb-3 md:flex-row md:items-center md:justify-between">
-          <div className="min-w-0">
-            <h1 className="text-xl font-semibold tracking-tight text-fg sm:text-2xl">
-              {title}
-            </h1>
-            {sub && (
-              <p className="mt-0.5 max-w-3xl text-xs leading-relaxed text-muted">
-                {sub}
-              </p>
-            )}
-          </div>
-          {status && <div className="flex shrink-0 flex-wrap items-center gap-2">{status}</div>}
-        </div>
-        {children}
-      </div>
-    </SidebarLayout>
   );
 }
 
