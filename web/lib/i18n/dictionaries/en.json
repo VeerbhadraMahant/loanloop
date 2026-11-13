@@ -83,12 +83,6 @@
     "keyboard_mode": "Type instead",
     "voice_mode": "Voice mode"
   },
-  "activity": {
-    "title": "Activity & History",
-    "tab_requests": "Service Requests",
-    "tab_calls": "Voice Calls",
-    "no_activity": "No past service requests recorded."
-  },
   "help": {
     "title": "Security & Settings",
     "zero_secrets_title": "Zero Secrets Guarantee",
@@ -98,8 +92,6 @@
     "mic_tap": "Tap-to-Talk (Single tap start/stop)",
     "app_theme": "Theme",
     "sign_out": "Sign Out",
-    "other_consoles_title": "Other Consoles (PC / Staff / Dev)",
-    "other_consoles_desc": "Looking for the operations desk, collections queue, or developer sandbox?",
     "staff_collections": "Staff Collections Desk",
     "staff_ops": "Live Operations Console",
     "dev_lab": "Developer Lab & Sandbox",

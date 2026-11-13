@@ -83,12 +83,6 @@
     "keyboard_mode": "टाइप करा",
     "voice_mode": "व्हॉइस मोड"
   },
-  "activity": {
-    "title": "इतिहास आणि नोंदी",
-    "tab_requests": "सेवा विनंत्या",
-    "tab_calls": "कॉल नोंदी",
-    "no_activity": "कोणतीही जुनी विनंती नोंदवलेली नाही."
-  },
   "help": {
     "title": "सुरक्षा आणि सेटिंग्ज",
     "zero_secrets_title": "झिरो सीक्रेट्स हमी",
@@ -98,8 +92,6 @@
     "mic_tap": "टॅप करा (सुलभ सिंगल टॅप)",
     "app_theme": "थीम",
     "sign_out": "लॉग आउट करा",
-    "other_consoles_title": "इतर कन्सोल (कर्मचारी व डेव्हलपर)",
-    "other_consoles_desc": "ऑपरेशन्स किंवा डेव्हलपर लॅबवर जायचे आहे?",
     "staff_collections": "वसुली डेस्क (Collections)",
     "staff_ops": "ऑपरेशन्स कन्सोल (Ops)",
     "dev_lab": "डेव्हलपर लॅब (Dev Lab)",
