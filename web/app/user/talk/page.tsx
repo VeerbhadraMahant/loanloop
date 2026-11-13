@@ -12,6 +12,8 @@ import { BottomSheet } from "@/components/user/bottom-sheet";
 import { ApprovalCard } from "@/components/user/approval-sheet";
 import { fetchUserApprovals } from "@/lib/user/user-service";
 import { Approval } from "@/lib/api";
+import { ErrorBox } from "@/components/ui";
+import { Button } from "@/components/ui/button";
 
 interface Message {
   id: string;
@@ -23,7 +25,7 @@ interface Message {
 
 function TalkContent() {
   const { t } = useI18n();
-  const { user, micMode } = useSession();
+  const { user, micMode, sessionFailed } = useSession();
   const searchParams = useSearchParams();
 
   const customerKey = user?.customerKey; // from the signed-in session; undefined until /auth/me answers
@@ -153,7 +155,7 @@ function TalkContent() {
           fetchUserApprovals().then((apprs) => {
             const pending = apprs.find((a) => a.status === "pending");
             if (pending) setActiveApproval(pending);
-          });
+          }).catch(() => {}); // non-blocking: the turn itself already succeeded
         }
 
         if (reply.audio_b64) {
@@ -306,6 +308,13 @@ function TalkContent() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
               </svg>
               <span>Speaking response...</span>
+            </div>
+          )}
+
+          {sessionFailed && (
+            <div>
+              <ErrorBox error="Could not load your session, so the call cannot start." />
+              <Button type="button" onClick={() => window.location.reload()}>Retry</Button>
             </div>
           )}
 

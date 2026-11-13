@@ -4,14 +4,15 @@ import { useEffect, useState } from "react";
 export type Door = "staff" | "customer";
 export type Me = { kind: Door; role: string; name: string; customer_key?: string };
 
-/** The signed-in user of one door, from GET /auth/me. `me` stays null while loading or when signed out. */
-export function useMe(door: Door) {
-  const [me, setMe] = useState<Me | null>(null);
+/** The signed-in user of one door, from GET /auth/me. undefined while loading (or skipped), null when signed out or the lookup failed. */
+export function useMe(door: Door, enabled = true) {
+  const [me, setMe] = useState<Me | null | undefined>(undefined);
   useEffect(() => {
+    if (!enabled) return;
     fetch(`/auth/me?door=${door}`, { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .then(setMe, () => setMe(null));
-  }, [door]);
+  }, [door, enabled]);
   return me;
 }
 

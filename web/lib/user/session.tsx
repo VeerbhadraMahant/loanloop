@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { useMe } from "@/components/auth";
 import { get } from "@/lib/api";
 
@@ -13,6 +14,9 @@ export interface UserProfile {
   customerKey: string;
   mobileMasked?: string;
 }
+
+// Signed-out onboarding screens: no session is expected there, so skip /auth/me.
+const PUBLIC_PAGES = ["/user/welcome", "/user/language", "/user/mobile", "/user/otp"];
 
 const LANG_KEY = "loanloop.user_lang";
 const MIC_MODE_KEY = "loanloop.user_mic_mode";
@@ -27,6 +31,7 @@ function stored<T extends string>(key: string, ok: readonly T[], fallback: T): T
 
 interface Ctx {
   user: UserProfile | null;
+  sessionFailed: boolean; // /auth/me answered "not signed in" or could not be reached
   language: SupportedLang;
   micMode: MicMode;
   setLanguage: (l: SupportedLang) => void;
@@ -36,7 +41,8 @@ interface Ctx {
 const SessionContext = createContext<Ctx | undefined>(undefined);
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
-  const me = useMe("customer");
+  const pathname = usePathname();
+  const me = useMe("customer", !PUBLIC_PAGES.includes(pathname));
   const [mobileMasked, setMobileMasked] = useState<string>();
   // Language and mic mode are per-device preferences, so they live in localStorage; read after mount to keep SSR markup identical.
   const [language, setLang] = useState<SupportedLang>("en");
@@ -59,6 +65,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   };
   const value: Ctx = {
     user: me?.customer_key ? { name: me.name, customerKey: me.customer_key, mobileMasked } : null,
+    sessionFailed: me === null,
     language,
     micMode,
     setLanguage: (l) => { setLang(l); save(LANG_KEY, l); },
