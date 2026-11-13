@@ -16,21 +16,11 @@ export interface VoiceTurnResponse {
 }
 
 export async function fetchUserSms(): Promise<Sms[]> {
-  try {
-    return await get<Sms[]>("/phone/me/sms");
-  } catch (err) {
-    console.warn("fetchUserSms error:", err);
-    return [];
-  }
+  return get<Sms[]>("/phone/me/sms"); // errors propagate so callers can show them
 }
 
 export async function fetchUserApprovals(): Promise<Approval[]> {
-  try {
-    return await get<Approval[]>("/phone/me/approvals");
-  } catch (err) {
-    console.warn("fetchUserApprovals error:", err);
-    return [];
-  }
+  return get<Approval[]>("/phone/me/approvals");
 }
 
 export async function respondToApproval(
