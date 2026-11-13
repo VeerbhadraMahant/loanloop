@@ -27,6 +27,7 @@ export function DevLabView() {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time restore from storage after mount
     try {
       const s = JSON.parse(localStorage.getItem(KEY) ?? "[]");
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time restore from storage after mount
       if (Array.isArray(s)) setSaved(s.slice(0, MAX));
     } catch {
       /* storage blocked */
