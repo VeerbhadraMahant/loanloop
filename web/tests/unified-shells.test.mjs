@@ -38,7 +38,7 @@ test("dev lab: engineer and admin get Dev Lab | Test Cases | Metrics, bank_manag
     for (const t of ["Sahyadri Voice Engine", "Developer Lab", "Test Cases", "Metrics", "Open Calling Desk", "Sign out"]) assert.ok(page.includes(t), `${who} ${t}`);
     const cases = await html("/dev?tab=test-cases", cookie);
     for (const id of ["TC-8801", "TC-8802", "TC-8803", "TC-8804", "TC-8805"]) assert.ok(cases.includes(id), id);
-    assert.ok(cases.includes("Start Test"));
+    assert.ok(!cases.includes("Start Test"), "no per-test-case launch buttons");
     assert.ok((await html("/dev?tab=metrics", cookie)).includes("Metrics"));
   }
   assert.equal((await get("/dev", await staffLogin("manager"))).status, 404);
