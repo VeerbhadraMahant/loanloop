@@ -24,7 +24,6 @@ export function DevLabView() {
   const [note, setNote] = useState<string | null>(null);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time restore from storage after mount
     try {
       const s = JSON.parse(localStorage.getItem(KEY) ?? "[]");
       // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time restore from storage after mount
