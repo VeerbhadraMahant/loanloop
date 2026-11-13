@@ -17,23 +17,20 @@ export function DevLabView() {
   const [dev, setDev] = useState<DevConfig | null>(null);
   const [off, setOff] = useState<string | null>(null);
   const [cfg, setCfg] = useState<Cfg>({ name: "My config", llm: "ollama", model: "", settings: {} });
-  const [saved, setSaved] = useState<Cfg[]>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const s = JSON.parse(localStorage.getItem(KEY) ?? "[]");
-        if (Array.isArray(s)) return s.slice(0, MAX);
-      } catch {
-        /* storage blocked */
-      }
-    }
-    return [];
-  });
+  const [saved, setSaved] = useState<Cfg[]>([]);
   const [editing, setEditing] = useState<number | null>(null);
   const [runs, setRuns] = useState<BenchRun[]>([]);
   const [warm, setWarm] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time restore from storage after mount
+    try {
+      const s = JSON.parse(localStorage.getItem(KEY) ?? "[]");
+      if (Array.isArray(s)) setSaved(s.slice(0, MAX));
+    } catch {
+      /* storage blocked */
+    }
     api<DevConfig>("/dev/config")
       .then(setDev)
       .catch((e) =>
