@@ -63,7 +63,7 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
   catch { throw new Error(DOWN); }
   if (r.status === 401 && typeof window !== "undefined") { // session expired: end cleanly at that door's sign-in page
     const p = window.location.pathname;
-    const customerDoor = p === "/phone" || p === "/call";
+    const customerDoor = p === "/phone" || p === "/call" || p === "/user" || p.startsWith("/user/");
     window.location.assign(customerDoor ? "/login" : "/staff/login");
     throw new Error("Session expired");
   }
