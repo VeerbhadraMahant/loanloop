@@ -11,7 +11,7 @@ type Variant = "default" | "destructive" | "outline" | "secondary" | "ghost" | "
 type Size = "default" | "sm" | "lg" | "icon";
 
 const BASE =
-  "inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md text-xs font-semibold transition-colors cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]";
+  "inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md text-xs font-semibold transition-[color,background-color,border-color,transform] duration-150 ease-out motion-reduce:transition-none cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]";
 
 const VARIANT_CLASSES: Record<Variant, string> = {
   default: "bg-primary text-primary-fg hover:bg-accent-hover shadow-xs",

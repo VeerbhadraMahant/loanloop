@@ -24,7 +24,7 @@ export function Panel({ id, tone, as: Tag = "section", pad = "py-12 lg:py-20", c
       <div aria-hidden className="ll-glow ll-g1" />
       <div aria-hidden className="ll-glow ll-g2" />
       <div aria-hidden className="ll-glow ll-g3" />
-      <div className={`${wrap} relative ${pad}`}>{children}</div>
+      <div className={`${wrap} ll-reveal relative ${pad}`}>{children}</div>
     </Tag>
   );
 }

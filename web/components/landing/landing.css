@@ -46,7 +46,8 @@
 .ll-eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
 
 /* buttons and links */
-.ll-btn { transition: transform 160ms var(--ease-out), background-color 160ms var(--ease-out), border-color 160ms var(--ease-out); }
+.ll-btn { transition: transform 180ms var(--ease-out), background-color 180ms var(--ease-out), border-color 180ms var(--ease-out); }
+.ll-btn svg { transition: transform 180ms var(--ease-out); }
 .ll-btn:active { transform: scale(0.97); }
 .ll-primary { background: var(--ll-wine); color: #ffffff; border-radius: 16px; height: 48px; padding: 0 24px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; }
 .ll-secondary { background: var(--ll-lilac); color: var(--ll-ink); border: 1px solid var(--ll-ink); border-radius: 8px; height: 44px; padding: 0 20px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; }
@@ -60,6 +61,12 @@
   .ll-link:hover, .ll-navLink:hover, .ll-footLink:hover { text-decoration-color: currentColor; }
   .ll-footLink:hover { color: #ffffff; }
   .ll-lift:hover { transform: translateY(-2px); }
+  .ll-btn:hover { transform: translateY(-1px); }
+  .ll-btn:hover svg { transform: translateX(3px); }
+  .ll-primary:hover { background: #5a2a33; }
+  .ll-secondary:hover { background: #c6b6fb; }
+  .ll-ghostDark:hover { background: rgba(255, 255, 255, 0.12); }
+  .ll-btn:active:hover { transform: scale(0.97); }
   .ll-lift:active:hover { transform: scale(0.98); }
 }
 
@@ -123,9 +130,28 @@
 .ll-rise { opacity: 0; animation: rise 420ms var(--ease-out) forwards; }
 .ll-ring { animation: ring 1800ms var(--ease-out) infinite; }
 
+/* sections ease in as they scroll into view; browsers without scroll timelines just show them */
+@keyframes reveal {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: none; }
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .ll-reveal { animation: reveal linear both; animation-timeline: view(); animation-range: entry 5% entry 30%; }
+  }
+}
+/* FAQ answers open and close smoothly where the browser can animate to auto height */
+@supports (interpolate-size: allow-keywords) {
+  @media (prefers-reduced-motion: no-preference) {
+    .ll-faq { interpolate-size: allow-keywords; }
+    .ll-faq::details-content { block-size: 0; overflow-y: clip; opacity: 0; transition: block-size 220ms var(--ease-out), opacity 220ms var(--ease-out), content-visibility 220ms allow-discrete; }
+    .ll-faq[open]::details-content { block-size: auto; opacity: 1; }
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ll-rise { opacity: 1; animation: none; }
   .ll-ring { animation: none; opacity: 0; }
-  .ll-btn, .ll-lift, .ll-tab, .ll-link, .ll-navLink, .ll-footLink, .ll-chev { transition: none; }
-  .ll-btn:active, .ll-lift:active, .ll-lift:hover { transform: none; }
+  .ll-btn, .ll-btn svg, .ll-lift, .ll-tab, .ll-link, .ll-navLink, .ll-footLink, .ll-chev { transition: none; }
+  .ll-btn:active, .ll-btn:hover, .ll-btn:hover svg, .ll-lift:active, .ll-lift:hover { transform: none; }
 }

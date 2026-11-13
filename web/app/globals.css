@@ -379,3 +379,11 @@ body {
     transition: opacity 80ms linear;
   }
 }
+
+/* Site-wide smoothness. Zero specificity, and skipped where an element sets its own transition utilities, so nothing existing is overridden. */
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+  :where(a, button, summary, [role="button"], [role="tab"], input, select, textarea):not([class*="transition"]):not([class*="duration-"]) {
+    transition: color 160ms var(--ease-out), background-color 160ms var(--ease-out), border-color 160ms var(--ease-out), opacity 160ms var(--ease-out), box-shadow 160ms var(--ease-out), transform 160ms var(--ease-out);
+  }
+}
