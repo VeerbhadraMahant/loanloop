@@ -2,24 +2,29 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { UserShell } from "@/components/user/user-shell";
 import { OtpPinInput } from "@/components/user/otp-pin-input";
 import { useI18n } from "@/lib/i18n";
 
 export default function OtpPage() {
   const { t } = useI18n();
+  const router = useRouter();
   const [mobile, setMobile] = useState("");
   useEffect(() => {
+    // Deep link / new tab: no number was typed on the previous screen, so start over there.
+    let m = "";
+    try { m = sessionStorage.getItem("loanloop.signin_mobile") ?? ""; } catch {}
     // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time read of the number typed on the previous screen
-    try { setMobile(sessionStorage.getItem("loanloop.signin_mobile") ?? ""); } catch {}
-  }, []);
+    if (m) setMobile(m); else router.replace("/user/mobile");
+  }, [router]);
   const [otp, setOtp] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleVerify = async (codeToVerify?: string) => {
     const code = codeToVerify ?? otp;
-    if (code.length < 6) return;
+    if (code.length < 6 || !mobile) return;
 
     setError(null);
     setLoading(true);
