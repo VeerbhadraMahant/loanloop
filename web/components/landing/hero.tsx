@@ -38,13 +38,13 @@ function CallMock() {
         </div>
         <div className="max-w-[92%] rounded-2xl rounded-bl-md border border-line bg-accent-soft px-4 py-3 text-fg">
           <p className="mb-1 font-mono text-xs text-muted">Agent</p>
-          <p>Thank you, Priya. I can see a payment of ₹12,450 received on 5 Nov against your loan ending 4417. I have raised a reconciliation ticket and paused reminders.</p>
+          <p>Thank you. I can see a payment of ₹12,450 received on 5 Nov against your loan ending 2046. I have raised a reconciliation ticket and paused reminders.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2 pt-1">
           <Pill tone="ok" icon="verified">Tier 1 verified</Pill>
           <Pill>Hinglish</Pill>
         </div>
-        <p className="flex items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm text-muted"><Icon name="inbox" size={14} />SMS sent to registered mobile ••••4417</p>
+        <p className="flex items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm text-muted"><Icon name="inbox" size={14} />SMS sent to registered mobile ••••7310</p>
       </div>
       <div className="flex items-center gap-4 border-t border-line bg-sunken px-4 py-3">
         <span className="relative inline-flex size-11 shrink-0 items-center justify-center">
