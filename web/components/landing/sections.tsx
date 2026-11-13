@@ -3,7 +3,7 @@ import { Icon, Pill, Wordmark, type IconName } from "@/components/ui";
 import s from "./landing.module.css";
 import { NAV, Section } from "./shared";
 
-const fig = "font-mono text-4xl font-semibold text-fg lg:text-5xl";
+const fig = "font-mono text-4xl font-semibold text-fg whitespace-nowrap xl:text-5xl";
 
 export function Problem() {
   const stats = [
@@ -12,20 +12,24 @@ export function Problem() {
     ["70%+", "of calls to RBI's contact centre are in Hindi"],
   ];
   return (
-    <Section id="problem" title="The call-back problem for lenders">
-      <p className="mt-5 max-w-[65ch] text-lg text-muted">
-        Indian lenders automate outbound calls, but borrower call-backs are still handled by people. Borrowers wait on hold, repeat themselves, and have no safe way to get help with details they are told never to share.
-      </p>
-      <dl className="mt-12 grid gap-px overflow-hidden rounded-2xl border border-line bg-line md:grid-cols-3">
-        {stats.map(([n, l]) => (
-          <div key={n} className="bg-card p-8">
-            <dt className={fig}>{n}</dt>
-            <dd className="mt-3 text-base text-muted">{l}</dd>
-          </div>
-        ))}
-      </dl>
-      <p className="mt-4 text-sm text-muted">Source: RBI Ombudsman annual report, FY 2024-25.</p>
-    </Section>
+    <Section
+      id="problem"
+      title="The call-back problem for lenders"
+      lead="Indian lenders automate outbound calls, but borrower call-backs are still handled by people. Borrowers wait on hold, repeat themselves, and have no safe way to get help with details they are told never to share."
+      aside={
+        <div>
+          <dl className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-card">
+            {stats.map(([n, l]) => (
+              <div key={n} className="p-8">
+                <dt className="font-mono text-5xl font-semibold text-fg whitespace-nowrap lg:text-6xl">{n}</dt>
+                <dd className="mt-2 text-base text-muted">{l}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className="mt-4 text-sm text-muted">Source: RBI Ombudsman annual report, FY 2024-25.</p>
+        </div>
+      }
+    />
   );
 }
 
@@ -38,10 +42,10 @@ const FEATURES: { icon: IconName; title: string; items: string[] }[] = [
 export function Features() {
   return (
     <Section id="features" alt title="Requests the voice desk completes">
-      <div className="mt-12 grid gap-5 md:grid-cols-3">
+      <div className="mt-12 grid gap-6 md:grid-cols-3">
         {FEATURES.map((f) => (
-          <article key={f.title} className="rounded-2xl border border-line bg-sunken p-6">
-            <span className="inline-flex size-11 items-center justify-center rounded-xl border border-line bg-card text-primary"><Icon name={f.icon} size={20} /></span>
+          <article key={f.title} className="h-full rounded-2xl border border-line border-t-2 border-t-primary bg-sunken p-8">
+            <span className="inline-flex size-12 items-center justify-center rounded-xl border border-line bg-card text-primary"><Icon name={f.icon} size={22} /></span>
             <h3 className="mt-5 text-xl font-semibold text-fg">{f.title}</h3>
             <ul className="mt-4 space-y-3 text-base text-muted">
               {f.items.map((i) => (
@@ -65,19 +69,19 @@ const STEPS = [
 export function How() {
   return (
     <Section id="how" title="How a call runs">
-      <ol className="relative mt-12 grid gap-8 md:grid-cols-4 md:gap-6">
-        <span aria-hidden className="absolute left-[21px] top-5 h-[calc(100%-2.5rem)] w-px bg-line md:left-5 md:top-[21px] md:h-px md:w-[calc(100%-2.5rem)]" />
+      <ol className="relative mt-12 grid gap-8 lg:grid-cols-4 lg:gap-6">
+        <span aria-hidden className="absolute left-6 top-6 h-[calc(100%-3rem)] w-px bg-line lg:h-px lg:w-[calc(75%+18px)]" />
         {STEPS.map(([t, d], i) => (
-          <li key={t} className="relative flex gap-4 md:block">
-            <span className="relative z-10 inline-flex size-11 shrink-0 items-center justify-center rounded-full border border-line bg-card font-mono text-base font-semibold text-primary">{i + 1}</span>
-            <div className="md:mt-5">
+          <li key={t} className="relative flex gap-5 lg:block">
+            <span className="relative z-10 inline-flex size-12 shrink-0 items-center justify-center rounded-full border border-line bg-card font-mono text-lg font-semibold text-primary">{i + 1}</span>
+            <div className="lg:mt-6">
               <h3 className="text-xl font-semibold text-fg">{t}</h3>
               <p className="mt-2 text-base text-muted">{d}</p>
             </div>
           </li>
         ))}
       </ol>
-      <p className="mt-12 max-w-[65ch] text-lg text-fg">Every spoken figure comes from the bank database, so the language model cannot invent a number.</p>
+      <p className="mt-12 max-w-[65ch] rounded-2xl border border-line bg-card p-6 text-lg text-fg">Every spoken figure comes from the bank database, so the language model cannot invent a number.</p>
     </Section>
   );
 }
@@ -92,11 +96,11 @@ const GUARANTEES = ["Masked outputs only", "Out-of-band delivery to the number o
 export function Security() {
   return (
     <Section id="security" alt title="Security tiers written in code">
-      <div className="mt-12 grid gap-10 lg:grid-cols-[1.7fr_1fr]">
-        <ol className="overflow-hidden rounded-2xl border border-line">
+      <div className="mt-12 grid gap-6 lg:grid-cols-[1.7fr_1fr]">
+        <ol className="flex flex-col overflow-hidden rounded-2xl border border-line">
           {TIERS.map(([n, name, unlock, allow]) => (
-            <li key={n} className="grid grid-cols-[3rem_1fr] items-baseline gap-x-5 gap-y-1 border-b border-line bg-sunken p-5 sm:grid-cols-[4rem_1fr_1.3fr] sm:p-6">
-              <span className="font-mono text-4xl font-semibold text-primary sm:row-span-1">{n}</span>
+            <li key={n} className="grid flex-1 grid-cols-[3.5rem_1fr] items-center gap-x-5 gap-y-1 border-b border-line bg-sunken p-5 sm:grid-cols-[4.5rem_1fr_1.3fr] sm:p-6">
+              <span className="font-mono text-5xl font-semibold text-primary">{n}</span>
               <div>
                 <h3 className="text-lg font-semibold text-fg">Tier {n} {name}</h3>
                 <p className="mt-1 text-base text-muted">{unlock}</p>
@@ -104,8 +108,8 @@ export function Security() {
               <p className="col-start-2 text-base text-fg sm:col-start-3">{allow}</p>
             </li>
           ))}
-          <li className="grid grid-cols-[3rem_1fr] items-baseline gap-x-5 gap-y-1 border-danger-line bg-danger-bg p-5 sm:grid-cols-[4rem_1fr_1.3fr] sm:p-6">
-            <span className="font-mono text-4xl font-semibold text-danger-fg">3</span>
+          <li className="grid flex-1 grid-cols-[3.5rem_1fr] items-center gap-x-5 gap-y-1 border-danger-line bg-danger-bg p-5 sm:grid-cols-[4.5rem_1fr_1.3fr] sm:p-6">
+            <span className="font-mono text-5xl font-semibold text-danger-fg">3</span>
             <div>
               <h3 className="text-lg font-semibold text-danger-fg">Tier 3 Never</h3>
               <p className="mt-1 text-base text-danger-fg">Cannot be unlocked</p>
@@ -113,9 +117,12 @@ export function Security() {
             <p className="col-start-2 text-base text-danger-fg sm:col-start-3">Passwords, PINs, OTPs, CVV and card numbers are never asked, accepted, stored or returned</p>
           </li>
         </ol>
-        <ul className="flex flex-col justify-center gap-5">
+        <ul className="flex flex-col gap-6">
           {GUARANTEES.map((g) => (
-            <li key={g} className="flex gap-3 text-lg text-fg"><Icon name="verified" size={22} className="mt-0.5 text-primary" />{g}</li>
+            <li key={g} className="flex flex-1 flex-col justify-center gap-3 rounded-2xl border border-line bg-sunken p-6">
+              <Icon name="verified" size={24} className="text-primary" />
+              <h3 className="text-lg font-semibold text-fg">{g}</h3>
+            </li>
           ))}
         </ul>
       </div>
@@ -140,11 +147,11 @@ const LANGS: [string, string, string, boolean][] = [
 export function Languages() {
   return (
     <Section id="languages" title="11 Indian languages on one call">
-      <ul className="mt-12 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+      <ul className="mt-12 grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-4">
         {LANGS.map(([native, en, lang, beta]) => (
-          <li key={en} className="flex min-h-24 flex-col justify-between rounded-xl border border-line bg-card p-4">
-            <span lang={lang} className="text-2xl font-semibold text-fg">{native}</span>
-            <span className="mt-2 flex items-center justify-between gap-2 text-sm text-muted">{en}{beta && <Pill tone="warn">beta</Pill>}</span>
+          <li key={en} className="flex min-h-28 flex-col justify-between rounded-xl border border-line bg-card p-6">
+            <span lang={lang} className="text-3xl font-semibold text-fg">{native}</span>
+            <span className="mt-3 flex flex-wrap items-center justify-between gap-2 text-base text-muted">{en}{beta && <Pill tone="warn">beta</Pill>}</span>
           </li>
         ))}
       </ul>
@@ -156,16 +163,16 @@ export function Languages() {
 const RESULTS = [
   ["1,000", "concurrent simulated calls, 0 errors"],
   ["33 ms", "gateway p95 per action (target under 50 ms)"],
-  ["94 / 100", "scripted calls passed in the four core languages"],
-  ["139 / 140", "scripted calls passed in the seven beta languages"],
+  ["94/100", "scripted calls passed in the four core languages"],
+  ["139/140", "scripted calls passed in the seven beta languages"],
 ];
 
 export function Results() {
   return (
     <Section id="results" alt title="Measured results">
-      <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <ul className="mt-12 grid gap-6 sm:grid-cols-2">
         {RESULTS.map(([n, l]) => (
-          <li key={n} className="rounded-2xl border border-line border-l-primary bg-sunken p-6 [border-left-width:3px]">
+          <li key={n} className="rounded-2xl border border-line border-l-primary bg-sunken p-8 [border-left-width:3px]">
             <p className={fig}>{n}</p>
             <p className="mt-3 text-base text-muted">{l}</p>
           </li>
@@ -176,21 +183,23 @@ export function Results() {
   );
 }
 
-const card = `${s.lift} relative flex flex-col rounded-2xl border border-line bg-card p-8 has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-primary`;
-const cta = `${s.btn} mt-8 inline-flex h-11 items-center justify-center rounded-xl bg-primary px-5 text-base font-semibold text-primary-fg outline-none after:absolute after:inset-0 after:rounded-2xl focus-visible:ring-2 focus-visible:ring-primary`;
+const card = `${s.lift} relative flex flex-col rounded-2xl border border-line bg-card p-8 lg:p-10 has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-primary`;
+const cta = `${s.btn} mt-8 inline-flex h-12 items-center justify-center rounded-xl bg-primary px-6 text-base font-semibold text-primary-fg outline-none after:absolute after:inset-0 after:rounded-2xl focus-visible:ring-2 focus-visible:ring-primary`;
 
 export function TwoDoors() {
   return (
     <Section id="signin" title="Two sign-in doors">
-      <div className="mt-12 grid gap-5 md:grid-cols-2">
+      <div className="mt-12 grid gap-6 md:grid-cols-2">
         <div className={card}>
-          <h3 className="text-2xl font-semibold text-fg">Customer</h3>
+          <span className="inline-flex size-12 items-center justify-center rounded-xl border border-line bg-sunken text-primary"><Icon name="phone" size={22} /></span>
+          <h3 className="mt-5 text-2xl font-semibold text-fg">Customer</h3>
           <p className="mt-3 max-w-[40ch] text-base text-muted">See the official bank SMS sent to you and call the voice desk.</p>
           <Link href="/login" className={`${cta} self-start`}>Customer sign in</Link>
         </div>
         <div className={card}>
-          <h3 className="text-2xl font-semibold text-fg">Bank staff</h3>
-          <ul className="mt-3 space-y-1 text-base text-muted">
+          <span className="inline-flex size-12 items-center justify-center rounded-xl border border-line bg-sunken text-primary"><Icon name="landmark" size={22} /></span>
+          <h3 className="mt-5 text-2xl font-semibold text-fg">Bank staff</h3>
+          <ul className="mt-3 space-y-2 text-base text-muted">
             <li><span className="font-medium text-fg">Bank manager:</span> bank, ops, collections</li>
             <li><span className="font-medium text-fg">Engineer:</span> dev lab, metrics, test cases</li>
             <li><span className="font-medium text-fg">Admin:</span> everything</li>
@@ -219,7 +228,7 @@ export function About() {
         <div className="divide-y divide-line border-y border-line">
           {FAQ.map(([q, a]) => (
             <details key={q} className="group py-4">
-              <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 rounded-lg text-lg font-semibold text-fg outline-none focus-visible:ring-2 focus-visible:ring-primary [&::-webkit-details-marker]:hidden">
+              <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 rounded-lg text-lg font-semibold text-fg outline-none focus-visible:ring-2 focus-visible:ring-primary [&::-webkit-details-marker]:hidden">
                 {q}
                 <Icon name="chevron_down" size={18} className="text-muted group-open:rotate-180" />
               </summary>

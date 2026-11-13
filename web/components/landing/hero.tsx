@@ -9,7 +9,7 @@ export function TopNav() {
       <a href="#main" className="sr-only rounded-lg bg-primary px-4 py-2 text-primary-fg focus:not-sr-only focus:absolute focus:left-4 focus:top-2">Skip to content</a>
       <nav aria-label="Main" className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-5 sm:px-8">
         <div className="flex items-center gap-8">
-          <a href="#home" className="rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-primary"><Wordmark /></a>
+          <a href="#home" className="inline-flex h-11 items-center rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-primary"><Wordmark /></a>
           <ul className="hidden items-center gap-1 lg:flex">
             {NAV.map(([h, l]) => (
               <li key={h}><a href={h} className="inline-flex h-11 items-center rounded-lg px-3 text-base text-muted outline-none hover:text-fg focus-visible:ring-2 focus-visible:ring-primary">{l}</a></li>
@@ -26,12 +26,12 @@ const d = (i: number) => ({ animationDelay: `${i * 50}ms` });
 
 function CallMock() {
   return (
-    <div className="overflow-hidden rounded-2xl border border-line bg-card shadow-sm">
+    <div className="mx-auto w-full max-w-[520px] overflow-hidden rounded-2xl border border-line bg-card shadow-sm lg:ml-auto lg:mr-0">
       <div className="flex items-center justify-between border-b border-line px-4 py-3">
         <span className="flex items-center gap-2 text-sm font-semibold text-fg"><Icon name="phone_in_talk" size={16} className="text-primary" />Voice desk call</span>
         <span className="font-mono text-xs text-muted">02:14</span>
       </div>
-      <div className="space-y-3 p-4 text-base">
+      <div className="space-y-4 p-5 text-base">
         <div className="ml-auto max-w-[85%] rounded-2xl rounded-br-md bg-surface-container-high px-4 py-3 text-fg">
           <p className="mb-1 font-mono text-xs text-muted">Caller</p>
           <p>Maine is mahine ki EMI already pay kar di hai.</p>
