@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 
 export const NAV = [
   ["#how", "How it works"],
@@ -8,10 +9,27 @@ export const NAV = [
 ] as const;
 
 export const wrap = "mx-auto w-full max-w-[1200px] px-5 sm:px-8";
-export const btnPrimary = `${"ll-btn"} ${"ll-primary"}`;
-export const btnSecondary = `${"ll-btn"} ${"ll-secondary"}`;
-export const btnGhostDark = `${"ll-btn"} ${"ll-ghostDark"}`;
-export const link = `${"ll-link"} inline-flex min-h-11 items-center gap-1 font-medium`;
+export const btnPrimary = "ll-btn ll-primary";
+export const btnSecondary = "ll-btn ll-secondary";
+export const btnGhostDark = "ll-btn ll-ghostDark";
+export const link = "ll-link inline-flex min-h-11 items-center gap-1 font-medium";
+
+export type Tone = "dawn" | "blush" | "mist" | "sand" | "lagoon" | "wine";
+
+// One rounded gradient panel: base colour from the tone, three clipped decorative glows, content above.
+export function Panel({ id, tone, as: Tag = "section", pad = "py-12 lg:py-20", children }: { id?: string; tone: Tone; as?: "section" | "footer"; pad?: string; children: ReactNode }) {
+  const dark = tone === "lagoon" || tone === "wine";
+  return (
+    <Tag id={id} className={`${wrap} scroll-mt-24 py-2.5`}>
+      <div className={`ll-panel ll-tone-${tone}${dark ? " ll-dark" : ""}`}>
+        <div aria-hidden className="ll-glow ll-g1" />
+        <div aria-hidden className="ll-glow ll-g2" />
+        <div aria-hidden className="ll-glow ll-g3" />
+        <div className={`relative px-5 sm:px-10 lg:px-14 ${pad}`}>{children}</div>
+      </div>
+    </Tag>
+  );
+}
 
 export function Arrow({ className = "", down = false }: { className?: string; down?: boolean }) {
   return (
