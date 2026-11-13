@@ -24,7 +24,7 @@ EVIL = "https://evil.example"
 GROUPS = ["login", "pages", "paths", "data", "direct", "voice", "logout", "lockout"]
 STAFF = {"bank_manager": "manager@loanloop.demo", "engineer": "engineer@loanloop.demo", "admin": "admin@loanloop.demo"}
 REDIRECTS = (301, 302, 303, 307, 308)
-BANK_PAGES = ["/bank", "/ops", "/collections", "/staff/overview"]
+BANK_PAGES = ["/bank", "/ops", "/collections", "/staff", "/staff/overview"]
 DEV_PAGES = ["/dev", "/metrics", "/test-cases"]
 USER_PAGES = ["/user", "/user/home", "/user/inbox", "/user/talk", "/user/help"]  # borrower app, customer session
 USER_ONBOARDING = ["/user/welcome", "/user/language", "/user/mobile", "/user/otp"]  # public until signed in
@@ -137,7 +137,7 @@ def g_login(st: Stack, ctx: dict):
 
 def g_pages(st: Stack, ctx: dict):
     S, C = ctx["staff"], ctx["cust"]
-    for p in ["/bank", "/ops", "/collections", "/dev", "/metrics", "/test-cases", "/staff/overview", "/dev/login"]:
+    for p in ["/bank", "/ops", "/collections", "/dev", "/metrics", "/test-cases", "/staff", "/staff/overview", "/dev/login"]:
         r = st.w("GET", p)
         check(f"no cookies {p} -> redirect /staff/login", redirects_to(r, "/staff/login"), f"{r.status_code} {r.headers.get('location')}")
     for p in ["/phone", "/call"] + USER_PAGES:
@@ -158,7 +158,7 @@ def g_pages(st: Stack, ctx: dict):
     r = st.w("GET", "/", {"ll_cust": C["a"]})
     check("customer session / -> redirect /user/home", redirects_to(r, "/user/home"), f"{r.status_code} {r.headers.get('location')}")
     cc = {"ll_cust": C["a"]}
-    for p in ["/bank", "/bank/conversations", "/ops", "/collections", "/dev", "/metrics", "/test-cases", "/call/outbound/1"]:
+    for p in ["/bank", "/bank/conversations", "/ops", "/collections", "/dev", "/metrics", "/test-cases", "/staff", "/call/outbound/1"]:
         r = st.w("GET", p, cc)
         check(f"customer {p} -> 404", r.status_code == 404, str(r.status_code))
     for role, ok, no in (("bank_manager", BANK_PAGES, DEV_PAGES), ("engineer", DEV_PAGES, BANK_PAGES), ("admin", BANK_PAGES + DEV_PAGES, [])):
@@ -192,7 +192,7 @@ def g_pages(st: Stack, ctx: dict):
         r = st.w("GET", p, cc)
         check(f"customer {p} -> 404 (not a page)", r.status_code == 404, str(r.status_code))
     forged = {"ll_cust": "forged", "ll_staff": "forged", "user_session": '{"role":"user","name":"x"}', "loanloop_session": '{"role":"staff"}'}
-    for p in USER_PAGES[1:] + ["/staff/overview"]:
+    for p in USER_PAGES[1:] + ["/staff", "/staff/overview"]:
         r = st.w("GET", p, forged)
         check(f"forged cookies {p} -> not the page", r.status_code != 200, str(r.status_code))
     for p in ["/phone/priya", "/call/priya"]:

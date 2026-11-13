@@ -21,7 +21,7 @@ const DEV = ["engineer", "admin"];
 
 /** Roles allowed on a staff page, or null when the path is not a staff page. */
 function staffRoles(p: string): string[] | null {
-  if (["/bank", "/ops", "/collections", "/call/outbound", "/staff/overview"].some((b) => under(p, b))) return BANK;
+  if (["/bank", "/ops", "/collections", "/call/outbound"].some((b) => under(p, b)) || (under(p, "/staff") && p !== "/staff/login")) return BANK; // /staff = the unified desk
   if (["/dev", "/metrics", "/test-cases"].some((b) => under(p, b))) return DEV;
   return null;
 }

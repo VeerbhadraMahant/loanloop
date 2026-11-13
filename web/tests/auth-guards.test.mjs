@@ -11,7 +11,7 @@ const ONBOARDING = ["/user/welcome", "/user/language", "/user/mobile", "/user/ot
 
 test("anonymous visitors: /user pages go to /login, staff pages to /staff/login", async () => {
   for (const p of USER_PAGES) assert.ok(redirectsTo(await get(p), "/login"), p);
-  for (const p of ["/staff/overview", "/bank", "/dev", "/dev/login"]) assert.ok(redirectsTo(await get(p), "/staff/login"), p);
+  for (const p of ["/staff", "/staff/overview", "/bank", "/dev", "/dev/login"]) assert.ok(redirectsTo(await get(p), "/staff/login"), p);
 });
 
 test("onboarding screens are public; the fake demo routes are gone", async () => {
@@ -31,7 +31,7 @@ test("customer: own /user pages open, onboarding bounces home, staff pages are 4
   for (const p of USER_PAGES.slice(1)) assert.equal((await get(p, c)).status, 200, p);
   assert.ok(redirectsTo(await get("/user", c), "/user/home"));
   for (const p of [...ONBOARDING, "/login"]) assert.ok(redirectsTo(await get(p, c), "/user/home"), p);
-  for (const p of ["/staff/overview", "/bank", "/dev"]) assert.equal((await get(p, c)).status, 404, p);
+  for (const p of ["/staff", "/staff/overview", "/bank", "/dev"]) assert.equal((await get(p, c)).status, 404, p);
   assert.equal((await get("/phone", c)).status, 200);
 });
 

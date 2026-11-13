@@ -79,7 +79,6 @@ const PERSONAS: Record<
     initials: string;
     phone: string;
     loan: string;
-    balance: string;
     status: string;
     tier: string;
     quickPrompts: string[];
@@ -90,7 +89,6 @@ const PERSONAS: Record<
     initials: "PD",
     phone: "+91 90000 14417",
     loan: "HL-88201-M · Sahyadri Prime Home Loan",
-    balance: "₹42,18,940",
     status: "Inbound Clean",
     tier: "Tier 1: Verified (DOB Auth)",
     quickPrompts: [
@@ -107,7 +105,6 @@ const PERSONAS: Record<
     initials: "RP",
     phone: "+91 98220 54109",
     loan: "AL-10492-P · Vehicle Auto-Debit Mandate",
-    balance: "₹3,45,200",
     status: "Bucket 1-30 DPD",
     tier: "Tier 2: Overdue (PTP Negotiation)",
     quickPrompts: [
@@ -121,7 +118,6 @@ const PERSONAS: Record<
     initials: "SK",
     phone: "+91 94230 77182",
     loan: "PL-33901-K · Personal Loan Restructure",
-    balance: "₹1,82,400",
     status: "Hardship Review",
     tier: "Tier 1: Verified (Medical Hardship)",
     quickPrompts: [
@@ -135,7 +131,6 @@ const PERSONAS: Record<
     initials: "VM",
     phone: "+91 98200 XXXXX (Spoofed)",
     loan: "Security Penetration Probe",
-    balance: "₹0",
     status: "Adversary / Pen-Test",
     tier: "Tier 0: Unverified (Red Team)",
     quickPrompts: [
@@ -150,14 +145,13 @@ const PERSONAS: Record<
 const now = () => performance.now();
 
 // `customer` is the signed-in customer_key (customer door) or a label (staff outbound, caseId set).
-export default function CallApp({ customer, name, caseId }: { customer: string; name?: string; caseId?: number }) {
+export default function CallApp({ customer, name, caseId, embedded = false }: { customer: string; name?: string; caseId?: number; embedded?: boolean }) {
   const normKey = customer.toLowerCase().trim();
   const persona = PERSONAS[normKey] ?? {
     name: name ?? customer,
     initials: (name ?? customer).slice(0, 2).toUpperCase(),
     phone: "+91 9XXXX XXXXX",
     loan: caseId ? `Outbound Case #${caseId}` : "Sahyadri Retail Loan Facility",
-    balance: "₹15,40,200",
     status: caseId ? "Outbound Collections" : "Customer Service",
     tier: "Tier 1: Verified",
     quickPrompts: [
@@ -534,20 +528,7 @@ export default function CallApp({ customer, name, caseId }: { customer: string; 
   const lastTiming = turns[turns.length - 1]?.timings;
   const totalMs = lastTiming ? Math.round(lastTiming.llm_ms + (lastTiming.tts_ms ?? 0) + (lastTiming.gateway_ms ?? 0) + (lastTiming.stt_ms ?? 0)) : null;
 
-  return (
-    <SidebarLayout
-      door={caseId ? "staff" : "customer"}
-      title="Live Calling Desk"
-      sub={`${persona.name} · ${persona.loan}`}
-      status={
-        <div className="flex items-center gap-2">
-          <Pill tone={statusTone[status]}>
-            <span role="status" aria-live="polite">{status}</span>
-          </Pill>
-          {lang && <Pill>{langLabel(lang)}</Pill>}
-        </div>
-      }
-    >
+  const body = (
       <main className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
         {/* TOP UTILITY BAR: Signed-in context & Call Controls */}
         <section className="w-full mb-2.5">
@@ -665,7 +646,7 @@ export default function CallApp({ customer, name, caseId }: { customer: string; 
         </div>
 
         {/* PRIMARY TRANSCRIPT WORKSPACE + SECONDARY PHONE SIDECAR */}
-        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_350px] gap-4 items-start">
+        <div className={`grid grid-cols-1 ${embedded ? "" : "xl:grid-cols-[minmax(0,1fr)_350px]"} gap-4 items-start`}>
           {/* PRIMARY WORKSPACE: Caller Ledger + Live Transcript */}
           <div className="flex flex-col gap-3 min-w-0">
             {/* Compact Caller Ledger Bar */}
@@ -689,12 +670,6 @@ export default function CallApp({ customer, name, caseId }: { customer: string; 
                 </div>
               </div>
 
-              <div className="flex sm:flex-col items-baseline sm:items-end justify-between border-t sm:border-t-0 pt-2 sm:pt-0 border-line shrink-0">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-muted">Ledger Balance</span>
-                <span className="font-mono tabular-nums text-base sm:text-lg text-fg font-semibold">
-                  {persona.balance}
-                </span>
-              </div>
             </div>
 
             {/* Conversation Transcript Workspace */}
@@ -983,6 +958,24 @@ export default function CallApp({ customer, name, caseId }: { customer: string; 
           </aside>
         </div>
     </main>
+  );
+  // embedded: inside a slide-over, no page chrome
+  if (embedded) return body;
+  return (
+    <SidebarLayout
+      door={caseId ? "staff" : "customer"}
+      title="Live Calling Desk"
+      sub={`${persona.name} · ${persona.loan}`}
+      status={
+        <div className="flex items-center gap-2">
+          <Pill tone={statusTone[status]}>
+            <span role="status" aria-live="polite">{status}</span>
+          </Pill>
+          {lang && <Pill>{langLabel(lang)}</Pill>}
+        </div>
+      }
+    >
+      {body}
     </SidebarLayout>
   );
 }

@@ -47,15 +47,16 @@ test("signed-out visitors are redirected to the right door", async () => {
 });
 
 test("per-customer URLs no longer exist", async () => {
-  for (const p of ["/phone/priya", "/call/priya", "/user/priya"]) assert.equal((await get(p)).status, 404, p);
+  for (const p of ["/phone/", "/call/", "/user/"].map((b) => `${b}priya`)) assert.equal((await get(p)).status, 404, p);
 });
 
 const STAFF_PAGES = [
   { path: "/bank", mustInclude: ["Sahyadri Finance Bank"] },
+  { path: "/staff", mustInclude: ["Collections", "Live Operations"] },
   { path: "/collections", mustInclude: ["Collections"] },
   { path: "/ops", mustInclude: ["Live Operations"] },
-  { path: "/dev", mustInclude: ["Developer lab"] },
-  { path: "/test-cases", mustInclude: ["Test Cases", "TC-8801", "TC-8802", "TC-8803", "TC-9904", "TC-8805"] },
+  { path: "/dev", mustInclude: ["Sahyadri Voice Engine", "Developer Lab"] },
+  { path: "/test-cases", mustInclude: ["Test Cases", "TC-8801", "TC-8802", "TC-8803", "TC-8804", "TC-8805"] },
   { path: "/metrics", mustInclude: ["Metrics"] },
 ];
 const CUSTOMER_PAGES = [
