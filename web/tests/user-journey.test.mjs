@@ -1,116 +1,47 @@
+// The borrower app (/user/*) on the real customer session: sign in, identity, own data, sign out.
 import test from "node:test";
 import assert from "node:assert/strict";
+import { BASE, CUST_PASS, get, login, redirectsTo } from "./_helpers.mjs";
 
-const BASE = process.env.SMOKE_URL ?? "http://localhost:3000";
+const skip = !CUST_PASS && "SMOKE_CUSTOMER_PASSCODE not set";
 
-function makeUserCookie() {
-  const session = {
-    role: "user",
-    identifier: "9000014417",
-    name: "Priya Deshmukh",
-    customerId: "priya",
-    createdAt: Date.now(),
-    expiresAt: Date.now() + 3600000,
-  };
-  return `loanloop_session_user=${encodeURIComponent(JSON.stringify(session))}`;
-}
-
-const USER_COOKIE = makeUserCookie();
-
-test("user onboarding flow pages render cleanly with expected content", async () => {
-  // 1. Welcome Screen
-  const welcomeRes = await fetch(`${BASE}/user/welcome`);
-  assert.equal(welcomeRes.status, 200);
-  const welcomeHtml = await welcomeRes.text();
-  assert.ok(welcomeHtml.includes("Sahyadri Voice Banking"), "Welcome missing brand badge");
-  assert.ok(welcomeHtml.includes("Zero Secrets Guarantee"), "Welcome missing zero secrets badge");
-  assert.ok(welcomeHtml.includes("Get Started"), "Welcome missing CTA");
-
-  // 2. Language Selection Screen
-  const langRes = await fetch(`${BASE}/user/language`);
-  assert.equal(langRes.status, 200);
-  const langHtml = await langRes.text();
-  assert.ok(langHtml.includes("Select Language"), "Language missing title");
-  assert.ok(langHtml.includes("English") && langHtml.includes("हिंदी") && langHtml.includes("मराठी"), "Missing language options");
-
-  // 3. Mobile Number Input Screen
-  const mobileRes = await fetch(`${BASE}/user/mobile`);
-  assert.equal(mobileRes.status, 200);
-  const mobileHtml = await mobileRes.text();
-  assert.ok(mobileHtml.includes("Enter Mobile Number"), "Mobile missing title");
-  assert.ok(mobileHtml.includes("Priya Deshmukh"), "Mobile missing Priya demo shortcut");
-  assert.ok(mobileHtml.includes("Ramesh Patil"), "Mobile missing Ramesh demo shortcut");
-  assert.ok(mobileHtml.includes("Sunita Kulkarni"), "Mobile missing Sunita demo shortcut");
-
-  // 4. OTP Verification Screen
-  const otpRes = await fetch(`${BASE}/user/otp?m=9000014417`);
-  assert.equal(otpRes.status, 200);
-  const otpHtml = await otpRes.text();
-  assert.ok(otpHtml.includes("Verification"), "OTP missing title");
-  assert.ok(otpHtml.includes("123456"), "OTP missing demo code hint");
+test("a wrong passcode does not sign in", { skip }, async () => {
+  const res = await fetch(`${BASE}/auth/customer/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Origin: BASE },
+    body: JSON.stringify({ mobile: "9000014417", passcode: CUST_PASS === "000000" ? "111111" : "000000" }),
+  });
+  assert.equal(res.status, 401);
+  assert.equal(res.headers.getSetCookie().some((c) => /^ll_cust=[^;]/.test(c)), false);
 });
 
-test("user phone console main tabs render properly with borrower data", async () => {
-  const headers = { Cookie: USER_COOKIE };
-
-  // 1. Home tab
-  const homeRes = await fetch(`${BASE}/user/home`, { headers });
-  assert.equal(homeRes.status, 200);
-  const homeHtml = await homeRes.text();
-  assert.ok(homeHtml.includes("Sahyadri Voice Desk"), "Home missing voice card");
-  assert.ok(homeHtml.includes("Active Loan"), "Home missing active loan section");
-  assert.ok(homeHtml.includes("Quick Services"), "Home missing quick actions grid");
-  assert.ok(homeHtml.includes("Change EMI Date"), "Home missing EMI date shortcut");
-
-  // 2. Inbox tab
-  const inboxRes = await fetch(`${BASE}/user/inbox`, { headers });
-  assert.equal(inboxRes.status, 200);
-  const inboxHtml = await inboxRes.text();
-  assert.ok(inboxHtml.includes("Inbox & Approvals") || inboxHtml.includes("Inbox"), "Inbox missing title");
-  assert.ok(inboxHtml.includes("Bank SMS Alerts"), "Inbox missing SMS heading");
-
-  // 3. Talk tab
-  const talkRes = await fetch(`${BASE}/user/talk`, { headers });
-  assert.equal(talkRes.status, 200);
-  const talkHtml = await talkRes.text();
-  assert.ok(talkHtml.includes("Voice Assistant"), "Talk missing title");
-  assert.ok(talkHtml.includes("Speak") && talkHtml.includes("Check") && talkHtml.includes("Done"), "Talk missing 3-step stepper");
-
-  // 4. Activity tab
-  const actRes = await fetch(`${BASE}/user/activity`, { headers });
-  assert.equal(actRes.status, 200);
-  const actHtml = await actRes.text();
-  assert.ok(actHtml.includes("Service Requests"), "Activity missing service requests tab");
-  assert.ok(actHtml.includes("Voice Calls"), "Activity missing voice calls tab");
-
-  // 5. Help tab & Other Consoles Redirect
-  const helpRes = await fetch(`${BASE}/user/help`, { headers });
-  assert.equal(helpRes.status, 200);
-  const helpHtml = await helpRes.text();
-  assert.ok(helpHtml.includes("Zero Secrets Guarantee"), "Help missing zero secrets guarantee");
-  assert.ok(helpHtml.includes("Microphone Mode"), "Help missing mic mode toggle");
-  assert.ok(helpHtml.includes("Other Consoles"), "Help missing other consoles block");
-  assert.ok(helpHtml.includes("/collections") && helpHtml.includes("/ops"), "Help missing staff console links");
-  assert.ok(helpHtml.includes("/dev") && helpHtml.includes("/metrics"), "Help missing dev console links");
+test("sign in lands on /user/home, identity and data come from the session", { skip }, async () => {
+  const body = JSON.stringify({ mobile: "9000014417", passcode: CUST_PASS });
+  const res = await fetch(`${BASE}/auth/customer/login`, { method: "POST", headers: { "Content-Type": "application/json", Origin: BASE }, body });
+  assert.equal((await res.json()).landing, "/user/home");
+  const cookie = await login("/auth/customer/login", JSON.parse(body));
+  const me = await (await get("/auth/me?door=customer", cookie)).json();
+  assert.equal(me.kind, "customer");
+  assert.ok(me.name && me.customer_key);
+  for (const p of ["/gw/phone/me", "/gw/phone/me/sms", "/gw/phone/me/approvals"]) assert.equal((await get(p, cookie)).status, 200, p);
+  assert.equal((await get("/gw/dashboard/calls", cookie)).status, 403); // a customer never reaches staff data
+  assert.equal((await get("/gw/events/stream", cookie)).status, 403);
 });
 
-test("backend customer and phone endpoints respond correctly for borrower", async () => {
-  const [phoneRes, smsRes, apprRes] = await Promise.all([
-    fetch(`${BASE}/gw/phone/priya`),
-    fetch(`${BASE}/gw/phone/priya/sms`),
-    fetch(`${BASE}/gw/phone/priya/approvals`),
-  ]);
+test("the borrower pages carry no demo personas, fake OTP or role cookies", { skip }, async () => {
+  const cookie = await login("/auth/customer/login", { mobile: "9000014417", passcode: CUST_PASS });
+  for (const p of ["/user/home", "/user/help", "/user/inbox"]) {
+    const res = await get(p, cookie);
+    const html = await res.text();
+    assert.equal(res.status, 200, p);
+    assert.equal(/123456|Switch Demo|loanloop\.user_session/.test(html), false, p);
+    assert.equal(res.headers.getSetCookie().length, 0, `${p} set a cookie`);
+  }
+});
 
-  assert.equal(phoneRes.status, 200);
-  const phone = await phoneRes.json();
-  assert.equal(phone.name, "Priya Deshmukh");
-  assert.ok(phone.mobile_masked.includes("417"), "Mobile should be masked");
-
-  assert.equal(smsRes.status, 200);
-  const sms = await smsRes.json();
-  assert.ok(Array.isArray(sms), "SMS must be an array");
-
-  assert.equal(apprRes.status, 200);
-  const appr = await apprRes.json();
-  assert.ok(Array.isArray(appr), "Approvals must be an array");
+test("sign out ends the session", { skip }, async () => {
+  const cookie = await login("/auth/customer/login", { mobile: "9000014417", passcode: CUST_PASS });
+  const out = await fetch(`${BASE}/auth/logout`, { method: "POST", headers: { "Content-Type": "application/json", Origin: BASE, cookie }, body: JSON.stringify({ door: "customer" }) });
+  assert.equal((await out.json()).login, "/login");
+  assert.ok(redirectsTo(await get("/user/home", cookie), "/login")); // the old session id is dead server-side
 });

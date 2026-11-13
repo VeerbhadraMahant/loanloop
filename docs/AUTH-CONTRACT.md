@@ -10,7 +10,7 @@ in parallel from it, so do not change a name, path, header or status code here w
 | staff | `bank_manager`, `engineer`, `admin` | `/staff/login` | `ll_staff` |
 | customer | `customer` | `/login` | `ll_cust` |
 
-Landing page after login: `bank_manager` and `admin` -> `/bank`; `engineer` -> `/dev`; `customer` -> `/phone`.
+Landing page after login: `bank_manager` and `admin` -> `/bank`; `engineer` -> `/dev`; `customer` -> `/user/home` (the web login handler returns this; `/phone` stays reachable).
 
 ## 2. Sessions (gateway owns them, Redis)
 
@@ -117,10 +117,12 @@ Pages and who may open them (`web/proxy.ts` validates the cookie against the gat
 | Paths | Needs |
 |---|---|
 | `/` (when no valid session), `/staff/login`, `/login`, `/auth/*`, Next static assets | public |
-| `/bank`, `/bank/*`, `/ops`, `/collections`, `/call/outbound/*` | staff `bank_manager` or `admin` |
+| `/bank`, `/bank/*`, `/ops`, `/collections`, `/call/outbound/*`, `/staff/overview` | staff `bank_manager` or `admin` |
 | `/dev`, `/metrics`, `/test-cases` | staff `engineer` or `admin` |
+| `/user`, `/user/home`, `/user/inbox`, `/user/talk`, `/user/help` (borrower app; any other `/user/*` is 404) | customer |
+| `/user/welcome`, `/user/language`, `/user/mobile`, `/user/otp` (borrower onboarding; the last one posts `/auth/customer/login`) | public; a signed-in customer is redirected to `/user/home` |
 | `/phone`, `/call` (exactly; the old `/phone/[customer]` and `/call/[customer]` routes are deleted) | customer |
-| `/` | valid staff session -> redirect to its landing; else valid customer session -> redirect to `/phone`; else the public landing page (200) |
+| `/` | valid staff session -> redirect to its landing; else valid customer session -> redirect to `/user/home`; else the public landing page (200) |
 | `/gw/*`, `/vx/*`, `/voice-out` | not page-gated; the handlers forward session headers and the backends decide. No relevant cookie -> 401 |
 
 Outcomes on a gated page:

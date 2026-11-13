@@ -24,8 +24,10 @@ EVIL = "https://evil.example"
 GROUPS = ["login", "pages", "paths", "data", "direct", "voice", "logout", "lockout"]
 STAFF = {"bank_manager": "manager@loanloop.demo", "engineer": "engineer@loanloop.demo", "admin": "admin@loanloop.demo"}
 REDIRECTS = (301, 302, 303, 307, 308)
-BANK_PAGES = ["/bank", "/ops", "/collections"]
+BANK_PAGES = ["/bank", "/ops", "/collections", "/staff/overview"]
 DEV_PAGES = ["/dev", "/metrics", "/test-cases"]
+USER_PAGES = ["/user", "/user/home", "/user/inbox", "/user/talk", "/user/help"]  # borrower app, customer session
+USER_ONBOARDING = ["/user/welcome", "/user/language", "/user/mobile", "/user/otp"]  # public until signed in
 
 results: list[tuple[str, bool]] = []
 current_group = ""
@@ -135,10 +137,10 @@ def g_login(st: Stack, ctx: dict):
 
 def g_pages(st: Stack, ctx: dict):
     S, C = ctx["staff"], ctx["cust"]
-    for p in ["/bank", "/ops", "/collections", "/dev", "/metrics", "/test-cases"]:
+    for p in ["/bank", "/ops", "/collections", "/dev", "/metrics", "/test-cases", "/staff/overview", "/dev/login"]:
         r = st.w("GET", p)
         check(f"no cookies {p} -> redirect /staff/login", redirects_to(r, "/staff/login"), f"{r.status_code} {r.headers.get('location')}")
-    for p in ["/phone", "/call"]:
+    for p in ["/phone", "/call"] + USER_PAGES:
         r = st.w("GET", p)
         check(f"no cookies {p} -> redirect /login", redirects_to(r, "/login"), f"{r.status_code} {r.headers.get('location')}")
     r = st.w("GET", "/")
@@ -154,7 +156,7 @@ def g_pages(st: Stack, ctx: dict):
         r = st.w("GET", "/", {"ll_staff": S[role]})
         check(f"{role} session / -> redirect {to}", redirects_to(r, to), f"{r.status_code} {r.headers.get('location')}")
     r = st.w("GET", "/", {"ll_cust": C["a"]})
-    check("customer session / -> redirect /phone", redirects_to(r, "/phone"), f"{r.status_code} {r.headers.get('location')}")
+    check("customer session / -> redirect /user/home", redirects_to(r, "/user/home"), f"{r.status_code} {r.headers.get('location')}")
     cc = {"ll_cust": C["a"]}
     for p in ["/bank", "/bank/conversations", "/ops", "/collections", "/dev", "/metrics", "/test-cases", "/call/outbound/1"]:
         r = st.w("GET", p, cc)
@@ -170,14 +172,38 @@ def g_pages(st: Stack, ctx: dict):
     for p in ["/phone", "/call"]:
         r = st.w("GET", p, {"ll_staff": S["admin"]})
         check(f"staff cookie only {p} -> redirect /login", redirects_to(r, "/login"), f"{r.status_code} {r.headers.get('location')}")
+    for p in USER_ONBOARDING:
+        r = st.w("GET", p)
+        check(f"no cookies {p} -> 200 (public onboarding)", r.status_code == 200, str(r.status_code))
+        r = st.w("GET", p, cc)
+        check(f"customer {p} -> redirect /user/home", redirects_to(r, "/user/home"), f"{r.status_code} {r.headers.get('location')}")
+    r = st.w("GET", "/login", cc)
+    check("customer /login -> redirect /user/home", redirects_to(r, "/user/home"), f"{r.status_code} {r.headers.get('location')}")
+    for p in USER_PAGES[1:] + ["/phone", "/call"]:
+        r = st.w("GET", p, cc)
+        check(f"customer {p} -> 200", r.status_code == 200, str(r.status_code))
+    r = st.w("GET", "/user", cc)
+    check("customer /user -> redirect /user/home", redirects_to(r, "/user/home"), f"{r.status_code} {r.headers.get('location')}")
+    for role in STAFF:
+        for p in USER_PAGES:
+            r = st.w("GET", p, {"ll_staff": S[role]})
+            check(f"{role} (staff cookie only) {p} -> redirect /login, never the page", redirects_to(r, "/login"), f"{r.status_code} {r.headers.get('location')}")
+    for p in ["/user/activity", "/user/priya", "/user/home/x"]:
+        r = st.w("GET", p, cc)
+        check(f"customer {p} -> 404 (not a page)", r.status_code == 404, str(r.status_code))
+    forged = {"ll_cust": "forged", "ll_staff": "forged", "user_session": '{"role":"user","name":"x"}', "loanloop_session": '{"role":"staff"}'}
+    for p in USER_PAGES[1:] + ["/staff/overview"]:
+        r = st.w("GET", p, forged)
+        check(f"forged cookies {p} -> not the page", r.status_code != 200, str(r.status_code))
     for p in ["/phone/priya", "/call/priya"]:
         r = st.w("GET", p, cc)
         check(f"old link {p} for customer -> 404", r.status_code == 404, str(r.status_code))
     for label, sv, cv in (("tampered", tamper(S["bank_manager"]), tamper(C["a"])), ("random", secrets.token_urlsafe(32), secrets.token_urlsafe(32))):
         r = st.w("GET", "/bank", {"ll_staff": sv})
         check(f"{label} staff cookie /bank -> signed out (redirect /staff/login)", redirects_to(r, "/staff/login"), str(r.status_code))
-        r = st.w("GET", "/phone", {"ll_cust": cv})
-        check(f"{label} customer cookie /phone -> signed out (redirect /login)", redirects_to(r, "/login"), str(r.status_code))
+        for p in ("/phone", "/user/home"):
+            r = st.w("GET", p, {"ll_cust": cv})
+            check(f"{label} customer cookie {p} -> signed out (redirect /login)", redirects_to(r, "/login"), str(r.status_code))
 
 
 def g_paths(st: Stack, ctx: dict):
