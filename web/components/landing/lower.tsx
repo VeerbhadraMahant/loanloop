@@ -98,10 +98,9 @@ export function Results() {
       <Chapter title="Measured results" soft="on one machine" />
       <div className="ll-chapterBody">
         <Bento>
-          <Cell fill="teal" span={7} className="ll-resCell"><p className={fig}>1,000</p>{text("concurrent simulated calls, 0 errors")}</Cell>
-          <Cell fill="stone" span={5} className="ll-resCell"><p className={fig}>33<span className="ll-resUnit">ms</span></p>{text("gateway p95 per action (target under 50 ms)")}</Cell>
-          <Cell fill="aubergine" span={5} className="ll-resCell"><p className={fig}>94/100</p>{text("scripted calls passed in the four core languages")}</Cell>
-          <Cell fill="lavender" span={7} className="ll-resCell"><p className={fig}>139/140</p>{text("scripted calls passed in the seven beta languages")}</Cell>
+          <Cell fill="teal" span={12} className="ll-resCell"><p className={fig}>1,000</p>{text("concurrent simulated calls, 0 errors")}</Cell>
+          <Cell fill="aubergine" span={6} className="ll-resCell"><p className={fig}>94/100</p>{text("scripted calls passed in the four core languages")}</Cell>
+          <Cell fill="lavender" span={6} className="ll-resCell"><p className={fig}>139/140</p>{text("scripted calls passed in the seven beta languages")}</Cell>
         </Bento>
         <p className="ll-resNote">Single-machine numbers: load generator, gateway, Postgres and Redis share one box. End-to-end voice latency is not measured at scale.</p>
       </div>

@@ -4,44 +4,51 @@
 /* Sahyadri Control Room Tokens */
 /* Default: Bright (Daylight Slate & Institutional Cobalt) */
 :root, [data-theme="bright"] {
-  --bg: #F5F7FA;
+  /* Warm neutrals + one violet accent, from docs/DESIGN.md (shared with the landing page) */
+  --bg: #F7F5F2;
   --card: #FFFFFF;
-  --line: #DCE2EC;
-  --fg: #111827;
-  --muted: #4E5968;
-  --primary: #1D4ED8;
+  --line: #E3E0DA;
+  --fg: #292827;
+  --muted: #5F5D5A;
+  --primary: #714CB6;
   --primary-fg: #FFFFFF;
-  --accent: #1D4ED8;
-  --accent-hover: #1E40AF;
-  --accent-soft: #EBF1FE;
-  --accent-ink: #1E3A8A;
-  --ok-bg: #ECFDF3;
-  --ok-fg: #15803D;
-  --ok-border: #A7F3D0;
-  --warn-bg: #FFFBEB;
-  --warn-fg: #B45309;
-  --warn-border: #FDE68A;
-  --danger-bg: #FEF2F2;
-  --danger-fg: #B91C1C;
-  --danger-line: #FECACA;
-  --sunken: #ECF0F5;
+  --accent: #714CB6;
+  --accent-hover: #533192;
+  --accent-soft: #E8E0FF;
+  --accent-ink: #3F256F;
+  --ok-bg: #E6F2EF;
+  --ok-fg: #0C6B5E;
+  --ok-border: #A9D4CB;
+  --warn-bg: #FBF1DF;
+  --warn-fg: #8A4B0B;
+  --warn-border: #E8C98F;
+  --danger-bg: #F8E7E8;
+  --danger-fg: #A02436;
+  --danger-line: #E6B6BD;
+  --sunken: #F2F0EB;
   --surface: #FFFFFF;
-  --surface-container: #E9EEF5;
-  --surface-container-high: #DFE6F0;
-  --surface-container-low: #F8FAFC;
-  --surface-variant: #E2E8F0;
+  --surface-container: #F2F0EB;
+  --surface-container-high: #E9E6E0;
+  --surface-container-low: #FAF9F7;
+  --surface-variant: #DEDBD5;
   --surface-bright: #FFFFFF;
-  --secondary-container: #E5EDFC;
-  --on-secondary-fixed: #172554;
-  --outline-variant: #C4CDD9;
-  --wash-from: #EDF2FA;
-  --wash-to: #F5F7FA;
-  --ring: #2563EB;
-  --bezel: #111827;
+  --secondary-container: #E8E0FF;
+  --on-secondary-fixed: #281647;
+  --outline-variant: #CFCBC4;
+  --wash-from: #EFEAF8;
+  --wash-to: #F7F5F2;
+  --ring: #714CB6;
+  --bezel: #292827;
+  /* jewel fills for colour-blocked cards */
+  --fill-teal: #0C4243;
+  --fill-wine: #421D24;
+  --fill-aubergine: #281647;
+  --fill-lilac: #D4C7FF;
+  --fill-night: #150C2B;
 }
 
 :root {
-  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Classic: Lower-glare studio stone, deep slate-navy accent (no beige/olive) */

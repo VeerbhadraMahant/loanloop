@@ -7,7 +7,7 @@ export function Facts() {
     ["11", "Indian languages"],
     ["23", "gateway actions"],
     ["4", "security tiers"],
-    ["33 ms", "gateway p95 per action"],
+    ["SMS only", "full details go to the registered mobile"],
     ["Tier 3", "OTP, PIN and password never asked"],
     ["Gnani", "Prisma speech-to-text and Timbre voices"],
   ];
