@@ -178,7 +178,7 @@ export function OpsView() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-line">
         <div>
-          <h2 className="text-base font-bold text-fg">Live Operations</h2>
+          <h2 className="text-base font-medium text-fg">Live Operations</h2>
           <p className="text-xs text-muted">Real-time call stream, session timeline, handover queue, and guardrail incidents.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">

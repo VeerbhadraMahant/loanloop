@@ -76,7 +76,7 @@ export default function HandoversPage() {
       </section>
 
       {counts.length > 0 && (
-        <section aria-label="Reasons" className="rounded-lg border border-bank-line bg-bank-surface p-4">
+        <section aria-label="Reasons" className="rounded-xl border border-bank-line bg-bank-surface p-4">
           <h2 className="mb-3 text-sm font-medium">Why calls were handed over</h2>
           <ul className="space-y-2">
             {counts.map(([r, n]) => (
@@ -120,7 +120,7 @@ export default function HandoversPage() {
             <section><h3 className="mb-1 text-sm font-medium text-bank-muted">Case summary</h3><p>{selected.summary}</p></section>
             <section><h3 className="mb-2 text-sm font-medium text-bank-muted">Already done on the call</h3><Chips items={selected.requests_done} empty="Nothing completed." /></section>
             <section><h3 className="mb-2 text-sm font-medium text-bank-muted">Still pending for your team</h3><Chips items={selected.requests_pending} empty="Nothing pending." /></section>
-            <dl className="grid grid-cols-2 gap-3 rounded-lg border border-bank-line p-3 text-sm">
+            <dl className="grid grid-cols-2 gap-3 rounded-xl border border-bank-line p-3 text-sm">
               <div><dt className="text-bank-muted">Customer</dt><dd>{selected.customer_ref ?? "Unknown"}</dd></div>
               <div><dt className="text-bank-muted">Call</dt><dd className="break-all">{selected.call_id}</dd></div>
             </dl>

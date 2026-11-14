@@ -3,10 +3,10 @@
   --b-bg: var(--bg);
   --b-surface: var(--card);
   --b-sunken: var(--sunken);
-  --b-line: var(--line);
-  --b-line-strong: var(--outline-variant);
+  --b-line: color-mix(in srgb, var(--fg) 12%, transparent);
+  --b-line-strong: color-mix(in srgb, var(--fg) 24%, transparent);
   --b-fg: var(--fg);
-  --b-muted: var(--muted);
+  --b-muted: color-mix(in srgb, var(--fg) 65%, transparent);
   --b-accent: var(--primary);
   --b-accent-fg: var(--primary-fg);
   --b-accent-soft: var(--accent-soft);
@@ -33,13 +33,13 @@
 .bank[data-density="compact"] { --b-cell-y: 6px; --b-text: 13px; }
 .bank :focus-visible { outline: 2px solid var(--b-ring); outline-offset: 2px; }
 .bank .b-num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }
-.bank .b-title { font-family: var(--font-sans); font-weight: 600; letter-spacing: -0.02em; }
-.bank .b-pressable { transition: transform 140ms var(--ease-out), background-color 140ms var(--ease-out), border-color 140ms var(--ease-out); }
+.bank .b-title { font-family: var(--font-sans); font-weight: 500; letter-spacing: -0.0275em; }
+.bank .b-pressable { transition: transform 100ms var(--ease-out), background-color 200ms var(--ease-out), border-color 200ms var(--ease-out); }
 .bank .b-pressable:active { transform: scale(0.98); }
 @keyframes b-slide-in { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes b-fade-in { from { opacity: 0; } to { opacity: 1; } }
-.bank .b-drawer { animation: b-slide-in 180ms cubic-bezier(0.23, 1, 0.32, 1) both; }
-.bank .b-scrim { animation: b-fade-in 140ms ease-out both; }
+.bank .b-drawer { animation: b-slide-in 300ms var(--ease-out) both; }
+.bank .b-scrim { animation: b-fade-in 200ms var(--ease-out) both; }
 @media (prefers-reduced-motion: reduce) {
   .bank .b-drawer { animation-name: b-fade-in; }
   .bank .b-pressable:active { transform: none; }

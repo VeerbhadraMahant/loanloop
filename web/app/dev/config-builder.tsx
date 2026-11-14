@@ -226,7 +226,7 @@ export function ConfigBuilder({
   return (
     <Card className="overflow-visible">
       {/* Sticky Preset & Save Bar */}
-      <div className="sticky top-12 z-20 flex flex-wrap items-center justify-between gap-2 rounded-t-lg border-b border-line bg-card/95 px-4 py-2.5 backdrop-blur-sm">
+      <div className="sticky top-12 z-20 flex flex-wrap items-center justify-between gap-2 rounded-t-lg border-b border-line bg-card px-4 py-2.5">
         <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Presets">
           <span className="mr-1 text-[11px] font-semibold uppercase tracking-wider text-muted">
             Presets:

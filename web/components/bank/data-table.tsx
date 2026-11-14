@@ -34,7 +34,7 @@ export function DataTable<T>({ columns, rows, rowKey, onRowClick, loading, empty
   const cell = "px-3 py-[var(--b-cell-y)] align-middle";
 
   return (
-    <div className="max-h-[70vh] overflow-auto rounded-lg border border-bank-line bg-bank-surface">
+    <div className="max-h-[70vh] overflow-auto rounded-xl border border-bank-line bg-bank-surface">
       <table className="w-full border-collapse text-left">
         <caption className="sr-only">{caption}</caption>
         <thead className="sticky top-0 z-10 bg-bank-sunken">

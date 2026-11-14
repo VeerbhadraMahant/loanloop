@@ -155,7 +155,7 @@ export default function TodayPage() {
           ) : items.length === 0 ? (
             <EmptyState title="Nothing needs attention" description="No handovers or security events yet." />
           ) : (
-            <ul className="divide-y divide-bank-line rounded-lg border border-bank-line bg-bank-surface">
+            <ul className="divide-y divide-bank-line rounded-xl border border-bank-line bg-bank-surface">
               {items.map((i) => (
                 <li key={i.key}>
                   <Link href={i.href} className="flex min-h-12 items-start gap-3 px-4 py-3 hover:bg-bank-sunken focus-visible:bg-bank-sunken">

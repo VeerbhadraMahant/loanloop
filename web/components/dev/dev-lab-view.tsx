@@ -74,7 +74,7 @@ export function DevLabView() {
       {dev && (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-line bg-card">
           <div>
-            <h2 className="text-sm font-bold text-fg">Voice Engine &amp; Model Benchmark Lab</h2>
+            <h2 className="text-sm font-medium text-fg">Voice Engine &amp; Model Benchmark Lab</h2>
             <p className="text-xs text-muted mt-0.5">
               Live LLM provider parameters, cold-start warmups &amp; latency benchmark comparison.
             </p>
@@ -102,7 +102,7 @@ export function DevLabView() {
 
       {dev && (
         <div className="space-y-5">
-          <details className="rounded-lg border border-line bg-card px-3.5 py-2.5 text-xs text-muted">
+          <details className="rounded-xl border border-line bg-card px-3.5 py-2.5 text-xs text-muted">
             <summary className="cursor-pointer font-medium text-fg">
               How to read benchmark timings &amp; caller selection
             </summary>
@@ -119,7 +119,7 @@ export function DevLabView() {
           <ConfigBuilder dev={dev} cfg={cfg} setCfg={setCfg} editing={editing !== null} onSave={save} />
           {note && <p role="alert" className="text-xs font-medium text-danger-fg">{note}</p>}
 
-          <div className="flex flex-wrap items-center gap-3 rounded-lg border border-line bg-card px-3.5 py-2.5">
+          <div className="flex flex-wrap items-center gap-3 rounded-xl border border-line bg-card px-3.5 py-2.5">
             <Button
               small
               variant="secondary"

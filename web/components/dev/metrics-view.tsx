@@ -89,7 +89,7 @@ export function MetricsView() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-line">
         <div>
-          <h2 className="text-base font-bold text-fg">Metrics &amp; SLA Telemetry</h2>
+          <h2 className="text-base font-medium text-fg">Metrics &amp; SLA Telemetry</h2>
           <p className="text-xs text-muted">Gateway latency benchmarks (p95 target &lt; {TARGET_P95} ms), error counts, and load test telemetry.</p>
         </div>
         <div className="flex items-center gap-2">
@@ -216,7 +216,7 @@ export function MetricsView() {
                             </td>
                             <td className="px-3 py-2 text-muted">{a.count}</td>
                             <td className="px-3 py-2 text-fg">{a.p50}</td>
-                            <td className={`px-3 py-2 font-bold ${pass ? "text-fg" : "text-danger-fg"}`}>
+                            <td className={`px-3 py-2 font-medium ${pass ? "text-fg" : "text-danger-fg"}`}>
                               {a.p95}
                             </td>
                             <td className="px-3 py-2 text-muted">{a.p99}</td>
@@ -295,7 +295,7 @@ export function MetricsView() {
                       return (
                         <div
                           key={k}
-                          className="flex flex-col justify-between rounded-lg border border-line bg-card px-3 py-2.5"
+                          className="flex flex-col justify-between rounded-xl border border-line bg-card px-3 py-2.5"
                         >
                           <div className="flex items-center justify-between gap-2">
                             <dt className="truncate font-mono text-[11px] uppercase tracking-wider text-muted">
@@ -324,7 +324,7 @@ export function MetricsView() {
                       return (
                         <details
                           key={k}
-                          className="rounded-lg border border-line bg-card p-3 text-xs"
+                          className="rounded-xl border border-line bg-card p-3 text-xs"
                           open={k === "overall"}
                         >
                           <summary className="flex cursor-pointer items-center justify-between gap-2 font-mono font-semibold uppercase tracking-wider text-fg">

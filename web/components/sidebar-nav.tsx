@@ -163,14 +163,14 @@ export function ThemeSelector() {
         onClick={() => changeTheme("bright")}
         className={`flex items-center justify-center gap-1.5 rounded px-2 py-1 transition-colors cursor-pointer ${
           theme === "bright"
-            ? "bg-card text-fg font-semibold border border-line"
+            ? "bg-card text-fg font-medium border border-line"
             : "text-muted hover:text-fg"
         }`}
         title="Bright daylight slate"
         aria-label="Radiant bright theme"
         aria-pressed={theme === "bright"}
       >
-        <span className="h-2 w-2 rounded-full bg-[#1D4ED8] border border-line" />
+        <span className="h-2 w-2 rounded-full bg-[var(--accent)] border border-line" />
         <span>Bright</span>
       </button>
       <button
@@ -178,14 +178,14 @@ export function ThemeSelector() {
         onClick={() => changeTheme("classic")}
         className={`flex items-center justify-center gap-1.5 rounded px-2 py-1 transition-colors cursor-pointer ${
           theme === "classic"
-            ? "bg-card text-fg font-semibold border border-line"
+            ? "bg-card text-fg font-medium border border-line"
             : "text-muted hover:text-fg"
         }`}
         title="Classic lower-glare stone"
         aria-label="Classic theme"
         aria-pressed={theme === "classic"}
       >
-        <span className="h-2 w-2 rounded-full bg-[#64748B] border border-line" />
+        <span className="h-2 w-2 rounded-full bg-[var(--surface-variant)] border border-line" />
         <span>Classic</span>
       </button>
       <button
@@ -193,14 +193,14 @@ export function ThemeSelector() {
         onClick={() => changeTheme("dark")}
         className={`flex items-center justify-center gap-1.5 rounded px-2 py-1 transition-colors cursor-pointer ${
           theme === "dark"
-            ? "bg-card text-fg font-semibold border border-line"
+            ? "bg-card text-fg font-medium border border-line"
             : "text-muted hover:text-fg"
         }`}
         title="Control room dark"
         aria-label="Dark theme"
         aria-pressed={theme === "dark"}
       >
-        <span className="h-2 w-2 rounded-full bg-[#0C1017] border border-outline-variant" />
+        <span className="h-2 w-2 rounded-full bg-[var(--fill-night)] border border-outline-variant" />
         <span>Dark</span>
       </button>
     </div>
@@ -239,7 +239,7 @@ function UserSettingsMenu({ align = "up", name, signOut = false }: { align?: "up
         className="flex w-full items-center justify-between gap-2 rounded-md border border-transparent px-2 py-1.5 text-left transition-colors hover:border-line hover:bg-sunken cursor-pointer"
       >
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary text-[11px] font-semibold text-primary-fg">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary text-[11px] font-medium text-primary-fg">
             SFB
           </div>
           <div className="min-w-0">
@@ -254,12 +254,12 @@ function UserSettingsMenu({ align = "up", name, signOut = false }: { align?: "up
         <div
           role="dialog"
           aria-label="Appearance settings"
-          className={`absolute left-0 right-0 z-50 min-w-[220px] rounded-lg border border-line bg-card p-3 shadow-md ${
+          className={`absolute left-0 right-0 z-50 min-w-[220px] rounded-lg border border-line bg-card p-3 shadow-none ${
             align === "up" ? "bottom-full mb-2" : "top-full mt-2 right-0 left-auto"
           }`}
         >
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">
+            <span className="text-[11px] font-medium uppercase tracking-wider text-muted">
               Appearance
             </span>
             <span className="font-mono text-[10px] text-muted">Cmd+B nav</span>
@@ -283,7 +283,7 @@ export function SidebarNav() {
       {isOpen && (
         <div
           onClick={toggle}
-          className="fixed inset-0 z-40 bg-fg/20 backdrop-blur-[1px] md:hidden"
+          className="fixed inset-0 z-40 bg-fg/20 md:hidden"
           aria-hidden="true"
         />
       )}
@@ -327,7 +327,7 @@ export function SidebarNav() {
                       aria-current={active ? "page" : undefined}
                       className={`flex items-center justify-between px-2.5 py-1.5 rounded-md text-[13px] transition-colors ${
                         active
-                          ? "bg-secondary-container text-accent-ink font-semibold"
+                          ? "bg-accent-soft text-accent-ink font-medium"
                           : "text-muted hover:text-fg hover:bg-sunken font-medium"
                       }`}
                     >
@@ -377,7 +377,7 @@ export function AppHeader({
   const me = useMe(door);
 
   return (
-    <header className="sticky top-0 z-30 h-12 bg-card/95 backdrop-blur-sm border-b border-line px-4 sm:px-6 flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-30 h-12 bg-card border-b border-line px-4 sm:px-6 flex items-center justify-between gap-4">
       <div className="flex items-center gap-3 min-w-0">
         {/* Toggle button to show or hide the vertical navbar (staff only: customers have no sidebar) */}
         {door === "staff" && <button
@@ -405,7 +405,7 @@ export function AppHeader({
 
         {title && (
           <div className="flex items-baseline gap-2 truncate">
-            <span className="text-sm font-semibold text-fg truncate">{title}</span>
+            <span className="text-sm font-medium text-fg truncate">{title}</span>
             {sub && <span className="hidden lg:inline text-xs text-muted truncate">· {sub}</span>}
           </div>
         )}

@@ -18,8 +18,8 @@ export type LlmId = (typeof LLMS)[number]["id"];
 
 /** Segment colours shared by the per-turn bar and the lab's comparison bars. */
 export const SEG = {
-  stt: { k: "STT", c: "bg-sky-500" }, llm: { k: "LLM", c: "bg-violet-500" }, gateway: { k: "Gateway", c: "bg-emerald-500" },
-  tts: { k: "TTS", c: "bg-amber-500" }, other: { k: "Server other", c: "bg-slate-400" }, net: { k: "Network/browser", c: "bg-rose-400" },
+  stt: { k: "STT", c: "bg-[var(--fill-teal)]" }, llm: { k: "LLM", c: "bg-primary" }, gateway: { k: "Gateway", c: "bg-ok-fg" },
+  tts: { k: "TTS", c: "bg-warn-fg" }, other: { k: "Server other", c: "bg-muted" }, net: { k: "Network/browser", c: "bg-danger-fg" },
 } as const;
 
 const sec = (ms: number) => (ms / 1000).toFixed(2);

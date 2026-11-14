@@ -131,7 +131,7 @@ export function CollectionsView({ onLaunchCall }: { onLaunchCall: (caseId: numbe
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-line">
         <div>
-          <h2 className="text-base font-bold text-fg">Collections &amp; Recoveries</h2>
+          <h2 className="text-base font-medium text-fg">Collections &amp; Recoveries</h2>
           <p className="text-xs text-muted">Overdue cases, automated dialer queue, promises to pay (PTP), and refusals to pay (RTP).</p>
         </div>
         <div className="flex items-center gap-2.5">
