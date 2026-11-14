@@ -149,6 +149,10 @@ def build() -> list:
         out.append(m.Reminder(loan_id=i, sent_at=datetime.combine(REF - timedelta(days=rnd.randint(1, 10)), time(10, 0), timezone.utc),
                               channel=rnd.choice(["sms", "call"]), paused_until=None))
     add_bank_data(out, loans, set(unmatched), REF)
+    add_persona_extras(out, loans, REF)
+    from app.db.history import add_history
+
+    add_history(out, REF)  # own RNG: nothing above changes
     return out
 
 
@@ -271,6 +275,80 @@ def add_bank_data(out: list, loans: dict[int, m.Loan], unmatched: set[int], REF:
         a.hold_amount = min(5_000, bal // 2) if i % 7 == 0 else 0
 
 
+# Extra loans for the named personas (the primary loan above is untouched; demo scripts depend on it). Ids start at 301 so
+# the primary stays the lowest id per customer: every "the loan" action orders by Loan.id and keeps picking it.
+# (customer_id, loan_id, product, principal, rate, tenure, elapsed, emi_day, loan_number)
+EXTRA_LOANS = [
+    (1, 301, "vehicle", 600_000, 9.5, 60, 18, 12, "410020611842"),
+    (1, 302, "consumer_durable", 80_000, 13.0, 18, 6, 20, "410020734905"),
+    (2, 303, "vehicle", 90_000, 11.5, 36, 10, 18, "410030248176"),
+    (2, 304, "gold", 100_000, 9.5, 18, 5, 25, "410030359027"),
+    (3, 305, "education", 400_000, 9.8, 84, 20, 8, "410040471653"),
+    (3, 306, "home_improvement", 250_000, 11.0, 36, 12, 22, "410040582390"),
+]
+# customer_id: (employer, net monthly salary, salary day, rent, SIP, broadband/mobile)
+SALARY = {1: ("Sahyadri Infotech Pvt Ltd", 145_000, 1, 0, 10_000, 1_099),
+          2: ("Godavari Auto Components Pvt Ltd", 85_000, 28, 14_000, 5_000, 799),
+          3: ("Krishna Valley Engineering Pvt Ltd", 110_000, 7, 16_500, 8_000, 999)}
+
+
+def _balance_after(principal: int, rate: float, months: int, paid: int) -> int:
+    r, e = rate / 1200, emi(principal, rate, months)
+    return round(principal * (1 + r) ** paid - e * ((1 + r) ** paid - 1) / r)
+
+
+def add_persona_extras(out: list, loans: dict[int, m.Loan], REF: date) -> None:
+    """Extra loans plus a steady salary-led statement (3 months) for Priya, Ramesh and Sunita. Own RNG: other customers unchanged."""
+    rnd = random.Random(7)
+    mine: dict[int, list[m.Loan]] = {c: [loans[c]] for c in SALARY}
+    for cid, lid, prod, princ, rate, ten, elapsed, day, num in EXTRA_LOANS:
+        ln = m.Loan(id=lid, customer_id=cid, loan_number=encrypt(num), loan_last4=num[-4:], product=prod, principal=princ,
+                    rate_type="fixed", current_rate=rate, emi_amount=emi(princ, rate, ten), emi_day=day, tenure_months=ten,
+                    outstanding=_balance_after(princ, rate, ten, elapsed), status="active")
+        mine[cid].append(ln)
+        out.append(ln)
+        this = date(REF.year, REF.month, day)
+        first_due = this if this > REF else add_months(this, 1)
+        for k in range(-6, 2):
+            d = add_months(first_due, k)
+            out.append(m.EmiSchedule(loan_id=lid, due_date=d, amount=ln.emi_amount, status="paid" if d <= REF else "due"))
+        out.append(m.Payment(loan_id=lid, date=add_months(date(REF.year, REF.month, day), -1), amount=ln.emi_amount,
+                             utr=f"SAHYM{rnd.randint(10**10, 10**11 - 1)}", channel="nach", status="matched"))
+        out.append(m.Reminder(loan_id=lid, sent_at=datetime.combine(REF - timedelta(days=rnd.randint(1, 10)), time(10, 0), timezone.utc),
+                              channel="sms", paused_until=None))
+
+    out[:] = [r for r in out if not (isinstance(r, m.AccountTransaction) and r.account_id in SALARY)]
+    accts = {r.id: r for r in out if isinstance(r, m.Account)}
+    n12 = lambda: str(rnd.randint(10**11, 10**12 - 1))  # noqa: E731
+    for cid, (employer, salary, sday, rent, sip, net) in SALARY.items():
+        items = []  # (date, dir, amount, narration, ref)
+
+        def on(day: int, back: int) -> date:
+            return add_months(date(REF.year, REF.month, min(day, 28)), -back)
+
+        for back in range(3):
+            items.append((on(sday, back), "cr", salary, f"Salary credit - {employer}", f"NEFT/CR/SAHYN{rnd.randint(10**10, 10**11 - 1)}"))
+            for ln in mine[cid]:
+                items.append((on(ln.emi_day, back), "dr", ln.emi_amount, f"EMI auto-debit - loan ending {ln.loan_last4}", f"NACH/{rnd.randint(10**10, 10**11 - 1)}"))
+            if rent:
+                items.append((on(3, back), "dr", rent, "UPI payment - House rent", f"UPI/DR/{n12()}"))
+            items.append((on(10, back), "dr", rnd.randrange(1_400, 3_400, 100), "Bill payment - MSEDCL electricity", f"BBPS/{n12()}"))
+            items.append((on(11, back), "dr", net, "Bill payment - Broadband and mobile", f"BBPS/{n12()}"))
+            items.append((on(sday + 2, back), "dr", sip, "SIP debit - Mutual fund", f"NACH/{rnd.randint(10**10, 10**11 - 1)}"))
+            for _ in range(5):
+                items.append((on(rnd.randint(1, 28), back), "dr", rnd.randrange(150, 4_500, 10), f"UPI payment - {rnd.choice(MERCHANTS)}", f"UPI/DR/{n12()}"))
+        items = sorted((x for x in items if x[0] <= REF), key=lambda x: x[0])  # never a future-dated row
+        run, lo = 0, 0
+        for _, dr, amt, *_ in items:
+            run += amt if dr == "cr" else -amt
+            lo = min(lo, run)
+        bal = -lo + rnd.randrange(20_000, 60_000, 250)  # opening balance: never overdrawn
+        for dt, dr, amt, narr, ref in items:
+            bal += amt if dr == "cr" else -amt
+            out.append(m.AccountTransaction(account_id=cid, date=dt, direction=dr, amount=amt, narration=narr, ref=ref, balance_after=bal))
+        accts[cid].balance = bal
+
+
 async def seed(engine: AsyncEngine, n_only: bool = False) -> int:
     from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -292,8 +370,8 @@ async def seed(engine: AsyncEngine, n_only: bool = False) -> int:
         from app.security.passwords import hash_secret
 
         if settings.demo_staff_password:
-            for email, name, role in (("manager@loanloop.demo", "Asha Manager", "bank_manager"), ("engineer@loanloop.demo", "Eshan Engineer", "engineer"),
-                                      ("admin@loanloop.demo", "Ankit Admin", "admin")):
+            for email, name, role in (("manager@loanloop.demo", "Asha Kulkarni", "bank_manager"), ("engineer@loanloop.demo", "Eshan Joshi", "engineer"),
+                                      ("admin@loanloop.demo", "Ankit Deshpande", "admin")):
                 s.add(m.StaffUser(email=email, name=name, role=role, password_hash=hash_secret(settings.demo_staff_password)))
         if settings.demo_customer_passcode:
             for cid in (1, 2, 3, OUT_ID):  # Priya, Ramesh, Sunita, Vikram (outbound persona)

@@ -101,7 +101,7 @@ async def test_lockout_unknown_identifier(client):
 async def test_session_lifecycle(client):
     sid = await staff(client, "engineer")
     r = await client.get("/auth/session", headers={"X-LL-Session": sid})
-    assert r.json() == {"kind": "staff", "role": "engineer", "name": "Eshan Engineer"}
+    assert r.json() == {"kind": "staff", "role": "engineer", "name": "Eshan Joshi"}
     assert (await client.get("/auth/session", headers={"X-LL-Session": "nope"})).status_code == 401
     assert (await client.get("/auth/session")).status_code == 401
     cs = await cust(client)

@@ -35,7 +35,6 @@ export function CallingDeskTab({ initialQuery }: { initialQuery?: string }) {
   const [showKeyboard, setShowKeyboard] = useState(false);
   const [inputText, setInputText] = useState("");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [tapTalking, setTapTalking] = useState(false);
   const [activeApproval, setActiveApproval] = useState<Approval | null>(null);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -187,21 +186,24 @@ export function CallingDeskTab({ initialQuery }: { initialQuery?: string }) {
     }
   }, [initialQuery, callId, handleTurnSubmit]);
 
+  // One recorder for both modes: tap mode starts on the first tap and sends on the second.
   const { talking: holdTalking, props: holdProps } = useHoldToTalk(
-    micMode === "hold",
+    true,
     (wav) => handleTurnSubmit({ wav }),
     (err) => setErrorMsg(err)
   );
 
-  const isCurrentlyListening = micMode === "hold" ? holdTalking : tapTalking;
+  const isCurrentlyListening = holdTalking;
   useEffect(() => {
     if (isCurrentlyListening) {
+      setErrorMsg(null);
       setStatus("listening");
       setCurrentStep(1);
-    } else if (status === "listening") {
-      setStatus("thinking");
+    } else {
+      // "thinking" is set only when a turn is actually sent; a clip too short to send goes back to idle.
+      setStatus((s) => (s === "listening" ? "idle" : s));
     }
-  }, [isCurrentlyListening, status]);
+  }, [isCurrentlyListening]);
 
   const handleSendText = (e: React.FormEvent) => {
     e.preventDefault();
@@ -398,9 +400,9 @@ export function CallingDeskTab({ initialQuery }: { initialQuery?: string }) {
               ) : (
                 <button
                   type="button"
-                  onClick={() => setTapTalking(!tapTalking)}
+                  onClick={() => (holdTalking ? holdProps.onMouseUp() : holdProps.onMouseDown())}
                   className={`w-18 h-18 rounded-full flex items-center justify-center border-4 transition-colors duration-150 cursor-pointer ${
-                    tapTalking
+                    holdTalking
                       ? "bg-danger-fg text-white border-danger-line scale-95 ring-4 ring-danger-fg/30 motion-safe:animate-pulse"
                       : "bg-primary text-primary-fg border-card motion-safe:active:scale-95"
                   }`}

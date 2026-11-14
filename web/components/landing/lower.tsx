@@ -135,7 +135,7 @@ export function TwoDoors() {
 }
 
 const FAQ = [
-  ["Is this a real bank?", "No. Sahyadri Finance Bank is a fictional lender with 200 synthetic customers."],
+  ["Is this a real bank?", "No. Sahyadri Finance Bank is a fictional lender."],
   ["Will the agent ask for my OTP or PIN?", "Never. If a caller says one aloud it is caught before the language model sees it and is not stored."],
   ["Which language model answers?", "A local open model for English, Hindi, Hinglish and Marathi, and Sarvam for the other seven languages. Speech is Gnani."],
   ["What happens when the agent is unsure?", "It hands over to a person with a structured case record."],
@@ -148,7 +148,7 @@ export function About() {
         <Chapter
           center={false}
           title="About LoanLoop"
-          lead="LoanLoop is an entry for the Gnani Great Indian AI Internship Challenge. Speech is Gnani: Prisma for recognition, Timbre for voices. All data is synthetic, and Sahyadri Finance Bank is a fictional lender."
+          lead="LoanLoop is an entry for the Gnani Great Indian AI Internship Challenge. Speech is Gnani: Prisma for recognition, Timbre for voices."
         />
         <div>
           {FAQ.map(([q, a]) => (

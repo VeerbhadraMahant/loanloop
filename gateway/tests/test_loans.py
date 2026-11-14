@@ -31,7 +31,7 @@ async def ramesh():
 
 async def loan_of(cust):
     async with SessionLocal() as db:
-        return (await db.execute(select(Loan).where(Loan.customer_id == cust.id))).scalar_one()
+        return (await db.execute(select(Loan).where(Loan.customer_id == cust.id).order_by(Loan.id).limit(1))).scalar_one()
 
 
 async def rb(client, field, value, cid="call1"):
@@ -97,7 +97,7 @@ async def test_check_payment_unmatched_flow(client, make_session, priya):
         sr = await db.get(ServiceRequest, tid)
         assert sr.type == "reconciliation" and sr.customer_id == priya.id
         assert sr.payload["utr_last4"] == "8291" and UTR not in str(sr.payload)
-        ln = (await db.execute(select(Loan).where(Loan.customer_id == priya.id))).scalar_one()
+        ln = (await db.execute(select(Loan).where(Loan.customer_id == priya.id).order_by(Loan.id).limit(1))).scalar_one()
         rem = (await db.execute(select(Reminder).where(Reminder.loan_id == ln.id))).scalars().all()
         assert rem and all(x.paused_until is not None for x in rem)
         assert (await db.execute(select(Payment.status).where(Payment.utr == UTR))).scalar_one() == "unmatched"

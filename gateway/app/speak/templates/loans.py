@@ -17,6 +17,12 @@ T: dict[str, dict[str, str]] = {
         "hinglish": "Aapke loan {loan} ki EMI {amount} hai. Abhi mujhe koi agli due date nahi dikh rahi.",
         "mr": "कर्ज {loan} चा तुमचा ईएमआय {amount} आहे. सध्या मला पुढील देय तारीख दिसत नाही.",
     },
+    "emi_others": {
+        "en": "You also have {n} other active loans with us; your total monthly EMI across all loans is {total}.",
+        "hi": "आपके हमारे पास {n} और चालू लोन भी हैं; सभी लोन की कुल मासिक ईएमआई {total} है।",
+        "hinglish": "Aapke hamare paas {n} aur active loans bhi hain; sabhi loans ki total monthly EMI {total} hai.",
+        "mr": "तुमची आमच्याकडे आणखी {n} चालू कर्जे आहेत; सर्व कर्जांचा एकूण मासिक ईएमआय {total} आहे.",
+    },
     "ctype_bounce": {"en": "bounce charge", "hi": "बाउंस शुल्क", "hinglish": "bounce charge", "mr": "बाउन्स शुल्क"},
     "ctype_penal": {"en": "penal charge", "hi": "पेनल शुल्क", "hinglish": "penal charge", "mr": "दंड शुल्क"},
     "ctype_processing": {"en": "processing fee", "hi": "प्रोसेसिंग शुल्क", "hinglish": "processing fee", "mr": "प्रक्रिया शुल्क"},

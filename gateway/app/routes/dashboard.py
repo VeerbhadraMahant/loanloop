@@ -180,7 +180,9 @@ async def metrics(db: AsyncSession = Depends(get_db)):
     n_calls = await db.scalar(select(func.count()).select_from(Call))
     ended = await db.scalar(select(func.count()).select_from(Call).where(Call.ended_at.is_not(None)))
     done = await db.scalar(select(func.count()).select_from(Call).where(Call.outcome.in_(("completed", "resolved"))))
-    n_ho = await db.scalar(select(func.count(func.distinct(Handover.call_id))))
+    # a call counts as handed over by its outcome or a queued packet (the queue only holds handovers not yet worked)
+    n_ho = await db.scalar(select(func.count()).select_from(Call).where(
+        (Call.outcome == "handover") | Call.call_id.in_(select(Handover.call_id))))
     secrets = await db.scalar(select(func.count()).select_from(AuditLog).where(
         (AuditLog.error_code == "SECRET_DETECTED") | AuditLog.action.in_(SECURITY_ACTIONS)))
     blocked = await db.scalar(select(func.count()).select_from(AuditLog).where(AuditLog.error_code.in_(BLOCKED_CODES)))

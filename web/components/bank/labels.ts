@@ -27,5 +27,6 @@ const CODE: Record<string, string> = {
 /** Plain-language description of a security/approval event. */
 export const what = (e: GwEvent) =>
   e.type === "approval" ? (e.detail ? human(e.detail) : "Approval not completed")
+  : e.action === "verify_caller" && e.error_code === "NOT_VERIFIED" ? "Identity check failed: details did not match"
   : e.error_code ? CODE[e.error_code] ?? human(e.error_code)
   : e.action === "report_secret_spoken" ? "Caller said a secret; it was not stored" : "Blocked";

@@ -686,7 +686,7 @@ export function OpsView() {
                       <Button
                         small
                         disabled
-                        title="Demo: live takeover is not wired up"
+                        title="Live takeover is not available yet"
                         className="w-full justify-center font-medium"
                       >
                         <Icon name="support_agent" size={13} />
