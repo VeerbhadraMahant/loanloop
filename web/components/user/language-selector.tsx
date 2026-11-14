@@ -3,6 +3,14 @@
 import React from "react";
 import { useSession } from "@/lib/user/session";
 import { SupportedLang } from "@/lib/user/session";
+import { LANGUAGES } from "@/lib/languages";
+
+const DESC: Partial<Record<SupportedLang, string>> = {
+  en: "Default language",
+  hi: "बातचीत हिंदी में करें",
+  mr: "संभाषण मराठीत करा",
+  hinglish: "Hindi aur English ka mix",
+};
 
 interface LanguageSelectorProps {
   layout?: "segmented" | "cards";
@@ -12,11 +20,13 @@ interface LanguageSelectorProps {
 export function LanguageSelector({ layout = "segmented", onSelect }: LanguageSelectorProps) {
   const { language, setLanguage } = useSession();
 
-  const options: Array<{ code: SupportedLang; label: string; native: string; desc: string }> = [
-    { code: "en", label: "English", native: "English", desc: "Default language" },
-    { code: "hi", label: "Hindi", native: "हिंदी", desc: "बातचीत हिंदी में करें" },
-    { code: "mr", label: "Marathi", native: "मराठी", desc: "संभाषण मराठीत करा" },
-  ];
+  const options = LANGUAGES.map((l) => ({
+    code: l.code,
+    label: l.name,
+    native: l.native,
+    beta: l.beta,
+    desc: l.beta ? "Beta" : (DESC[l.code] ?? ""),
+  }));
 
   const handleSelect = (code: SupportedLang) => {
     setLanguage(code);
@@ -66,7 +76,7 @@ export function LanguageSelector({ layout = "segmented", onSelect }: LanguageSel
   }
 
   return (
-    <div className="flex items-center p-1 bg-surface-container rounded-xl border border-line">
+    <div className="flex flex-wrap items-center gap-1 p-1 bg-surface-container rounded-xl border border-line">
       {options.map((opt) => {
         const isSelected = language === opt.code;
         return (
@@ -81,6 +91,7 @@ export function LanguageSelector({ layout = "segmented", onSelect }: LanguageSel
             }`}
           >
             {opt.native}
+            {opt.beta && <sup className="ml-0.5 text-[8px] font-medium opacity-70">beta</sup>}
           </button>
         );
       })}

@@ -1,0 +1,100 @@
+{
+  "common": {
+    "bank_name": "Sahyadri Finance Bank",
+    "bank_subtitle": "Voice Servicing aur Mobile Desk",
+    "continue": "Aage badhein",
+    "verify": "Verify karein",
+    "cancel": "Cancel",
+    "back": "Wapas",
+    "close": "Band karein",
+    "loading": "Load ho raha hai...",
+    "secure_badge": "100% RBI Compliant · Zero Secrets",
+    "demo_tag": "Demo Persona"
+  },
+  "nav": {
+    "home": "Home",
+    "inbox": "Inbox",
+    "talk": "Baat",
+    "help": "Madad"
+  },
+  "welcome": {
+    "hero_title": "Voice Banking ab aur aasaan",
+    "hero_desc": "Marathi, Hindi ya English mein bolkar apni EMI jaanein, payment date badlein ya services turant paayein.",
+    "cta_start": "Shuru karein",
+    "rbi_note": "Sahyadri Finance Bank RBI ke guidelines aur zero secrets privacy standards ka poora paalan karta hai."
+  },
+  "language": {
+    "title": "Bhasha chunein",
+    "subtitle": "Wo bhasha chunein jisme aap sabse aaram se baat kar sakein:",
+    "en": "English",
+    "hi": "हिंदी (Hindi)",
+    "mr": "मराठी (Marathi)",
+    "helper": "Aap apni pasandida bhasha Settings se kabhi bhi badal sakte hain."
+  },
+  "mobile": {
+    "title": "Mobile number daalein",
+    "subtitle": "Sign in karne ke liye apna registered mobile number daalein.",
+    "input_label": "Registered mobile number",
+    "placeholder": "98765 43210",
+    "cta_send": "Aage badhein"
+  },
+  "otp": {
+    "title": "Passcode daalein",
+    "subtitle": "Apna 6-digit passcode daalein, number:",
+    "cta_verify": "Sign In",
+    "edit_mobile": "Number badlein"
+  },
+  "home": {
+    "greeting": "Namaste",
+    "active_loan": "Active Loan",
+    "emi_due": "Agli EMI",
+    "due_on": "Due date",
+    "outstanding": "Baaki Balance",
+    "pay_now": "EMI bharein",
+    "voice_card_title": "Sahyadri Voice Desk",
+    "voice_card_sub": "Bolkar poochein ya update karwayein",
+    "hold_to_talk": "Dabakar bolein",
+    "tap_to_talk": "Tap karke bolein",
+    "release_to_send": "Audio bhejne ke liye chhodein",
+    "listening": "Aapki awaaz sun raha hoon...",
+    "tools_heading": "Quick Services",
+    "tool_emi_date": "EMI date badlein",
+    "tool_balance": "Balance dekhein",
+    "tool_statement": "SMS Statement",
+    "tool_branch": "Branch ka time",
+    "tool_hardship": "Moratorium maangein",
+    "tool_officer": "Officer se baat karein"
+  },
+  "inbox": {
+    "title": "Inbox aur Approvals",
+    "pending_approvals": "Aapki action chahiye (Tier 2)",
+    "no_approvals": "Abhi koi pending approval request nahi hai.",
+    "sms_heading": "Bank SMS Alerts",
+    "approve": "Request approve karein",
+    "decline": "Decline karein",
+    "expires_in": "Khatam hoga:"
+  },
+  "talk": {
+    "title": "Voice Assistant",
+    "step_speak": "Bolein",
+    "step_check": "Check",
+    "step_send": "Ho gaya",
+    "type_placeholder": "Ya yahan type karein...",
+    "keyboard_mode": "Type karein",
+    "voice_mode": "Voice mode"
+  },
+  "help": {
+    "title": "Security aur Settings",
+    "zero_secrets_title": "Zero Secrets Guarantee",
+    "zero_secrets_body": "Sahyadri Finance Bank aapse voice ya chat par kabhi bhi debit card PIN, internet banking password, poora card number ya OTP nahi maangega.",
+    "mic_mode_title": "Microphone Mode",
+    "mic_hold": "Hold-to-Talk (shor wali jagah ke liye best)",
+    "mic_tap": "Tap-to-Talk (ek tap se start/stop)",
+    "app_theme": "Theme",
+    "sign_out": "Sign Out",
+    "staff_collections": "Staff Collections Desk",
+    "staff_ops": "Live Operations Console",
+    "dev_lab": "Developer Lab aur Sandbox",
+    "dev_metrics": "Metrics aur SLA Dashboard"
+  }
+}
