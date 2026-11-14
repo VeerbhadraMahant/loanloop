@@ -162,7 +162,8 @@ def add_history(out: list, REF: date) -> None:
     seen = {}
 
     def lat(action, code):
-        if rnd.random() < 0.012:
+        # rare slow rows only on high-volume actions: one outlier among a dozen samples would wreck a low-volume action's p95
+        if action in ("start_call", "end_call", "verify_caller", "check_approval", "request_app_approval", "emi_info") and rnd.random() < 0.012:
             return rnd.randint(90, 260)
         base = 7 if code else {"verify_caller": 17, "check_payment": 20, "emi_date_change": 19, "send_details_sms": 15, "handover": 14,
                                "request_document": 16, "emi_info": 14, "foreclosure_quote": 18}.get(action, 12)
@@ -176,7 +177,9 @@ def add_history(out: list, REF: date) -> None:
         n = len(c.steps)
         offs = sorted(rnd.uniform(3, max(5, dur.total_seconds() - 6)) for _ in range(n - 2))
         stamps = [started] + [started + timedelta(seconds=o + i) for i, o in enumerate(offs)] + [started + dur - timedelta(milliseconds=rnd.randint(40, 120))]
-        cid = f"c-{started.strftime('%Y%m%d-%H%M')}-{rnd.randrange(16**3):03x}"
+        # same shape as live voice-service ids; every group keeps a letter so no digit run looks like a card number to the redactor
+        grp = lambda: next(g for g in iter(lambda: f"{rnd.getrandbits(32):08x}", None) if not g.isdigit())  # noqa: E731
+        cid = f"v-{grp()}-{grp()}-{grp()}-{grp()}"
         while cid in seen:
             cid += "x"
         seen[cid] = 1
@@ -194,7 +197,8 @@ def add_history(out: list, REF: date) -> None:
                 apps.append(m.Approval(session_id=cid, customer_id=c.cust["id"], purpose=p[0], status=p[1], created_at=ts))
             elif kind == "req":
                 reqs.append((ts + timedelta(seconds=1), c.cust["id"], p[0], p[1]))
-            elif kind == "handover":
+            elif kind == "handover" and ts >= datetime.now(timezone.utc) - timedelta(days=10):
+                # the handover queue has no resolved state: older ones were worked by the team, so only recent ones stay queued
                 hos.append(m.Handover(call_id=cid, customer_id=cust_id, reason=p[0], summary=p[1], requests_done=list(p[2]),
                                       requests_pending=list(p[3]), created_at=ts + timedelta(seconds=1)))
             elif kind == "ptp":
@@ -435,7 +439,11 @@ def add_history(out: list, REF: date) -> None:
         if cs.customer_id == OUT_ID or not cs.attempts or cs.last_call_at is None:
             continue
         cust = info(cs.customer_id)
-        last = cs.last_call_at.astimezone(IST)
+        # the base seed puts every case's last call at the same clock time; spread it over calling hours (09:30-18:30 IST)
+        lt = cs.last_call_at.astimezone(IST)
+        lt = lt.replace(hour=9, minute=30, second=rnd.randint(0, 59)) + timedelta(minutes=rnd.randint(0, 540))
+        cs.last_call_at = lt.astimezone(timezone.utc)
+        last = lt
         floor = REF - timedelta(days=cs.dpd)
         t_end = last
         for k in range(cs.attempts):
@@ -451,8 +459,8 @@ def add_history(out: list, REF: date) -> None:
             c = _Call(cust, "outbound"); c.started_day = t.date()
             c.st("start_call", tier=0)
             r = rnd.random()
-            if r < 0.22:
-                c.st("verify_caller", "NOT_VERIFIED"); c.outcome = "caller_hung_up"; dur = dur_of(40, 15, 20, 80)
+            if r < 0.22:  # borrower hung up before the identity check: not a security event
+                c.outcome = "caller_hung_up"; dur = dur_of(40, 15, 20, 80)
             else:
                 verify(c, 0.04); c.st("dues_info")
                 if r > 0.9:
@@ -483,7 +491,7 @@ def add_history(out: list, REF: date) -> None:
             c = _Call(cust, direction); c.started_day = day
             c.st("start_call", tier=0)
             if kind == "hung":
-                c.st("verify_caller", "NOT_VERIFIED"); c.outcome = "caller_hung_up"; dur = dur_of(40, 15, 20, 80)
+                c.outcome = "caller_hung_up"; dur = dur_of(40, 15, 20, 80)
             else:
                 verify(c, 0.04); c.st("dues_info"); dur = dur_of(170, 50, 70, 330)
                 if kind.startswith("ptp"):

@@ -97,7 +97,6 @@ export function LoginForm({ door }: { door: "staff" | "customer" }) {
         <div className="mx-auto w-full max-w-[400px] animate-[ll-in_200ms_var(--ease-out)_both] motion-reduce:animate-none">
           <div className="mb-8 flex items-center justify-between lg:hidden">
             <Wordmark />
-            <span className="font-mono text-sm text-muted">Demo · synthetic data</span>
           </div>
           <h1 className="text-3xl font-normal tracking-[-0.0275em] text-fg">{d.title}</h1>
           <p className="mt-2 text-base text-muted">{d.help}</p>

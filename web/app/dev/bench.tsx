@@ -143,7 +143,7 @@ export function Bench({
         {tts
           ? "Warning: TTS (and voice input) spend Gnani credits. "
           : "Typed bench with TTS off spends no Gnani credits. "}
-        Script lines are synthetic test lines.
+        Script lines are fixed test lines.
       </p>
       <label className="block space-y-1 text-xs font-medium text-fg">
         <span>Script lines (one per line, max 12)</span>

@@ -69,7 +69,7 @@ const mono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: "LoanLoop · Voice Banking Desk",
-  description: "Secure multilingual voice service desk for Sahyadri Finance Bank. Demo with synthetic data.",
+  description: "Secure multilingual voice service desk for Sahyadri Finance Bank.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

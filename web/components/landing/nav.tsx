@@ -104,7 +104,7 @@ export function Announcement() {
   return (
     <div className="ll-announce">
       <p>
-        Demo with synthetic data. Sahyadri Finance Bank is a fictional lender.{" "}
+        Built for the Gnani Great Indian AI Internship Challenge.{" "}
         <a href="#about" className="ll-announceLink">About the project <Arrow /></a>
       </p>
     </div>

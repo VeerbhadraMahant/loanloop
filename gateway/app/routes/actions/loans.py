@@ -67,9 +67,15 @@ async def emi_info(inp: NoInput, session: Session, db: AsyncSession, bg: Backgro
     )).scalar_one_or_none()
     kw = dict(loan=ending(loan.loan_last4, inp.language), amount=rupees(loan.emi_amount))
     data = {"emi": loan.emi_amount, "loan": mask_loan(loan.loan_last4), "next_due": nxt.isoformat() if nxt else None}
-    if nxt is None:
-        return ActionResponse(ok=True, speak=t("emi_no_due", inp.language, **kw), data=data)
-    return ActionResponse(ok=True, speak=t("emi_info", inp.language, date=fmt_date(nxt, inp.language), **kw), data=data)
+    others = (await db.execute(select(Loan).where(Loan.customer_id == session.customer_id, Loan.status != "closed",
+                                                  Loan.id != loan.id).order_by(Loan.id))).scalars().all()
+    speak = (t("emi_no_due", inp.language, **kw) if nxt is None
+             else t("emi_info", inp.language, date=fmt_date(nxt, inp.language), **kw))
+    if others:
+        data["other_loans"] = [{"loan": mask_loan(o.loan_last4), "product": o.product, "emi": o.emi_amount} for o in others]
+        speak += " " + t("emi_others", inp.language, n=len(others),
+                         total=rupees(loan.emi_amount + sum(o.emi_amount for o in others)))
+    return ActionResponse(ok=True, speak=speak, data=data)
 
 
 # ---- explain_emi_change ----

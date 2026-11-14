@@ -370,8 +370,8 @@ async def seed(engine: AsyncEngine, n_only: bool = False) -> int:
         from app.security.passwords import hash_secret
 
         if settings.demo_staff_password:
-            for email, name, role in (("manager@loanloop.demo", "Asha Manager", "bank_manager"), ("engineer@loanloop.demo", "Eshan Engineer", "engineer"),
-                                      ("admin@loanloop.demo", "Ankit Admin", "admin")):
+            for email, name, role in (("manager@loanloop.demo", "Asha Kulkarni", "bank_manager"), ("engineer@loanloop.demo", "Eshan Joshi", "engineer"),
+                                      ("admin@loanloop.demo", "Ankit Deshpande", "admin")):
                 s.add(m.StaffUser(email=email, name=name, role=role, password_hash=hash_secret(settings.demo_staff_password)))
         if settings.demo_customer_passcode:
             for cid in (1, 2, 3, OUT_ID):  # Priya, Ramesh, Sunita, Vikram (outbound persona)

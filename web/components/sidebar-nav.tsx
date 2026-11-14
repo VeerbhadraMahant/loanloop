@@ -349,12 +349,9 @@ export function SidebarNav() {
           ))}
         </nav>
 
-        {/* Single Persistent Demo Notice + User/Theme Settings Menu */}
+        {/* User/Theme Settings Menu (the data notice lives in each page footer) */}
         <div className="border-t border-line p-2.5 space-y-2 shrink-0 bg-card">
           <UserSettingsMenu align="up" name={me?.name} />
-          <div className="px-2 text-[11px] font-mono text-muted">
-            Demo · synthetic data
-          </div>
           <SignOut door="staff" className="text-xs font-medium text-muted hover:text-fg px-2 py-1 rounded-lg border border-line" />
         </div>
       </aside>

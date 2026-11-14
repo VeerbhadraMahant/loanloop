@@ -22,6 +22,7 @@ export function useHoldToTalk(enabled: boolean, onWav: (wav: Blob) => void, onEr
     rec.current = null; clearTimeout(r.timer); setTalking(false);
     const pcm = downsample(r.stop(), r.rate);
     if (pcm.length >= MIN_SECONDS * 16000) cb.current.onWav(new Blob([encodeWav(pcm)], { type: "audio/wav" }));
+    else cb.current.onError("Too short to hear. Keep holding while you speak, then release.");
   }, []);
 
   const begin = async () => {

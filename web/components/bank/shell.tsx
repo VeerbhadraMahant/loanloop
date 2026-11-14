@@ -110,7 +110,6 @@ export function BankShell({ children }: { children: ReactNode }) {
               <button type="button" onClick={toggleDensity} aria-pressed={compact} className={`${ctl} flex-1 justify-center`}>{compact ? "Compact" : "Comfy"}</button>
             </div>
             <SignOut door="staff" className={`${ctl} w-full justify-center`} />
-            <div className="px-1 font-mono text-[11px] text-bank-muted">Demo · synthetic data</div>
           </div>
         </aside>
 
@@ -118,6 +117,9 @@ export function BankShell({ children }: { children: ReactNode }) {
           <main id="bank-main" tabIndex={-1} className="mx-auto w-full min-w-0 max-w-[1280px] px-4 py-4 outline-none sm:px-6 lg:px-8">
             {children}
           </main>
+          <footer className="mt-auto border-t border-bank-line px-4 py-3 font-mono text-[11px] text-bank-muted sm:px-6 lg:px-8">
+            Demo · synthetic data · Sahyadri Finance Bank Ltd
+          </footer>
         </div>
       </div>
     </div>
