@@ -23,7 +23,7 @@ function Buckets({ cases }: { cases: CollCase[] }) {
   const list = [...map].sort((a, b) => a[1].dpd - b[1].dpd);
   const max = Math.max(1, ...list.map(([, v]) => v.amt));
   return (
-    <section aria-label="Overdue by days past due" className="rounded-lg border border-bank-line bg-bank-surface p-4">
+    <section aria-label="Overdue by days past due" className="rounded-xl border border-bank-line bg-bank-surface p-4">
       <h2 className="b-title text-lg">Overdue by days past due</h2>
       {list.length === 0 ? <p className="mt-2 text-bank-muted">No open cases.</p> : (
         <ul className="mt-3 space-y-3">

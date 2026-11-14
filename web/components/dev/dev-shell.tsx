@@ -24,7 +24,7 @@ export function DevShell({ initialTab = "lab" }: { initialTab?: DevTab }) {
 
   return (
     <SidebarLayout title="Developer workspace" sub="Lab, test cases and metrics" status={
-      <button type="button" onClick={() => setDeskOpen(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-primary text-primary-fg hover:opacity-90 transition-opacity cursor-pointer">
+      <button type="button" onClick={() => setDeskOpen(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-primary text-primary-fg hover:opacity-90 transition-opacity cursor-pointer">
         <Icon name="support_agent" size={13} />
         <span>Open Calling Desk</span>
       </button>
@@ -37,7 +37,7 @@ export function DevShell({ initialTab = "lab" }: { initialTab?: DevTab }) {
             <button
               type="button"
               onClick={() => setActiveTab("lab")}
-              className={`py-2.5 px-4 text-xs font-bold border-b-2 transition-all cursor-pointer flex items-center gap-2 ${
+              className={`py-2.5 px-4 text-xs font-medium border-b-2 transition-all cursor-pointer flex items-center gap-2 ${
                 activeTab === "lab"
                   ? "border-primary text-primary bg-card/60"
                   : "border-transparent text-muted hover:text-fg hover:bg-card/30"
@@ -52,7 +52,7 @@ export function DevShell({ initialTab = "lab" }: { initialTab?: DevTab }) {
             <button
               type="button"
               onClick={() => setActiveTab("test-cases")}
-              className={`py-2.5 px-4 text-xs font-bold border-b-2 transition-all cursor-pointer flex items-center gap-2 ${
+              className={`py-2.5 px-4 text-xs font-medium border-b-2 transition-all cursor-pointer flex items-center gap-2 ${
                 activeTab === "test-cases"
                   ? "border-primary text-primary bg-card/60"
                   : "border-transparent text-muted hover:text-fg hover:bg-card/30"
@@ -67,7 +67,7 @@ export function DevShell({ initialTab = "lab" }: { initialTab?: DevTab }) {
             <button
               type="button"
               onClick={() => setActiveTab("metrics")}
-              className={`py-2.5 px-4 text-xs font-bold border-b-2 transition-all cursor-pointer flex items-center gap-2 ${
+              className={`py-2.5 px-4 text-xs font-medium border-b-2 transition-all cursor-pointer flex items-center gap-2 ${
                 activeTab === "metrics"
                   ? "border-primary text-primary bg-card/60"
                   : "border-transparent text-muted hover:text-fg hover:bg-card/30"
@@ -115,7 +115,7 @@ export function DevShell({ initialTab = "lab" }: { initialTab?: DevTab }) {
       <footer className="border-t border-line bg-card py-3">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between text-xs text-muted">
           <div className="font-mono text-[11px]">
-            Demo · synthetic data · Deterministic gateway telemetry (<span className="text-fg font-bold">50ms SLA</span>)
+            Demo · synthetic data · Deterministic gateway telemetry (<span className="text-fg font-medium">50ms SLA</span>)
           </div>
           <div className="text-[11px]">
             Sahyadri Voice Systems Engineering

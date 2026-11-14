@@ -36,7 +36,7 @@ export function DetailDrawer({ open, onClose, title, subtitle, children }: {
       <div className="b-scrim absolute inset-0 bg-[var(--b-scrim)]" onClick={onClose} aria-hidden />
       <div
         ref={panel} role="dialog" aria-modal="true" aria-label={title} tabIndex={-1}
-        className="b-drawer relative flex h-full w-full max-w-xl flex-col border-l border-bank-line bg-bank-surface text-bank-fg shadow-xl outline-none"
+        className="b-drawer relative flex h-full w-full max-w-xl flex-col border-l border-bank-line bg-bank-surface text-bank-fg shadow-none outline-none"
       >
         <div className="flex items-start justify-between gap-4 border-b border-bank-line px-5 py-4">
           <div className="min-w-0">

@@ -82,7 +82,7 @@ export function TestCasesView() {
       {/* Intro Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-line bg-card">
         <div>
-          <h2 className="text-sm font-bold text-fg">Deterministic Evaluation Test Suites</h2>
+          <h2 className="text-sm font-medium text-fg">Deterministic Evaluation Test Suites</h2>
           <p className="text-xs text-muted mt-0.5">
             5 end-to-end voice scenarios testing servicing, RBI collections, hardship escalation, and red-team secret probing.
           </p>
@@ -101,7 +101,7 @@ export function TestCasesView() {
             <div>
               <div className="mb-2 flex items-center justify-between gap-2">
                 <div className="flex items-center gap-1.5">
-                  <span className="font-mono text-xs font-bold text-fg">{tc.id}</span>
+                  <span className="font-mono text-xs font-medium text-fg">{tc.id}</span>
                   <Pill tone={tc.badgeTone}>{tc.badge}</Pill>
                 </div>
                 <span className="rounded border border-line bg-sunken px-1.5 py-0.5 font-mono text-[10px] text-muted">
@@ -110,11 +110,11 @@ export function TestCasesView() {
               </div>
 
               <div className="flex items-start gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sunken border border-line text-xs font-bold font-mono text-fg">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sunken border border-line text-xs font-medium font-mono text-fg">
                   {tc.avatar}
                 </div>
                 <div className="min-w-0">
-                  <h3 className="text-sm font-bold text-fg">{tc.name}</h3>
+                  <h3 className="text-sm font-medium text-fg">{tc.name}</h3>
                   <p className="text-xs text-muted">{tc.subtitle}</p>
                 </div>
               </div>

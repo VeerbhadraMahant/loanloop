@@ -61,7 +61,7 @@ export default function SecurityPage() {
         <KpiTile label="Unapproved app approvals" value={num(n.approval)} hint="Denied or expired" tone="info" loading={loading} />
       </section>
 
-      <section aria-labelledby="refuse" className="rounded-lg border border-bank-line bg-bank-surface p-4">
+      <section aria-labelledby="refuse" className="rounded-xl border border-bank-line bg-bank-surface p-4">
         <h2 id="refuse" className="b-title text-lg">What the agent refuses</h2>
         <p className="mt-1 text-sm text-bank-muted">Controls built into the gateway for this system, as designed. Described for review; this page is not a certification or audit opinion.</p>
         <dl className="mt-4 grid gap-x-6 gap-y-4 md:grid-cols-2">

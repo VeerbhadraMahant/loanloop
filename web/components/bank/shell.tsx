@@ -75,7 +75,7 @@ export function BankShell({ children }: { children: ReactNode }) {
         </div>
         <Link
           href="/"
-          className="b-pressable inline-flex shrink-0 items-center gap-1 rounded-md bg-bank-accent px-2.5 py-1.5 text-xs font-semibold text-bank-accent-fg hover:opacity-90"
+          className="b-pressable inline-flex shrink-0 items-center gap-1 rounded-md bg-bank-accent px-2.5 py-1.5 text-xs font-medium text-bank-accent-fg hover:opacity-90"
         >
           <Icon d="M15 18l-6-6 6-6" />
           <span>LoanLoop Desk</span>
@@ -94,7 +94,7 @@ export function BankShell({ children }: { children: ReactNode }) {
             {NAV.map((n) => (
               <Link
                 key={n.href} href={n.href} aria-current={active(n.href) ? "page" : undefined}
-                className={`flex min-h-9 items-center gap-2.5 rounded-md px-2.5 text-[13px] font-medium transition-colors duration-150 ${active(n.href) ? "bg-bank-accent-soft text-bank-accent-ink font-semibold" : "text-bank-fg hover:bg-bank-sunken"}`}
+                className={`flex min-h-9 items-center gap-2.5 rounded-md px-2.5 text-[13px] font-medium transition-colors duration-150 ${active(n.href) ? "bg-bank-accent-soft text-bank-accent-ink font-medium" : "text-bank-fg hover:bg-bank-sunken"}`}
               >
                 <Icon d={n.d} />{n.label}
               </Link>

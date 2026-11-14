@@ -27,7 +27,7 @@ export function StaffShell({ initialTab = "collections" }: { initialTab?: StaffT
             <button
               type="button"
               onClick={() => setActiveTab("collections")}
-              className={`py-2.5 px-4 text-xs font-bold border-b-2 transition-all cursor-pointer flex items-center gap-2 ${
+              className={`py-2.5 px-4 text-xs font-medium border-b-2 transition-all cursor-pointer flex items-center gap-2 ${
                 activeTab === "collections"
                   ? "border-primary text-primary bg-card/60"
                   : "border-transparent text-muted hover:text-fg hover:bg-card/30"
@@ -42,7 +42,7 @@ export function StaffShell({ initialTab = "collections" }: { initialTab?: StaffT
             <button
               type="button"
               onClick={() => setActiveTab("ops")}
-              className={`py-2.5 px-4 text-xs font-bold border-b-2 transition-all cursor-pointer flex items-center gap-2 ${
+              className={`py-2.5 px-4 text-xs font-medium border-b-2 transition-all cursor-pointer flex items-center gap-2 ${
                 activeTab === "ops"
                   ? "border-primary text-primary bg-card/60"
                   : "border-transparent text-muted hover:text-fg hover:bg-card/30"

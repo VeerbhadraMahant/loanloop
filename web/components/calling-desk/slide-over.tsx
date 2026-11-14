@@ -62,7 +62,7 @@ export function SlideOver({
     >
       {/* Backdrop Scrim */}
       <div
-        className="fixed inset-0 bg-fg/30 backdrop-blur-[2px] transition-opacity animate-in fade-in duration-200"
+        className="fixed inset-0 bg-fg/30 transition-opacity animate-in fade-in duration-200"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -70,17 +70,17 @@ export function SlideOver({
       {/* Slide-over panel */}
       <div
         ref={panelRef}
-        className={`relative z-50 flex h-full w-full ${widthClass} flex-col border-l border-line bg-card shadow-2xl transition-transform animate-in slide-in-from-right duration-250 ease-out`}
+        className={`relative z-50 flex h-full w-full ${widthClass} flex-col border-l border-line bg-card shadow-none transition-transform animate-in slide-in-from-right duration-250 ease-out`}
       >
         {/* Slide-over Header */}
-        <div className="flex h-14 shrink-0 items-center justify-between border-b border-line px-5 bg-card/95 backdrop-blur-sm select-none">
+        <div className="flex h-14 shrink-0 items-center justify-between border-b border-line px-5 bg-card select-none">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary text-primary-fg font-bold text-xs">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary text-primary-fg font-medium text-xs">
               <Icon name="support_agent" size={14} />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 truncate">
-                <span className="text-sm font-bold text-fg truncate">{title}</span>
+                <span className="text-sm font-medium text-fg truncate">{title}</span>
                 {badge}
               </div>
               {sub && <p className="truncate text-[11px] text-muted">{sub}</p>}
