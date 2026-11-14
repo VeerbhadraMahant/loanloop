@@ -23,7 +23,7 @@ export function StaffShell({ initialTab = "collections" }: { initialTab?: StaffT
       <div className="border-b border-line bg-card">
         {/* Console Top Tab Navigation */}
         <div className="border-t border-line/60 bg-sunken/40">
-          <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-2">
+          <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-2 overflow-x-auto [&>*]:shrink-0">
             <button
               type="button"
               onClick={() => setActiveTab("collections")}
