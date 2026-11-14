@@ -203,11 +203,11 @@ export function CallingDeskTab({ initialQuery }: { initialQuery?: string }) {
   return (
           <div className="flex flex-col h-full justify-between pb-2">
         {/* Top 3-Step Voice Stepper */}
-        <div className="bg-card rounded-2xl p-3 border border-line shadow-xs mb-3">
+        <div className="bg-surface-container rounded-xl p-3 ring-1 ring-fg/[0.04] mb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span
-                className={`w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center transition-colors ${
+                className={`w-6 h-6 rounded-full text-sm font-medium flex items-center justify-center transition-colors ${
                   currentStep >= 1
                     ? "bg-primary text-primary-fg"
                     : "bg-surface-container text-muted"
@@ -215,14 +215,14 @@ export function CallingDeskTab({ initialQuery }: { initialQuery?: string }) {
               >
                 1
               </span>
-              <span className="text-xs font-semibold text-fg">{t.talk.step_speak}</span>
+              <span className="text-sm font-medium text-fg">{t.talk.step_speak}</span>
             </div>
 
             <div className="flex-1 h-0.5 mx-2 bg-line" />
 
             <div className="flex items-center gap-2">
               <span
-                className={`w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center transition-colors ${
+                className={`w-6 h-6 rounded-full text-sm font-medium flex items-center justify-center transition-colors ${
                   currentStep >= 2
                     ? "bg-primary text-primary-fg"
                     : "bg-surface-container text-muted"
@@ -230,14 +230,14 @@ export function CallingDeskTab({ initialQuery }: { initialQuery?: string }) {
               >
                 2
               </span>
-              <span className="text-xs font-semibold text-fg">{t.talk.step_check}</span>
+              <span className="text-sm font-medium text-fg">{t.talk.step_check}</span>
             </div>
 
             <div className="flex-1 h-0.5 mx-2 bg-line" />
 
             <div className="flex items-center gap-2">
               <span
-                className={`w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center transition-colors ${
+                className={`w-6 h-6 rounded-full text-sm font-medium flex items-center justify-center transition-colors ${
                   currentStep === 3
                     ? "bg-ok-fg text-white"
                     : "bg-surface-container text-muted"
@@ -245,7 +245,7 @@ export function CallingDeskTab({ initialQuery }: { initialQuery?: string }) {
               >
                 3
               </span>
-              <span className="text-xs font-semibold text-fg">{t.talk.step_send}</span>
+              <span className="text-sm font-medium text-fg">{t.talk.step_send}</span>
             </div>
           </div>
         </div>
@@ -258,10 +258,10 @@ export function CallingDeskTab({ initialQuery }: { initialQuery?: string }) {
               className={`flex flex-col ${msg.who === "user" ? "items-end" : "items-start"}`}
             >
               <div
-                className={`max-w-[85%] rounded-2xl p-3.5 shadow-xs text-xs leading-relaxed ${
+                className={`max-w-[85%] rounded-xl p-3.5 text-sm leading-relaxed ${
                   msg.who === "user"
                     ? "bg-primary text-primary-fg rounded-tr-xs"
-                    : "bg-card text-fg border border-line rounded-tl-xs"
+                    : "bg-surface-container text-fg ring-1 ring-fg/[0.04] rounded-tl-xs"
                 }`}
               >
                 <p className="font-sans whitespace-pre-wrap">{msg.text}</p>
@@ -271,7 +271,7 @@ export function CallingDeskTab({ initialQuery }: { initialQuery?: string }) {
                     {msg.actions.map((act, i) => (
                       <span
                         key={i}
-                        className={`inline-flex items-center gap-1 text-[10px] font-mono font-medium px-2 py-0.5 rounded-full ${
+                        className={`inline-flex items-center gap-1 text-[11px] font-mono font-medium px-2 py-0.5 rounded-full ${
                           act.ok
                             ? "bg-ok-bg text-ok-fg border border-ok-border"
                             : "bg-warn-bg text-warn-fg border border-warn-border"
@@ -291,15 +291,15 @@ export function CallingDeskTab({ initialQuery }: { initialQuery?: string }) {
           ))}
 
           {status === "thinking" && (
-            <div className="flex items-center gap-2 text-xs text-muted p-2 bg-card rounded-xl border border-line w-fit">
-              <span className="w-2 h-2 rounded-full bg-primary animate-ping" />
+            <div className="flex items-center gap-2 text-sm text-muted p-2 bg-surface-container rounded-xl ring-1 ring-fg/[0.04] w-fit">
+              <span className="w-2 h-2 rounded-full bg-primary motion-safe:animate-ping" />
               <span>Thinking...</span>
             </div>
           )}
 
           {status === "speaking" && (
-            <div className="flex items-center gap-2 text-xs text-primary p-2 bg-accent-soft rounded-xl border border-primary/20 w-fit">
-              <svg className="w-4 h-4 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <div className="flex items-center gap-2 text-sm text-primary p-2 bg-accent-soft rounded-xl border border-primary/20 w-fit">
+              <svg className="w-4 h-4 motion-safe:animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
               </svg>
               <span>Speaking response...</span>
@@ -314,7 +314,7 @@ export function CallingDeskTab({ initialQuery }: { initialQuery?: string }) {
           )}
 
           {errorMsg && (
-            <div className="p-3 rounded-xl bg-danger-bg text-danger-fg text-xs border border-danger-line">
+            <div className="p-3 rounded-xl bg-danger-bg text-danger-fg text-sm border border-danger-line">
               {errorMsg}
             </div>
           )}
@@ -331,13 +331,13 @@ export function CallingDeskTab({ initialQuery }: { initialQuery?: string }) {
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 placeholder={t.talk.type_placeholder}
-                className="flex-1 py-3 px-4 text-xs rounded-xl border border-line bg-card text-fg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                className="flex-1 py-3 px-4 text-sm rounded-xl border border-line bg-card text-fg focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary"
                 autoFocus
               />
               <button
                 type="submit"
                 disabled={!inputText.trim()}
-                className="p-3 rounded-xl bg-primary text-primary-fg hover:bg-accent-hover active:scale-95 transition-all disabled:opacity-50"
+                className="p-3 rounded-xl bg-primary text-primary-fg hover:bg-accent-hover motion-safe:active:scale-95 transition-colors disabled:opacity-50"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
@@ -359,9 +359,9 @@ export function CallingDeskTab({ initialQuery }: { initialQuery?: string }) {
                 {[1, 2, 3, 4, 5].map((bar) => (
                   <span
                     key={bar}
-                    className={`w-1 rounded-full transition-all duration-200 ${
+                    className={`w-1 rounded-full transition-colors duration-200 ${
                       isCurrentlyListening
-                        ? "bg-primary animate-pulse h-5"
+                        ? "bg-primary motion-safe:animate-pulse h-5"
                         : "bg-outline-variant h-2"
                     }`}
                   />
@@ -372,10 +372,10 @@ export function CallingDeskTab({ initialQuery }: { initialQuery?: string }) {
                 <button
                   type="button"
                   {...holdProps}
-                  className={`w-18 h-18 rounded-full flex items-center justify-center shadow-lg border-4 transition-all duration-150 cursor-pointer ${
+                  className={`w-18 h-18 rounded-full flex items-center justify-center border-4 transition-colors duration-150 cursor-pointer ${
                     holdTalking
-                      ? "bg-danger-fg text-white border-danger-line scale-95 ring-4 ring-danger-fg/30 animate-pulse"
-                      : "bg-primary text-primary-fg border-card hover:scale-105 active:scale-95 shadow-primary/30"
+                      ? "bg-danger-fg text-white border-danger-line scale-95 ring-4 ring-danger-fg/30 motion-safe:animate-pulse"
+                      : "bg-primary text-primary-fg border-card motion-safe:active:scale-95"
                   }`}
                   aria-label={t.home.hold_to_talk}
                 >
@@ -387,10 +387,10 @@ export function CallingDeskTab({ initialQuery }: { initialQuery?: string }) {
                 <button
                   type="button"
                   onClick={() => setTapTalking(!tapTalking)}
-                  className={`w-18 h-18 rounded-full flex items-center justify-center shadow-lg border-4 transition-all duration-150 cursor-pointer ${
+                  className={`w-18 h-18 rounded-full flex items-center justify-center border-4 transition-colors duration-150 cursor-pointer ${
                     tapTalking
-                      ? "bg-danger-fg text-white border-danger-line scale-95 ring-4 ring-danger-fg/30 animate-pulse"
-                      : "bg-primary text-primary-fg border-card hover:scale-105 active:scale-95 shadow-primary/30"
+                      ? "bg-danger-fg text-white border-danger-line scale-95 ring-4 ring-danger-fg/30 motion-safe:animate-pulse"
+                      : "bg-primary text-primary-fg border-card motion-safe:active:scale-95"
                   }`}
                   aria-label={t.home.tap_to_talk}
                 >
@@ -412,7 +412,7 @@ export function CallingDeskTab({ initialQuery }: { initialQuery?: string }) {
                 <button
                   type="button"
                   onClick={() => setShowKeyboard(true)}
-                  className="text-[11px] font-semibold text-primary hover:underline flex items-center gap-1"
+                  className="text-[11px] font-medium text-primary hover:underline flex items-center gap-1"
                 >
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />

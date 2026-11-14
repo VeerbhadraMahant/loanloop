@@ -75,7 +75,7 @@ export function BottomNav({ activeTab = "home" }: BottomNavProps) {
   ];
 
   return (
-    <nav className="absolute bottom-0 inset-x-0 z-40 bg-card/95 backdrop-blur-lg border-t border-line px-3 pt-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(0,0,0,0.04)]">
+    <nav className="absolute bottom-0 inset-x-0 z-40 bg-card/95 backdrop-blur-lg border-t border-line px-3 pt-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
       <div className="flex items-center justify-between max-w-sm mx-auto">
         {navItems.map((item) => {
           const isActive = activeTab === item.id;
@@ -85,12 +85,12 @@ export function BottomNav({ activeTab = "home" }: BottomNavProps) {
               <div key={item.id} className="relative -top-5 flex flex-col items-center">
                 <Link
                   href={item.href}
-                  className="w-14 h-14 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/25 border-4 border-bg hover:scale-105 active:scale-95 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  className="w-14 h-14 rounded-full bg-primary flex items-center justify-center border-4 border-bg motion-safe:active:scale-95 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                   aria-label={item.label}
                 >
                   {item.icon}
                 </Link>
-                <span className="text-[10px] font-semibold text-primary mt-1">
+                <span className="text-[11px] font-medium text-primary mt-1">
                   {item.label}
                 </span>
               </div>
@@ -103,19 +103,19 @@ export function BottomNav({ activeTab = "home" }: BottomNavProps) {
               href={item.href}
               className={`flex-1 flex flex-col items-center justify-center min-h-[48px] py-1 rounded-xl transition-colors relative select-none ${
                 isActive
-                  ? "text-primary font-semibold"
+                  ? "text-primary font-medium"
                   : "text-muted hover:text-fg hover:bg-surface-container/50"
               }`}
             >
               <div className="relative">
                 {item.icon}
                 {item.badge !== null && item.badge !== undefined && (
-                  <span className="absolute -top-1 -right-2 px-1.5 py-0.2 min-w-4 text-[9px] font-bold font-mono bg-danger-fg text-white rounded-full flex items-center justify-center shadow-sm">
+                  <span className="absolute -top-1 -right-2 px-1.5 py-0.2 min-w-4 text-[9px] font-medium font-mono bg-danger-fg text-white rounded-full flex items-center justify-center">
                     {item.badge}
                   </span>
                 )}
               </div>
-              <span className="text-[10px] mt-0.5 tracking-tight">{item.label}</span>
+              <span className="text-[11px] mt-0.5 tracking-tight">{item.label}</span>
             </Link>
           );
         })}

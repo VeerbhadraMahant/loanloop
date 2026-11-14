@@ -36,7 +36,7 @@ const field = ({ label: _l, ...rest }: { label: string }) => rest;
 const ERRORS: Record<number, string> = { 401: "Wrong details. Try again.", 429: "Too many attempts. Try again in 15 minutes." };
 
 const ring = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
-const input = `block h-12 w-full rounded-xl border border-line bg-card px-3.5 text-base text-fg ${ring}`;
+const input = `block h-12 w-full rounded-xl border border-outline-variant bg-card px-3.5 text-base text-fg ${ring}`;
 
 export function LoginForm({ door }: { door: "staff" | "customer" }) {
   const d = DOORS[door];
@@ -75,12 +75,12 @@ export function LoginForm({ door }: { door: "staff" | "customer" }) {
 
   const labelCls = "mb-1.5 block text-sm font-medium text-fg";
   return (
-    <main className="grid min-h-dvh bg-sunken lg:grid-cols-2">
+    <main className="grid min-h-dvh bg-bg lg:grid-cols-2">
       <style>{`@keyframes ll-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}`}</style>
-      <aside className="hidden flex-col justify-between border-r border-line bg-card p-12 lg:flex">
+      <aside className="hidden flex-col justify-between bg-surface-container p-12 lg:flex">
         <Wordmark />
         <div className="max-w-md">
-          <p className="serif text-4xl font-semibold leading-tight text-fg">{d.heading}</p>
+          <p className="text-4xl font-normal tracking-[-0.0275em] leading-tight text-fg">{d.heading}</p>
           <ul className="mt-8 space-y-4">
             {d.points.map(([icon, text]) => (
               <li key={text} className="flex items-start gap-3 text-base text-muted">
@@ -90,16 +90,16 @@ export function LoginForm({ door }: { door: "staff" | "customer" }) {
             ))}
           </ul>
         </div>
-        <span className="font-mono text-xs text-muted">Demo · synthetic data</span>
+        <span className="font-mono text-sm text-muted">Demo · synthetic data</span>
       </aside>
 
       <div className="flex flex-col justify-center px-5 py-10 sm:px-8">
         <div className="mx-auto w-full max-w-[400px] animate-[ll-in_200ms_var(--ease-out)_both] motion-reduce:animate-none">
           <div className="mb-8 flex items-center justify-between lg:hidden">
             <Wordmark />
-            <span className="font-mono text-xs text-muted">Demo · synthetic data</span>
+            <span className="font-mono text-sm text-muted">Demo · synthetic data</span>
           </div>
-          <h1 className="serif text-3xl font-semibold text-fg">{d.title}</h1>
+          <h1 className="text-3xl font-normal tracking-[-0.0275em] text-fg">{d.title}</h1>
           <p className="mt-2 text-base text-muted">{d.help}</p>
 
           <form ref={formRef} onSubmit={submit} className="mt-8">
@@ -135,7 +135,7 @@ export function LoginForm({ door }: { door: "staff" | "customer" }) {
             <button
               type="submit"
               disabled={busy}
-              className={`flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-primary text-base font-semibold text-primary-fg transition-transform duration-150 active:scale-[0.97] disabled:opacity-50 motion-reduce:transition-none ${ring} focus-visible:ring-offset-2`}
+              className={`flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-primary text-base font-medium text-primary-fg transition-transform duration-150 motion-safe:active:scale-[0.97] disabled:opacity-50 motion-reduce:transition-none ${ring} focus-visible:ring-offset-2`}
             >
               {busy && <span aria-hidden className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent motion-reduce:animate-none" />}
               {busy ? "Signing in…" : "Sign in"}

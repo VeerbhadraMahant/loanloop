@@ -118,7 +118,7 @@ export function OtpPinInput({
           disabled={disabled}
           onChange={(e) => handleChange(i, e.target.value)}
           onKeyDown={(e) => handleKeyDown(i, e)}
-          className={`w-12 h-14 text-center font-mono text-xl font-bold rounded-xl border bg-card text-fg transition-all duration-150 focus:outline-none focus:ring-2 ${
+          className={`w-12 h-14 text-center font-mono text-xl font-medium rounded-xl border bg-card text-fg transition-all duration-150 focus:outline-none focus:ring-2 ${
             hasError
               ? "border-danger-fg text-danger-fg focus:ring-danger-fg/30 bg-danger-bg/20"
               : digit

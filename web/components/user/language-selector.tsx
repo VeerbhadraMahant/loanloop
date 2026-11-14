@@ -33,18 +33,18 @@ export function LanguageSelector({ layout = "segmented", onSelect }: LanguageSel
               key={opt.code}
               type="button"
               onClick={() => handleSelect(opt.code)}
-              className={`w-full p-4 rounded-2xl border text-left flex items-center justify-between transition-all duration-150 active:scale-[0.99] ${
+              className={`w-full p-4 rounded-xl border text-left flex items-center justify-between transition-all duration-150 motion-safe:active:scale-[0.99] ${
                 isSelected
-                  ? "bg-accent-soft border-primary ring-1 ring-primary shadow-sm"
+                  ? "bg-accent-soft border-primary ring-1 ring-primary"
                   : "bg-card border-line hover:border-outline-variant hover:bg-surface-container/50"
               }`}
             >
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-base text-fg tracking-tight">{opt.native}</span>
-                  <span className="text-xs text-muted font-medium">({opt.label})</span>
+                  <span className="font-medium text-base text-fg tracking-tight">{opt.native}</span>
+                  <span className="text-sm text-muted font-medium">({opt.label})</span>
                 </div>
-                <p className="text-xs text-muted mt-0.5">{opt.desc}</p>
+                <p className="text-sm text-muted mt-0.5">{opt.desc}</p>
               </div>
 
               <div
@@ -74,9 +74,9 @@ export function LanguageSelector({ layout = "segmented", onSelect }: LanguageSel
             key={opt.code}
             type="button"
             onClick={() => handleSelect(opt.code)}
-            className={`flex-1 py-1.5 px-2 text-xs font-semibold rounded-lg transition-all duration-150 ${
+            className={`flex-1 py-1.5 px-2 text-sm font-medium rounded-lg transition-all duration-150 ${
               isSelected
-                ? "bg-card text-primary shadow-xs border border-line"
+                ? "bg-card text-primary ring-1 ring-fg/[0.04]"
                 : "text-muted hover:text-fg"
             }`}
           >

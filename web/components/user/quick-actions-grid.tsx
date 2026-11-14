@@ -92,10 +92,10 @@ export function QuickActionsGrid({ onSelectAction }: QuickActionsGridProps) {
   return (
     <div>
       <div className="flex items-center justify-between mb-3 px-1">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-muted">
+        <h3 className="text-sm font-medium uppercase tracking-wider text-muted">
           {t.home.tools_heading}
         </h3>
-        <span className="text-[10px] text-muted font-medium">1-tap shortcuts</span>
+        <span className="text-[11px] text-muted font-medium">1-tap shortcuts</span>
       </div>
 
       <div className="grid grid-cols-2 gap-2.5">
@@ -104,16 +104,16 @@ export function QuickActionsGrid({ onSelectAction }: QuickActionsGridProps) {
             key={act.id}
             type="button"
             onClick={() => handleTileClick(act.query)}
-            className="p-3.5 rounded-2xl bg-card border border-line hover:border-primary/40 hover:bg-surface-container/40 transition-all duration-150 text-left flex flex-col justify-between min-h-[92px] active:scale-95 group shadow-xs"
+            className="p-3.5 rounded-xl bg-surface-container ring-1 ring-fg/[0.04] hover:border-primary/40 hover:bg-surface-container/40 transition-all duration-150 text-left flex flex-col justify-between min-h-[92px] motion-safe:active:scale-95 group"
           >
             <div className="p-2 rounded-xl bg-surface-container w-fit group-hover:bg-accent-soft transition-colors mb-2">
               {act.icon}
             </div>
             <div>
-              <div className="text-xs font-bold text-fg group-hover:text-primary transition-colors line-clamp-1">
+              <div className="text-sm font-medium text-fg group-hover:text-primary transition-colors line-clamp-1">
                 {act.title}
               </div>
-              <div className="text-[10px] text-muted line-clamp-1 mt-0.5 font-medium">
+              <div className="text-[11px] text-muted line-clamp-1 mt-0.5 font-medium">
                 {act.subtitle}
               </div>
             </div>

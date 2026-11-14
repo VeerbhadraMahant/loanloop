@@ -3,7 +3,7 @@ import type { ButtonHTMLAttributes } from "react";
 
 export function Wordmark() {
   return (
-    <span className="text-[17px] font-semibold tracking-tight text-fg">
+    <span className="text-[17px] font-medium tracking-[-0.0275em] text-fg">
       LoanLoop
     </span>
   );
@@ -44,7 +44,7 @@ export function Card({
   return (
     <Tag
       {...rest}
-      className={`rounded-lg border border-line bg-card ${className}`}
+      className={`rounded-xl bg-surface-container ring-1 ring-fg/[0.04] ${className}`}
     >
       {children}
     </Tag>
@@ -56,7 +56,7 @@ const tones = {
   ok: "bg-ok-bg text-ok-fg border-ok-border",
   warn: "bg-warn-bg text-warn-fg border-warn-border",
   danger: "bg-danger-bg text-danger-fg border-danger-line",
-  accent: "bg-secondary-container text-accent-ink font-semibold border-primary/25",
+  accent: "bg-secondary-container text-accent-ink font-medium border-primary/25",
 };
 
 export function Pill({
@@ -72,7 +72,7 @@ export function Pill({
 }) {
   return (
     <span
-      className={`inline-flex items-center gap-1 whitespace-nowrap rounded-md border px-2 py-0.5 text-[11px] font-medium leading-4 ${tones[tone]} ${className}`}
+      className={`inline-flex items-center gap-1 whitespace-nowrap rounded-md border px-2 py-0.5 text-xs font-medium leading-4 ${tones[tone]} ${className}`}
     >
       {icon && <Icon name={icon} size={11} />}
       {children}
@@ -82,7 +82,7 @@ export function Pill({
 
 export function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-flex items-center gap-2 rounded-md border border-line bg-card px-2.5 py-1 text-[11px] font-medium text-muted">
+    <span className="inline-flex items-center gap-2 rounded-md bg-surface-container px-2.5 py-1 text-xs font-medium text-muted">
       {children}
     </span>
   );
@@ -124,16 +124,16 @@ export function StatTile({
 
   return (
     <div
-      className={`flex min-w-0 flex-col justify-between overflow-hidden rounded-lg border border-l-[3px] border-line bg-card px-3.5 py-2.5 ${tileEdge[edgeKey]} ${className}`}
+      className={`flex min-w-0 flex-col justify-between overflow-hidden rounded-xl border-l-[3px] bg-surface-container px-3.5 py-2.5 ${tileEdge[edgeKey]} ${className}`}
     >
       <p
-        className="truncate text-[11px] font-medium uppercase tracking-wider text-muted"
+        className="truncate text-xs font-medium uppercase tracking-wider text-muted"
         title={caption}
       >
         {caption}
       </p>
       <p
-        className={`num mt-1 truncate font-semibold leading-tight tracking-tight text-fg ${sizeClass}`}
+        className={`num mt-1 truncate font-medium leading-tight tracking-[-0.0275em] text-fg ${sizeClass}`}
         title={str || undefined}
       >
         {value}
@@ -203,7 +203,7 @@ export function ErrorBox({ error }: { error: string | null }) {
   return (
     <p
       role="alert"
-      className="mb-3 flex items-start gap-2 rounded-lg border border-danger-line bg-danger-bg px-3 py-2 text-xs text-danger-fg"
+      className="mb-3 flex items-start gap-2 rounded-xl border border-danger-line bg-danger-bg px-3 py-2 text-sm text-danger-fg"
     >
       <Icon name="alert" size={15} className="mt-0.5" />
       <span>{error}</span>
@@ -219,7 +219,7 @@ export function Empty({
   icon?: IconName;
 }) {
   return (
-    <div className="flex items-center gap-2.5 rounded-lg border border-dashed border-line bg-card px-4 py-4 text-xs text-muted">
+    <div className="flex items-center gap-2.5 rounded-xl border border-dashed border-outline-variant bg-surface-container px-4 py-4 text-sm text-muted">
       <Icon name={icon} size={15} />
       <span>{children}</span>
     </div>
@@ -231,7 +231,7 @@ export function Skeleton({ rows = 3 }: { rows?: number }) {
     <div
       aria-busy="true"
       aria-label="Loading"
-      className="space-y-2 rounded-lg border border-line bg-card p-3.5"
+      className="space-y-2 rounded-xl bg-surface-container ring-1 ring-fg/[0.04] p-3.5"
     >
       {Array.from({ length: rows }, (_, i) => (
         <div

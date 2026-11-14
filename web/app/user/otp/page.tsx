@@ -55,7 +55,7 @@ export default function OtpPage() {
       <div className="space-y-4">
         <Link
           href="/user/mobile"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted hover:text-fg transition-colors"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-muted hover:text-fg transition-colors"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -64,12 +64,12 @@ export default function OtpPage() {
         </Link>
 
         <div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-fg tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-normal tracking-[-0.0275em] text-fg">
             {t.otp.title}
           </h1>
-          <p className="text-xs text-muted mt-1 leading-relaxed">
+          <p className="text-sm text-muted mt-1 leading-relaxed">
             {t.otp.subtitle}{" "}
-            <span className="font-mono font-bold text-fg">+91 {mobile}</span>
+            <span className="font-mono font-medium text-fg">+91 {mobile}</span>
           </p>
         </div>
 
@@ -82,7 +82,7 @@ export default function OtpPage() {
             hasError={Boolean(error)}
             disabled={loading}
           />
-          {error && <p className="text-xs text-danger-fg mt-2 text-center font-medium">{error}</p>}
+          {error && <p className="text-sm text-danger-fg mt-2 text-center font-medium">{error}</p>}
         </div>
 
       </div>
@@ -93,7 +93,7 @@ export default function OtpPage() {
           type="button"
           disabled={loading || otp.length < 6}
           onClick={() => handleVerify()}
-          className="w-full py-3.5 px-4 rounded-2xl font-bold text-sm bg-primary text-primary-fg hover:bg-accent-hover active:scale-[0.99] transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
+          className="w-full min-h-12 py-3 px-4 rounded-xl font-medium text-base bg-primary text-primary-fg hover:bg-accent-hover motion-safe:active:scale-[0.99] transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
         >
           <span>{loading ? t.common.loading : t.otp.cta_verify}</span>
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>

@@ -532,8 +532,8 @@ export default function CallApp({ customer, name, caseId, embedded = false }: { 
       <main className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
         {/* TOP UTILITY BAR: Signed-in context & Call Controls */}
         <section className="w-full mb-2.5">
-          <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-2.5 px-3 py-2.5 rounded-lg bg-card border border-line">
-            <div className="font-mono text-[10px] uppercase tracking-wider text-muted font-medium">
+          <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-2.5 px-3 py-2.5 rounded-lg bg-surface-container ring-1 ring-fg/[0.04]">
+            <div className="font-mono text-[11px] uppercase tracking-wider text-muted font-medium">
               {caseId ? `Outbound case ${caseId}` : `Signed in as ${persona.name}`}
             </div>
 
@@ -541,7 +541,7 @@ export default function CallApp({ customer, name, caseId, embedded = false }: { 
             <div className="flex flex-wrap items-center gap-2">
               {/* Status Ribbon */}
               <div
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-mono tabular-nums font-medium border ${
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-sm font-mono tabular-nums font-medium border ${
                   status === "thinking" || status === "connecting"
                     ? "bg-warn-bg text-warn-fg border-warn-border"
                     : inCall
@@ -551,7 +551,7 @@ export default function CallApp({ customer, name, caseId, embedded = false }: { 
               >
                 <span className="relative flex h-2 w-2">
                   {inCall && (
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-ok-fg opacity-75"></span>
+                    <span className="motion-safe:animate-ping absolute inline-flex h-full w-full rounded-full bg-ok-fg opacity-75"></span>
                   )}
                   <span
                     className={`relative inline-flex rounded-full h-2 w-2 ${
@@ -581,7 +581,7 @@ export default function CallApp({ customer, name, caseId, embedded = false }: { 
                 <button
                   type="button"
                   onClick={end}
-                  className="px-3.5 py-1.5 rounded-md bg-danger-fg hover:bg-danger-fg/90 text-white font-semibold text-xs transition-colors flex items-center gap-1.5 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-fg"
+                  className="px-3.5 py-1.5 rounded-md bg-danger-fg hover:bg-danger-fg/90 text-white font-medium text-sm transition-colors flex items-center gap-1.5 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-fg"
                 >
                   <Icon name="x" size={13} />
                   <span>End Call</span>
@@ -591,7 +591,7 @@ export default function CallApp({ customer, name, caseId, embedded = false }: { 
                   type="button"
                   onClick={start}
                   disabled={status === "connecting"}
-                  className="px-3.5 py-1.5 rounded-md bg-ok-fg hover:bg-ok-fg/90 text-white font-semibold text-xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ok-fg"
+                  className="px-3.5 py-1.5 rounded-md bg-ok-fg hover:bg-ok-fg/90 text-white font-medium text-sm transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ok-fg"
                 >
                   <Icon name="phone_in_talk" size={13} />
                   <span>{ended ? "Start New Call" : "Start Call"}</span>
@@ -603,7 +603,7 @@ export default function CallApp({ customer, name, caseId, embedded = false }: { 
                 type="button"
                 onClick={() => toggleVoice(!voiceReplies)}
                 aria-pressed={voiceReplies}
-                className={`p-1.5 rounded-md text-xs transition-colors border cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                className={`p-1.5 rounded-md text-sm transition-colors border cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                   voiceReplies
                     ? "bg-accent-soft text-primary border-primary/25"
                     : "bg-sunken text-muted border-line hover:text-fg"
@@ -618,7 +618,7 @@ export default function CallApp({ customer, name, caseId, embedded = false }: { 
                 type="button"
                 onClick={() => setShowDiagnostics(!showDiagnostics)}
                 aria-pressed={showDiagnostics}
-                className={`p-1.5 rounded-md text-xs transition-colors border cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                className={`p-1.5 rounded-md text-sm transition-colors border cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                   showDiagnostics
                     ? "bg-accent-soft text-primary border-primary/25"
                     : "bg-sunken text-muted border-line hover:text-fg"
@@ -635,12 +635,12 @@ export default function CallApp({ customer, name, caseId, embedded = false }: { 
         <div className="w-full mb-3 px-3 py-1.5 rounded-md bg-sunken/70 border border-line flex items-center justify-between gap-3 text-[11px] text-muted">
           <div className="flex items-center gap-2 min-w-0">
             <Icon name="verified" size={13} className="text-ok-fg shrink-0" />
-            <span className="font-semibold text-fg shrink-0">Zero Secrets Policy</span>
+            <span className="font-medium text-fg shrink-0">Zero Secrets Policy</span>
             <span className="truncate">
               Agent never queries, logs, or reads aloud MPINs, passwords, or OTP codes. Verification runs out-of-band on the customer handset.
             </span>
           </div>
-          <span className="font-mono text-[10px] text-muted shrink-0 hidden sm:inline">
+          <span className="font-mono text-[11px] text-muted shrink-0 hidden sm:inline">
             RBI 08:00–19:00 IST
           </span>
         </div>
@@ -650,17 +650,17 @@ export default function CallApp({ customer, name, caseId, embedded = false }: { 
           {/* PRIMARY WORKSPACE: Caller Ledger + Live Transcript */}
           <div className="flex flex-col gap-3 min-w-0">
             {/* Compact Caller Ledger Bar */}
-            <div className="px-3.5 py-2.5 rounded-lg bg-card border border-line flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div className="px-3.5 py-2.5 rounded-lg bg-surface-container ring-1 ring-fg/[0.04] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-md bg-accent-soft text-primary flex items-center justify-center font-semibold text-sm shrink-0">
+                <div className="w-9 h-9 rounded-md bg-accent-soft text-primary flex items-center justify-center font-medium text-sm shrink-0">
                   {persona.initials}
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h2 className="text-sm font-semibold text-fg tracking-tight">
+                    <h2 className="text-sm font-medium text-fg tracking-tight">
                       {persona.name}
                     </h2>
-                    <span className="px-1.5 py-0.5 rounded bg-ok-bg text-ok-fg font-mono text-[10px] border border-ok-border">
+                    <span className="px-1.5 py-0.5 rounded bg-ok-bg text-ok-fg font-mono text-[11px] border border-ok-border">
                       {persona.status}
                     </span>
                   </div>
@@ -693,12 +693,12 @@ export default function CallApp({ customer, name, caseId, embedded = false }: { 
               >
                 {msgs.length === 0 ? (
                   <div className="my-auto text-center py-10 text-muted text-sm">
-                    <p className="text-base font-semibold text-fg mb-1">
+                    <p className="text-base font-medium text-fg mb-1">
                       {status === "idle"
                         ? `Ready to connect with ${persona.name}`
                         : "Connecting to Sahyadri Voice Desk…"}
                     </p>
-                    <p className="text-xs text-muted">
+                    <p className="text-sm text-muted">
                       {status === "idle"
                         ? "Click Start Call above or use the Talk button below to begin."
                         : "Establishing secure bilateral audio session…"}
@@ -717,14 +717,14 @@ export default function CallApp({ customer, name, caseId, embedded = false }: { 
                         <span className="font-medium text-fg">
                           {m.who === "caller" ? persona.name : "Sahyadri Voice Agent"}
                         </span>
-                        <span className="font-mono tabular-nums text-[10px]">#{i + 1}</span>
+                        <span className="font-mono tabular-nums text-[11px]">#{i + 1}</span>
                       </div>
 
                       <div
                         className={`px-3.5 py-2.5 rounded-lg text-sm leading-[1.6] ${
                           m.who === "caller"
                             ? "bg-primary text-primary-fg"
-                            : "bg-card border border-line text-fg"
+                            : "bg-surface-container ring-1 ring-fg/[0.04] text-fg"
                         }`}
                       >
                         {m.text}
@@ -761,7 +761,7 @@ export default function CallApp({ customer, name, caseId, embedded = false }: { 
                   ))
                 )}
                 {ended && (
-                  <div className="text-center py-2 text-xs font-mono font-medium text-muted border-t border-line mt-2">
+                  <div className="text-center py-2 text-sm font-mono font-medium text-muted border-t border-line mt-2">
                     — Call Session Terminated —
                   </div>
                 )}
@@ -770,7 +770,7 @@ export default function CallApp({ customer, name, caseId, embedded = false }: { 
               {/* Voice Interaction Deck (Bottom controls) */}
               <div className="p-3.5 bg-card border-t border-line flex flex-col gap-2.5">
                 {/* Context Quick Actions Bar */}
-                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-sm">
                   <span className="text-muted shrink-0 mr-1 font-medium text-[11px]">Quick Prompts:</span>
                   {persona.quickPrompts.map((q, idx) => (
                     <button
@@ -778,7 +778,7 @@ export default function CallApp({ customer, name, caseId, embedded = false }: { 
                       type="button"
                       disabled={!inCall || busy}
                       onClick={() => sendTextVal(q)}
-                      className="shrink-0 px-2.5 py-1 rounded-md bg-sunken hover:bg-card text-fg text-xs transition-colors border border-line disabled:opacity-50 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                      className="shrink-0 px-2.5 py-1 rounded-md bg-sunken hover:bg-surface-container text-fg text-sm transition-colors ring-1 ring-fg/[0.04] disabled:opacity-50 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                     >
                       {q}
                     </button>
@@ -791,16 +791,16 @@ export default function CallApp({ customer, name, caseId, embedded = false }: { 
                     <button
                       type="button"
                       onClick={start}
-                      className="w-14 h-14 rounded-full bg-ok-fg hover:bg-ok-fg/90 text-white active:scale-95 transition-all flex flex-col items-center justify-center gap-0.5 cursor-pointer ring-2 ring-ok-border/60 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ok-fg"
+                      className="w-14 h-14 rounded-full bg-ok-fg hover:bg-ok-fg/90 text-white motion-safe:active:scale-95 transition-all flex flex-col items-center justify-center gap-0.5 cursor-pointer ring-2 ring-ok-border/60 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ok-fg"
                       title="Start Call"
                     >
                       <Icon name="phone_in_talk" size={20} />
-                      <span className="text-[9px] font-bold tracking-wide uppercase">Start</span>
+                      <span className="text-[9px] font-medium tracking-wide uppercase">Start</span>
                     </button>
                   ) : (
                     <div className="relative flex flex-col items-center">
                       {listening && (
-                        <span className="absolute -inset-2 rounded-full bg-primary/20 animate-ping pointer-events-none"></span>
+                        <span className="absolute -inset-2 rounded-full bg-primary/20 motion-safe:animate-ping pointer-events-none"></span>
                       )}
                       <button
                         type="button"
@@ -809,10 +809,10 @@ export default function CallApp({ customer, name, caseId, embedded = false }: { 
                         aria-pressed={listening}
                         className={`w-14 h-14 rounded-full flex flex-col items-center justify-center transition-all cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                           listening
-                            ? "bg-primary text-primary-fg ring-4 ring-primary/30 scale-105"
+                            ? "bg-primary text-primary-fg ring-4 ring-primary/30"
                             : busy
                             ? "bg-sunken text-muted border border-line cursor-wait"
-                            : "bg-primary hover:bg-accent-hover text-primary-fg ring-2 ring-primary/20 active:scale-95"
+                            : "bg-primary hover:bg-accent-hover text-primary-fg ring-2 ring-primary/20 motion-safe:active:scale-95"
                         } disabled:opacity-50`}
                         title="Hold to Talk (or hold Spacebar)"
                       >
@@ -823,7 +823,7 @@ export default function CallApp({ customer, name, caseId, embedded = false }: { 
 
                   {/* Status / Instructions alongside talk button */}
                   <div className="text-left min-w-[160px]">
-                    <div className="text-xs font-semibold text-fg">
+                    <div className="text-sm font-medium text-fg">
                       {status === "idle" || ended
                         ? "Click to begin voice session"
                         : listening
@@ -862,7 +862,7 @@ export default function CallApp({ customer, name, caseId, embedded = false }: { 
                   <button
                     type="submit"
                     disabled={!inCall || busy || !text.trim()}
-                    className="absolute right-1 px-2.5 py-1 rounded bg-card hover:bg-sunken text-fg text-xs font-semibold border border-line transition-colors disabled:opacity-40 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    className="absolute right-1 px-2.5 py-1 rounded bg-card hover:bg-sunken text-fg text-sm font-medium border border-line transition-colors disabled:opacity-40 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   >
                     Send
                   </button>
@@ -874,7 +874,7 @@ export default function CallApp({ customer, name, caseId, embedded = false }: { 
             {error && (
               <p
                 role="alert"
-                className="rounded-md border border-danger-line bg-danger-bg px-3.5 py-2.5 text-xs text-danger-fg"
+                className="rounded-md border border-danger-line bg-danger-bg px-3.5 py-2.5 text-sm text-danger-fg"
               >
                 {error}
               </p>
@@ -884,9 +884,9 @@ export default function CallApp({ customer, name, caseId, embedded = false }: { 
             {showDiagnostics && (
               <Card className="overflow-hidden enter p-0">
                 <div className="bg-sunken/50 p-3.5 flex flex-col gap-2.5">
-                  <div className="flex items-center justify-between text-xs text-muted font-mono">
+                  <div className="flex items-center justify-between text-sm text-muted font-mono">
                     <span>Pipeline: Deepgram / Whisper STT → Qwen (Ollama) → Gateway → Edge TTS</span>
-                    <span className="font-semibold tabular-nums text-fg">
+                    <span className="font-medium tabular-nums text-fg">
                       {totalMs ? `${totalMs} ms Total` : "Awaiting Turn Data"}
                     </span>
                   </div>
@@ -895,42 +895,42 @@ export default function CallApp({ customer, name, caseId, embedded = false }: { 
                   {lastTiming && (
                     <div className="w-full h-2 rounded-full bg-sunken overflow-hidden flex border border-line">
                       <div
-                        className="bg-[#3B82C4] h-full"
+                        className="bg-accent h-full"
                         style={{ width: `${Math.max(5, (lastTiming.stt_ms / (totalMs || 1)) * 100)}%` }}
                         title={`STT: ${lastTiming.stt_ms}ms`}
                       ></div>
                       <div
-                        className="bg-[#7C5CBF] h-full"
+                        className="bg-[var(--fill-lilac)] h-full"
                         style={{ width: `${Math.max(5, (lastTiming.llm_ms / (totalMs || 1)) * 100)}%` }}
                         title={`LLM: ${lastTiming.llm_ms}ms`}
                       ></div>
                       <div
-                        className="bg-[#0F6B4F] h-full"
+                        className="bg-ok-fg h-full"
                         style={{ width: `${Math.max(2, (lastTiming.gateway_ms / (totalMs || 1)) * 100)}%` }}
                         title={`Gateway: ${lastTiming.gateway_ms}ms`}
                       ></div>
                       <div
-                        className="bg-[#D99A1E] h-full"
+                        className="bg-warn-fg h-full"
                         style={{ width: `${Math.max(5, (lastTiming.tts_ms / (totalMs || 1)) * 100)}%` }}
                         title={`TTS: ${lastTiming.tts_ms}ms`}
                       ></div>
                     </div>
                   )}
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2 font-mono text-xs">
-                    <div className="bg-card p-2.5 rounded-md border border-line">
-                      <span className="text-muted block text-[10px]">Active Inference Model</span>
-                      <span className="text-fg font-semibold">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2 font-mono text-sm">
+                    <div className="bg-surface-container p-2.5 rounded-md ring-1 ring-fg/[0.04]">
+                      <span className="text-muted block text-[11px]">Active Inference Model</span>
+                      <span className="text-fg font-medium">
                         {turns[turns.length - 1]?.model || "qwen3:8b (Ollama Metal)"}
                       </span>
                     </div>
-                    <div className="bg-card p-2.5 rounded-md border border-line">
-                      <span className="text-muted block text-[10px]">Configured Provider</span>
-                      <span className="text-ok-fg font-semibold">{llm}</span>
+                    <div className="bg-surface-container p-2.5 rounded-md ring-1 ring-fg/[0.04]">
+                      <span className="text-muted block text-[11px]">Configured Provider</span>
+                      <span className="text-ok-fg font-medium">{llm}</span>
                     </div>
-                    <div className="bg-card p-2.5 rounded-md border border-line">
-                      <span className="text-muted block text-[10px]">Session Turns</span>
-                      <span className="text-fg font-semibold tabular-nums">{turns.length} turns recorded</span>
+                    <div className="bg-surface-container p-2.5 rounded-md ring-1 ring-fg/[0.04]">
+                      <span className="text-muted block text-[11px]">Session Turns</span>
+                      <span className="text-fg font-medium tabular-nums">{turns.length} turns recorded</span>
                     </div>
                   </div>
                 </div>
