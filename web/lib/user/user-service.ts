@@ -38,9 +38,12 @@ export async function respondToApproval(
   }
 }
 
+/** URL the browser fetches a streamed reply's PCM from (/vx for the voice proxy, /voice-out as given). */
+export const voiceAudioUrl = (audioUrl: string) => (audioUrl.startsWith("/voice-out") ? audioUrl : `${VOICE_BASE}${audioUrl}`);
+
 export async function startVoiceSession(
   customerKey: string
-): Promise<{ call_id: string; greeting: string; audio_b64?: string }> {
+): Promise<{ call_id: string; greeting: string; audio_b64?: string; audio_url?: string }> {
   const res = await fetch(`${VOICE_BASE}/calls?stream=1`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -58,6 +61,7 @@ export async function startVoiceSession(
     call_id: data.call_id,
     greeting: data.agent_text,
     audio_b64: data.audio_b64,
+    audio_url: data.audio_url,
   };
 }
 
@@ -66,14 +70,16 @@ export async function sendVoiceTurn(params: {
   user_text?: string;
   wavBlob?: Blob;
 }): Promise<VoiceTurnResponse> {
-  const isAudio = Boolean(params.wavBlob);
-  const init: RequestInit = {
-    method: "POST",
-    headers: { "Content-Type": isAudio ? "audio/wav" : "application/json" },
-    body: isAudio
-      ? params.wavBlob
-      : JSON.stringify({ text: params.user_text, tts: true }),
-  };
+  // The voice service takes a multipart form (field "audio") for speech, JSON for typed text; never a bare audio body (415).
+  let init: RequestInit;
+  if (params.wavBlob) {
+    const form = new FormData();
+    form.append("audio", params.wavBlob, "turn.wav");
+    form.append("tts", "true");
+    init = { method: "POST", body: form };
+  } else {
+    init = { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: params.user_text, tts: true }) };
+  }
 
   const res = await fetch(`${VOICE_BASE}/calls/${encodeURIComponent(params.call_id)}/turn?stream=1`, init);
 

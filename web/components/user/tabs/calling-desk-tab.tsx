@@ -5,7 +5,8 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/lib/user/session";
 import { useHoldToTalk } from "@/lib/use-hold-to-talk";
-import { sendVoiceTurn, startVoiceSession } from "@/lib/user/user-service";
+import { sendVoiceTurn, startVoiceSession, voiceAudioUrl } from "@/lib/user/user-service";
+import { PcmPlayer } from "@/lib/pcm-player";
 import { BottomSheet } from "@/components/user/bottom-sheet";
 import { ApprovalCard } from "@/components/user/approval-sheet";
 import { fetchUserApprovals } from "@/lib/user/user-service";
@@ -39,6 +40,14 @@ export function CallingDeskTab({ initialQuery }: { initialQuery?: string }) {
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const chatBottomRef = useRef<HTMLDivElement | null>(null);
+
+  const pcmRef = useRef<PcmPlayer | null>(null);
+  // Streamed replies (?stream=1) come as audio_url (raw PCM), not base64.
+  const playStream = useCallback((url: string) => {
+    audioRef.current?.pause();
+    setStatus("speaking");
+    (pcmRef.current ??= new PcmPlayer()).play(voiceAudioUrl(url)).then(() => setStatus("idle"));
+  }, []);
 
   const playAudioBase64 = useCallback((b64: string) => {
     try {
@@ -77,9 +86,8 @@ export function CallingDeskTab({ initialQuery }: { initialQuery?: string }) {
               timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
             },
           ]);
-          if (session.audio_b64) {
-            playAudioBase64(session.audio_b64);
-          }
+          if (session.audio_url) playStream(session.audio_url);
+          else if (session.audio_b64) playAudioBase64(session.audio_b64);
         }
       })
       .catch((err) => {
@@ -92,8 +100,10 @@ export function CallingDeskTab({ initialQuery }: { initialQuery?: string }) {
         audioRef.current.pause();
         audioRef.current = null;
       }
+      pcmRef.current?.dispose();
+      pcmRef.current = null;
     };
-  }, [customerKey, playAudioBase64]);
+  }, [customerKey, playAudioBase64, playStream]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -154,7 +164,9 @@ export function CallingDeskTab({ initialQuery }: { initialQuery?: string }) {
           }).catch(() => {}); // non-blocking: the turn itself already succeeded
         }
 
-        if (reply.audio_b64) {
+        if (reply.audio_url) {
+          playStream(reply.audio_url);
+        } else if (reply.audio_b64) {
           playAudioBase64(reply.audio_b64);
         } else {
           setStatus("idle");
@@ -164,7 +176,7 @@ export function CallingDeskTab({ initialQuery }: { initialQuery?: string }) {
         setErrorMsg(err instanceof Error ? err.message : "Voice processing error");
       }
     },
-    [callId, playAudioBase64]
+    [callId, playAudioBase64, playStream]
   );
 
   const initialSentRef = useRef(false);
