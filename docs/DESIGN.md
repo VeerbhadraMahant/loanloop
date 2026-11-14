@@ -7,7 +7,7 @@ They cover the landing page only. The bank, dev and customer apps keep their own
 ## 1. One immersive moment, then a calm page
 
 - The hero is the only showpiece: animated background, voice orb, frosted glass fragments.
-- Everything below it is flat and still. Nothing fades or slides in on scroll.
+- Everything below it is flat and calm. The only scroll motion is the small reveal in section 8: content rises into place once; nothing loops and there is no parallax.
 - If a new section needs attention, give it colour or size, not motion.
 
 ## 2. Warm neutrals, colour in blocks
@@ -57,7 +57,9 @@ They cover the landing page only. The bank, dev and customer apps keep their own
 ## 8. Motion is small and purposeful
 
 - Durations 100, 200, 300, 400ms. One curve: `cubic-bezier(0.16, 1, 0.3, 1)`.
-- Entrance animation exists only in the hero: text slides down and fades, the composition slides up, glass fragments follow 100ms apart.
+- Hero entrance: text slides down and fades, the composition slides up, glass fragments follow 100ms apart.
+- Scroll reveal (below the hero): chapter intro lines, bento cells, hairline-grid items, doors and security tiers rise 20px and fade in as they enter the viewport, staggered by a few percent of range. It is CSS scroll-driven (`animation-timeline: view()`, range `entry 0% entry 40%`), so it finishes while the element is still near the screen edge. Two extras: the Statement words brighten one by one, and the footer wordmark drifts up. Nothing else moves on scroll.
+- Scroll motion lives in one block at the end of `landing-fx.css`, inside `@supports (animation-timeline: view())` and `prefers-reduced-motion: no-preference`. Content is the default state: where either is missing, everything just shows. Transform and opacity only. No JavaScript.
 - Hover feedback: arrows nudge 4px, underlines appear, outline rings go from 1px to 2px, fills darken. Cards never lift, scale or glow.
 - Signature pieces: the gooey pill in the header nav, the curved language loop, the hero button's rotating chip. One of each; do not repeat them elsewhere.
 - Every animation is switched off under `prefers-reduced-motion`, and the content is fully visible without it.

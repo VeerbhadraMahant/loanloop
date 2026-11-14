@@ -61,3 +61,30 @@
   .ll-stageIn, .ll-stageOut { animation: none; }
   .ll-menu, .ll-menu::backdrop, .ll-announceLink svg, .ll-topnavStaff { transition: none; }
 }
+
+/* Scroll motion (landing only). Pure CSS, scroll-driven: content is the normal state, so browsers without
+   animation-timeline, and visitors who prefer reduced motion, just see everything. Transform and opacity only. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    @keyframes ll-rise { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+    .ll-chapter > *, .ll-cell, .ll-hairGrid > *, .ll-door, .ll-tier, .ll-resNote {
+      animation: ll-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 40%;
+    }
+    /* stagger by shifting the range: chapter lines in order, bento cells side by side */
+    .ll-chapter > :nth-child(2) { animation-range: entry 6% entry 46%; }
+    .ll-chapter > :nth-child(3) { animation-range: entry 12% entry 52%; }
+    .ll-chapter > :nth-child(4) { animation-range: entry 18% entry 58%; }
+    .ll-bento > :nth-child(even), .ll-doors > :nth-child(even), .ll-tier:nth-child(even) { animation-range: entry 8% entry 48%; }
+
+    /* statement: words brighten one after another as the quote scrolls in */
+    .ll-quote { view-timeline: --ll-q block; }
+    .ll-word { animation: ll-word linear both; animation-timeline: --ll-q; animation-range: entry calc(var(--i) * 2.5%) entry calc(30% + var(--i) * 2.5%); }
+    @keyframes ll-word { from { opacity: 0.25; } to { opacity: 1; } }
+
+    /* footer wordmark drifts up into place */
+    .ll-footMark { animation: ll-drift linear both; animation-timeline: view(); animation-range: entry 0% entry 70%; }
+    @keyframes ll-drift { from { opacity: 0; transform: translateY(12%); } to { opacity: 1; transform: none; } }
+  }
+}

@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { Icon } from "@/components/ui";
 import { Bento, Cell, Chapter, Chevron, Section, TwoTone, link } from "./shared";
 import { FeatureTabs } from "./feature-tabs";
@@ -80,12 +81,21 @@ export function Features() {
   );
 }
 
+/** Wraps each word in a span with --i (its index) so CSS can brighten the words one by one on scroll. Array parts render bold. */
+function Words({ parts }: { parts: (string | string[])[] }) {
+  let i = 0;
+  return <>{parts.map((p, k) => {
+    const words = (Array.isArray(p) ? p[0] : p).split(/(\s+)/).filter(Boolean).map((w, j) => /^\s+$/.test(w) ? w : <span key={j} className="ll-word" style={{ "--i": i++ } as CSSProperties}>{w}</span>);
+    return Array.isArray(p) ? <b key={k}>{words}</b> : <span key={k}>{words}</span>;
+  })}</>;
+}
+
 export function Statement() {
   return (
     <Section kind="band">
       <div className="ll-statement">
         <p className="ll-quote">
-          Every spoken figure comes from the <b>bank database</b>, so the language model <b>cannot invent</b> a number.
+          <Words parts={["Every spoken figure comes from the ", ["bank database"], ", so the language model ", ["cannot invent"], " a number."]} />
         </p>
         <p className="ll-muted mt-6 text-base">Design rule of the gateway</p>
         <a href="#security" className={`${link} mt-2`}>See the security tiers<Chevron /></a>
