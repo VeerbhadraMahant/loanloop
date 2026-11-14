@@ -66,8 +66,6 @@ const mono = IBM_Plex_Mono({
 });
 
 // Indic script fallbacks; unlayered so it overrides the @theme font stacks in globals.css without editing that file.
-const indic = "var(--font-devanagari), " + ["bengali", "gujarati", "gurmukhi", "kannada", "malayalam", "tamil", "telugu"].map((n) => `var(--font-${n})`).join(", ");
-const fontCss = `:root{--font-sans:var(--font-sans-latin),${indic},-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;--font-serif:var(--font-sans);--font-mono:var(--font-ibm-mono),${indic},ui-monospace,SFMono-Regular,monospace}`;
 
 export const metadata: Metadata = {
   title: "LoanLoop · Voice Banking Desk",
@@ -83,7 +81,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${sansLatin.variable} ${devanagari.variable} ${bengali.variable} ${gujarati.variable} ${gurmukhi.variable} ${kannada.variable} ${malayalam.variable} ${tamil.variable} ${telugu.variable} ${mono.variable}`}
     >
       <head>
-        <style dangerouslySetInnerHTML={{ __html: fontCss }} />
         <script
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var t=localStorage.getItem("loanloop.theme");if(t){document.documentElement.setAttribute("data-theme",t);}}catch(e){}})();`,

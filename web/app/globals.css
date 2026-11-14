@@ -159,9 +159,9 @@
   --color-on-secondary-fixed: var(--on-secondary-fixed);
   --color-outline-variant: var(--outline-variant);
   --color-bezel: var(--bezel);
-  --font-sans: var(--font-sans-latin), var(--font-devanagari), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-serif: var(--font-sans-latin), var(--font-devanagari), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-mono: var(--font-ibm-mono), var(--font-devanagari), ui-monospace, SFMono-Regular, monospace;
+  --font-sans: var(--font-sans-latin), var(--font-devanagari), var(--font-bengali), var(--font-gujarati), var(--font-gurmukhi), var(--font-kannada), var(--font-malayalam), var(--font-tamil), var(--font-telugu), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-serif: var(--font-sans-latin), var(--font-devanagari), var(--font-bengali), var(--font-gujarati), var(--font-gurmukhi), var(--font-kannada), var(--font-malayalam), var(--font-tamil), var(--font-telugu), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: var(--font-ibm-mono), var(--font-devanagari), var(--font-bengali), var(--font-gujarati), var(--font-gurmukhi), var(--font-kannada), var(--font-malayalam), var(--font-tamil), var(--font-telugu), ui-monospace, SFMono-Regular, monospace;
 }
 
 @custom-variant hov {
