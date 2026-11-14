@@ -32,12 +32,12 @@ export function BottomSheet({
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-bezel/50 backdrop-blur-xs transition-opacity animate-in fade-in"
+        className="fixed inset-0 bg-bezel/50 backdrop-blur-xs transition-opacity motion-safe:animate-in fade-in"
         onClick={onClose}
       />
 
       {/* Sheet Content Container */}
-      <div className="relative w-full sm:max-w-[400px] bg-card rounded-t-[28px] sm:rounded-[28px] border border-line shadow-2xl p-5 z-10 max-h-[85vh] overflow-y-auto animate-in slide-in-from-bottom duration-200">
+      <div className="relative w-full sm:max-w-[400px] bg-surface-container rounded-t-xl sm:rounded-xl ring-1 ring-fg/[0.04] p-5 z-10 max-h-[85vh] overflow-y-auto motion-safe:animate-in slide-in-from-bottom duration-200">
         {/* Drag Pill Handle */}
         <div className="w-12 h-1 bg-outline-variant/60 rounded-full mx-auto mb-4 sm:hidden" />
 
@@ -45,8 +45,8 @@ export function BottomSheet({
         {(title || subtitle) && (
           <div className="flex items-start justify-between gap-3 mb-4">
             <div>
-              {title && <h3 className="text-base font-bold text-fg tracking-tight">{title}</h3>}
-              {subtitle && <p className="text-xs text-muted mt-0.5">{subtitle}</p>}
+              {title && <h3 className="text-base font-medium text-fg tracking-tight">{title}</h3>}
+              {subtitle && <p className="text-sm text-muted mt-0.5">{subtitle}</p>}
             </div>
             <button
               type="button"

@@ -10,7 +10,7 @@ function Talk() {
 
 export default function Page() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-xs text-muted">Starting voice session...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-sm text-muted">Starting voice session...</div>}>
       <Talk />
     </Suspense>
   );

@@ -52,12 +52,12 @@ export function BankAppTab({ onPending }: { onPending: (n: number) => void }) {
   return (
           <div className="space-y-6">
         {loadError && (
-          <div className="p-3 rounded-xl bg-danger-bg text-danger-fg text-xs border border-danger-line flex items-center justify-between">
+          <div className="p-3 rounded-xl bg-danger-bg text-danger-fg text-sm border border-danger-line flex items-center justify-between">
             <span>{loadError}</span>
             <button
               type="button"
               onClick={loadData}
-              className="text-[11px] font-bold underline ml-2 cursor-pointer"
+              className="text-[11px] font-medium underline ml-2 cursor-pointer"
             >
               Retry
             </button>
@@ -67,19 +67,19 @@ export function BankAppTab({ onPending }: { onPending: (n: number) => void }) {
         {/* Approvals Section */}
         <div>
           <div className="flex items-center justify-between mb-3 px-1">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-muted flex items-center gap-2">
+            <h2 className="text-sm font-medium uppercase tracking-wider text-muted flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-warn-fg" />
               {t.inbox.pending_approvals}
             </h2>
             {pendingApprovals.length > 0 && (
-              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-warn-bg text-warn-fg border border-warn-border">
+              <span className="text-[11px] font-mono font-medium px-2 py-0.5 rounded-full bg-warn-bg text-warn-fg border border-warn-border">
                 {pendingApprovals.length} action required
               </span>
             )}
           </div>
 
           {loading && approvals.length === 0 ? (
-            <div className="p-6 text-center text-xs text-muted bg-card rounded-2xl border border-line">
+            <div className="p-6 text-center text-sm text-muted bg-surface-container rounded-xl ring-1 ring-fg/[0.04]">
               Loading requests...
             </div>
           ) : pendingApprovals.length > 0 ? (
@@ -93,13 +93,13 @@ export function BankAppTab({ onPending }: { onPending: (n: number) => void }) {
               ))}
             </div>
           ) : (
-            <div className="p-5 text-center bg-card rounded-2xl border border-line shadow-xs">
+            <div className="p-5 text-center bg-surface-container rounded-xl ring-1 ring-fg/[0.04]">
               <div className="w-10 h-10 rounded-full bg-surface-container mx-auto flex items-center justify-center text-muted mb-2">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <p className="text-xs text-muted leading-relaxed">
+              <p className="text-sm text-muted leading-relaxed">
                 {t.inbox.no_approvals}
               </p>
             </div>
@@ -109,7 +109,7 @@ export function BankAppTab({ onPending }: { onPending: (n: number) => void }) {
         {/* Resolved Approvals (if any) */}
         {pastApprovals.length > 0 && (
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-muted mb-2.5 px-1">
+            <h3 className="text-sm font-medium uppercase tracking-wider text-muted mb-2.5 px-1">
               Resolved Approvals
             </h3>
             <div className="space-y-2">
@@ -126,17 +126,17 @@ export function BankAppTab({ onPending }: { onPending: (n: number) => void }) {
         {/* Bank SMS Alerts History */}
         <div>
           <div className="flex items-center justify-between mb-3 px-1">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-muted flex items-center gap-2">
+            <h2 className="text-sm font-medium uppercase tracking-wider text-muted flex items-center gap-2">
               <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
               </svg>
               {t.inbox.sms_heading}
             </h2>
-            <span className="text-[10px] font-mono text-muted">VK-SAHYADRI</span>
+            <span className="text-[11px] font-mono text-muted">VK-SAHYADRI</span>
           </div>
 
           {smsList.length === 0 ? (
-            <div className="p-6 text-center text-xs text-muted bg-card rounded-2xl border border-line">
+            <div className="p-6 text-center text-sm text-muted bg-surface-container rounded-xl ring-1 ring-fg/[0.04]">
               No recent SMS messages found.
             </div>
           ) : (
@@ -144,16 +144,16 @@ export function BankAppTab({ onPending }: { onPending: (n: number) => void }) {
               {smsList.map((sms) => (
                 <div
                   key={sms.id}
-                  className="bg-card rounded-2xl p-4 border border-line shadow-xs relative group"
+                  className="bg-surface-container rounded-xl p-4 ring-1 ring-fg/[0.04] relative group"
                 >
-                  <div className="flex items-center justify-between text-[10px] font-mono text-muted mb-1.5">
-                    <span className="font-bold text-fg">VK-SAHYADRI</span>
+                  <div className="flex items-center justify-between text-[11px] font-mono text-muted mb-1.5">
+                    <span className="font-medium text-fg">VK-SAHYADRI</span>
                     <span suppressHydrationWarning>
                       {sms.created_at ? new Date(sms.created_at).toLocaleString([], { dateStyle: "short", timeStyle: "short" }) : ""}
                     </span>
                   </div>
 
-                  <p className="text-xs text-fg leading-relaxed font-sans select-text">
+                  <p className="text-sm text-fg leading-relaxed font-sans select-text">
                     {sms.body}
                   </p>
 
@@ -161,7 +161,7 @@ export function BankAppTab({ onPending }: { onPending: (n: number) => void }) {
                     <button
                       type="button"
                       onClick={() => copySms(sms.body, sms.id)}
-                      className="text-[10px] font-semibold text-primary hover:underline inline-flex items-center gap-1 cursor-pointer"
+                      className="text-[11px] font-medium text-primary hover:underline inline-flex items-center gap-1 cursor-pointer"
                     >
                       {copiedId === sms.id ? (
                         <>

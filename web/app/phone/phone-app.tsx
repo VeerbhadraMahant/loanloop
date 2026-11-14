@@ -40,14 +40,14 @@ export function CircularCountdown({ from, to }: { from: string; to?: string | nu
           />
         </svg>
         <span
-          className={`absolute font-mono text-xs font-bold tracking-tight ${
+          className={`absolute font-mono text-sm font-medium tracking-tight ${
             isUrgent ? "text-danger-fg" : "text-warn-fg"
           }`}
         >
           {Math.floor(s / 60)}:{String(s % 60).padStart(2, "0")}
         </span>
       </div>
-      <span className="font-mono text-[10px] text-warn-fg uppercase font-semibold mt-1">Expires</span>
+      <span className="font-mono text-[11px] text-warn-fg uppercase font-medium mt-1">Expires</span>
     </div>
   );
 }
@@ -130,16 +130,16 @@ export function PhoneHandset({
   };
 
   const err = me.error ?? sms.error ?? appr.error;
-  const h2 = "mb-2 text-xs font-semibold uppercase tracking-wider text-muted flex items-center justify-between";
+  const h2 = "mb-2 text-sm font-medium uppercase tracking-wider text-muted flex items-center justify-between";
 
   const chassis = (
     <div
       className={`w-full mx-auto bg-card flex flex-col ${
         simulationProps
-          ? "h-[700px] max-h-[calc(100vh-140px)] min-h-[560px] max-w-[390px] rounded-[2rem] p-2.5 border-2 border-line-strong shadow-md"
+          ? "h-[700px] max-h-[calc(100vh-140px)] min-h-[560px] max-w-[390px] rounded-[2rem] p-2.5 border-2 border-bezel"
           : isSidecar
-          ? "h-[600px] max-h-[calc(100vh-190px)] min-h-[480px] max-w-[350px] rounded-2xl p-2 border border-line-strong"
-          : "max-w-[390px] min-h-[700px] rounded-[2rem] p-2.5 border-2 border-line-strong shadow-md"
+          ? "h-[600px] max-h-[calc(100vh-190px)] min-h-[480px] max-w-[350px] rounded-xl p-2 border border-bezel"
+          : "max-w-[390px] min-h-[700px] rounded-[2rem] p-2.5 border-2 border-bezel"
       }`}
     >
       <div className="w-full bg-canvas rounded-[1.5rem] overflow-hidden flex flex-col relative border border-line h-full flex-1 min-h-0">
@@ -152,9 +152,9 @@ export function PhoneHandset({
 
         {/* Status Bar */}
         <div className="w-full px-5 py-1.5 bg-card flex items-center justify-between text-fg font-mono tabular-nums text-[11px] shrink-0 border-b border-line/50">
-          <span className="font-semibold">10:42</span>
+          <span className="font-medium">10:42</span>
           <div className="flex items-center gap-1.5 text-muted">
-            <span className="text-[10px]">5G</span>
+            <span className="text-[11px]">5G</span>
             <Icon name="phone" size={11} />
           </div>
         </div>
@@ -166,9 +166,9 @@ export function PhoneHandset({
               <button
                 type="button"
                 onClick={() => setActiveTab("call")}
-                className={`flex-1 py-1 rounded text-xs font-medium flex items-center justify-center gap-1.5 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                className={`flex-1 py-1 rounded text-sm font-medium flex items-center justify-center gap-1.5 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                   activeTab === "call"
-                    ? "bg-card text-fg font-semibold border border-line"
+                    ? "bg-surface-container text-fg font-medium ring-1 ring-fg/[0.04]"
                     : "text-muted hover:text-fg border border-transparent"
                 }`}
               >
@@ -178,9 +178,9 @@ export function PhoneHandset({
               <button
                 type="button"
                 onClick={() => setActiveTab("app")}
-                className={`flex-1 py-1 rounded text-xs font-medium flex items-center justify-center gap-1.5 transition-colors cursor-pointer relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                className={`flex-1 py-1 rounded text-sm font-medium flex items-center justify-center gap-1.5 transition-colors cursor-pointer relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                   activeTab === "app"
-                    ? "bg-card text-fg font-semibold border border-line"
+                    ? "bg-surface-container text-fg font-medium ring-1 ring-fg/[0.04]"
                     : "text-muted hover:text-fg border border-transparent"
                 }`}
               >
@@ -200,7 +200,7 @@ export function PhoneHandset({
             /* Incoming / Call Idle State */
             <div className="flex-1 min-h-0 p-5 flex flex-col items-center justify-center text-center gap-3.5 bg-canvas">
               <div className="relative">
-                <div className="w-16 h-16 rounded-full bg-accent-soft text-primary flex items-center justify-center font-semibold text-xl ring-2 ring-primary/20">
+                <div className="w-16 h-16 rounded-full bg-accent-soft text-primary flex items-center justify-center font-medium text-xl ring-2 ring-primary/20">
                   S
                 </div>
                 <span className="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-ok-fg border-2 border-card flex items-center justify-center text-[9px] text-white">
@@ -209,14 +209,14 @@ export function PhoneHandset({
               </div>
 
               <div>
-                <h3 className="text-lg font-semibold text-fg tracking-tight leading-tight">Sahyadri Voice Agent</h3>
-                <p className="font-mono text-xs text-primary font-medium mt-1">1800-209-4000 · Verified Banking</p>
+                <h3 className="text-lg font-medium text-fg tracking-tight leading-tight">Sahyadri Voice Agent</h3>
+                <p className="font-mono text-sm text-primary font-medium mt-1">1800-209-4000 · Verified Banking</p>
                 <p className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-0.5 rounded-md bg-sunken border border-line font-mono text-[11px] text-fg">
                   <span>{simulationProps.personaName}</span>
                   <span className="text-muted">·</span>
                   <span className="text-muted">{simulationProps.personaPhone}</span>
                 </p>
-                <p className="text-xs text-muted mt-2 max-w-[260px] leading-relaxed">
+                <p className="text-sm text-muted mt-2 max-w-[260px] leading-relaxed">
                   Borrower phone view: voice call with synced SMS and out-of-band in-app approvals.
                 </p>
               </div>
@@ -226,12 +226,12 @@ export function PhoneHandset({
                   type="button"
                   onClick={simulationProps.start}
                   disabled={simulationProps.status === "connecting"}
-                  className="w-14 h-14 rounded-full bg-ok-fg hover:bg-ok-fg/90 text-white flex items-center justify-center active:scale-95 transition-all cursor-pointer ring-2 ring-ok-border disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ok-fg"
+                  className="w-14 h-14 rounded-full bg-ok-fg hover:bg-ok-fg/90 text-white flex items-center justify-center motion-safe:active:scale-95 transition-all cursor-pointer ring-2 ring-ok-border disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ok-fg"
                   title="Answer / Start Call"
                 >
                   <Icon name="phone_in_talk" size={22} />
                 </button>
-                <span className="text-xs font-medium text-fg">
+                <span className="text-sm font-medium text-fg">
                   {simulationProps.status === "connecting"
                     ? "Connecting Call…"
                     : simulationProps.ended
@@ -246,18 +246,18 @@ export function PhoneHandset({
               {/* Call Status Ribbon */}
               <div className="bg-sunken px-3.5 py-1.5 border-b border-line flex items-center justify-between text-[11px] shrink-0">
                 <div className="flex items-center gap-1.5 text-fg font-medium">
-                  <span className="w-2 h-2 rounded-full bg-ok-fg animate-pulse"></span>
+                  <span className="w-2 h-2 rounded-full bg-ok-fg motion-safe:animate-pulse"></span>
                   <span className="font-mono tabular-nums">{fmtDur(simulationProps.callDuration)}</span>
                   <span className="text-muted">· HD Audio</span>
                 </div>
-                <span className="text-[10px] font-mono text-primary font-medium">Zero Secrets</span>
+                <span className="text-[11px] font-mono text-primary font-medium">Zero Secrets</span>
               </div>
 
               {/* Clean Transcript Area (NO TIMINGS OR TELEMETRY VISIBLE) */}
               <div className="flex-1 min-h-0 p-3 space-y-2.5 overflow-y-auto overscroll-contain">
                 {simulationProps.msgs.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center text-center p-4 text-muted text-xs">
-                    <p className="text-sm text-fg font-semibold mb-1">Call Connected</p>
+                  <div className="h-full flex flex-col items-center justify-center text-center p-4 text-muted text-sm">
+                    <p className="text-sm text-fg font-medium mb-1">Call Connected</p>
                     <p className="max-w-[220px]">Hold the mic button below (or Spacebar) to speak with the banking assistant.</p>
                   </div>
                 ) : (
@@ -268,14 +268,14 @@ export function PhoneHandset({
                         m.who === "caller" ? "items-end self-end" : "items-start"
                       }`}
                     >
-                      <span className="text-[10px] text-muted font-medium">
+                      <span className="text-[11px] text-muted font-medium">
                         {m.who === "caller" ? simulationProps.personaName : "Sahyadri Agent"}
                       </span>
                       <div
-                        className={`px-3 py-2 rounded-lg text-xs leading-[1.6] ${
+                        className={`px-3 py-2 rounded-lg text-sm leading-[1.6] ${
                           m.who === "caller"
                             ? "bg-primary text-primary-fg"
-                            : "bg-card border border-line text-fg"
+                            : "bg-surface-container ring-1 ring-fg/[0.04] text-fg"
                         }`}
                       >
                         {m.text}
@@ -288,18 +288,18 @@ export function PhoneHandset({
                 {pending && (
                   <div className="enter rounded-lg border border-warn-border bg-warn-bg p-3 space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-warn-border/60 text-warn-fg font-mono text-[10px] font-semibold">
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-warn-border/60 text-warn-fg font-mono text-[11px] font-medium">
                         <Icon name="shield" size={11} />
                         In-Call Authorization Needed
                       </span>
                     </div>
-                    <p className="text-xs font-medium text-fg leading-snug">{pending.purpose}</p>
+                    <p className="text-sm font-medium text-fg leading-snug">{pending.purpose}</p>
                     <div className="grid grid-cols-2 gap-2 pt-1">
                       <Button
                         small
                         disabled={busy}
                         onClick={() => act(pending.id, "approve")}
-                        className="w-full text-center justify-center font-semibold text-xs"
+                        className="w-full min-h-11! rounded-xl! text-center justify-center font-medium text-sm"
                       >
                         Approve (Tap)
                       </Button>
@@ -308,7 +308,7 @@ export function PhoneHandset({
                         variant="secondary"
                         disabled={busy}
                         onClick={() => act(pending.id, "deny")}
-                        className="w-full text-center justify-center font-semibold text-xs border-danger-line text-danger-fg"
+                        className="w-full min-h-11! rounded-xl! text-center justify-center font-medium text-sm border-danger-line text-danger-fg"
                       >
                         Deny
                       </Button>
@@ -318,15 +318,15 @@ export function PhoneHandset({
               </div>
 
               {/* Quick Prompts Carousel */}
-              <div className="px-3 pt-2 pb-1.5 border-t border-line bg-card flex items-center gap-1.5 overflow-x-auto text-xs shrink-0">
-                <span className="text-[10px] text-muted font-medium shrink-0">Tap:</span>
+              <div className="px-3 pt-2 pb-1.5 border-t border-line bg-card flex items-center gap-1.5 overflow-x-auto text-sm shrink-0">
+                <span className="text-[11px] text-muted font-medium shrink-0">Tap:</span>
                 {simulationProps.quickPrompts.map((q, idx) => (
                   <button
                     key={idx}
                     type="button"
                     disabled={simulationProps.busy}
                     onClick={() => simulationProps.sendTextVal(q)}
-                    className="shrink-0 px-2 py-1 rounded-md bg-sunken hover:bg-card text-fg text-[11px] border border-line cursor-pointer disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    className="shrink-0 px-2 py-1 rounded-md bg-sunken hover:bg-surface-container text-fg text-[11px] ring-1 ring-fg/[0.04] cursor-pointer disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   >
                     {q}
                   </button>
@@ -362,16 +362,16 @@ export function PhoneHandset({
                       aria-pressed={simulationProps.listening}
                       className={`w-12 h-12 rounded-full flex items-center justify-center transition-all cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                         simulationProps.listening
-                          ? "bg-primary text-primary-fg ring-4 ring-primary/30 scale-105"
+                          ? "bg-primary text-primary-fg ring-4 ring-primary/30"
                           : simulationProps.busy
                           ? "bg-sunken text-muted border border-line cursor-wait"
-                          : "bg-primary hover:bg-accent-hover text-primary-fg ring-2 ring-primary/20 active:scale-95"
+                          : "bg-primary hover:bg-accent-hover text-primary-fg ring-2 ring-primary/20 motion-safe:active:scale-95"
                       } disabled:opacity-50`}
                       title="Hold to talk (or hold Spacebar)"
                     >
                       <Icon name={simulationProps.listening ? "mic" : simulationProps.busy ? "speed" : "mic"} size={20} />
                     </button>
-                    <span className="text-[10px] text-muted font-medium mt-1">
+                    <span className="text-[11px] text-muted font-medium mt-1">
                       {simulationProps.listening ? "Release to Send" : simulationProps.busy ? "Thinking…" : "Hold to Talk"}
                     </span>
                   </div>
@@ -380,7 +380,7 @@ export function PhoneHandset({
                   <button
                     type="button"
                     onClick={simulationProps.end}
-                    className="w-9 h-9 rounded-full bg-danger-bg hover:bg-danger-line/40 text-danger-fg border border-danger-line flex items-center justify-center cursor-pointer active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-fg"
+                    className="w-9 h-9 rounded-full bg-danger-bg hover:bg-danger-line/40 text-danger-fg border border-danger-line flex items-center justify-center cursor-pointer motion-safe:active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-fg"
                     title="End Call"
                   >
                     <Icon name="x" size={15} />
@@ -401,12 +401,12 @@ export function PhoneHandset({
                       value={simulationProps.text ?? ""}
                       onChange={(e) => simulationProps.setText?.(e.target.value)}
                       placeholder="Type message..."
-                      className="w-full pl-3 pr-16 py-1.5 rounded-md bg-sunken text-fg text-xs border border-line focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full pl-3 pr-16 py-1.5 rounded-md bg-sunken text-fg text-sm border border-line focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                     <button
                       type="submit"
                       disabled={!simulationProps.text?.trim()}
-                      className="absolute right-1 px-2.5 py-1 rounded bg-card text-fg text-[11px] font-semibold border border-line disabled:opacity-40 cursor-pointer"
+                      className="absolute right-1 px-2.5 py-1 rounded bg-card text-fg text-[11px] font-medium border border-line disabled:opacity-40 cursor-pointer"
                     >
                       Send
                     </button>
@@ -421,19 +421,19 @@ export function PhoneHandset({
             {/* App Header */}
             <div className="px-4 py-2.5 bg-card border-b border-line flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2 min-w-0">
-                <div className="w-7 h-7 rounded-md bg-primary text-primary-fg flex items-center justify-center font-semibold text-xs shrink-0">
+                <div className="w-7 h-7 rounded-md bg-primary text-primary-fg flex items-center justify-center font-medium text-sm shrink-0">
                   S
                 </div>
                 <div className="min-w-0">
-                  <h3 className="text-fg text-sm leading-tight font-semibold tracking-tight truncate">
+                  <h3 className="text-fg text-sm leading-tight font-medium tracking-tight truncate">
                     Sahyadri Mobile
                   </h3>
-                  <p className="font-mono text-muted text-[10px] truncate">
+                  <p className="font-mono text-muted text-[11px] truncate">
                     {me.data ? `${me.data.name} · ${me.data.mobile_masked}` : "Sahyadri customer"}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-ok-bg text-ok-fg text-[10px] font-mono font-medium border border-ok-border shrink-0">
+              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-ok-bg text-ok-fg text-[11px] font-mono font-medium border border-ok-border shrink-0">
                 <span className="w-1.5 h-1.5 rounded-full bg-ok-fg"></span>
                 <span>Synced</span>
               </div>
@@ -444,10 +444,10 @@ export function PhoneHandset({
               <button
                 type="button"
                 onClick={() => setActiveTab("call")}
-                className="w-full bg-ok-bg text-ok-fg px-4 py-1.5 border-b border-ok-border flex items-center justify-between text-xs font-semibold cursor-pointer shrink-0 hover:bg-ok-border/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="w-full bg-ok-bg text-ok-fg px-4 py-1.5 border-b border-ok-border flex items-center justify-between text-sm font-medium cursor-pointer shrink-0 hover:bg-ok-border/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
                 <span className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-ok-fg animate-pulse"></span>
+                  <span className="w-2 h-2 rounded-full bg-ok-fg motion-safe:animate-pulse"></span>
                   <span className="tabular-nums">Call in progress ({fmtDur(simulationProps.callDuration)})</span>
                 </span>
                 <span className="text-[11px] font-mono underline">Return to Call →</span>
@@ -460,7 +460,7 @@ export function PhoneHandset({
                 <Icon name="sync" size={12} />
                 Voice desk paired, refreshes every 3 s
               </span>
-              <span className="font-mono text-[10px] text-primary font-semibold">Polling</span>
+              <span className="font-mono text-[11px] text-primary font-medium">Polling</span>
             </div>
 
             {/* Scrollable Main Area */}
@@ -475,7 +475,7 @@ export function PhoneHandset({
                   className="enter rounded-lg border border-warn-border bg-warn-bg p-3 relative overflow-hidden"
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-warn-border/60 text-warn-fg font-mono text-[10px] font-semibold">
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-warn-border/60 text-warn-fg font-mono text-[11px] font-medium">
                       <Icon name="shield" size={11} />
                       In-Call Authorization Needed
                     </span>
@@ -483,7 +483,7 @@ export function PhoneHandset({
 
                   <div className="flex items-start justify-between gap-3 mb-2.5">
                     <div className="flex-1">
-                      <h4 id="ap" className="text-sm font-semibold text-fg leading-snug">
+                      <h4 id="ap" className="text-sm font-medium text-fg leading-snug">
                         {pending.purpose}
                       </h4>
                       <p className="text-[11px] text-muted mt-1 leading-relaxed">
@@ -494,7 +494,7 @@ export function PhoneHandset({
                   </div>
 
                   {actErr && (
-                    <p role="alert" className="mb-2 text-xs text-danger-fg">
+                    <p role="alert" className="mb-2 text-sm text-danger-fg">
                       {actErr}
                     </p>
                   )}
@@ -503,7 +503,7 @@ export function PhoneHandset({
                     <Button
                       disabled={busy}
                       onClick={() => act(pending.id, "approve")}
-                      className="w-full h-9 text-center justify-center font-semibold text-xs"
+                      className="w-full min-h-11! rounded-xl! text-center justify-center font-medium text-sm"
                     >
                       <Icon name="check" size={14} />
                       Approve (Tap)
@@ -512,14 +512,14 @@ export function PhoneHandset({
                       variant="secondary"
                       disabled={busy}
                       onClick={() => act(pending.id, "deny")}
-                      className="w-full h-9 text-center justify-center font-semibold text-xs border-danger-line text-danger-fg hover:bg-danger-bg"
+                      className="w-full min-h-11! rounded-xl! text-center justify-center font-medium text-sm border-danger-line text-danger-fg hover:bg-danger-bg"
                     >
                       <Icon name="x" size={14} />
                       Deny
                     </Button>
                   </div>
 
-                  <div className="mt-2 pt-2 border-t border-warn-border/40 text-[10px] text-muted text-center">
+                  <div className="mt-2 pt-2 border-t border-warn-border/40 text-[11px] text-muted text-center">
                     Zero Secrets: Sahyadri never asks you to speak OTP or MPIN numbers aloud.
                   </div>
                 </section>
@@ -532,7 +532,7 @@ export function PhoneHandset({
                     <Icon name="inbox" size={13} />
                     Official Bank SMS Inbox
                   </span>
-                  <span className="font-mono text-[10px] text-muted font-normal">Bank Secure</span>
+                  <span className="font-mono text-[11px] text-muted font-normal">Bank Secure</span>
                 </div>
 
                 {sms.loading ? (
@@ -546,14 +546,14 @@ export function PhoneHandset({
                       .map((m, i) => (
                         <li
                           key={m.id}
-                          className="enter rounded-lg border border-line bg-card p-3"
+                          className="enter rounded-lg ring-1 ring-fg/[0.04] bg-surface-container p-3"
                           style={stagger(i)}
                         >
-                          <div className="flex items-center justify-between text-xs text-muted font-mono tabular-nums mb-1">
-                            <span className="font-semibold text-primary">VK-SAHYADRI</span>
-                            <span className="text-[10px]">{fmtTime(m.created_at)}</span>
+                          <div className="flex items-center justify-between text-sm text-muted font-mono tabular-nums mb-1">
+                            <span className="font-medium text-primary">VK-SAHYADRI</span>
+                            <span className="text-[11px]">{fmtTime(m.created_at)}</span>
                           </div>
-                          <p className="text-xs text-fg leading-[1.6]">{m.body}</p>
+                          <p className="text-sm text-fg leading-[1.6]">{m.body}</p>
                           <button
                             type="button"
                             onClick={() => copyText(m.body, m.id)}
@@ -578,14 +578,14 @@ export function PhoneHandset({
                 ) : !appr.data?.length ? (
                   <Empty icon="clock">No activity yet.</Empty>
                 ) : (
-                  <ul className="divide-y divide-line rounded-lg border border-line bg-card text-xs">
+                  <ul className="divide-y divide-line rounded-lg ring-1 ring-fg/[0.04] bg-surface-container text-sm">
                     {[...appr.data]
                       .sort((a, b) => b.created_at.localeCompare(a.created_at))
                       .map((a) => (
                         <li key={a.id} className="flex items-center justify-between gap-3 px-3 py-2">
                           <span className="min-w-0">
                             <span className="block font-medium text-fg">{a.purpose}</span>
-                            <span className="font-mono tabular-nums text-[10px] text-muted">{fmtTime(a.created_at)}</span>
+                            <span className="font-mono tabular-nums text-[11px] text-muted">{fmtTime(a.created_at)}</span>
                           </span>
                           <Pill
                             tone={statusTone[a.status as keyof typeof statusTone] ?? "neutral"}
@@ -604,8 +604,8 @@ export function PhoneHandset({
 
         {/* Mobile App Bottom Nav Bar (when not in call screen) */}
       {(!simulationProps || activeTab === "app") && (
-        <div className="bg-card px-6 py-2 border-t border-line flex items-center justify-between text-muted text-[10px] shrink-0">
-          <div className="flex flex-col items-center gap-0.5 text-primary font-semibold">
+        <div className="bg-card px-6 py-2 border-t border-line flex items-center justify-between text-muted text-[11px] shrink-0">
+          <div className="flex flex-col items-center gap-0.5 text-primary font-medium">
             <Icon name="home" size={14} />
             <span>Home</span>
           </div>
@@ -647,9 +647,9 @@ export function PhoneHandset({
 export default function PhoneApp() {
   return (
     <>
-      <div className="fixed left-4 right-4 top-4 z-10 flex justify-between text-xs font-medium">
-        <Link href="/call" className="rounded-lg border border-line bg-card px-3 py-1.5 text-fg">Call the voice desk</Link>
-        <SignOut door="customer" className="rounded-lg border border-line bg-card px-3 py-1.5 text-fg" />
+      <div className="fixed left-4 right-4 top-4 z-10 flex justify-between text-sm font-medium">
+        <Link href="/call" className="rounded-lg ring-1 ring-fg/[0.04] bg-surface-container px-3 py-1.5 text-fg">Call the voice desk</Link>
+        <SignOut door="customer" className="rounded-lg ring-1 ring-fg/[0.04] bg-surface-container px-3 py-1.5 text-fg" />
       </div>
       <PhoneHandset />
     </>

@@ -32,10 +32,10 @@ export function ApprovalCard({ approval, onResolved }: ApprovalCardProps) {
 
   return (
     <div
-      className={`rounded-2xl p-4 border transition-all ${
+      className={`rounded-xl p-4 transition-colors ${
         isPending
-          ? "bg-warn-bg/25 border-warn-border/80 shadow-md ring-1 ring-warn-border/40"
-          : "bg-card border-line"
+          ? "bg-warn-bg ring-1 ring-warn-border"
+          : "bg-surface-container ring-1 ring-fg/[0.04]"
       }`}
     >
       <div className="flex items-start justify-between gap-3 mb-3">
@@ -46,10 +46,10 @@ export function ApprovalCard({ approval, onResolved }: ApprovalCardProps) {
                 ? "bg-ok-fg"
                 : approval.status === "denied"
                 ? "bg-danger-fg"
-                : "bg-warn-fg animate-pulse"
+                : "bg-warn-fg motion-safe:animate-pulse"
             }`}
           />
-          <span className="text-xs font-bold uppercase tracking-wider text-fg">
+          <span className="text-sm font-medium uppercase tracking-wider text-fg">
             {isPending ? t.inbox.pending_approvals : `Status: ${approval.status}`}
           </span>
         </div>
@@ -59,7 +59,7 @@ export function ApprovalCard({ approval, onResolved }: ApprovalCardProps) {
         )}
       </div>
 
-      <p className="text-sm font-semibold text-fg mb-1 leading-snug">
+      <p className="text-sm font-medium text-fg mb-1 leading-snug">
         {approval.purpose}
       </p>
 
@@ -74,7 +74,7 @@ export function ApprovalCard({ approval, onResolved }: ApprovalCardProps) {
       </div>
 
       {error && (
-        <div className="text-xs text-danger-fg bg-danger-bg p-2 rounded-lg mb-3">
+        <div className="text-sm text-danger-fg bg-danger-bg p-2 rounded-lg mb-3">
           {error}
         </div>
       )}
@@ -85,7 +85,7 @@ export function ApprovalCard({ approval, onResolved }: ApprovalCardProps) {
             type="button"
             disabled={busy}
             onClick={() => handleDecision("approve")}
-            className="flex-1 py-2.5 px-4 rounded-xl font-bold text-xs bg-ok-fg text-white hover:bg-ok-fg/90 active:scale-95 transition-all shadow-sm flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer"
+            className="flex-1 min-h-11 py-2.5 px-4 rounded-xl font-medium text-base bg-primary text-primary-fg hover:bg-accent-hover motion-safe:active:scale-95 transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -97,14 +97,14 @@ export function ApprovalCard({ approval, onResolved }: ApprovalCardProps) {
             type="button"
             disabled={busy}
             onClick={() => handleDecision("deny")}
-            className="py-2.5 px-4 rounded-xl font-bold text-xs bg-surface-container hover:bg-danger-bg hover:text-danger-fg text-fg border border-line active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
+            className="min-h-11 py-2.5 px-4 rounded-xl font-medium text-base bg-transparent hover:bg-danger-bg hover:text-danger-fg text-fg border border-outline-variant motion-safe:active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
           >
             {t.inbox.decline}
           </button>
         </div>
       ) : (
-        <div className="text-xs font-medium text-muted">
-          This request was marked as <span className="font-bold text-fg capitalize">{approval.status}</span>.
+        <div className="text-sm font-medium text-muted">
+          This request was marked as <span className="font-medium text-fg capitalize">{approval.status}</span>.
         </div>
       )}
     </div>
