@@ -783,16 +783,16 @@ _LANG_STOP = {"please", "pls", "plz", "kripya", "ji", "jee", "ok", "okay", "yes"
               "a", "lets", "let", "let's", "hum", "aap", "ab", "se", "continue", "only", "language"}
 _FIRST_TURN_HINGLISH = {"hai", "kya", "mera", "meri", "mujhe", "kitna", "ka", "ki", "ko", "nahi", "kab", "bata", "batao", "aap", "mere"}
 LANG_OK = {"en": "Sure, I will continue in English. How can I help you?",
-           "hinglish": "Theek hai, hum Hinglish mein baat karenge. Main aapki kaise madad kar sakta hoon?",
-           "hi": "ठीक है, मैं हिंदी में बात करूँगा। मैं आपकी कैसे मदद कर सकता हूँ?",
-           "mr": "ठीक आहे, मी मराठीत बोलेन. मी तुमची कशी मदत करू शकतो?"}
+           "hinglish": "Theek hai, hum Hinglish mein baat karenge. Main aapki kaise madad kar sakti hoon?",
+           "hi": "ठीक है, मैं हिंदी में बात करूँगी। मैं आपकी कैसे मदद कर सकती हूँ?",
+           "mr": "ठीक आहे, मी मराठीत बोलेन. मी तुमची कशी मदत करू शकते?"}
 LANG_SORRY = ""  # set by _sorry_line(): lists the languages that are active
 
 
 def _sorry_line() -> str:
     names = [m["name"] for m in sorted(MODES, key=lambda m: m["code"] == "hinglish") if m["code"] in ACTIVE_LANGS]
     return (f"Sorry, I can speak {', '.join(names[:-1])} or {names[-1]}. Which would you like? "
-            "माफ़ कीजिए, मैं अंग्रेज़ी, हिंदी, मराठी या हिंग्लिश में बात कर सकता हूँ। आप कौन सी भाषा चाहेंगे?"
+            "माफ़ कीजिए, मैं अंग्रेज़ी, हिंदी, मराठी या हिंग्लिश में बात कर सकती हूँ। आप कौन सी भाषा चाहेंगे?"
             if len(names) > 1 else "Sorry, I could not follow that language.")
 
 
@@ -1122,9 +1122,9 @@ _INJECT_BASE = (r"system\s*prompt|tool\s*list|(?:ignore|forget|disregard)\s+(?:a
 _LEAK = re.compile(_LEAK_BASE, re.I)  # rebuilt with the language files' prompt_leak by _build_regexes
 _INJECT = re.compile(_INJECT_BASE, re.I)
 SAFE = {"en": "I can only help with banking requests. How can I help you?",
-        "hinglish": "Main sirf banking requests mein madad kar sakta hoon. Main aapki kaise madad karun?",
-        "hi": "मैं केवल बैंकिंग से जुड़े अनुरोधों में मदद कर सकता हूँ। मैं आपकी कैसे मदद करूँ?",
-        "mr": "मी फक्त बँकिंग विनंत्यांमध्ये मदत करू शकतो. मी तुमची कशी मदत करू?"}
+        "hinglish": "Main sirf banking requests mein madad kar sakti hoon. Main aapki kaise madad karun?",
+        "hi": "मैं केवल बैंकिंग से जुड़े अनुरोधों में मदद कर सकती हूँ। मैं आपकी कैसे मदद करूँ?",
+        "mr": "मी फक्त बँकिंग विनंत्यांमध्ये मदत करू शकते. मी तुमची कशी मदत करू?"}
 _VERIFY_WORDS = {"mobile", "number", "dob", "birth", "date", "janam", "tithi", "tarikh", "born", "registered", "and", "my", "is", "mera",
                  "meri", "aur", "hai", "the", "of", "i", "am", "जन्म", "तारीख", "जन्मतारीख", "मोबाईल", "मोबाइल", "नंबर", "आणि", "आहे", "है",
                  "और", "मेरा", "माझा", "माझी", "जन्मतिथि", "मेरी", "का", "ka", "ki", "तिथि"}
