@@ -803,7 +803,8 @@ const Lightfall = ({
       [streakProgram, downProgram, blurProgram, compositeProgram].forEach(item => gl.deleteProgram(item.program));
       gl.deleteBuffer(buffer);
       gl.deleteVertexArray(vao);
-      if (!gl.isContextLost()) gl.getExtension('WEBGL_lose_context')?.loseContext();
+      // local change (LoanLoop): no loseContext() here. React Strict Mode re-runs this effect on the same canvas,
+      // getContext() then returns the lost context and the canvas paints flat grey. The context is freed with the canvas.
     };
   }, [generation]);
 

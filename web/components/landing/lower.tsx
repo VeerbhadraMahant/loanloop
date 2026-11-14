@@ -99,7 +99,7 @@ export function Results() {
       <div className="ll-chapterBody">
         <Bento>
           <Cell fill="teal" span={7} className="ll-resCell"><p className={fig}>1,000</p>{text("concurrent simulated calls, 0 errors")}</Cell>
-          <Cell fill="stone" span={5} className="ll-resCell"><p className={fig}>33 ms</p>{text("gateway p95 per action (target under 50 ms)")}</Cell>
+          <Cell fill="stone" span={5} className="ll-resCell"><p className={fig}>33<span className="ll-resUnit">ms</span></p>{text("gateway p95 per action (target under 50 ms)")}</Cell>
           <Cell fill="aubergine" span={5} className="ll-resCell"><p className={fig}>94/100</p>{text("scripted calls passed in the four core languages")}</Cell>
           <Cell fill="lavender" span={7} className="ll-resCell"><p className={fig}>139/140</p>{text("scripted calls passed in the seven beta languages")}</Cell>
         </Bento>

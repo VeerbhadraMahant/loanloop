@@ -25,7 +25,7 @@
   .ll-topnavStaff:hover { text-decoration-color: currentColor; }
   .ll-menuBtn:hover { background: rgb(20 20 19 / 5%); }
 }
-.ll-skip { position: absolute; left: 16px; top: 10px; z-index: 50; padding: 8px 16px; border-radius: 8px; background: var(--ll-ink); color: #ffffff; transform: translateY(-200%); }
+.ll-skip { position: absolute; left: 16px; top: 10px; z-index: 50; display: inline-flex; align-items: center; min-height: 44px; padding: 8px 16px; border-radius: 8px; background: var(--ll-ink); color: #ffffff; transform: translateY(-200%); }
 .ll-skip:focus { transform: none; }
 
 /* GooeyNav clamps a negative index to 0, so hide its pill while the hero is in view */
@@ -46,8 +46,8 @@
 .ll-menuStaff { display: flex; align-items: center; justify-content: center; min-height: 44px; font-weight: 600; color: var(--ll-violet); }
 
 /* announcement strip: scrolls away with the page */
-.ll-announce { background: var(--ll-lavender); color: var(--ll-ink); padding: 14px 16px; text-align: center; font-size: 15px; }
-.ll-announceLink { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
+.ll-announce { background: var(--ll-lavender); color: var(--ll-ink); padding: 10px 16px; text-align: center; font-size: 15px; line-height: 1.4; }
+.ll-announceLink { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; margin: -10px 0; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
 .ll-announceLink svg { transition: transform 300ms ease-in-out; }
 @media (hover: hover) and (pointer: fine) { .ll-announceLink:hover svg { transform: translateX(4px); } }
 

@@ -101,16 +101,8 @@ function Layer({ id, paused, dpr }: { id: number; paused: boolean; dpr?: number 
   }
   return (
     <Lightfall
-      colors={["#d4c7ff", "#714cb6", "#e8e0ff", "#f2b07c"]}
-      backgroundColor="#714cb6"
-      speed={0.25}
-      streakCount={2}
-      density={0.45}
-      glow={0.5}
-      backgroundGlow={0.08}
-      headGlow={0.35}
-      bloom={0.15}
-      twinkle={0.2}
+      colors={["#d4c7ff", "#714cb6"]}
+      backgroundColor={NIGHT}
       mouseInteraction={false}
       holdToWarp={false}
       intro={false}
