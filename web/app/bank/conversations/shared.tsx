@@ -1,11 +1,12 @@
 import { StatusBadge, type Tone } from "@/components/bank/status-badge";
+import { langLabel as anyLangLabel } from "@/lib/languages";
 
 const OUTCOME: Record<string, [Tone, string]> = {
   completed: ["ok", "Completed"], handover: ["warn", "Handed over"], blocked: ["danger", "Blocked"], caller_hung_up: ["neutral", "Caller hung up"],
 };
 export const outcomeLabel = (o: string | null) => (o ? OUTCOME[o]?.[1] ?? o.replace(/_/g, " ") : "In progress");
 export const LANG: Record<string, string> = { en: "English", hi: "Hindi", hinglish: "Hinglish", mr: "Marathi" };
-export const langLabel = (l: string) => LANG[l] ?? l;
+export const langLabel = (l: string) => LANG[l] ?? anyLangLabel(l);
 
 export function OutcomeBadge({ outcome }: { outcome: string | null }) {
   return <StatusBadge tone={outcome ? OUTCOME[outcome]?.[0] ?? "info" : "info"}>{outcomeLabel(outcome)}</StatusBadge>;

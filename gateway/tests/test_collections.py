@@ -58,8 +58,8 @@ async def test_dues_info_none_for_regular_customer(client, mk_session):
 
 
 async def test_seed_overdue_distribution(fresh):
-    async with SessionLocal() as db:
-        cases = (await db.execute(select(CollectionCase))).scalars().all()
+    async with SessionLocal() as db:  # resolved cases are history from earlier episodes; the checks below are for live ones
+        cases = (await db.execute(select(CollectionCase).where(CollectionCase.status != "resolved"))).scalars().all()
         assert OUT in {c.id for c in cases}
         by = {b: sum(c.bucket == b for c in cases) for b in ("1-30", "31-60", "61-90", "90+")}
         assert by["1-30"] >= 15 and by["31-60"] >= 8 and by["61-90"] >= 5 and by["90+"] >= 3

@@ -29,3 +29,24 @@ async def test_reseed_flushes_redis_ll_keys():
     await seed(engine)
     assert await sessions.redis.get("ll:rl:verify:c1") is None
     assert await sessions.redis.get("other") == "x"
+
+
+async def test_history_is_bounded_ended_and_masked():
+    import json
+    import re
+    from datetime import datetime, timezone
+
+    from app.db.models import Approval, AuditLog, Call, Handover, ServiceRequest, SmsOutbox
+
+    now_, lo = datetime.now(timezone.utc), datetime.now(timezone.utc) - timedelta(days=366)
+    async with SessionLocal() as db:
+        for model, col in ((Call, Call.started_at), (Call, Call.ended_at), (AuditLog, AuditLog.ts), (Handover, Handover.created_at),
+                           (ServiceRequest, ServiceRequest.created_at), (SmsOutbox, SmsOutbox.created_at), (Approval, Approval.created_at)):
+            rows = (await db.execute(select(col))).scalars().all()
+            assert rows and all(lo <= t <= now_ for t in rows), (model.__name__, col.key)
+        assert (await db.execute(select(Call.call_id).where(Call.ended_at.is_(None)))).first() is None
+        long_run = re.compile(r"\d{10,}")
+        for a in (await db.execute(select(AuditLog))).scalars():
+            assert not long_run.search(f"{a.call_id} {a.action} {a.error_code} {json.dumps(a.flags)}")
+        for s in (await db.execute(select(SmsOutbox.body))).scalars():
+            assert not long_run.search(s)

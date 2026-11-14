@@ -150,6 +150,9 @@ def build() -> list:
                               channel=rnd.choice(["sms", "call"]), paused_until=None))
     add_bank_data(out, loans, set(unmatched), REF)
     add_persona_extras(out, loans, REF)
+    from app.db.history import add_history
+
+    add_history(out, REF)  # own RNG: nothing above changes
     return out
 
 
