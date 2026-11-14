@@ -57,7 +57,7 @@ class Loan(Base):
     customer_id: Mapped[int] = mapped_column(ForeignKey("customers.id"), index=True)
     loan_number: Mapped[str] = mapped_column(Text)  # Fernet token
     loan_last4: Mapped[str] = mapped_column(String(4))
-    product: Mapped[str] = mapped_column(String(20))  # home|personal|vehicle
+    product: Mapped[str] = mapped_column(String(20))  # home|personal|vehicle|consumer_durable|gold|education|home_improvement
     principal: Mapped[int] = mapped_column(Integer)
     rate_type: Mapped[str] = mapped_column(String(10))  # floating|fixed
     current_rate: Mapped[float] = mapped_column(Numeric(5, 2))
