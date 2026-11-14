@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { LanguageSelector } from "@/components/user/language-selector";
 import { SignOut } from "@/components/auth";
+import { useThemePreference, type ThemeId } from "@/components/sidebar-nav";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/lib/user/session";
 
@@ -10,25 +11,11 @@ export function AccountTab() {
   const { t } = useI18n();
   const { micMode, setMicMode } = useSession();
 
-  const [currentTheme, setCurrentTheme] = useState<"bright" | "classic" | "dark">(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("loanloop.theme") as "bright" | "classic" | "dark" | null;
-      if (stored) return stored;
-    }
-    return "bright";
-  });
+  const { theme: currentTheme, changeTheme } = useThemePreference();
 
-  const handleThemeChange = (theme: "bright" | "classic" | "dark") => {
-    setCurrentTheme(theme);
-    try {
-      localStorage.setItem("loanloop.theme", theme);
-      document.documentElement.setAttribute("data-theme", theme);
-      if (theme === "dark") {
-        document.documentElement.classList.add("dark");
-      } else {
-        document.documentElement.classList.remove("dark");
-      }
-    } catch {}
+  const handleThemeChange = (theme: ThemeId) => {
+    changeTheme(theme);
+    document.documentElement.classList.toggle("dark", theme === "dark");
   };
 
   return (
