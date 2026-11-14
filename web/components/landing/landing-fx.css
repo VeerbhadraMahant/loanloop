@@ -1,0 +1,63 @@
+/* Landing effects: background stage, header, mobile menu, announcement strip, language loop. */
+
+/* stage: fixed layer behind the page; the static gradient is the fallback and the reduced-motion view */
+.ll-stage { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; background: radial-gradient(120% 90% at 20% 0%, rgb(58 36 112 / 70%) 0%, transparent 60%), radial-gradient(90% 80% at 90% 100%, rgb(113 76 182 / 35%) 0%, transparent 55%), var(--ll-night); }
+.ll-stageLayer { position: absolute; inset: 0; }
+.ll-stageIn { animation: ll-stageIn 1700ms ease-in-out both; }
+.ll-stageOut { animation: ll-stageOut 1700ms ease-in-out both; }
+@keyframes ll-stageIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ll-stageOut { from { opacity: 1; } to { opacity: 0; } }
+
+/* header */
+.ll-topnav { position: sticky; top: 0; z-index: 40; background: var(--ll-canvas); border-bottom: 1px solid var(--ll-line); }
+.ll-topnavRow { display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 64px; }
+.ll-topnavBrand { display: inline-flex; align-items: center; min-height: 44px; color: var(--ll-ink); }
+.ll-topnavCentre { display: none; }
+.ll-topnavRight { display: flex; align-items: center; gap: 8px; }
+.ll-topnavStaff { display: none; align-items: center; min-height: 44px; padding-inline: 12px; font-size: 14px; font-weight: 500; color: var(--ll-ink); text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 6px; transition: text-decoration-color 200ms var(--ll-expo); }
+.ll-menuBtn { display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 8px; color: var(--ll-ink); cursor: pointer; }
+@media (min-width: 640px) { .ll-topnavStaff { display: inline-flex; } }
+@media (min-width: 1080px) {
+  .ll-topnavCentre { display: block; }
+  .ll-topnavRight > .ll-menuBtn { display: none; }
+}
+@media (hover: hover) and (pointer: fine) {
+  .ll-topnavStaff:hover { text-decoration-color: currentColor; }
+  .ll-menuBtn:hover { background: rgb(20 20 19 / 5%); }
+}
+.ll-skip { position: absolute; left: 16px; top: 10px; z-index: 50; padding: 8px 16px; border-radius: 8px; background: var(--ll-ink); color: #ffffff; transform: translateY(-200%); }
+.ll-skip:focus { transform: none; }
+
+/* GooeyNav clamps a negative index to 0, so hide its pill while the hero is in view */
+.ll-navIdle .gooey-nav__canvas, .ll-navIdle .gooey-nav__fallback, .ll-navIdle .gooey-nav__list--active { opacity: 0; }
+
+/* mobile menu: native dialog sliding in from the right */
+.ll-menu { position: fixed; inset: 0 0 0 auto; margin: 0; width: min(100vw, 420px); height: 100dvh; max-width: none; max-height: none; padding: 0; border: 0; background: var(--ll-canvas); color: var(--ll-ink); transform: translateX(100%); transition: transform 300ms ease-out, overlay 300ms allow-discrete, display 300ms allow-discrete; }
+.ll-menu[open] { transform: none; }
+@starting-style { .ll-menu[open] { transform: translateX(100%); } }
+.ll-menu::backdrop { background: rgb(21 12 43 / 0%); transition: background-color 300ms ease-out, overlay 300ms allow-discrete, display 300ms allow-discrete; }
+.ll-menu[open]::backdrop { background: rgb(21 12 43 / 45%); }
+@starting-style { .ll-menu[open]::backdrop { background: rgb(21 12 43 / 0%); } }
+.ll-menuPanel { display: flex; flex-direction: column; height: 100%; }
+.ll-menuHead { display: flex; align-items: center; justify-content: space-between; height: 64px; padding-inline: 16px; border-bottom: 1px solid var(--ll-line); }
+.ll-menuList { flex: 1; overflow-y: auto; }
+.ll-menuList a { display: flex; align-items: center; min-height: 56px; padding-inline: 16px; font-size: 18px; border-bottom: 1px solid var(--ll-line); }
+.ll-menuFoot { display: flex; flex-direction: column; gap: 8px; padding: 16px; border-top: 1px solid var(--ll-line); }
+.ll-menuStaff { display: flex; align-items: center; justify-content: center; min-height: 44px; font-weight: 600; color: var(--ll-violet); }
+
+/* announcement strip: scrolls away with the page */
+.ll-announce { background: var(--ll-lavender); color: var(--ll-ink); padding: 14px 16px; text-align: center; font-size: 15px; }
+.ll-announceLink { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
+.ll-announceLink svg { transition: transform 300ms ease-in-out; }
+@media (hover: hover) and (pointer: fine) { .ll-announceLink:hover svg { transform: translateX(4px); } }
+
+/* language loop: light strip above the Languages section */
+.ll-loop { background: var(--ll-canvas); color: rgb(41 40 39 / 80%); overflow: hidden; padding-top: clamp(32px, 5vw, 64px); }
+.ll-loop .curved-loop-jacket { min-height: 0; }
+.ll-loop .curved-loop-svg { text-transform: none; font-family: var(--font-sans), "Nirmala UI", "Noto Sans", sans-serif; }
+
+@media (prefers-reduced-motion: no-preference) { html:has(.ll-root) { scroll-behavior: smooth; } }
+@media (prefers-reduced-motion: reduce) {
+  .ll-stageIn, .ll-stageOut { animation: none; }
+  .ll-menu, .ll-menu::backdrop, .ll-announceLink svg, .ll-topnavStaff { transition: none; }
+}
