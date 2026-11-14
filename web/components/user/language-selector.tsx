@@ -84,7 +84,7 @@ export function LanguageSelector({ layout = "segmented", onSelect }: LanguageSel
             key={opt.code}
             type="button"
             onClick={() => handleSelect(opt.code)}
-            className={`flex-1 py-1.5 px-2 text-sm font-medium rounded-lg transition-all duration-150 ${
+            className={`flex-1 min-h-11 py-1.5 px-2 text-sm font-medium rounded-lg transition-all duration-150 ${
               isSelected
                 ? "bg-card text-primary ring-1 ring-fg/[0.04]"
                 : "text-muted hover:text-fg"

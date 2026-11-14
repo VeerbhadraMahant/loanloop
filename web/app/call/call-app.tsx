@@ -603,7 +603,7 @@ export default function CallApp({ customer, name, caseId, embedded = false }: { 
                 type="button"
                 onClick={() => toggleVoice(!voiceReplies)}
                 aria-pressed={voiceReplies}
-                className={`p-1.5 rounded-md text-sm transition-colors border cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                className={`inline-flex min-h-10 min-w-10 items-center justify-center p-1.5 rounded-md text-sm transition-colors border cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                   voiceReplies
                     ? "bg-accent-soft text-primary border-primary/25"
                     : "bg-sunken text-muted border-line hover:text-fg"
@@ -618,7 +618,7 @@ export default function CallApp({ customer, name, caseId, embedded = false }: { 
                 type="button"
                 onClick={() => setShowDiagnostics(!showDiagnostics)}
                 aria-pressed={showDiagnostics}
-                className={`p-1.5 rounded-md text-sm transition-colors border cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                className={`inline-flex min-h-10 min-w-10 items-center justify-center p-1.5 rounded-md text-sm transition-colors border cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                   showDiagnostics
                     ? "bg-accent-soft text-primary border-primary/25"
                     : "bg-sunken text-muted border-line hover:text-fg"
@@ -778,7 +778,7 @@ export default function CallApp({ customer, name, caseId, embedded = false }: { 
                       type="button"
                       disabled={!inCall || busy}
                       onClick={() => sendTextVal(q)}
-                      className="shrink-0 px-2.5 py-1 rounded-md bg-sunken hover:bg-surface-container text-fg text-sm transition-colors ring-1 ring-fg/[0.04] disabled:opacity-50 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                      className="shrink-0 min-h-10 px-3 py-1 rounded-md bg-sunken hover:bg-surface-container text-fg text-sm transition-colors ring-1 ring-fg/[0.04] disabled:opacity-50 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                     >
                       {q}
                     </button>
