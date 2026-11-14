@@ -4,8 +4,9 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useMe } from "@/components/auth";
 import { get } from "@/lib/api";
+import { LANGUAGES } from "@/lib/languages";
 
-export type SupportedLang = "en" | "hi" | "mr";
+export type SupportedLang = (typeof LANGUAGES)[number]["code"];
 export type MicMode = "hold" | "tap";
 
 /** The signed-in customer, from the real session (/auth/me) and the gateway's own profile (/gw/phone/me). */
@@ -50,7 +51,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time read of device preferences
-    setLang(stored<SupportedLang>(LANG_KEY, ["en", "hi", "mr"], "en"));
+    setLang(stored<SupportedLang>(LANG_KEY, LANGUAGES.map((l) => l.code), "en"));
     setMic(stored<MicMode>(MIC_MODE_KEY, ["hold", "tap"], "hold"));
   }, []);
 

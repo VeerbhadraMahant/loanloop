@@ -1,0 +1,100 @@
+{
+  "common": {
+    "bank_name": "Sahyadri Finance Bank",
+    "bank_subtitle": "ভয়েস সার্ভিস ও মোবাইল ডেস্ক",
+    "continue": "এগিয়ে যান",
+    "verify": "যাচাই করুন",
+    "cancel": "বাতিল",
+    "back": "পিছনে",
+    "close": "বন্ধ করুন",
+    "loading": "লোড হচ্ছে...",
+    "secure_badge": "100% RBI অনুমোদিত · কোনো গোপন তথ্য নয়",
+    "demo_tag": "ডেমো প্রোফাইল"
+  },
+  "nav": {
+    "home": "হোম",
+    "inbox": "ইনবক্স",
+    "talk": "কথা",
+    "help": "সাহায্য"
+  },
+  "welcome": {
+    "hero_title": "ভয়েস ব্যাংকিং এখন আরও সহজ",
+    "hero_desc": "মারাঠি, হিন্দি বা ইংরেজিতে কথা বলে আপনার EMI জানুন, পেমেন্টের তারিখ বদলান বা সেবা নিন।",
+    "cta_start": "শুরু করুন",
+    "rbi_note": "Sahyadri Finance Bank RBI-এর নির্দেশিকা এবং গোপনীয়তার মান কঠোরভাবে মেনে চলে।"
+  },
+  "language": {
+    "title": "ভাষা বেছে নিন",
+    "subtitle": "যে ভাষায় কথা বলতে আপনি সবচেয়ে স্বচ্ছন্দ, সেটি বেছে নিন:",
+    "en": "English",
+    "hi": "हिंदी (Hindi)",
+    "mr": "मराठी (Marathi)",
+    "helper": "আপনি যেকোনো সময় সেটিংস থেকে ভাষা বদলাতে পারবেন।"
+  },
+  "mobile": {
+    "title": "মোবাইল নম্বর দিন",
+    "subtitle": "সাইন ইন করতে আপনার নিবন্ধিত মোবাইল নম্বর দিন।",
+    "input_label": "নিবন্ধিত মোবাইল নম্বর",
+    "placeholder": "98765 43210",
+    "cta_send": "এগিয়ে যান"
+  },
+  "otp": {
+    "title": "পাসকোড দিন",
+    "subtitle": "আপনার ৬ সংখ্যার পাসকোড দিন, নম্বর:",
+    "cta_verify": "সাইন ইন",
+    "edit_mobile": "নম্বর বদলান"
+  },
+  "home": {
+    "greeting": "নমস্কার",
+    "active_loan": "চলমান লোন",
+    "emi_due": "পরবর্তী EMI",
+    "due_on": "শেষ তারিখ",
+    "outstanding": "বকেয়া ব্যালেন্স",
+    "pay_now": "EMI দিন",
+    "voice_card_title": "Sahyadri Voice Desk",
+    "voice_card_sub": "কথা বলে জানুন বা পরিবর্তন করুন",
+    "hold_to_talk": "চেপে ধরে বলুন",
+    "tap_to_talk": "ট্যাপ করে বলুন",
+    "release_to_send": "অডিও পাঠাতে ছেড়ে দিন",
+    "listening": "আপনার কথা শুনছি...",
+    "tools_heading": "দ্রুত সেবা",
+    "tool_emi_date": "EMI-র তারিখ বদলান",
+    "tool_balance": "ব্যালেন্স দেখুন",
+    "tool_statement": "SMS স্টেটমেন্ট",
+    "tool_branch": "শাখার সময়",
+    "tool_hardship": "মোরাটোরিয়াম চান",
+    "tool_officer": "কর্মকর্তার সঙ্গে কথা বলুন"
+  },
+  "inbox": {
+    "title": "ইনবক্স ও অনুমোদন",
+    "pending_approvals": "আপনার পদক্ষেপ দরকার (Tier 2)",
+    "no_approvals": "এখন কোনো অনুমোদনের অনুরোধ নেই।",
+    "sms_heading": "ব্যাংকের SMS বার্তা",
+    "approve": "অনুমোদন করুন",
+    "decline": "প্রত্যাখ্যান করুন",
+    "expires_in": "মেয়াদ শেষ হবে:"
+  },
+  "talk": {
+    "title": "ভয়েস সহকারী",
+    "step_speak": "বলুন",
+    "step_check": "যাচাই",
+    "step_send": "হয়ে গেছে",
+    "type_placeholder": "অথবা এখানে লিখুন...",
+    "keyboard_mode": "লিখে জানান",
+    "voice_mode": "ভয়েস মোড"
+  },
+  "help": {
+    "title": "নিরাপত্তা ও সেটিংস",
+    "zero_secrets_title": "কোনো গোপন তথ্য চাওয়া হবে না",
+    "zero_secrets_body": "Sahyadri Finance Bank ভয়েস বা চ্যাটে আপনার ডেবিট কার্ডের PIN, ইন্টারনেট ব্যাংকিং পাসওয়ার্ড, পুরো কার্ড নম্বর বা OTP কখনোই চাইবে না।",
+    "mic_mode_title": "মাইক্রোফোন মোড",
+    "mic_hold": "চেপে ধরে বলুন (গোলমালের জায়গায় ভালো)",
+    "mic_tap": "ট্যাপ করে বলুন (একবার ট্যাপে শুরু/শেষ)",
+    "app_theme": "থিম",
+    "sign_out": "সাইন আউট",
+    "staff_collections": "স্টাফ কালেকশন ডেস্ক",
+    "staff_ops": "লাইভ অপারেশন কনসোল",
+    "dev_lab": "ডেভেলপার ল্যাব ও স্যান্ডবক্স",
+    "dev_metrics": "মেট্রিক্স ও SLA ড্যাশবোর্ড"
+  }
+}
