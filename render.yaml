@@ -1,0 +1,87 @@
+# Render Blueprint: gateway + voice (free web services), Key Value (Redis), Postgres. Web runs on Vercel.
+# Free web services can't receive private-network traffic, so voice and Vercel reach the gateway by its public URL.
+# Values marked sync: false are entered in the dashboard when the Blueprint is created (see docs/DEPLOY.md).
+services:
+  - type: web
+    name: loanloop-gateway
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./deploy/gateway.Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: loanloop-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: loanloop-redis
+          property: connectionString
+      - key: GATEWAY_SHARED_SECRET
+        generateValue: true
+      - key: DASHBOARD_TOKEN
+        generateValue: true
+      - key: PHONE_TOKEN
+        generateValue: true
+      - key: ENCRYPTION_KEY # Fernet key; the laptop seed must use the same value
+        sync: false
+      - key: PUBLIC_GATEWAY_URL # https://<gateway>.onrender.com; turns on the dev-default secret guard
+        sync: false
+      - key: GNANI_SPEECH_API_KEY
+        sync: false
+      - key: DEMO_STAFF_PASSWORD
+        sync: false
+      - key: DEMO_CUSTOMER_PASSCODE
+        sync: false
+
+  - type: web
+    name: loanloop-voice
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./deploy/voice.Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: GATEWAY_URL # https://<gateway>.onrender.com (public URL: no private network on free)
+        sync: false
+      - key: GATEWAY_SHARED_SECRET
+        fromService:
+          type: web
+          name: loanloop-gateway
+          envVarKey: GATEWAY_SHARED_SECRET
+      - key: DASHBOARD_TOKEN
+        fromService:
+          type: web
+          name: loanloop-gateway
+          envVarKey: DASHBOARD_TOKEN
+      - key: LLM_PROVIDER # required: the code default is ollama, which is not deployed
+        value: sarvam
+      - key: SARVAM_API_KEY
+        sync: false
+      - key: SARVAM_MODEL
+        value: sarvam-105b-conversations
+      - key: GNANI_SPEECH_API_KEY
+        sync: false
+      - key: WARMUP
+        value: "false"
+      - key: VOICE_ALLOWED_HOSTS # <voice>.onrender.com, no scheme; turns on the public-deploy guard
+        sync: false
+      - key: VOICE_EDGE_TOKEN # copy this value into Vercel's VOICE_EDGE_TOKEN
+        generateValue: true
+
+  - type: keyvalue
+    name: loanloop-redis
+    plan: free
+    region: singapore
+    ipAllowList: [] # internal connections only
+
+databases:
+  - name: loanloop-db
+    plan: free
+    region: singapore
+    databaseName: loanloop
+    user: loanloop
