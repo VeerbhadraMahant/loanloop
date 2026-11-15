@@ -181,7 +181,7 @@ export function Footer() {
         <div className="ll-footTop">
           <div>
             <Wordmark className="text-white" />
-            <p className="ll-footTag">Voice service desk for loan borrowers</p>
+            <p className="ll-footTag">Voice service desk for bank customers</p>
             <p className="ll-footNote">Sahyadri Finance Bank is a fictional lender. All data is synthetic.</p>
           </div>
           <div className="ll-footCols">

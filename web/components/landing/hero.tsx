@@ -12,7 +12,7 @@ export function Hero() {
           <h1 className="ll-display ll-white">
             Voice service desk
             <br />
-            for loan borrowers
+            for bank customers
           </h1>
           <p className="ll-heroSub ll-white80">
             Borrowers call, speak in any of 11 Indian languages, and finish the request on the same call. The agent never takes a password, PIN or OTP.

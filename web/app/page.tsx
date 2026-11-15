@@ -12,7 +12,7 @@ import { BackgroundStage } from "@/components/landing/stage";
 
 export const metadata: Metadata = {
   title: "LoanLoop",
-  description: "Voice service desk for loan borrowers: 11 Indian languages, tiered security, and requests finished on the same call.",
+  description: "Voice service desk for bank customers: 11 Indian languages, tiered security, and requests finished on the same call.",
 };
 
 // Public page: static text and plain links only. proxy.ts redirects visitors who already have a session.
