@@ -81,7 +81,7 @@ On a real deployment, serve the staff door and the customer door from separate w
 
 ## 4. Seeding (from your laptop, once)
 
-Free Render services have no pre-deploy step and no shell, so seed the empty database from `gateway/`. In the Render dashboard, open `loanloop-db` and copy its **External Database URL**. Then, in PowerShell:
+Free Render services have no pre-deploy step and no shell, so seed the empty database from `gateway/`. In the Render dashboard, open `loanloop-db` and copy its **External Database URL**. Start Docker Desktop and run `docker compose up -d` in the repo root first: the seed clears Redis keys at the end and needs a local Redis. Then, in PowerShell:
 
 ```
 cd gateway
@@ -94,7 +94,7 @@ uv run python -m app.db.seed_if_empty
 
 Close that PowerShell window afterwards so the env vars don't leak into a local `start.ps1` run.
 
-It seeds only when `customers` is missing or empty and never drops a populated DB. If Render refuses the external connection, set the gateway's **Settings > Docker Command** once to `sh -c "python -m app.db.seed_if_empty && python /app/deploy/serve.py app.main:app 8000"`, deploy, then clear the field.
+If the connection fails with a TLS error, append `?sslmode=require` to the External Database URL. It seeds only when `customers` is missing or empty and never drops a populated DB. If Render refuses the external connection, set the gateway's **Settings > Docker Command** once to `sh -c "python -m app.db.seed_if_empty && python /app/deploy/serve.py app.main:app 8000"`, deploy, then clear the field.
 
 To reset demo data deliberately (this DROPS all tables), run `uv run python ../tools/seed_data.py` with the same env vars.
 
