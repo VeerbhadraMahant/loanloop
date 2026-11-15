@@ -244,6 +244,7 @@ class Settings(BaseSettings):
     llm_route_cooldown: float = 60.0  # after a routed failure, skip routing to that provider this long
     llm_lang_routing: bool = True  # beta-language turns go to the provider named by languages.json "llm" (LLM_LANG_ROUTING=false: always the default)
     dev: bool = Field(False, validation_alias="VOICE_DEV")  # developer lab: /dev/* routes, per-call settings
+    dev_public: bool = Field(False, validation_alias="VOICE_DEV_PUBLIC")  # explicit opt-in: dev lab on a public deploy (routes stay engineer/admin-only)
     warmup: bool = True  # background Ollama warm-up at startup (tests turn it off)
     gemini_api_key: str = ""
     sarvam_api_key: str = ""
@@ -285,8 +286,8 @@ class Settings(BaseSettings):
             bad.append("DASHBOARD_TOKEN is the dev default")
         if not self.voice_edge_token:
             bad.append("VOICE_EDGE_TOKEN is empty")
-        if self.dev:
-            bad.append("VOICE_DEV is on")
+        if self.dev and not self.dev_public:
+            bad.append("VOICE_DEV is on (set VOICE_DEV_PUBLIC=1 to allow it deliberately)")
         if bad:
             raise RuntimeError("Refusing to start: public deployment (VOICE_ALLOWED_HOSTS set or on Railway) but " + "; ".join(bad) + ".")
         if self.llm_fallback and (self.llm_fallback not in PROVIDERS or self.llm_fallback == self.llm_provider):
@@ -2195,7 +2196,7 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         return provider, model, validate_settings(body.get("settings") or {}, provider)
 
     async def open_call(provider: str, model: str, sett: dict, want_tts: bool, direction: str = "inbound",
-                        case_id: int | None = None, stream: bool = False, pinned: bool = False) -> dict:
+                        case_id: int | None = None, stream: bool = False, pinned: bool = False, app_session: str | None = None) -> dict:
         tm, t_start = {}, time.perf_counter()
         _TM.set(tm)
         now = time.time()
@@ -2211,10 +2212,17 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         c = {"id": cid, "llm": provider, "model": model, "set": sett, "pinned": pinned, "language": "hinglish", "ended": False, "ts": now, "direction": direction, "lang_set": direction == "outbound",
              "lock": asyncio.Lock(), "turn": 0, "held": None, "appr_checks": 0, "rb_turn": -9, "pending_rb": None,
              "rb_new": None, "rb_active": None, "messages": [{"role": "system", "content": sysmsg}]}
-        start_args = {"language": c["language"], "direction": direction, **({"case_id": case_id} if direction == "outbound" else {})}
+        start_args = {"language": c["language"], "direction": direction, **({"case_id": case_id} if direction == "outbound" else {}),
+                      **({"app_session": app_session} if app_session else {})}  # raw id only on the wire; the gateway validates it
         res = await gateway(cid, "start_call", start_args)
         text = redact_agent(res.get("speak"))
         hello = f"(call connected, call_id={cid})" if sett["cache_prompt"] else "(call connected)"
+        data = res.get("data") if isinstance(res.get("data"), dict) else {}
+        if data.get("app_verified"):  # gateway put the session at tier 1: switch to the verified tool set
+            c["verified"] = True
+            name = re.sub(r"[^\w .'-]", "", str(data.get("first_name") or ""))[:40] or "the account holder"
+            hello = (f"(call connected{f', call_id={cid}' if sett['cache_prompt'] else ''}; the caller is signed in to the bank app as {name}, "
+                     "already verified at tier 1: do not ask for mobile number or date of birth; use emi_info and the other tier-1 tools directly)")
         c["messages"] += [{"role": "user", "content": hello}, {"role": "assistant", "content": text}]
         calls[cid] = c
         aud = tts_defer(c, text, True) if text and want_tts and stream else {}
@@ -2244,7 +2252,8 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         if direction == "outbound" and case_id is None:
             raise HTTPException(422, "outbound needs case_id")
         res = await open_call(provider, model, sett, tts_q and body.get("tts") is not False, direction, case_id,
-                              stream_q or body.get("stream") is True, pinned=cfg.dev and bool(body.get("llm") or body.get("model")))
+                              stream_q or body.get("stream") is True, pinned=cfg.dev and bool(body.get("llm") or body.get("model")),
+                              app_session=request.headers.get("x-ll-customer-session") if direction == "inbound" and who["kind"] == "customer" else None)
         calls[res["call_id"]]["owner"] = who["h"]
         return res
 

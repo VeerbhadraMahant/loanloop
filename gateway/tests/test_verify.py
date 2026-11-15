@@ -101,3 +101,42 @@ async def test_verify_flexible_date_and_mobile_formats(client):
     r4 = await call(client, "verify_caller", call_id="flex4", registered_mobile="9000014417", dob="14 ஆகஸ்ட் 1991")
     assert r4["ok"] and "Priya" in r4["speak"]
     assert parse_dob("১৪ আগস্ট ১৯৯১") == "1991-08-14" and parse_dob("௧௪ ஆகஸ்ட் ௧௯௯௧") == "1991-08-14"
+
+
+async def _app_start(client, sid, cid="appcall", **kw):
+    return await call(client, "start_call", call_id=cid, app_session=sid, **kw)
+
+
+async def test_app_session_starts_call_at_tier1(client, priya):
+    from app import authsess
+    sid = await authsess.create({"kind": "customer", "role": "customer", "name": priya.name, "customer_id": priya.id})
+    r = await _app_start(client, sid)
+    assert r["ok"] and r["data"]["app_verified"] is True and r["data"]["first_name"] == priya.name.split()[0]
+    s = await sessions.get("appcall")
+    assert s.tier == 1 and s.customer_id == priya.id
+    assert (await call(client, "emi_info", call_id="appcall"))["ok"]  # no verify_caller needed
+    assert sid not in json.dumps(r)
+
+
+async def test_bad_or_staff_app_session_is_tier0(client):
+    from app import authsess
+    staff = await authsess.create({"kind": "staff", "role": "admin", "name": "x", "user_id": 0})
+    for i, sid in enumerate(("bogus-token", staff)):
+        r = await _app_start(client, sid, cid=f"bad{i}")
+        assert r["ok"] and r["data"]["app_verified"] is False and "first_name" not in r["data"]
+        assert (await sessions.get(f"bad{i}")).tier == 0
+        assert (await call(client, "emi_info", call_id=f"bad{i}"))["error_code"] in ("NOT_VERIFIED", "TIER_TOO_LOW")
+
+
+async def test_app_session_ignored_outbound_and_never_audited(client, priya):
+    from sqlalchemy import select
+    from app import authsess
+    from app.db.models import AuditLog
+    from app.db.session import SessionLocal
+    sid = await authsess.create({"kind": "customer", "role": "customer", "name": priya.name, "customer_id": priya.id})
+    r = await _app_start(client, sid, cid="outc", direction="outbound")
+    assert r["data"]["app_verified"] is False and (await sessions.get("outc")).tier == 0
+    await _app_start(client, sid, cid="inc")
+    async with SessionLocal() as db:
+        rows = (await db.execute(select(AuditLog).where(AuditLog.call_id.in_(["outc", "inc"])))).scalars().all()
+    assert rows and sid not in "".join(str(vars(x)) for x in rows)

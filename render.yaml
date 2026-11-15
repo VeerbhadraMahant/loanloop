@@ -68,6 +68,10 @@ services:
         sync: false
       - key: WARMUP
         value: "false"
+      - key: VOICE_DEV # developer lab (/dev) on the deploy; its routes need an engineer/admin sign-in
+        value: "1"
+      - key: VOICE_DEV_PUBLIC # the public-deploy guard refuses VOICE_DEV without this explicit opt-in
+        value: "1"
       - key: VOICE_ALLOWED_HOSTS # <voice>.onrender.com, no scheme; turns on the public-deploy guard
         sync: false
       - key: VOICE_EDGE_TOKEN # copy this value into Vercel's VOICE_EDGE_TOKEN

@@ -139,3 +139,53 @@ def test_both_headers_pass_if_either_identity_is_allowed(env):
     cid = start(c, {**CUST_A, **MGR}).json()["call_id"]  # plain inbound: customer session is the owner
     assert turn(c, cid, CUST_A).status_code == 200
     assert turn(c, cid, MGR).status_code == 403
+
+
+def _gw_start(fake):
+    return [s for s in fake.of("gw") if s[1].endswith("/actions/start_call")][-1][2]
+
+
+def _env_with_fake(verified):
+    fake = Fake()
+    fake.gw["start_call"] = {"ok": True, "speak": "hi", "data": {"app_verified": verified, "first_name": "Priya"}}
+
+    def handler(req):
+        if req.url.path == "/auth/session":
+            sid = req.headers["x-ll-session"]
+            return httpx.Response(200, json=SESSIONS[sid]) if sid in SESSIONS else httpx.Response(401)
+        return fake.handler(req)
+
+    cl = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    return fake, TestClient(create_app(Settings(gnani_speech_api_key=KEY, VOICE_DEV=True), cl), base_url=BASE)
+
+
+def _tools_on_turn(c, fake, cid, h):
+    fake.sent.clear()
+    assert turn(c, cid, h).status_code == 200
+    return {t["function"]["name"] for t in fake.of("llm")[0][2]["tools"]}
+
+
+def test_customer_session_is_forwarded_and_marks_call_verified():
+    fake, tc_ = _env_with_fake(True)
+    with tc_ as c:
+        r = start(c, CUST_A)
+        cid = r.json()["call_id"]
+        assert _gw_start(fake)["app_session"] == "cust-a"
+        assert c.app.state.calls[cid]["verified"] is True
+        assert "cust-a" not in str(c.app.state.calls[cid])  # raw id never kept in the call
+        assert "emi_info" in _tools_on_turn(c, fake, cid, CUST_A)
+        assert "signed in to the bank app as Priya" in str(c.app.state.calls[cid]["messages"])
+
+
+def test_not_verified_reply_and_non_customer_sessions_stay_tier0():
+    fake, tc_ = _env_with_fake(False)
+    with tc_ as c:
+        cid = start(c, CUST_A).json()["call_id"]
+        assert not c.app.state.calls[cid].get("verified")
+        assert "emi_info" not in _tools_on_turn(c, fake, cid, CUST_A)
+    fake, tc_ = _env_with_fake(True)  # even if a gateway said verified, staff/outbound never send the session
+    with tc_ as c:
+        start(c, ENG)
+        assert "app_session" not in _gw_start(fake)
+        start(c, {**CUST_A, **MGR}, OUT)
+        assert "app_session" not in _gw_start(fake)

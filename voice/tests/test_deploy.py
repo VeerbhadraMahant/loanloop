@@ -53,6 +53,11 @@ def test_public_startup_guard_refuses(bad):
 def test_public_startup_guard_allows_good_and_local():
     create_app(Settings(**PUB), httpx.AsyncClient())
     create_app(Settings(gnani_speech_api_key=KEY), httpx.AsyncClient())  # no allowed hosts: dev defaults fine
+    create_app(Settings(**{**PUB, "VOICE_DEV": True, "VOICE_DEV_PUBLIC": True}), httpx.AsyncClient())  # deliberate opt-in
+
+
+def test_dev_public_alone_does_not_turn_dev_on():
+    assert Settings(**{**PUB, "VOICE_DEV_PUBLIC": True}).dev is False
 
 
 def test_port_env(monkeypatch):

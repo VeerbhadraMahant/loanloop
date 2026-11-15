@@ -6,7 +6,7 @@ from pydantic import Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app import events, sessions
+from app import authsess, events, sessions
 from app.contract import ActionIn, ActionResponse
 from app.db.models import Call, CollectionCase, Customer, now
 from app.routes.actions._runner import action
@@ -19,11 +19,19 @@ class StartCallIn(ActionIn):
     caller_number: str | None = Field(default=None, max_length=20, pattern=r"^[+\d][\d \-]{5,19}$")
     direction: Literal["inbound", "outbound"] = "inbound"
     case_id: int | None = Field(default=None, ge=1, le=2_000_000_000)  # outbound only
+    app_session: str | None = Field(default=None, max_length=200, pattern=r"^[A-Za-z0-9_\-]{1,200}$")  # inbound: web customer login id
 
 
-@action("start_call", In=StartCallIn, router=router, needs_session=False)
+# scan_exempt: a random token must not trip the PIN/card scan. Not in redact_fields: that would mangle the token and audit it.
+@action("start_call", In=StartCallIn, router=router, needs_session=False, scan_exempt=("app_session",))
 async def start_call(inp: StartCallIn, session, db: AsyncSession, bg: BackgroundTasks) -> ActionResponse:
     cust_id, case_id = None, None
+    app_cust, first_name = None, None
+    if inp.app_session and inp.direction == "inbound":  # the gateway validates the login itself; invalid/staff/expired: silently tier 0
+        a = await authsess.get(inp.app_session)
+        if a and a.get("kind") == "customer" and a.get("customer_id"):
+            app_cust = await db.get(Customer, a["customer_id"])
+            first_name = app_cust.name.split()[0] if app_cust and app_cust.name.split() else None
     if await sessions.get(inp.call_id) is not None:  # never reset a live session (tier, direction, case)
         return ActionResponse(ok=False, speak=t("generic_error", inp.language), error_code="INVALID_INPUT")
     if inp.direction == "outbound" and inp.case_id:
@@ -35,13 +43,19 @@ async def start_call(inp: StartCallIn, session, db: AsyncSession, bg: Background
         mobile = "".join(c for c in inp.caller_number if c.isdigit())[-10:]
         cust_id = (await db.execute(select(Customer.id).where(Customer.registered_mobile == mobile))).scalar()
     # caller-ID is only a claim: tier stays 0, customer_id stays unset until verify_caller
-    await sessions.create(inp.call_id, inp.language, prefetched_customer_id=cust_id, direction=inp.direction, case_id=case_id)
+    s = await sessions.create(inp.call_id, inp.language, prefetched_customer_id=cust_id, direction=inp.direction, case_id=case_id)
+    if app_cust is not None:
+        s.customer_id, s.tier = app_cust.id, 1
+        await sessions.save(s)
     existing = await db.get(Call, inp.call_id)
     if existing is None:
         db.add(Call(call_id=inp.call_id, language=inp.language, direction=inp.direction))
-    bg.add_task(events.publish, {"type": "call_start", "call_id": inp.call_id, "language": inp.language, "tier": 0})
+    bg.add_task(events.publish, {"type": "call_start", "call_id": inp.call_id, "language": inp.language, "tier": s.tier})
     key = "call_started_out" if inp.direction == "outbound" else "call_started"
-    return ActionResponse(ok=True, speak=t(key, inp.language), data={"matched_caller": cust_id is not None, "direction": inp.direction})
+    data = {"matched_caller": cust_id is not None, "direction": inp.direction, "app_verified": app_cust is not None}
+    if app_cust is not None:
+        data["first_name"] = first_name
+    return ActionResponse(ok=True, speak=t(key, inp.language), data=data)
 
 
 class ReadbackIn(ActionIn):
