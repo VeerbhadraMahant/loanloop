@@ -1,4 +1,6 @@
-# Deploying LoanLoop: Vercel (web) + Railway (gateway, voice, ollama, Postgres, Redis)
+# Deploying LoanLoop: Vercel (web) + Railway (gateway, voice, Postgres, Redis)
+
+The deployed LLM is Sarvam only (`sarvam-105b-conversations`, hosted). No Ollama service is deployed.
 
 Everything is synthetic data. People sign in with a per-user login (staff at `/staff/login`, customers at `/login`). `WEB_BASIC_AUTH` is an optional extra gate in front of both.
 
@@ -14,14 +16,12 @@ Never reuse the three gateway tokens for each other. Losing `ENCRYPTION_KEY` mak
 ## 2. Railway project
 
 1. New project, add **PostgreSQL** and **Redis** (database templates).
-2. Add three services from this GitHub repo (empty service, connect repo). For each: Settings, **Config-as-code file path**:
+2. Add two services from this GitHub repo (empty service, connect repo). For each: Settings, **Config-as-code file path**:
    - `gateway` -> `/deploy/railway/gateway.json`
    - `voice` -> `/deploy/railway/voice.json`
-   - `ollama` -> `/deploy/railway/ollama.json`
 
    Leave root directory empty (the Docker build context is the repo root).
-3. `gateway` and `voice`: Settings, Networking, **Generate domain** (public HTTPS). `ollama`: no public domain.
-4. `ollama`: add a **volume** mounted at `/root/.ollama`. The model (`qwen3:8b`, about 5 GB download) is pulled on first start. Give it about 8 GB RAM; on CPU it is slow (seconds per token burst), so it is only the fallback.
+3. `gateway` and `voice`: Settings, Networking, **Generate domain** (public HTTPS).
 
 Variables (reference variables in `${{...}}` form):
 
@@ -46,9 +46,9 @@ Variables (reference variables in `${{...}}` form):
 | GATEWAY_URL | `http://gateway.railway.internal:8000` (set the gateway's `PORT=8000` so the internal port is fixed) |
 | GATEWAY_SHARED_SECRET, DASHBOARD_TOKEN | same as gateway |
 | GNANI_SPEECH_API_KEY | Gnani key |
-| LLM_PROVIDER / LLM_FALLBACK | `sarvam` / `ollama` |
+| LLM_PROVIDER | `sarvam` (**required**: the code default is `ollama`, which is not deployed) |
+| LLM_FALLBACK | leave unset (no fallback provider is deployed) |
 | SARVAM_API_KEY, SARVAM_MODEL | Sarvam key, `sarvam-105b-conversations` |
-| OLLAMA_URL, OLLAMA_MODEL | `http://ollama.railway.internal:11434`, `qwen3:8b` |
 | WARMUP | `false` |
 | VOICE_ALLOWED_HOSTS | `<voice public domain>` (no scheme) |
 | VOICE_EDGE_TOKEN | generated token (same as Vercel) |
@@ -58,9 +58,7 @@ The gateway and voice images start via `deploy/serve.py`, a dual-stack (IPv4+IPv
 
 Never set `VOICE_DEV`. Leave `VOICE_ALLOWED_ORIGINS` empty (the browser only talks to Vercel).
 
-**ollama**: `OLLAMA_MODEL=qwen3:8b` (default), `PORT` not needed.
-
-Deploy order: Postgres, Redis, gateway (its pre-deploy step seeds the DB only if empty), then ollama, then voice.
+Deploy order: Postgres, Redis, gateway (its pre-deploy step seeds the DB only if empty), then voice.
 
 ## 3. Vercel
 
@@ -94,7 +92,7 @@ The gateway pre-deploy command `python -m app.db.seed_if_empty` seeds only when 
 - [ ] A typed call on the call page completes a verify and an EMI query.
 - [ ] `/ops` live events update while the call runs (SSE).
 - [ ] Mic works on the call page (HTTPS is required; allow the browser permission).
-- [ ] Voice logs show `sarvam` as provider; stop it once to confirm fallback to Ollama (first Ollama reply can take a minute).
+- [ ] Voice logs show `sarvam` as provider, and a typed turn replies in about a second.
 
 ## 6. Rollback
 
