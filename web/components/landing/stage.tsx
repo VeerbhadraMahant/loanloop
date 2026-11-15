@@ -6,12 +6,11 @@ import { Component, useEffect, useState, useSyncExternalStore, type ReactNode } 
 // Client-only, lazy: none of the WebGL code is loaded until the stage decides to mount it.
 const GradientASCII = dynamic(() => import("@/components/reactbits/GradientASCII/GradientASCII"), { ssr: false });
 const PatternWaves = dynamic(() => import("@/components/reactbits/PatternWaves/PatternWaves"), { ssr: false });
-const Lightfall = dynamic(() => import("@/components/reactbits/Lightfall/Lightfall"), { ssr: false });
 
-const SHOW_MS = 12000;
 const FADE_MS = 1700;
-const COUNT = 3;
 const NIGHT = "#150c2b";
+// Layer 0 (GradientASCII) behind the hero; layer 1 (PatternWaves) once the visitor scrolls past most of the first screen.
+const SCROLL_SWITCH = 0.75;
 
 function subscribeMedia(query: string, cb: () => void) {
   const mq = window.matchMedia(query);
@@ -84,30 +83,17 @@ function Layer({ id, paused, dpr }: { id: number; paused: boolean; dpr?: number 
       />
     );
   }
-  if (id === 1) {
-    return (
-      <PatternWaves
-        preset="silk"
-        color="#d4c7ff"
-        backgroundColor={NIGHT}
-        opacity={0.5}
-        fade="edges"
-        speed={0.5}
-        interactive={false}
-        intro={false}
-        paused={paused}
-      />
-    );
-  }
   return (
-    <Lightfall
-      colors={["#d4c7ff", "#714cb6"]}
+    <PatternWaves
+      preset="silk"
+      color="#d4c7ff"
       backgroundColor={NIGHT}
-      mouseInteraction={false}
-      holdToWarp={false}
+      opacity={0.5}
+      fade="edges"
+      speed={0.5}
+      interactive={false}
       intro={false}
       paused={paused}
-      dpr={dpr}
     />
   );
 }
@@ -121,18 +107,34 @@ export function BackgroundStage() {
   const [state, setState] = useState({ cur: 0, prev: -1 });
 
   useEffect(() => {
-    if (!enabled || hidden) return;
+    if (!enabled) return;
     let clear: ReturnType<typeof setTimeout> | undefined;
-    const tick = setInterval(() => {
-      setState((s) => ({ cur: (s.cur + 1) % COUNT, prev: s.cur }));
+    let cur = 0;
+    let fading = false;
+    const update = () => {
+      // hysteresis: switch down at 75% of the first screen, back up only above 50%, so the threshold doesn't flicker
+      const y = window.scrollY / window.innerHeight;
+      const want = cur === 0 ? (y > SCROLL_SWITCH ? 1 : 0) : (y > SCROLL_SWITCH - 0.25 ? 1 : 0);
+      if (want === cur) return; // no re-render while scrolling within one zone
+      // reversing mid-fade would restart both keyframes and flash; switch straight back instead
+      setState({ cur: want, prev: fading ? -1 : cur });
+      cur = want;
+      fading = true;
       clearTimeout(clear);
-      clear = setTimeout(() => setState((s) => ({ ...s, prev: -1 })), FADE_MS);
-    }, SHOW_MS);
+      clear = setTimeout(() => {
+        fading = false;
+        setState((s) => ({ ...s, prev: -1 }));
+      }, FADE_MS);
+    };
+    update(); // a reload mid-page starts on the right layer
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
     return () => {
-      clearInterval(tick);
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
       clearTimeout(clear);
     };
-  }, [enabled, hidden]);
+  }, [enabled]);
 
   const dpr = small ? 1 : undefined;
   return (
