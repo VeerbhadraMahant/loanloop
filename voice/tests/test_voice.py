@@ -1454,3 +1454,14 @@ def test_end_call_never_runs_in_the_same_turn_as_a_handover_unless_the_caller_sa
             r = turn(c, d, said).json()
         names = [n for n, _ in seen if n in ("handover", "end_call")]
         assert ("end_call" in names) is ended and "handover" in names or ended, (said, names)
+
+
+def test_turn_language_follows_the_caller_mid_call():
+    from voice.app import turn_language as tl
+    assert tl("What is my customer ID?", "hinglish") == "en"
+    assert tl("Mera EMI kitna hai aur kab due hai?", "en") == "hinglish"
+    assert tl("माझा EMI किती आहे?", "hi") == "mr"
+    assert tl("maza EMI kiti aahe", "en") == "mr"
+    assert tl("मेरा EMI कितना है?", "en") == "hi"
+    assert tl("yes", "hi") == "hi" and tl("haan ji", "mr") == "mr" and tl("4821", "hinglish") == "hinglish"
+    assert tl("Kothrud ka ifsc", "mr") == "mr" and tl("What is my EMI amount?", "hi") == "en"

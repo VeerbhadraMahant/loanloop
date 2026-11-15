@@ -378,6 +378,9 @@ async def seed(engine: AsyncEngine, n_only: bool = False) -> int:
                 s.add(m.CustomerLogin(customer_id=cid, passcode_hash=hash_secret(settings.demo_customer_passcode)))
         if not (settings.demo_staff_password and settings.demo_customer_passcode):
             print("No demo logins created for the missing value(s): set DEMO_STAFF_PASSWORD and DEMO_CUSTOMER_PASSCODE in gateway/.env, or use app.db.create_user.")
+        from app.db.alerts import add_bank_alerts
+
+        await add_bank_alerts(s)  # routine bank SMS in the demo customers' phone inbox
         await s.commit()
     from app import sessions  # reseed must fully reset: sessions, rate-limit counters, cref cache
 

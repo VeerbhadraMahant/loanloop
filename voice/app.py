@@ -840,11 +840,23 @@ def detect_language(text: str, first: bool) -> tuple[str | None, bool, bool]:
     return named, not rest and len(toks) <= 8, True  # only a language choice; "Hinglish. KYC kaise karein?" is a question too
 
 
+_ROMAN_MARATHI = {"aahe", "ahe", "aahet", "maza", "majha", "mazha", "mazi", "majhi", "kiti", "kadhi", "tumhi", "mala", "sanga", "sangaa"}
+
+
 def first_turn_language(text: str, current: str) -> str:
-    """No language named: Devanagari picks Hindi/Marathi, Roman text with Hindi words is Hinglish, otherwise English."""
+    """No language named: Devanagari picks Hindi/Marathi, Roman text with Marathi/Hindi words is Marathi/Hinglish, otherwise English."""
     if _DEVANAGARI.search(text):
         return infer_language(text, current)
-    return "hinglish" if set(_tokens(text.lower())) & _FIRST_TURN_HINGLISH else "en"
+    toks = set(_tokens(text.lower()))
+    return "mr" if toks & _ROMAN_MARATHI else "hinglish" if toks & _FIRST_TURN_HINGLISH else "en"
+
+
+def turn_language(text: str, current: str) -> str:
+    """Later turns follow the language the caller is using now; short replies ('yes', 'haan', a number) keep the current one."""
+    if not _DEVANAGARI.search(text) and sum(t.isalpha() for t in _tokens(text.lower())) < 3:
+        return current
+    now = first_turn_language(text, current)
+    return current if now == "hinglish" and current in ("hi", "mr") else now  # romanised Hindi words: Hindi/Marathi callers type that way
 
 
 def is_customer_question(text: str) -> bool:
@@ -2276,6 +2288,9 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
             c["note"] = f"the caller chose {c['language']}; answer in that language"
         elif first and not named:
             c["language"] = first_turn_language(user_text, c["language"])
+        elif not named and (now := turn_language(user_text, c["language"])) != c["language"]:
+            c["language"] = now  # the caller switched language mid-call without naming it: follow them
+            c["note"] = f"the caller is now speaking {now}; answer in that language"
         if is_customer_question(user_text) and not c.get("verified") and c["direction"] == "inbound":
             return canned(c, user_text, CUSTOMER_Q[c["language"]])
         return None

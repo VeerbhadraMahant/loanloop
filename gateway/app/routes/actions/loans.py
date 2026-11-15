@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.clock import today_ist
 from app.contract import ActionIn, ActionResponse
-from app.db.models import Charge, EmiSchedule, Loan, Payment, RateReset, Reminder, ServiceRequest, now
+from app.db.models import Charge, Customer, EmiSchedule, Loan, Payment, RateReset, Reminder, ServiceRequest, SmsOutbox, now
 from app.routes.actions._runner import action
 from app.security.mask import mask_loan
 from app.sessions import Session
@@ -48,7 +48,15 @@ async def new_request(db: AsyncSession, session: Session, rtype: str, payload: d
     db.add(sr)
     await db.flush()
     session.tasks.append(f"{rtype}:done")
+    if (label := REQUEST_SMS.get(rtype)) and (c := await db.get(Customer, session.customer_id)):  # same transaction: no SMS for a rolled-back request
+        db.add(SmsOutbox(customer_id=c.id, to_mobile=c.registered_mobile,
+                         body=f"Sahyadri Finance Bank: your {label} request is registered. Ticket {sr.id}. We will update you by SMS."))
     return sr
+
+
+# statement / interest_cert already send their own delivery SMS (requests.py)
+REQUEST_SMS = {"emi_date_change": "EMI date change", "closure": "loan closure", "reconciliation": "payment check",
+               "nominee": "nominee update", "address": "address update"}
 
 
 # ---- emi_info ----
