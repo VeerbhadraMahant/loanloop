@@ -1,5 +1,7 @@
 """Per-user login: staff (email + password) and customer (mobile + 6-digit passcode). Sessions live in Redis (authsess)."""
 import asyncio
+import secrets
+from typing import Literal
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Response
 from pydantic import BaseModel, Field
@@ -8,9 +10,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import authsess
 from app.audit import write_audit
+from app.config import settings
 from app.db.models import Customer, CustomerLogin, StaffUser
 from app.db.session import get_db
-from app.security.passwords import verify_secret
+from app.security.passwords import hash_secret, verify_secret
 from app.sms import customer_key
 
 router = APIRouter(prefix="/auth")
@@ -69,6 +72,40 @@ async def customer_login(body: CustomerLoginBody, db: AsyncSession = Depends(get
     sid = await authsess.create({"kind": "customer", "role": "customer", "name": c.name, "customer_id": c.id, "customer_key": key})
     await _audit(db, "auth.login", "customer", role="customer")
     return {"session_id": sid, "kind": "customer", "role": "customer", "name": c.name, "customer_key": key, "landing": "/phone"}
+
+
+DEMO_STAFF = {"bank_manager": ("manager@loanloop.demo", "Asha Kulkarni"), "engineer": ("engineer@loanloop.demo", "Eshan Joshi"),
+              "admin": ("admin@loanloop.demo", "Ankit Deshpande")}
+
+
+class DemoBody(BaseModel):
+    role: Literal["customer", "engineer", "bank_manager", "admin"]
+
+
+@router.post("/demo")
+async def demo_login(body: DemoBody, db: AsyncSession = Depends(get_db)):
+    """Open panels for the hackathon demo (synthetic data): a normal session for a fixed demo identity, no credentials. DEMO_OPEN_PANELS=false turns it off."""
+    if not settings.demo_open_panels:
+        raise HTTPException(404, "not found")
+    if body.role == "customer":
+        c = await db.get(Customer, 1)  # Priya
+        if c is None:
+            raise HTTPException(503, "demo customer missing")
+        key = customer_key(c)
+        sid = await authsess.create({"kind": "customer", "role": "customer", "name": c.name, "customer_id": c.id, "customer_key": key})
+        await _audit(db, "auth.demo", "customer", role="customer")
+        return {"session_id": sid, "kind": "customer", "role": "customer", "name": c.name, "customer_key": key, "landing": "/phone"}
+    email, name = DEMO_STAFF[body.role]
+    u = (await db.execute(select(StaffUser).where(StaffUser.email == email))).scalar_one_or_none()
+    if u is None:  # not seeded (no DEMO_STAFF_PASSWORD): create with an unguessable password, so only this door opens it
+        u = StaffUser(email=email, name=name, role=body.role, password_hash=hash_secret(secrets.token_urlsafe(24)))
+        db.add(u)
+        await db.flush()
+    elif u.disabled:
+        raise HTTPException(403, "demo user disabled")
+    sid = await authsess.create({"kind": "staff", "role": u.role, "name": u.name, "user_id": u.id})
+    await _audit(db, "auth.demo", "staff", role=u.role)
+    return {"session_id": sid, "kind": "staff", "role": u.role, "name": u.name, "landing": LANDING[u.role]}
 
 
 @router.get("/session")

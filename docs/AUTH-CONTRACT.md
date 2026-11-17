@@ -146,3 +146,13 @@ Other web rules:
 ## 8. Not in this change
 - Binding an in-call `verify_caller` to the signed-in customer (the call still verifies by date of birth, like a real phone line).
 - Password reset, sign-up, staff management UI, per-IP rate limits, multi-bank `bank_id`.
+
+## Demo open panels (hackathon, synthetic data)
+
+Sign-in is removed from the user experience. The landing page links to four panels, `/auth/demo?as=customer|engineer|bank|admin`.
+The web route calls the gateway `POST /auth/demo {"role": "customer"|"engineer"|"bank_manager"|"admin"}`, which issues a normal Redis
+session for a fixed demo identity (customer = Priya, id 1; staff = the seeded manager / engineer / admin, created on demand with an
+unguessable password if missing). The web route sets the usual `ll_staff` / `ll_cust` cookie and redirects to the panel landing.
+`proxy.ts` sends a visitor with no session, or the wrong role, through `/auth/demo` for the panel that path belongs to; `/login` and
+`/staff/login` redirect to `/`. All server-side checks (`require_*`, voice tokens and sessions) are unchanged, and the password logins
+still exist on the gateway. Set `DEMO_OPEN_PANELS=false` on the gateway to make `/auth/demo` return 404 (sign-in pages are gone from web though).

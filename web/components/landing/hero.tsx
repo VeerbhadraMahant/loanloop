@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Icon } from "@/components/ui";
 import { Arrow, Chevron } from "./shared";
 
@@ -18,11 +17,13 @@ export function Hero() {
             Borrowers call, speak in any of 11 Indian languages, and finish the request on the same call. The agent never takes a password, PIN or OTP.
           </p>
           <div className="ll-heroActions">
-            <Link href="/login" className="ll-heroBtn">
-              <span>Customer sign in</span>
+            <a href="/auth/demo?as=customer" className="ll-heroBtn">
+              <span>Customer panel</span>
               <span aria-hidden className="ll-heroChip"><Arrow /></span>
-            </Link>
-            <Link href="/staff/login" className="ll-link ll-linkDark">Staff sign in<Chevron /></Link>
+            </a>
+            <a href="/auth/demo?as=engineer" className="ll-link ll-linkDark">Engineer panel<Chevron /></a>
+            <a href="/auth/demo?as=bank" className="ll-link ll-linkDark">Bank panel<Chevron /></a>
+            <a href="/auth/demo?as=admin" className="ll-link ll-linkDark">Admin panel<Chevron /></a>
           </div>
         </div>
 

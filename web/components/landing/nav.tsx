@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import GooeyNav from "@/components/reactbits/GooeyNav/GooeyNav";
 import { Arrow, NAV, Wordmark } from "./shared";
@@ -55,8 +54,10 @@ export function TopNav() {
           />
         </div>
         <div className="ll-topnavRight">
-          <Link href="/staff/login" className="ll-topnavStaff">Staff sign in</Link>
-          <Link href="/login" className="ll-btn ll-btnSm ll-outline">Customer sign in</Link>
+          <a href="/auth/demo?as=engineer" className="ll-topnavStaff">Engineer</a>
+          <a href="/auth/demo?as=bank" className="ll-topnavStaff">Bank</a>
+          <a href="/auth/demo?as=admin" className="ll-topnavStaff">Admin</a>
+          <a href="/auth/demo?as=customer" className="ll-btn ll-btnSm ll-outline">Customer panel</a>
           <button
             ref={buttonRef}
             type="button"
@@ -91,8 +92,10 @@ export function TopNav() {
             ))}
           </nav>
           <div className="ll-menuFoot">
-            <Link href="/staff/login" className="ll-menuStaff">Staff sign in</Link>
-            <Link href="/login" className="ll-btn ll-primary w-full">Customer sign in</Link>
+            <a href="/auth/demo?as=engineer" className="ll-menuStaff">Engineer panel</a>
+            <a href="/auth/demo?as=bank" className="ll-menuStaff">Bank panel</a>
+            <a href="/auth/demo?as=admin" className="ll-menuStaff">Admin panel</a>
+            <a href="/auth/demo?as=customer" className="ll-btn ll-primary w-full">Customer panel</a>
           </div>
         </div>
       </dialog>

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Icon } from "@/components/ui";
 import { Arrow, Bento, Cell, Chapter, Chevron, NAV, Section, Wordmark, btnOnDark, btnOutlineDark, btnPrimary, linkDark } from "./shared";
 
@@ -111,13 +110,13 @@ export function Results() {
 export function TwoDoors() {
   return (
     <Section id="signin">
-      <Chapter title="Two sign-in doors" soft="one for each side of the desk" />
+      <Chapter title="Four panels" soft="open any of them, no sign-in" />
       <div className="ll-doors">
         <div className="ll-door ll-fill-lavender">
           <span className="ll-doorIcon"><Icon name="phone" size={24} /></span>
           <h3 className="ll-title">Customer</h3>
           <p className="ll-doorDesc">See the official bank SMS sent to you and call the voice desk.</p>
-          <Link href="/login" className={`${btnPrimary} ll-doorBtn`}>Customer sign in<Arrow /></Link>
+          <a href="/auth/demo?as=customer" className={`${btnPrimary} ll-doorBtn`}>Customer panel<Arrow /></a>
         </div>
         <div className="ll-door ll-fill-stone">
           <span className="ll-doorIcon"><Icon name="landmark" size={24} /></span>
@@ -127,7 +126,11 @@ export function TwoDoors() {
             <li><b>Engineer:</b> dev lab, metrics, test cases</li>
             <li><b>Admin:</b> everything</li>
           </ul>
-          <Link href="/staff/login" className={`${btnPrimary} ll-doorBtn`}>Staff sign in<Arrow /></Link>
+          <div className="ll-doorRow">
+            <a href="/auth/demo?as=bank" className={`${btnPrimary} ll-doorBtn`}>Bank panel<Arrow /></a>
+            <a href="/auth/demo?as=engineer" className={`${btnPrimary} ll-doorBtn`}>Engineer panel<Arrow /></a>
+            <a href="/auth/demo?as=admin" className={`${btnPrimary} ll-doorBtn`}>Admin panel<Arrow /></a>
+          </div>
         </div>
       </div>
     </Section>
@@ -168,7 +171,7 @@ export function CtaBand() {
     <Section kind="window">
       <div className="ll-cta">
         <h2 className="ll-h2 ll-white max-w-[20ch]">Call the voice desk and get it done</h2>
-        <Link href="/login" className={btnOutlineDark}>Customer sign in</Link>
+        <a href="/auth/demo?as=customer" className={btnOutlineDark}>Customer panel</a>
       </div>
     </Section>
   );
@@ -191,11 +194,13 @@ export function Footer() {
                 {NAV.filter(([x]) => x !== "#about").map(([x, t]) => <li key={x}><a href={x} className="ll-footLink">{t}</a></li>)}
               </ul>
             </nav>
-            <nav aria-label="Sign in">
-              <h2 className="ll-footHead">Sign in</h2>
+            <nav aria-label="Panels">
+              <h2 className="ll-footHead">Panels</h2>
               <ul className="mt-2">
-                <li><Link href="/login" className="ll-footLink">Customer sign in</Link></li>
-                <li><Link href="/staff/login" className="ll-footLink">Staff sign in</Link></li>
+                <li><a href="/auth/demo?as=customer" className="ll-footLink">Customer panel</a></li>
+                <li><a href="/auth/demo?as=engineer" className="ll-footLink">Engineer panel</a></li>
+                <li><a href="/auth/demo?as=bank" className="ll-footLink">Bank panel</a></li>
+                <li><a href="/auth/demo?as=admin" className="ll-footLink">Admin panel</a></li>
               </ul>
             </nav>
             <nav aria-label="About">

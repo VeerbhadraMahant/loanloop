@@ -21,9 +21,8 @@ export function SignOut({ door, className = "" }: { door: Door; className?: stri
   const out = async () => {
     setBusy(true);
     try {
-      const r = await fetch("/auth/logout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ door }) });
-      const j = await r.json();
-      window.location.assign(j.login);
+      await fetch("/auth/logout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ door }) });
+      window.location.assign("/");
     } catch {
       setBusy(false);
     }
