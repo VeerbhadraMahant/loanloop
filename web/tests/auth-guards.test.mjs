@@ -9,7 +9,21 @@ const NEEDS_CUST = { skip: !CUST_PASS && "SMOKE_CUSTOMER_PASSCODE not set" };
 const USER_PAGES = ["/user", "/user/home", "/user/inbox", "/user/talk", "/user/help"];
 const ONBOARDING = ["/user/welcome", "/user/language"];
 
-const demoTo = (res, as) => res.status >= 300 && res.status < 400 && new URL(res.headers.get("location") ?? "", BASE).pathname + new URL(res.headers.get("location") ?? "", BASE).search === `/auth/demo?as=${as}`;
+const demoTo = (res, as) => {
+  if (res.status < 300 || res.status >= 400) return false;
+  const u = new URL(res.headers.get("location") ?? "", BASE);
+  return u.pathname === "/auth/demo" && u.searchParams.get("as") === as;
+};
+
+test("demo panel returns to the page it was bounced from, never off-site", async () => {
+  const loc = async (q) => (await get(`/auth/demo?as=customer${q}`)).headers.get("location") ?? "";
+  assert.equal(new URL(await loc("&next=%2Fuser%2Ftalk"), BASE).pathname, "/user/talk");
+  for (const bad of ["//evil.example", "https://evil.example", "/user/talk?x=1", "/%2F%2Fevil", "/user/../dev"]) {
+    const u = new URL(await loc(`&next=${encodeURIComponent(bad)}`), BASE);
+    assert.equal(u.origin, new URL(BASE).origin, bad);
+    assert.equal(u.pathname, "/user/home", bad);
+  }
+});
 
 test("anonymous visitors: gated pages go to the matching demo panel, old login pages go home", async () => {
   for (const p of USER_PAGES) assert.ok(demoTo(await get(p), "customer"), p);

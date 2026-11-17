@@ -4,6 +4,7 @@ import { VoiceError, isDeadCall, storedCallId, storeCallId, loadTurns, storeTurn
 
 assert.ok(isDeadCall(new VoiceError("x", 409)));
 assert.ok(isDeadCall(new VoiceError("x", 404)));
+assert.ok(isDeadCall(new VoiceError("x", 403)));
 assert.ok(!isDeadCall(new VoiceError("x", 500)));
 assert.ok(!isDeadCall(new Error("x")));
 assert.equal(storedCallId(), null); // no sessionStorage in node: degrades to null, never throws

@@ -72,8 +72,7 @@ foreach ($s in $svc) {
 
 Write-Host ''
 Write-Host 'Open:'
-Write-Host '  Staff:    http://localhost:3000/staff/login'
-Write-Host '  Customer: http://localhost:3000/login'
+Write-Host '  Panels:   http://localhost:3000  (Customer, Engineer, Bank, Admin; no sign-in)'
 Write-Host 'Demo logins are created by -Seed: staff manager@, engineer@, admin@loanloop.demo; customers sign in with their registered mobile.'
 Write-Host 'The secrets are DEMO_STAFF_PASSWORD and DEMO_CUSTOMER_PASSCODE in gateway\.env.'
 Write-Host 'Stop everything with .\stop.ps1'

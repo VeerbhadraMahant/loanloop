@@ -191,7 +191,6 @@ export function CallingDeskTab({ initialQuery, queryNonce = 0 }: { initialQuery?
           if (callIdRef.current) storeTurns(callIdRef.current, null);
           callIdRef.current = null;
           setEnded(true);
-          setMessages((prev) => [...prev, { id: `e_${Date.now()}`, who: "agent", text: "Call ended. Your next message starts a new call.", timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) }]);
         }
 
         if (reply.user_text && !text) {
@@ -211,6 +210,10 @@ export function CallingDeskTab({ initialQuery, queryNonce = 0 }: { initialQuery?
             timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
           },
         ]);
+        // Note goes after the agent's farewell so the transcript reads in order.
+        if (reply.ended) {
+          setMessages((prev) => [...prev, { id: `e_${Date.now()}`, who: "agent", text: "Call ended. Your next message starts a new call.", timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) }]);
+        }
 
         setCurrentStep(3);
 

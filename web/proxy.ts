@@ -57,7 +57,7 @@ export async function proxy(req: NextRequest) {
   if (p === "/" || onboarding) return NextResponse.next(); // landing and intro screens: always reachable, no session needed
 
   // Open demo panels: a missing or wrong-role session is replaced by a demo session for the panel this path belongs to.
-  const demo = (as: string) => go(`/auth/demo?as=${as}`);
+  const demo = (as: string) => go(`/auth/demo?as=${as}&next=${encodeURIComponent(p)}`);
   let staff: Session | null = null;
   let cust: Session | null = null;
   try {

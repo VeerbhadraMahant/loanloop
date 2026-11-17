@@ -5,8 +5,9 @@ export class VoiceError extends Error {
   constructor(msg: string, status: number) { super(msg); this.status = status; }
 }
 
-/** 409 = call ended, 404 = unknown/expired call (TTL or voice restart): start a fresh call and retry the turn once. */
-export const isDeadCall = (e: unknown) => e instanceof VoiceError && (e.status === 409 || e.status === 404);
+/** 409 = call ended, 404 = unknown/expired call (TTL or voice restart), 403 = call owned by an older session
+ *  (the demo session was re-issued after idle expiry or a panel switch): start a fresh call and retry the turn once. */
+export const isDeadCall = (e: unknown) => e instanceof VoiceError && [403, 404, 409].includes(e.status);
 
 export const storedCallId = (): string | null => { try { return sessionStorage.getItem(KEY); } catch { return null; } };
 const MAX_TURNS = 50; // cap so sessionStorage can't grow unbounded

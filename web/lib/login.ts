@@ -20,7 +20,10 @@ export async function demoHandler(req: Request) {
   const j = await r.json().catch(() => ({}));
   if (!r.ok || typeof j.session_id !== "string") return new NextResponse("Open panels are off", { status: r.status === 404 ? 404 : 502 });
   const door: Door = j.kind === "customer" ? "customer" : "staff";
-  const res = NextResponse.redirect(new URL(landingOf(j.role), req.url));
+  // Return to the page the proxy bounced from. Same-origin plain paths only (no "//", scheme or query): never an open redirect.
+  const next = new URL(req.url).searchParams.get("next") ?? "";
+  const to = /^\/[a-z0-9-]+(\/[a-z0-9-]+)*$/.test(next) ? next : landingOf(j.role);
+  const res = NextResponse.redirect(new URL(to, req.url));
   setSession(res, door, j.session_id);
   return res;
 }
