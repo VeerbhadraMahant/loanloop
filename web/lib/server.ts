@@ -5,7 +5,6 @@ export const STAFF_COOKIE = "ll_staff";
 export const CUSTOMER_COOKIE = "ll_cust";
 export type Door = "staff" | "customer";
 export const COOKIE = { staff: STAFF_COOKIE, customer: CUSTOMER_COOKIE } as const;
-export const LOGIN = { staff: "/staff/login", customer: "/login" } as const;
 export type Session = { kind: Door; role: string; name: string; customer_id?: number; customer_key?: string };
 
 // Fixed allowlist, never derived from Host (a DNS-rebinding page would control Host and Origin alike).

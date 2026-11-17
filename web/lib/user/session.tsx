@@ -17,7 +17,7 @@ export interface UserProfile {
 }
 
 // Signed-out onboarding screens: no session is expected there, so skip /auth/me.
-const PUBLIC_PAGES = ["/user/welcome", "/user/language", "/user/mobile", "/user/otp"];
+const PUBLIC_PAGES = ["/user/welcome", "/user/language"];
 
 const LANG_KEY = "loanloop.user_lang";
 const MIC_MODE_KEY = "loanloop.user_mic_mode";

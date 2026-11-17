@@ -56,6 +56,9 @@
 .ll-doorRoles { display: flex; flex-direction: column; gap: 8px; font-size: 16px; color: var(--ll-muted); }
 .ll-doorRoles b { font-weight: 500; color: var(--ll-ink); }
 .ll-doorBtn { align-self: flex-start; margin-top: auto; }
+.ll-doorRow { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; }
+.ll-doorRow .ll-doorBtn { margin-top: 0; }
+.ll-door .ll-doorRow .ll-doorBtn::after { display: none; }
 
 /* about / faq */
 .ll-aboutGrid { display: grid; gap: 48px; }

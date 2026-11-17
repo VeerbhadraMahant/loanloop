@@ -244,3 +244,26 @@ async def test_only_auth_session_extends_idle_ttl(client):
     await client.get("/auth/session", headers={"X-LL-Session": sid})
     await client.get("/auth/session", headers={"X-LL-Session": cs})
     assert await authsess.redis.ttl(authsess._key(sid)) > 1700 and await authsess.redis.ttl(authsess._key(cs)) > 800
+
+
+@pytest.mark.parametrize("role,kind", [("customer", "customer"), ("engineer", "staff"), ("bank_manager", "staff"), ("admin", "staff")])
+async def test_demo_open_panels(client, role, kind):
+    r = await client.post("/auth/demo", json={"role": role})
+    assert r.status_code == 200, r.text
+    j = r.json()
+    assert (j["kind"], j["role"]) == (kind, role)
+    s = await client.get("/auth/session", headers={"X-LL-Session": j["session_id"]})
+    assert s.status_code == 200 and (s.json()["kind"], s.json()["role"]) == (kind, role)
+
+
+async def test_demo_customer_is_priya(client):
+    j = (await client.post("/auth/demo", json={"role": "customer"})).json()
+    assert j["customer_key"] and (await client.get("/auth/session", headers={"X-LL-Session": j["session_id"]})).json()["customer_id"] == 1
+
+
+async def test_demo_bad_role_and_flag_off(client, monkeypatch):
+    assert (await client.post("/auth/demo", json={"role": "root"})).status_code == 422
+    from app.config import settings
+
+    monkeypatch.setattr(settings, "demo_open_panels", False)
+    assert (await client.post("/auth/demo", json={"role": "admin"})).status_code == 404

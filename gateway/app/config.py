@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     public_gateway_url: str = "http://localhost:8000"
     demo_staff_password: str = ""  # owner-chosen secrets for the seeded demo logins; nothing ships in the repo
     demo_customer_passcode: str = ""
+    demo_open_panels: bool = True  # hackathon demo: POST /auth/demo opens any panel without credentials; set false to require sign-in
     session_ttl_s: int = 1800
     jobs_interval_s: int = 3600  # cron-style jobs loop; 0 disables (tests)
 

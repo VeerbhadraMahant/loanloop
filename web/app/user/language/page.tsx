@@ -44,15 +44,15 @@ export default function LanguagePage() {
 
         {/* Continue Action */}
         <div className="pt-6">
-          <Link
-            href="/user/mobile"
+          <a
+            href="/auth/demo?as=customer"
             className="w-full min-h-12 py-3 px-4 rounded-xl font-medium text-base bg-primary text-primary-fg hover:bg-accent-hover motion-safe:active:scale-[0.99] transition-colors flex items-center justify-center gap-2"
           >
             <span>{t.common.continue}</span>
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
             </svg>
-          </Link>
+          </a>
         </div>
       </div>
     </UserShell>
