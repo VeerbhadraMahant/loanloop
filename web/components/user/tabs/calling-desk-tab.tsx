@@ -6,7 +6,7 @@ import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/lib/user/session";
 import { useHoldToTalk } from "@/lib/use-hold-to-talk";
 import { sendVoiceTurn, startVoiceSession, voiceAudioUrl } from "@/lib/user/user-service";
-import { isDeadCall, storeCallId, storedCallId } from "@/lib/user/voice-call";
+import { isDeadCall, loadTurns, storeCallId, storedCallId, storeTurns } from "@/lib/user/voice-call";
 import { PcmPlayer } from "@/lib/pcm-player";
 import { BottomSheet } from "@/components/user/bottom-sheet";
 import { ApprovalCard } from "@/components/user/approval-sheet";
@@ -92,6 +92,7 @@ export function CallingDeskTab({ initialQuery, queryNonce = 0 }: { initialQuery?
     const stored = storedCallId();
     if (stored) {
       callIdRef.current = stored;
+      setMessages(loadTurns<Message>(stored));
       setCallId(stored);
     } else {
       newCall(customerKey)
@@ -127,6 +128,11 @@ export function CallingDeskTab({ initialQuery, queryNonce = 0 }: { initialQuery?
       pcmRef.current = null;
     };
   }, [customerKey, playAudioBase64, playStream]);
+
+  // Keep the transcript so a reused call (after navigating away and back) shows it again.
+  useEffect(() => {
+    if (callId && !ended) storeTurns(callId, messages);
+  }, [callId, ended, messages]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -175,12 +181,14 @@ export function CallingDeskTab({ initialQuery, queryNonce = 0 }: { initialQuery?
           if (!isDeadCall(err)) throw err;
           // Ended (409) or expired/restarted (404): start a new call and replay this turn once.
           storeCallId(null);
+          if (callIdRef.current) storeTurns(callIdRef.current, null);
           const id = await fresh();
           setMessages((prev) => [...prev, { id: `n_${Date.now()}`, who: "agent", text: "Started a new call", timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) }]);
           reply = await send(id);
         }
         if (reply.ended) {
           storeCallId(null);
+          if (callIdRef.current) storeTurns(callIdRef.current, null);
           callIdRef.current = null;
           setEnded(true);
           setMessages((prev) => [...prev, { id: `e_${Date.now()}`, who: "agent", text: "Call ended. Your next message starts a new call.", timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) }]);
