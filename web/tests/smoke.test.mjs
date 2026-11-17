@@ -22,27 +22,30 @@ async function login(path, body) {
   return cookie;
 }
 
-test("login pages are public", async () => {
-  for (const p of ["/login", "/staff/login"]) assert.equal((await get(p)).status, 200, p);
+test("old login pages redirect to the landing page", async () => {
+  for (const p of ["/login", "/staff/login"]) {
+    const res = await get(p);
+    assert.ok(res.status >= 300 && res.status < 400 && new URL(res.headers.get("location") ?? "", BASE).pathname === "/", p);
+  }
 });
 
-test("landing page is public and links to both doors", async () => {
+test("landing page is public and links to the demo panels", async () => {
   const res = await get("/");
   assert.equal(res.status, 200);
   const html = await res.text();
-  for (const h of ['href="/login"', 'href="/staff/login"']) assert.ok(html.includes(h), h);
+  for (const h of ["customer", "engineer", "bank", "admin"].map((r) => `href="/auth/demo?as=${r}"`)) assert.ok(html.includes(h), h);
 });
 
-test("signed-out visitors are redirected to the right door", async () => {
+test("signed-out visitors are sent to the right demo panel", async () => {
   for (const p of ["/bank", "/ops", "/dev"]) {
     const res = await get(p);
     assert.ok(res.status >= 300 && res.status < 400, `${p} returned ${res.status}`);
-    assert.match(res.headers.get("location") ?? "", /\/staff\/login/, p);
+    assert.match(res.headers.get("location") ?? "", /\/auth\/demo\?as=(bank|engineer)/, p);
   }
   for (const p of ["/phone", "/call"]) {
     const res = await get(p);
     assert.ok(res.status >= 300 && res.status < 400, `${p} returned ${res.status}`);
-    assert.match(res.headers.get("location") ?? "", /\/login/, p);
+    assert.match(res.headers.get("location") ?? "", /\/auth\/demo\?as=customer/, p);
   }
 });
 

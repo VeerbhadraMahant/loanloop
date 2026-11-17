@@ -42,6 +42,6 @@ test("the borrower pages carry no demo personas, fake OTP or role cookies", { sk
 test("sign out ends the session", { skip }, async () => {
   const cookie = await login("/auth/customer/login", { mobile: "9000014417", passcode: CUST_PASS });
   const out = await fetch(`${BASE}/auth/logout`, { method: "POST", headers: { "Content-Type": "application/json", Origin: BASE, cookie }, body: JSON.stringify({ door: "customer" }) });
-  assert.equal((await out.json()).login, "/login");
-  assert.ok(redirectsTo(await get("/user/home", cookie), "/login")); // the old session id is dead server-side
+  assert.equal((await out.json()).ok, true);
+  assert.ok(redirectsTo(await get("/user/home", cookie), "/auth/demo")); // the old session id is dead server-side
 });

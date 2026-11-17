@@ -16,7 +16,7 @@ test("forged role cookies do not open any shell", async () => {
   const payload = encodeURIComponent(JSON.stringify({ id: "STAFF-104", name: "x", role: "staff", expiresAt: Date.now() + 3600000 }));
   const forged = [`loanloop_session_staff=${payload}`, `loanloop_session_dev=${payload}`, "ll_staff=forged", "ll_cust=forged"].join("; ");
   for (const p of ["/staff", "/dev"]) assert.notEqual((await get(p, forged)).status, 200, p);
-  assert.ok(redirectsTo(await get("/user", forged), "/login"));
+  { const r = await get("/user", forged); assert.ok(redirectsTo(r, "/auth/demo") && r.headers.get("location").includes("as=customer")); }
 });
 
 test("staff desk: bank_manager and admin get Collections | Ops with a case-based calling desk", NEEDS_STAFF, async () => {
@@ -28,7 +28,7 @@ test("staff desk: bank_manager and admin get Collections | Ops with a case-based
     assert.ok((await html("/staff?tab=ops", cookie)).includes("Live Operations"), who);
     assert.equal((await get("/staff/overview", cookie)).status, 200, who);
   }
-  assert.equal((await get("/staff", await staffLogin("engineer"))).status, 404);
+  assert.equal((await get("/staff", await staffLogin("engineer"))).status, 307); // wrong role -> demo bank panel
 });
 
 test("dev lab: engineer and admin get Dev Lab | Test Cases | Metrics, bank_manager does not", NEEDS_STAFF, async () => {
@@ -41,7 +41,7 @@ test("dev lab: engineer and admin get Dev Lab | Test Cases | Metrics, bank_manag
     assert.ok(!cases.includes("Start Test"), "no per-test-case launch buttons");
     assert.ok((await html("/dev?tab=metrics", cookie)).includes("Metrics"));
   }
-  assert.equal((await get("/dev", await staffLogin("manager"))).status, 404);
+  assert.equal((await get("/dev", await staffLogin("manager"))).status, 307); // wrong role -> demo engineer panel
 });
 
 test("borrower phone: four tabs, no invented loan data, own session only", NEEDS_CUST, async () => {
