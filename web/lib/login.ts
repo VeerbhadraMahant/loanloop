@@ -8,6 +8,11 @@ const secure = () => process.env.NODE_ENV === "production";
 export const setSession = (res: NextResponse, door: Door, sid: string) =>
   res.cookies.set(COOKIE[door], sid, { httpOnly: true, sameSite: "strict", path: "/", secure: secure() });
 
+/** Gateway asleep or restarting: say so and retry, instead of a dead end. */
+const waking = () => new NextResponse(
+  `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="5"><title>Starting LoanLoop</title><body style="margin:0;min-height:100vh;display:grid;place-items:center;font-family:system-ui,sans-serif;background:#f6f5f2;color:#1c1b22;padding:16px"><main style="max-width:30rem"><h1 style="font-size:1.25rem">Starting the bank server…</h1><p>The demo runs on a free plan that sleeps when idle. Waking it takes up to a minute. This page retries every 5 seconds.</p></main></body></html>`,
+  { status: 503, headers: { "Content-Type": "text/html; charset=utf-8", "Retry-After": "5", "Cache-Control": "no-store" } });
+
 /** GET /auth/demo?as=customer|engineer|bank|admin (hackathon open panels): get a gateway session for the demo identity, set the cookie, go to the panel. */
 const DEMO_ROLE: Record<string, string> = { customer: "customer", engineer: "engineer", bank: "bank_manager", admin: "admin" };
 export async function demoHandler(req: Request) {
@@ -15,10 +20,12 @@ export async function demoHandler(req: Request) {
   if (!role) return new NextResponse("Unknown panel", { status: 400 });
   let r: Response;
   try {
-    r = await fetch(`${GATEWAY}/auth/demo`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ role }), cache: "no-store" });
-  } catch { return new NextResponse("Gateway unreachable", { status: 502 }); }
+    // Render's free plan sleeps the gateway when idle and restarts it on every deploy; a cold start holds the request ~30-50 s.
+    r = await fetch(`${GATEWAY}/auth/demo`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ role }), cache: "no-store", signal: AbortSignal.timeout(50_000) });
+  } catch { return waking(); }
+  if (r.status === 404) return new NextResponse("Open panels are off", { status: 404 }); // DEMO_OPEN_PANELS=false on the gateway
   const j = await r.json().catch(() => ({}));
-  if (!r.ok || typeof j.session_id !== "string") return new NextResponse("Open panels are off", { status: r.status === 404 ? 404 : 502 });
+  if (!r.ok || typeof j.session_id !== "string") return waking();
   const door: Door = j.kind === "customer" ? "customer" : "staff";
   // Return to the page the proxy bounced from. Same-origin plain paths only (no "//", scheme or query): never an open redirect.
   const next = new URL(req.url).searchParams.get("next") ?? "";
