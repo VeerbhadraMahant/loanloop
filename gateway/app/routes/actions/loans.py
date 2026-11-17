@@ -80,9 +80,15 @@ async def emi_info(inp: NoInput, session: Session, db: AsyncSession, bg: Backgro
     speak = (t("emi_no_due", inp.language, **kw) if nxt is None
              else t("emi_info", inp.language, date=fmt_date(nxt, inp.language), **kw))
     if others:
-        data["other_loans"] = [{"loan": mask_loan(o.loan_last4), "product": o.product, "emi": o.emi_amount} for o in others]
-        speak += " " + t("emi_others", inp.language, n=len(others),
-                         total=rupees(loan.emi_amount + sum(o.emi_amount for o in others)))
+        # One list of ALL active loans, highest EMI first, amounts pre-formatted: the LLM once compared only the
+        # "other" loans and named the wrong one as highest. It must read figures from here, never compare or compute.
+        every = sorted([loan, *others], key=lambda x: x.emi_amount, reverse=True)
+        data["loans_by_emi_desc"] = [{"loan": mask_loan(x.loan_last4), "product": x.product,
+                                      "emi": rupees(x.emi_amount), "primary": x.id == loan.id} for x in every]
+        data["highest_emi_loan"] = mask_loan(every[0].loan_last4)
+        data["lowest_emi_loan"] = mask_loan(every[-1].loan_last4)
+        data["total_emi"] = rupees(loan.emi_amount + sum(o.emi_amount for o in others))
+        speak += " " + t("emi_others", inp.language, n=len(others), total=data["total_emi"])
     return ActionResponse(ok=True, speak=speak, data=data)
 
 

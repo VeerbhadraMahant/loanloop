@@ -49,6 +49,22 @@ async def test_emi_info(client, make_session, priya):
     assert fmt_date(date.fromisoformat(r["data"]["next_due"]), "en") in r["speak"]
 
 
+async def test_emi_info_ranks_all_loans(client, make_session, priya):
+    """The LLM must never compare EMIs itself: every active loan (the primary one too) comes ranked, highest first."""
+    await make_session(tier=1)
+    r = await call(client, "emi_info")
+    ranked = r["data"]["loans_by_emi_desc"]
+    async with SessionLocal() as db:
+        loans = (await db.execute(select(Loan).where(Loan.customer_id == priya.id, Loan.status != "closed"))).scalars().all()
+    assert len(ranked) == len(loans) >= 2
+    want = sorted(loans, key=lambda x: x.emi_amount, reverse=True)
+    assert [x["loan"] for x in ranked] == [f"ending {x.loan_last4}" for x in want]
+    assert [x["emi"] for x in ranked] == [rupees(x.emi_amount) for x in want]
+    assert r["data"]["highest_emi_loan"] == f"ending {want[0].loan_last4}"
+    assert r["data"]["total_emi"] == rupees(sum(x.emi_amount for x in loans)) and r["data"]["total_emi"] in r["speak"]
+    assert sum(x["primary"] for x in ranked) == 1
+
+
 @pytest.mark.parametrize("lang", ["hi", "hinglish", "mr"])
 async def test_emi_info_languages(client, make_session, lang):
     await make_session(tier=1, language=lang)
