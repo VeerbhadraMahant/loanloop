@@ -212,6 +212,20 @@ def test_raw_secret_never_reaches_ollama_or_history(env, caplog):
     assert "4321" not in blob and "it was removed" in blob
 
 
+@pytest.mark.parametrize("text,lang", [
+    ("My net banking password is Priya1234, can you check my account?", "en"),
+    ("Mera password Priya1234 hai, account check karo", "hinglish"),
+    ("माझा पासवर्ड Priya1234 आहे", "mr"),
+])
+def test_secret_warning_in_callers_language(env, text, lang):
+    """The secret warning follows the language the caller is speaking, like any other turn (it used to stay on the default)."""
+    c, fake = env
+    d = new_call(c)
+    turn(c, d, text)
+    gw = fake.of("gw")[-1]
+    assert gw[2]["secret_type"] == "password" and gw[2]["language"] == lang
+
+
 def test_string_arguments_parsed_and_written_back(env):
     c, fake = env
     d = new_call(c)

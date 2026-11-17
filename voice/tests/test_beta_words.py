@@ -165,6 +165,7 @@ def test_stt_keyterms_language_list_first_then_global_deduped_and_capped(tmp_pat
         got = sent()
         assert got[:3] == ["தமிழ்1", "IFSC", "தமிழ்2"] and len(got) == len(set(got)) and got[3:] == [g for g in glob if g != "IFSC"][:197]
         (tmp_path / "ta.txt").write_text(" ".join(f"ta{i}" for i in range(300)).replace(" ", chr(10)), encoding="utf-8")  # more than Prisma takes: capped
+        turn(c, d, "Tamil")  # the fake STT replies in English (with a PIN), and the secret warning follows the caller's language
         c.post(f"/calls/{d['call_id']}/turn?tts=false", files=wav)
         assert len(sent()) == 200 and sent()[0] == "ta0"
     va.load_languages()

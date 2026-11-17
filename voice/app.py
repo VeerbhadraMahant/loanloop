@@ -2335,10 +2335,13 @@ def create_app(settings: Settings | None = None, client: httpx.AsyncClient | Non
         # secret: the value never enters history, logs or the LLM; the gateway is told, we answer directly
         stype = "card" if stype == "card_number" else stype
         stype = stype if stype in SECRET_KINDS else "password"
-        lang, _, _ = detect_language(user_text, not c.get("lang_set") and c["direction"] == "inbound")
+        first = not c.get("lang_set") and c["direction"] == "inbound"
+        lang, _, named = detect_language(user_text, first)
         c["lang_set"] = True
         if lang and lang != "unsupported":
             c["language"] = lang  # naming a language alongside a secret still switches it
+        elif not named:  # same inference as language_turn: warn in the language the caller is speaking
+            c["language"] = first_turn_language(user_text, c["language"]) if first else turn_language(user_text, c["language"])
         res = await gateway(c["id"], "report_secret_spoken", {"language": c["language"], "secret_type": stype})
         speak = res.get("speak") if isinstance(res.get("speak"), str) else ""
         c["messages"] += [{"role": "user", "content": f"[caller started to say a secret ({stype}); it was removed]"},
