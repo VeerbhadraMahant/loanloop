@@ -6,6 +6,7 @@ import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/lib/user/session";
 import { useHoldToTalk } from "@/lib/use-hold-to-talk";
 import { sendVoiceTurn, startVoiceSession, voiceAudioUrl } from "@/lib/user/user-service";
+import { isDeadCall, storeCallId, storedCallId } from "@/lib/user/voice-call";
 import { PcmPlayer } from "@/lib/pcm-player";
 import { BottomSheet } from "@/components/user/bottom-sheet";
 import { ApprovalCard } from "@/components/user/approval-sheet";
@@ -22,13 +23,25 @@ interface Message {
   timestamp: string;
 }
 
-export function CallingDeskTab({ initialQuery }: { initialQuery?: string }) {
+// One in-flight call creation shared by StrictMode's double mount, so it opens a single call.
+let starting: ReturnType<typeof startVoiceSession> | null = null;
+function newCall(customerKey: string) {
+  return (starting ??= startVoiceSession(customerKey)
+    .then((s) => { storeCallId(s.call_id); return s; })
+    .finally(() => { starting = null; }));
+}
+
+export function CallingDeskTab({ initialQuery, queryNonce = 0 }: { initialQuery?: string; queryNonce?: number }) {
   const { t } = useI18n();
   const { user, micMode, sessionFailed } = useSession();
 
   const customerKey = user?.customerKey; // from the signed-in session; undefined until /auth/me answers
 
   const [callId, setCallId] = useState<string | null>(null);
+  const callIdRef = useRef<string | null>(null); // latest id for async turn code
+  const busyRef = useRef(false); // a turn is in flight
+  const [busy, setBusy] = useState(false);
+  const [ended, setEnded] = useState(false); // server ended the call; the next turn opens a new one
   const [messages, setMessages] = useState<Message[]>([]);
   const [status, setStatus] = useState<"idle" | "listening" | "thinking" | "speaking">("idle");
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
@@ -41,15 +54,19 @@ export function CallingDeskTab({ initialQuery }: { initialQuery?: string }) {
   const chatBottomRef = useRef<HTMLDivElement | null>(null);
 
   const pcmRef = useRef<PcmPlayer | null>(null);
+  const playSeq = useRef(0);
   // Streamed replies (?stream=1) come as audio_url (raw PCM), not base64.
   const playStream = useCallback((url: string) => {
     audioRef.current?.pause();
     setStatus("speaking");
-    (pcmRef.current ??= new PcmPlayer()).play(voiceAudioUrl(url)).then(() => setStatus("idle"));
+    const mine = ++playSeq.current; // a superseded reply must not flip status to idle under the new one
+    (pcmRef.current ??= new PcmPlayer()).play(voiceAudioUrl(url)).then(() => { if (mine === playSeq.current) setStatus("idle"); });
   }, []);
 
   const playAudioBase64 = useCallback((b64: string) => {
     try {
+      playSeq.current++;
+      pcmRef.current?.stop();
       if (audioRef.current) {
         audioRef.current.pause();
       }
@@ -68,30 +85,37 @@ export function CallingDeskTab({ initialQuery }: { initialQuery?: string }) {
     }
   }, []);
 
-  // Initialize voice session on mount
+  // Initialize voice session on mount: reuse the stored call (page changes remount this tab), else open one.
   useEffect(() => {
     if (!customerKey) return;
     let active = true;
-    startVoiceSession(customerKey)
-      .then((session) => {
-        if (!active) return;
-        setCallId(session.call_id);
-        if (session.greeting) {
-          setMessages([
-            {
-              id: "greet",
-              who: "agent",
-              text: session.greeting,
-              timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-            },
-          ]);
-          if (session.audio_url) playStream(session.audio_url);
-          else if (session.audio_b64) playAudioBase64(session.audio_b64);
-        }
-      })
-      .catch((err) => {
-        if (active) setErrorMsg(err instanceof Error ? err.message : "Could not start the voice session");
-      });
+    const stored = storedCallId();
+    if (stored) {
+      callIdRef.current = stored;
+      setCallId(stored);
+    } else {
+      newCall(customerKey)
+        .then((session) => {
+          if (!active) return;
+          callIdRef.current = session.call_id;
+          setCallId(session.call_id);
+          if (session.greeting) {
+            setMessages([
+              {
+                id: "greet",
+                who: "agent",
+                text: session.greeting,
+                timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+              },
+            ]);
+            if (session.audio_url) playStream(session.audio_url);
+            else if (session.audio_b64) playAudioBase64(session.audio_b64);
+          }
+        })
+        .catch((err) => {
+          if (active) setErrorMsg(err instanceof Error ? err.message : "Could not start the voice session");
+        });
+    }
 
     return () => {
       active = false;
@@ -111,8 +135,14 @@ export function CallingDeskTab({ initialQuery }: { initialQuery?: string }) {
 
   const handleTurnSubmit = useCallback(
     async ({ text, wav }: { text?: string; wav?: Blob }) => {
-      if (!text && !wav) return;
+      if ((!text && !wav) || busyRef.current) return;
+      busyRef.current = true;
+      setBusy(true);
       setErrorMsg(null);
+      // Cut the previous reply so audio never overlaps.
+      playSeq.current++;
+      pcmRef.current?.stop();
+      audioRef.current?.pause();
       setStatus("thinking");
       setCurrentStep(2);
 
@@ -129,12 +159,32 @@ export function CallingDeskTab({ initialQuery }: { initialQuery?: string }) {
       ]);
 
       try {
-        if (!callId) throw new Error("Voice session is not ready yet");
-        const reply = await sendVoiceTurn({
-          call_id: callId,
-          user_text: text,
-          wavBlob: wav,
-        });
+        const send = (id: string) => sendVoiceTurn({ call_id: id, user_text: text, wavBlob: wav });
+        const fresh = async () => {
+          if (!customerKey) throw new Error("Voice session is not ready yet");
+          const s = await newCall(customerKey);
+          callIdRef.current = s.call_id;
+          setCallId(s.call_id);
+          setEnded(false);
+          return s.call_id;
+        };
+        let reply;
+        try {
+          reply = await send(callIdRef.current ?? (await fresh()));
+        } catch (err) {
+          if (!isDeadCall(err)) throw err;
+          // Ended (409) or expired/restarted (404): start a new call and replay this turn once.
+          storeCallId(null);
+          const id = await fresh();
+          setMessages((prev) => [...prev, { id: `n_${Date.now()}`, who: "agent", text: "Started a new call", timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) }]);
+          reply = await send(id);
+        }
+        if (reply.ended) {
+          storeCallId(null);
+          callIdRef.current = null;
+          setEnded(true);
+          setMessages((prev) => [...prev, { id: `e_${Date.now()}`, who: "agent", text: "Call ended. Your next message starts a new call.", timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) }]);
+        }
 
         if (reply.user_text && !text) {
           setMessages((prev) =>
@@ -173,22 +223,26 @@ export function CallingDeskTab({ initialQuery }: { initialQuery?: string }) {
       } catch (err) {
         setStatus("idle");
         setErrorMsg(err instanceof Error ? err.message : "Voice processing error");
+      } finally {
+        busyRef.current = false;
+        setBusy(false);
       }
     },
-    [callId, playAudioBase64, playStream]
+    [customerKey, playAudioBase64, playStream]
   );
 
-  const initialSentRef = useRef(false);
+  // Each quick-action tap bumps queryNonce; send it once the call exists and no turn is running.
+  const sentNonceRef = useRef(0);
   useEffect(() => {
-    if (initialQuery && callId && !initialSentRef.current) {
-      initialSentRef.current = true;
+    if (initialQuery && queryNonce !== sentNonceRef.current && callId && !busy) {
+      sentNonceRef.current = queryNonce;
       handleTurnSubmit({ text: initialQuery });
     }
-  }, [initialQuery, callId, handleTurnSubmit]);
+  }, [initialQuery, queryNonce, callId, busy, handleTurnSubmit]);
 
   // One recorder for both modes: tap mode starts on the first tap and sends on the second.
   const { talking: holdTalking, props: holdProps } = useHoldToTalk(
-    true,
+    Boolean(callId || ended) && !busy,
     (wav) => handleTurnSubmit({ wav }),
     (err) => setErrorMsg(err)
   );
@@ -207,7 +261,7 @@ export function CallingDeskTab({ initialQuery }: { initialQuery?: string }) {
 
   const handleSendText = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputText.trim()) return;
+    if (!inputText.trim() || busy) return;
     const q = inputText.trim();
     setInputText("");
     setShowKeyboard(false);
@@ -350,7 +404,7 @@ export function CallingDeskTab({ initialQuery }: { initialQuery?: string }) {
               />
               <button
                 type="submit"
-                disabled={!inputText.trim()}
+                disabled={!inputText.trim() || busy}
                 className="p-3 rounded-xl bg-primary text-primary-fg hover:bg-accent-hover motion-safe:active:scale-95 transition-colors disabled:opacity-50"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

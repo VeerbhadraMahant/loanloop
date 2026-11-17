@@ -1,8 +1,16 @@
 "use client";
 
 import { get, post, Approval, Sms } from "@/lib/api";
+import { VoiceError } from "@/lib/user/voice-call";
 
 const VOICE_BASE = "/vx"; // same proxy /call uses: it forwards the ll_cust session cookie
+
+/** Throws VoiceError carrying the server's `detail` (e.g. "call ended") and status. */
+async function failed(what: string, res: Response): Promise<never> {
+  let d = `HTTP ${res.status}`;
+  try { const j = await res.json(); if (j?.detail) d = typeof j.detail === "string" ? j.detail : JSON.stringify(j.detail); } catch { /* keep status */ }
+  throw new VoiceError(`${what}: ${d}`, res.status);
+}
 
 export interface VoiceTurnResponse {
   user_text?: string;
@@ -54,7 +62,7 @@ export async function startVoiceSession(
   });
 
   if (!res.ok) {
-    throw new Error(`Failed to start voice call: HTTP ${res.status}`);
+    return failed("Failed to start voice call", res);
   }
   const data = await res.json();
   return {
@@ -84,7 +92,7 @@ export async function sendVoiceTurn(params: {
   const res = await fetch(`${VOICE_BASE}/calls/${encodeURIComponent(params.call_id)}/turn?stream=1`, init);
 
   if (!res.ok) {
-    throw new Error(`Voice turn failed: HTTP ${res.status}`);
+    return failed("Voice turn failed", res);
   }
   return res.json();
 }

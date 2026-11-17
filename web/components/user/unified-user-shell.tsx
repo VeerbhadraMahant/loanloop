@@ -13,13 +13,14 @@ export type UserShellTab = "console" | "calling-desk" | "bank-app" | "account";
 export function UnifiedUserShell({ initialTab = "console", initialUtterance }: { initialTab?: UserShellTab; initialUtterance?: string }) {
   const { user } = useSession();
   const [activeTab, setActiveTab] = useState<UserShellTab>(initialTab);
-  const [utterance, setUtterance] = useState(initialUtterance);
+  // n bumps on every tap so repeating a quick action is not deduped away.
+  const [utterance, setUtterance] = useState({ q: initialUtterance, n: initialUtterance ? 1 : 0 });
   // The voice session starts when the tab first opens (it opens a call), then stays mounted so a call survives tab switches.
   const [callOpened, setCallOpened] = useState(initialTab === "calling-desk");
   const [pendingApprovalCount, setPendingApprovalCount] = useState(0);
 
   const openCall = (q?: string) => {
-    if (q) setUtterance(q);
+    if (q) setUtterance((u) => ({ q, n: u.n + 1 }));
     setCallOpened(true);
     setActiveTab("calling-desk");
   };
@@ -88,7 +89,7 @@ export function UnifiedUserShell({ initialTab = "console", initialUtterance }: {
           </div>
 
           <div className={`h-full flex-col px-4 pt-3 pb-20 ${activeTab === "calling-desk" ? "flex" : "hidden"}`}>
-            {callOpened && <CallingDeskTab initialQuery={utterance} />}
+            {callOpened && <CallingDeskTab initialQuery={utterance.q} queryNonce={utterance.n} />}
           </div>
 
           <div className={`h-full overflow-y-auto px-4 py-3 pb-20 ${activeTab === "bank-app" ? "block" : "hidden"}`}>

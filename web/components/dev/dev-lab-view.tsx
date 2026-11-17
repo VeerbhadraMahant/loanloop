@@ -16,7 +16,7 @@ const OFF = "Dev mode is off: start the voice service with VOICE_DEV=1 (start.ps
 export function DevLabView() {
   const [dev, setDev] = useState<DevConfig | null>(null);
   const [off, setOff] = useState<string | null>(null);
-  const [cfg, setCfg] = useState<Cfg>({ name: "My config", llm: "ollama", model: "", settings: {} });
+  const [cfg, setCfg] = useState<Cfg>({ name: "My config", llm: "sarvam", model: "", settings: {} });
   const [saved, setSaved] = useState<Cfg[]>([]);
   const [editing, setEditing] = useState<number | null>(null);
   const [runs, setRuns] = useState<BenchRun[]>([]);

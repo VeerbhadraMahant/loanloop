@@ -14,7 +14,7 @@ import { Icon } from "@/components/ui";
 type DevTab = "lab" | "test-cases" | "metrics";
 
 // The slide-over reuses the Dev Lab's own live call (typed or voice turns, per-turn timings) with default model settings.
-const DESK_CFG: Cfg = { name: "Calling Desk", llm: "ollama", model: "", settings: {} };
+const DESK_CFG: Cfg = { name: "Calling Desk", llm: "sarvam", model: "", settings: {} };
 
 export function DevShell({ initialTab = "lab" }: { initialTab?: DevTab }) {
   const tabParam = useSearchParams().get("tab");
